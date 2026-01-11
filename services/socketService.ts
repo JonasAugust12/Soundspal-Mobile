@@ -1,0 +1,257 @@
+import { io, Socket } from 'socket.io-client';
+import { useAuthStore } from '@/stores/authStore';
+import { useMessagingStore } from '@/stores/messagingStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { messagingKeys } from '@/hooks/useMessagingApi';
+import type { Message } from '@/types/messaging.type';
+
+class SocketService {
+    private socket: Socket | null = null;
+    private reconnectAttempts = 0;
+    private maxReconnectAttempts = 5;
+    private hasReachedMaxAttempts = false;
+    private isConnecting = false;
+    private hasAttemptedTokenRefresh = false;
+    private queryClient: any = null;
+
+    // Set query client from provider
+    setQueryClient(client: any) {
+        this.queryClient = client;
+    }
+
+    connect() {
+        // Prevent multiple simultaneous connection attempts
+        if (this.isConnecting) {
+            console.log('🔌 Connection already in progress...');
+            return this.socket;
+        }
+
+        // Don't retry if already failed max times
+        if (this.hasReachedMaxAttempts) {
+            console.warn('⚠️ Socket connection disabled after max retry attempts');
+            return null;
+        }
+
+        // Already connected
+        if (this.socket?.connected) {
+            console.log('✅ Socket already connected');
+            return this.socket;
+        }
+
+        const { user, accessToken } = useAuthStore.getState();
+
+        if (!user || !accessToken) {
+            console.warn('⚠️ Cannot connect to socket: user not authenticated');
+            return null;
+        }
+
+        this.isConnecting = true;
+
+        this.socket = io('https://talentlink.io.vn', {
+            path: '/socket.io',
+            auth: {
+                token: accessToken,
+            },
+            query: {
+                token: accessToken,
+            },
+            extraHeaders: {
+                Authorization: `Bearer ${accessToken}`,
+                'x-user-id': user.id,
+            },
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 10000,
+        });
+
+        this.setupListeners();
+        this.isConnecting = false;
+        return this.socket;
+    }
+
+    private setupListeners() {
+        if (!this.socket) return;
+
+        // Remove all existing listeners to prevent duplicates
+        this.socket.removeAllListeners();
+
+        // Connection events
+        this.socket.on('connect', () => {
+            console.log('✅ Connected to messaging service');
+            console.log('🆔 Socket ID:', this.socket?.id);
+            this.reconnectAttempts = 0;
+            this.hasReachedMaxAttempts = false;
+            this.hasAttemptedTokenRefresh = false;
+        });
+
+        this.socket.on('disconnect', (reason) => {
+            console.warn('⚠️ Disconnected from messaging service');
+            console.warn('Reason:', reason);
+
+            if (reason === 'io server disconnect' && !this.hasAttemptedTokenRefresh) {
+                console.error('❌ Server forced disconnect - possible auth issue');
+                this.handleDisconnect();
+            }
+        });
+
+        this.socket.on('connect_error', (error) => {
+            console.error('❌ Socket connection error:', error.message);
+            this.handleConnectionError();
+        });
+
+        this.socket.on('error', (error) => {
+            console.error('❌ Socket error event:', error);
+        });
+
+        // Message events
+        this.socket.on('message:new', (message: Message) => {
+            console.log('📨 New message received:', {
+                id: message.id,
+                conversationId: message.conversationId,
+                senderId: message.senderId,
+            });
+
+            // Invalidate queries
+            this.queryClient?.invalidateQueries({
+                queryKey: messagingKeys.messages(message.conversationId),
+            });
+            this.queryClient?.invalidateQueries({
+                queryKey: messagingKeys.conversations(),
+            });
+        });
+
+        this.socket.on('message:edited', (message: Message) => {
+            console.log('✏️ Message edited:', message.id);
+            this.queryClient?.invalidateQueries({
+                queryKey: messagingKeys.messages(message.conversationId),
+            });
+        });
+
+        this.socket.on(
+            'message:deleted',
+            ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
+                console.log('🗑️ Message deleted:', messageId);
+                this.queryClient?.invalidateQueries({
+                    queryKey: messagingKeys.messages(conversationId),
+                });
+                this.queryClient?.invalidateQueries({
+                    queryKey: messagingKeys.conversations(),
+                });
+            }
+        );
+
+        // Typing events
+        this.socket.on(
+            'typing:start',
+            ({ conversationId, userId }: { conversationId: string; userId: string }) => {
+                const currentUserId = useAuthStore.getState().user?.id;
+                if (userId !== currentUserId) {
+                    console.log('⌨️ User typing:', userId);
+                    useMessagingStore.getState().addTypingUser(conversationId, userId);
+                }
+            }
+        );
+
+        this.socket.on(
+            'typing:stop',
+            ({ conversationId, userId }: { conversationId: string; userId: string }) => {
+                const currentUserId = useAuthStore.getState().user?.id;
+                if (userId !== currentUserId) {
+                    console.log('⏸️ User stopped typing:', userId);
+                    useMessagingStore.getState().removeTypingUser(conversationId, userId);
+                }
+            }
+        );
+
+        // Online status events
+        this.socket.on('user:online', ({ userId }: { userId: string }) => {
+            console.log('🟢 User online:', userId);
+            useMessagingStore.getState().addOnlineUser(userId);
+        });
+
+        this.socket.on('user:offline', ({ userId }: { userId: string }) => {
+            console.log('⚫ User offline:', userId);
+            useMessagingStore.getState().removeOnlineUser(userId);
+        });
+    }
+
+    private handleDisconnect() {
+        // Attempt to reconnect
+        setTimeout(() => {
+            this.disconnect();
+            this.connect();
+        }, 1000);
+    }
+
+    private handleConnectionError() {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
+            console.log(`🔄 Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`)
+
+;
+
+            this.isConnecting = false;
+            setTimeout(() => {
+                this.connect();
+            }, delay);
+        } else {
+            console.error('❌ Max reconnection attempts reached');
+            this.hasReachedMaxAttempts = true;
+            this.isConnecting = false;
+        }
+    }
+
+    // Helper methods for emitting events
+    joinConversation(conversationId: string) {
+        if (!this.socket?.connected) {
+            console.warn('⚠️ Cannot join conversation - socket not connected');
+            return;
+        }
+        console.log('📥 Joining conversation:', conversationId);
+        this.socket.emit('conversation:join', { conversationId });
+    }
+
+    leaveConversation(conversationId: string) {
+        if (!this.socket?.connected) return;
+        console.log('📤 Leaving conversation:', conversationId);
+        this.socket.emit('conversation:leave', { conversationId });
+    }
+
+    startTyping(conversationId: string) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('typing:start', { conversationId });
+    }
+
+    stopTyping(conversationId: string) {
+        if (!this.socket?.connected) return;
+        this.socket.emit('typing:stop', { conversationId });
+    }
+
+    disconnect() {
+        if (this.socket) {
+            this.socket.removeAllListeners();
+            this.socket.disconnect();
+            this.socket = null;
+        }
+        this.reconnectAttempts = 0;
+        this.hasReachedMaxAttempts = false;
+        this.isConnecting = false;
+        this.hasAttemptedTokenRefresh = false;
+    }
+
+    resetReconnectAttempts() {
+        this.reconnectAttempts = 0;
+        this.hasReachedMaxAttempts = false;
+        this.hasAttemptedTokenRefresh = false;
+    }
+
+    isConnected(): boolean {
+        return this.socket?.connected ?? false;
+    }
+}
+
+// Export singleton instance
+export const socketService = new SocketService();

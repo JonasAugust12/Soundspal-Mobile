@@ -5,7 +5,7 @@ export interface Genre {
     updated_at: string;
 }
 
-export type UserRole = 'SINGER' | 'PRODUCER' | 'VENUE';
+export type UserRole = 'singer' | 'producer' | 'venue';
 
 export interface FeaturedUser {
     id: string;
@@ -95,3 +95,49 @@ export interface FeaturedJobsResponse {
     message: string;
     data: FeaturedJobsData;
 }
+
+// Search types
+export interface UserProfile {
+    id: string;
+    username: string;
+    status: string;
+    email: string;
+    role: UserRole;
+    display_name: string;
+    avatar_url?: string;
+    cover_url?: string;
+    phone_number?: string;
+    brief_bio?: string;
+    detail_bio?: string;
+    city?: string;
+    country?: string;
+    featured_release_links?: string[];
+    genres: Genre[] | null;
+    is_verified: boolean;
+    is_featured: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface SearchUsersRequest {
+    query?: string;
+    role?: UserRole;
+    location?: string;
+    genres?: string[];
+    openHour?: string;
+    rentPrice?: string;
+    capacity?: string;
+    businessTypes?: string[];
+    convenientFacilities?: string[];
+    page?: number;
+    pageSize?: number;
+    sortBy?: 'displayName';
+    sortOrder?: 'asc' | 'desc';
+}
+
+export type SearchUsersResponse = UserProfile[];
+
+export interface GetGenresResponse {
+    genres: Genre[];
+}
+

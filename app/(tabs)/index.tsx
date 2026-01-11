@@ -32,9 +32,17 @@ export default function HomeScreen() {
 
     // Transform featured users to ArtistItem format
     const artists: ArtistItem[] = useMemo(() => {
-        if (!featuredUsersData?.data?.users) return [];
+        if (!featuredUsersData) return [];
 
-        return featuredUsersData.data.users.map((user: import('@/types/search.type').FeaturedUser) => ({
+        // Handle different response structures
+        const users = featuredUsersData?.data?.users || [];
+
+        if (!Array.isArray(users)) {
+            console.warn('Featured users array check failed. Data:', featuredUsersData?.data);
+            return [];
+        }
+
+        return users.map((user: import('@/types/search.type').FeaturedUser) => ({
             id: user.id,
             name: user.display_name,
             description: user.brief_bio || `${user.role} chuyên nghiệp`,
@@ -42,7 +50,7 @@ export default function HomeScreen() {
                 user.city && user.country
                     ? `${user.city}, ${user.country}`
                     : user.city || user.country || 'Chưa cập nhật',
-            skills: user.genres.map((g: import('@/types/search.type').Genre) => g.name).join('/') || 'Chưa cập nhật',
+            skills: user.genres?.map((g: import('@/types/search.type').Genre) => g.name).join('/') || 'Chưa cập nhật',
             image: user.avatar_url
                 ? { uri: user.avatar_url }
                 : require('@/assets/images/user_profile.png'),
@@ -52,9 +60,16 @@ export default function HomeScreen() {
 
     // Transform featured jobs to JobItem format
     const jobs: JobItem[] = useMemo(() => {
-        if (!featuredJobsData?.data?.jobs) return [];
+        if (!featuredJobsData) return [];
 
-        return featuredJobsData.data.jobs.map((job: import('@/types/search.type').FeaturedJob) => {
+        const jobsList = featuredJobsData?.data?.jobs || [];
+
+        if (!Array.isArray(jobsList)) {
+            console.warn('Featured jobs array check failed. Data:', featuredJobsData?.data);
+            return [];
+        }
+
+        return jobsList.map((job: import('@/types/search.type').FeaturedJob) => {
             // Parse date from published_at or created_at
             const date = new Date(job.published_at || job.created_at).toLocaleDateString('vi-VN');
 
@@ -211,7 +226,7 @@ export default function HomeScreen() {
                     >
                         {artists.map((artist, index) => {
                             // Get the original user data for navigation
-                            const user = featuredUsersData?.data?.users[index];
+                            const user = featuredUsersData?.data?.users?.[index];
 
                             return (
                                 <ArtistCard
@@ -221,7 +236,7 @@ export default function HomeScreen() {
                                     onPress={() => {
                                         if (!user?.username) return;
                                         // Navigate based on role
-                                        if (user.role === 'VENUE') {
+                                        if (user.role === 'venue') {
                                             router.push({
                                                 pathname: '/(profiles)/venueProfile',
                                                 params: { username: user.username },
