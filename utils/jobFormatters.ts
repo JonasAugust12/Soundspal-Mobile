@@ -18,12 +18,15 @@ export const formatBudget = (min: number, max: number, currency: string): string
 };
 
 /**
- * Format date to Vietnamese locale
+ * Format date to Vietnamese locale (dd-MM-yyyy format)
  */
 export const formatDate = (dateStr: string): string => {
     if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN');
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
 };
 
 /**
@@ -41,4 +44,44 @@ export const formatDaysAgo = (dateStr: string): string => {
     if (diffDays < 7) return `${diffDays} ngày trước`;
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} tuần trước`;
     return `${Math.floor(diffDays / 30)} tháng trước`;
+};
+
+/**
+ * Format job type to Vietnamese display name
+ */
+export const formatJobType = (type: string): string => {
+    const typeMap: { [key: string]: string } = {
+        'venue': 'Venue',
+        'producer': 'Nhà sản xuất',
+        'singer': 'Ca sĩ',
+        'musician': 'Nhạc công',
+        'dj': 'DJ',
+        'band': 'Ban nhạc',
+    };
+    return typeMap[type?.toLowerCase()] || type || 'N/A';
+};
+
+/**
+ * Format recruitment type to Vietnamese display name
+ */
+export const formatRecruitmentType = (type: string): string => {
+    const typeMap: { [key: string]: string } = {
+        'full_time': 'Toàn thời gian',
+        'part_time': 'Bán thời gian',
+        'contract': 'Hợp đồng',
+        'one_time': 'Một lần',
+    };
+    return typeMap[type?.toLowerCase()] || type || 'N/A';
+};
+
+/**
+ * Format location type to Vietnamese display name
+ */
+export const formatLocationType = (type: string): string => {
+    const typeMap: { [key: string]: string } = {
+        'remote': 'Làm việc từ xa',
+        'onsite': 'Tại địa điểm',
+        'hybrid': 'Kết hợp',
+    };
+    return typeMap[type?.toLowerCase()] || type || 'N/A';
 };
