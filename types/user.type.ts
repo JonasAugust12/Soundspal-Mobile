@@ -29,6 +29,14 @@ export interface BaseUser {
     is_verified: boolean;
     created_at: string;
     updated_at: string;
+    // Social links
+    facebook_url?: string;
+    instagram_url?: string;
+    youtube_url?: string;
+    website_url?: string;
+    // Artist specific
+    featured_release_links?: string[];
+    genres?: string[];
 }
 
 // Singer/Producer specific fields

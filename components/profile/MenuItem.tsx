@@ -10,7 +10,7 @@ interface MenuItemProps {
     showChevron?: boolean;
 }
 
-export default function MenuItem({
+export function MenuItem({
     icon,
     title,
     subtitle,

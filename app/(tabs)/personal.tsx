@@ -37,11 +37,12 @@ export default function PersonalScreen() {
     };
 
     const handleEditProfile = () => {
-        if (user?.role === 'singer' || user?.role === 'producer') {
-            router.push('/(editprofile)/artistEditProfile');
-        } else if (user?.role === 'venue') {
-            router.push('/(editprofile)/venueEditProfile');
-        }
+        // if (user?.role === 'singer' || user?.role === 'producer') {
+        //     router.push('/(editprofile)/artistEditProfile');
+        // } else if (user?.role === 'venue') {
+        //     router.push('/(editprofile)/venueEditProfile');
+        // }
+        router.push('/(editprofile)/editProfile');
     };
 
     const handleViewProfile = () => {

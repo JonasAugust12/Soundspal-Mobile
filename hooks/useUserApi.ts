@@ -9,26 +9,37 @@ import type {
     VideoResponse,
 } from '@/types/user.type';
 
+// Wrapper response type
+interface ApiResponse<T> {
+    message: string;
+    data: T;
+}
+
 // API Calls
 const userApi = {
-    getCurrentUser: () => {
-        return createApiCall<User>('GET', '/users/me')();
+    getCurrentUser: async () => {
+        const response = await createApiCall<ApiResponse<User>>('GET', '/users/me')();
+        return response.data;
     },
 
-    getUserByUsername: (username: string) => {
-        return createApiCall<User>('GET', `/users/${username}`)();
+    getUserByUsername: async (username: string) => {
+        const response = await createApiCall<ApiResponse<User>>('GET', `/users/${username}`)();
+        return response.data;
     },
 
-    getCurrentUserMedia: () => {
-        return createApiCall<MediaResponse>('GET', '/users/me/media')();
+    getCurrentUserMedia: async () => {
+        const response = await createApiCall<ApiResponse<MediaResponse>>('GET', '/users/me/media')();
+        return response.data;
     },
 
-    getUserMedia: (username: string) => {
-        return createApiCall<MediaResponse>('GET', `/users/media/${username}`)();
+    getUserMedia: async (username: string) => {
+        const response = await createApiCall<ApiResponse<MediaResponse>>('GET', `/users/media/${username}`)();
+        return response.data;
     },
 
-    getUserVideos: (username: string) => {
-        return createApiCall<{ data: VideoResponse }>('GET', `/users/videos/all/${username}`)();
+    getUserVideos: async (username: string) => {
+        const response = await createApiCall<ApiResponse<VideoResponse>>('GET', `/users/videos/all/${username}`)();
+        return response.data;
     },
 
     updateBasicInfo: createApiCall<User, {
@@ -139,7 +150,6 @@ export const useGetUserVideos = (username: string, options?: { enabled?: boolean
         queryFn: () => userApi.getUserVideos(username),
         enabled: options?.enabled !== false && !!username,
         staleTime: 180000, // 3 minutes
-        select: (data) => data.data, // Extract nested data
     });
 };
 

@@ -33,7 +33,10 @@ export interface FeaturedUsersData {
     cache_until: string;
     cached_at: string;
     count: number;
-    users: FeaturedUser[];
+    users: {
+        users: FeaturedUser[];
+        total: number;
+    };
 }
 
 export interface FeaturedUsersResponse {

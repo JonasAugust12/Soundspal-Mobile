@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { Job } from '@/types/job.type';
-import { SearchBar, JobCardFull, JobCardSkeleton } from '@/components/jobs';
+import { SearchBar } from './SearchBar';
+import { JobCardFull } from './JobCardFull';
+import { JobCardSkeleton } from './JobCardSkeleton';
 
 interface JobListProps {
     jobs: (Job & { isOwned?: boolean })[];

@@ -14,20 +14,12 @@ import {
     OnlineIndicator,
     TypingIndicator,
 } from '@/components/common';
-import {
-    useGetConversation,
-    useGetMessages,
-    useSendMessage,
-    useEditMessage,
-    useDeleteMessage,
-    useMarkMessageAsRead,
-    useMarkConversationAsRead,
-} from '@/hooks/useMessagingApi';
-import { useUploadFile } from '@/hooks/useStorageApi';
 import { useMessagingStore } from '@/stores/messagingStore';
 import { useAuthStore } from '@/stores/authStore';
 import { socketService } from '@/services/socketService';
+import { apiClient } from '@/lib/apiClient';
 import type { ChatMessage } from '@/components/common/MessageBubble';
+import type { Message, Conversation } from '@/types/messaging.type';
 
 export default function DetailMessageScreen() {
     const router = useRouter();
@@ -37,7 +29,25 @@ export default function DetailMessageScreen() {
     const { user: currentUser } = useAuthStore();
     const currentUserId = currentUser?.id;
 
-    const { onlineUsers, typingUsers, setActiveConversation } = useMessagingStore();
+    // Read from store
+    const {
+        onlineUsers,
+        typingUsers,
+        messagesByConversation,
+        loadingMessages,
+        conversations,
+        setActiveConversation,
+        setMessages,
+        addMessage,
+        updateMessage,
+        removeMessage,
+        setLoadingMessages,
+        hasMessages,
+        clearUnread,
+    } = useMessagingStore();
+
+    const messages = messagesByConversation[conversationId || ''] || [];
+    const isLoadingMessages = loadingMessages[conversationId || ''] || false;
     const allTypingUsers = typingUsers[conversationId || ''] || [];
     const filteredTypingUsers = allTypingUsers.filter((userId) => userId !== currentUserId);
 
@@ -46,25 +56,62 @@ export default function DetailMessageScreen() {
     const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
     const [showActionSheet, setShowActionSheet] = useState(false);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+    const [conversation, setConversation] = useState<Conversation | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Queries & Mutations
-    const { data: conversation } = useGetConversation(conversationId || '');
-    const { data: messages, isLoading, error } = useGetMessages(conversationId || '');
-    const sendMessage = useSendMessage();
-    const editMessage = useEditMessage();
-    const deleteMessage = useDeleteMessage();
-    const markAsRead = useMarkMessageAsRead();
-    const markConversationAsRead = useMarkConversationAsRead();
-    const uploadFile = useUploadFile();
+    // Fetch conversation details
+    useEffect(() => {
+        if (!conversationId) return;
 
-    // Initialize socket and mark as read
+        const fetchConversation = async () => {
+            try {
+                const response = await apiClient.get<Conversation>(`/conversations/${conversationId}`);
+                setConversation(response.data);
+            } catch (error) {
+                console.error('Failed to fetch conversation:', error);
+            }
+        };
+
+        fetchConversation();
+    }, [conversationId]);
+
+    // Fetch messages if not in cache
+    useEffect(() => {
+        if (!conversationId) return;
+
+        const fetchMessages = async () => {
+            // Check if already in cache
+            if (hasMessages(conversationId)) {
+                console.log('📦 Using cached messages for:', conversationId);
+                return;
+            }
+
+            console.log('📡 Fetching messages for:', conversationId);
+            setLoadingMessages(conversationId, true);
+
+            try {
+                const response = await apiClient.get<Message[]>(`/messages/conversation/${conversationId}`);
+                setMessages(conversationId, response.data);
+            } catch (error) {
+                console.error('Failed to fetch messages:', error);
+            } finally {
+                setLoadingMessages(conversationId, false);
+            }
+        };
+
+        fetchMessages();
+    }, [conversationId, hasMessages, setMessages, setLoadingMessages]);
+
+    // Initialize socket and clear unread
     useEffect(() => {
         if (conversationId) {
             setActiveConversation(conversationId);
             socketService.joinConversation(conversationId);
-            markConversationAsRead.mutate(conversationId);
+            clearUnread(conversationId);
+
+            // Mark as read on server
+            apiClient.post(`/messages/conversation/${conversationId}/read`).catch(console.error);
         }
 
         return () => {
@@ -77,53 +124,45 @@ export default function DetailMessageScreen() {
                 clearTimeout(typingTimeoutRef.current);
             }
         };
-    }, [conversationId]);
-
-    // Mark latest message as read
-    useEffect(() => {
-        if (conversationId && messages && messages.length > 0) {
-            const latestMessage = messages[0];
-            if (latestMessage.senderId !== currentUserId) {
-                markAsRead.mutate({ messageId: latestMessage.id, conversationId });
-            }
-        }
-    }, [messages, conversationId, currentUserId]);
+    }, [conversationId, setActiveConversation, clearUnread]);
 
     // Auto-scroll to bottom
     useEffect(() => {
-        if (messages && messages.length > 0) {
+        if (messages.length > 0) {
             setTimeout(() => {
                 scrollViewRef.current?.scrollToEnd({ animated: true });
             }, 100);
         }
-    }, [messages]);
+    }, [messages.length]);
 
     const handleSendMessage = async () => {
         if (!messageText.trim() || !conversationId) return;
 
         try {
             if (editingMessageId) {
-                await editMessage.mutateAsync({
-                    messageId: editingMessageId,
-                    body: { content: messageText.trim() },
+                const response = await apiClient.put<Message>(`/messages/${editingMessageId}`, {
+                    content: messageText.trim(),
                 });
 
-                Toast.show({
-                    type: 'success',
-                    text1: 'Đã chỉnh sửa tin nhắn',
+                updateMessage(conversationId, editingMessageId, {
+                    content: response.data.content,
+                    isEdited: true,
                 });
 
+                Toast.show({ type: 'success', text1: 'Đã chỉnh sửa tin nhắn' });
                 setEditingMessageId(null);
                 setMessageText('');
                 socketService.stopTyping(conversationId);
                 return;
             }
 
-            await sendMessage.mutateAsync({
+            const response = await apiClient.post<Message>('/messages', {
                 conversationId,
                 content: messageText.trim(),
             });
 
+            // Add to store immediately
+            addMessage(conversationId, response.data);
             setMessageText('');
             socketService.stopTyping(conversationId);
         } catch (error) {
@@ -158,15 +197,18 @@ export default function DetailMessageScreen() {
                 } as any);
                 formData.append('folder', 'messages');
 
-                const uploadResult = await uploadFile.mutateAsync(formData);
+                const uploadResponse = await apiClient.post<{ url: string }>('/storage/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
 
-                await sendMessage.mutateAsync({
+                const messageResponse = await apiClient.post<Message>('/messages', {
                     conversationId,
                     content: messageText.trim() || '',
-                    attachmentUrl: uploadResult.url,
+                    attachmentUrl: uploadResponse.data.url,
                     attachmentType: 'image',
                 });
 
+                addMessage(conversationId, messageResponse.data);
                 setMessageText('');
                 setIsUploading(false);
             }
@@ -207,7 +249,7 @@ export default function DetailMessageScreen() {
     };
 
     const handleEditMessage = () => {
-        const message = messages?.find((m) => m.id === selectedMessageId);
+        const message = messages.find((m) => m.id === selectedMessageId);
         if (message && !message.isDeleted) {
             setEditingMessageId(selectedMessageId);
             setMessageText(message.content);
@@ -218,12 +260,9 @@ export default function DetailMessageScreen() {
         if (!selectedMessageId || !conversationId) return;
 
         try {
-            await deleteMessage.mutateAsync({ messageId: selectedMessageId, conversationId });
-
-            Toast.show({
-                type: 'success',
-                text1: 'Đã xóa tin nhắn',
-            });
+            await apiClient.delete(`/messages/${selectedMessageId}`);
+            removeMessage(conversationId, selectedMessageId);
+            Toast.show({ type: 'success', text1: 'Đã xóa tin nhắn' });
         } catch (error) {
             console.error('Failed to delete message:', error);
             Toast.show({
@@ -240,13 +279,10 @@ export default function DetailMessageScreen() {
     };
 
     const handleCopyMessage = async () => {
-        const message = messages?.find((m) => m.id === selectedMessageId);
+        const message = messages.find((m) => m.id === selectedMessageId);
         if (message && !message.isDeleted) {
             await Clipboard.setStringAsync(message.content);
-            Toast.show({
-                type: 'success',
-                text1: 'Đã sao chép tin nhắn',
-            });
+            Toast.show({ type: 'success', text1: 'Đã sao chép tin nhắn' });
         }
     };
 
@@ -254,24 +290,17 @@ export default function DetailMessageScreen() {
         router.back();
     };
 
-    // Get other user info from conversation participants
+    // Get other user from conversation
     const otherUser = useMemo(() => {
         if (!conversation?.participants) return null;
-
-        // Find the participant who is not the current user
-        const otherParticipant = conversation.participants.find(
-            (participant) => participant.id !== currentUserId
-        );
-
-        return otherParticipant || null;
+        return conversation.participants.find((p) => p.id !== currentUserId) || null;
     }, [conversation, currentUserId]);
 
     const isOtherUserOnline = otherUser?.id ? onlineUsers.includes(otherUser.id) : false;
 
-    // Transform messages
+    // Transform messages for display
     const chatMessages: ChatMessage[] = useMemo(() => {
-        if (!messages) return [];
-        return [...messages].reverse().map((msg) => ({
+        return messages.map((msg) => ({
             id: msg.id,
             text: msg.content,
             time: new Date(msg.createdAt).toLocaleTimeString('en-US', {
@@ -279,7 +308,7 @@ export default function DetailMessageScreen() {
                 minute: '2-digit',
             }),
             side: msg.senderId === currentUserId ? 'right' : 'left',
-            avatarSource: msg.sender.avatarUrl
+            avatarSource: msg.sender?.avatarUrl
                 ? { uri: msg.sender.avatarUrl }
                 : require('@/assets/images/user-default.jpg'),
             attachmentUrl: msg.attachmentUrl,
@@ -289,11 +318,11 @@ export default function DetailMessageScreen() {
         }));
     }, [messages, currentUserId]);
 
-    const selectedMessage = messages?.find((m) => m.id === selectedMessageId);
+    const selectedMessage = messages.find((m) => m.id === selectedMessageId);
     const canEditSelected = selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
     const canDeleteSelected = selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
 
-    if (isLoading) {
+    if (isLoadingMessages && messages.length === 0) {
         return (
             <SafeAreaView className="flex-1 bg-background">
                 <View className="flex-1 items-center justify-center">
@@ -304,7 +333,7 @@ export default function DetailMessageScreen() {
         );
     }
 
-    if (error || !conversationId) {
+    if (!conversationId) {
         return (
             <SafeAreaView className="flex-1 bg-background">
                 <View className="flex-1 items-center justify-center">

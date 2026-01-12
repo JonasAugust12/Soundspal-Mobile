@@ -23,6 +23,10 @@ function RootLayoutNav() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="(editprofile)" />
+                <Stack.Screen name="(profiles)" />
+                <Stack.Screen name="(messages)" />
+                <Stack.Screen name="(jobs)" />
             </Stack>
             <Toast />
         </>

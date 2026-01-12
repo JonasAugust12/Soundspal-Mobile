@@ -113,32 +113,31 @@ class SocketService {
                 senderId: message.senderId,
             });
 
-            // Invalidate queries
-            this.queryClient?.invalidateQueries({
-                queryKey: messagingKeys.messages(message.conversationId),
-            });
-            this.queryClient?.invalidateQueries({
-                queryKey: messagingKeys.conversations(),
-            });
+            const store = useMessagingStore.getState();
+
+            // Append message to store
+            store.addMessage(message.conversationId, message);
+
+            // Increment unread if not active conversation
+            if (store.activeConversationId !== message.conversationId) {
+                store.incrementUnread(message.conversationId);
+            }
         });
 
         this.socket.on('message:edited', (message: Message) => {
             console.log('✏️ Message edited:', message.id);
-            this.queryClient?.invalidateQueries({
-                queryKey: messagingKeys.messages(message.conversationId),
-            });
+            useMessagingStore.getState().updateMessage(
+                message.conversationId,
+                message.id,
+                { content: message.content, isEdited: true }
+            );
         });
 
         this.socket.on(
             'message:deleted',
             ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
                 console.log('🗑️ Message deleted:', messageId);
-                this.queryClient?.invalidateQueries({
-                    queryKey: messagingKeys.messages(conversationId),
-                });
-                this.queryClient?.invalidateQueries({
-                    queryKey: messagingKeys.conversations(),
-                });
+                useMessagingStore.getState().removeMessage(conversationId, messageId);
             }
         );
 

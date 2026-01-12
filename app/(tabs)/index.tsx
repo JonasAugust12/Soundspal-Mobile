@@ -34,8 +34,8 @@ export default function HomeScreen() {
     const artists: ArtistItem[] = useMemo(() => {
         if (!featuredUsersData) return [];
 
-        // Handle different response structures
-        const users = featuredUsersData?.data?.users || [];
+        // Handle nested response structure: data.users.users
+        const users = featuredUsersData?.data?.users?.users || [];
 
         if (!Array.isArray(users)) {
             console.warn('Featured users array check failed. Data:', featuredUsersData?.data);
@@ -226,7 +226,7 @@ export default function HomeScreen() {
                     >
                         {artists.map((artist, index) => {
                             // Get the original user data for navigation
-                            const user = featuredUsersData?.data?.users?.[index];
+                            const user = featuredUsersData?.data?.users?.users?.[index];
 
                             return (
                                 <ArtistCard
