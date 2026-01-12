@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, KeyboardAvoidingView, Platform, Image, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Phone, Video } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
@@ -81,7 +81,6 @@ export default function DetailMessageScreen() {
         if (!conversationId) return;
 
         const fetchMessages = async () => {
-            // Check if already in cache
             if (hasMessages(conversationId)) {
                 console.log('📦 Using cached messages for:', conversationId);
                 return;
@@ -110,7 +109,6 @@ export default function DetailMessageScreen() {
             socketService.joinConversation(conversationId);
             clearUnread(conversationId);
 
-            // Mark as read on server
             apiClient.post(`/messages/conversation/${conversationId}/read`).catch(console.error);
         }
 
@@ -161,7 +159,6 @@ export default function DetailMessageScreen() {
                 content: messageText.trim(),
             });
 
-            // Add to store immediately
             addMessage(conversationId, response.data);
             setMessageText('');
             socketService.stopTyping(conversationId);
@@ -324,10 +321,12 @@ export default function DetailMessageScreen() {
 
     if (isLoadingMessages && messages.length === 0) {
         return (
-            <SafeAreaView className="flex-1 bg-background">
+            <SafeAreaView className="flex-1 bg-white">
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#7C3BED" />
-                    <Text className="mt-4 text-foreground">Đang tải tin nhắn...</Text>
+                    <View className="w-16 h-16 rounded-full bg-purple-100 items-center justify-center mb-4">
+                        <ActivityIndicator size="large" color="#7C3BED" />
+                    </View>
+                    <Text className="text-gray-600 font-medium">Đang tải tin nhắn...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -335,7 +334,7 @@ export default function DetailMessageScreen() {
 
     if (!conversationId) {
         return (
-            <SafeAreaView className="flex-1 bg-background">
+            <SafeAreaView className="flex-1 bg-white">
                 <View className="flex-1 items-center justify-center">
                     <Text className="text-red-500">Không thể tải tin nhắn</Text>
                 </View>
@@ -344,71 +343,106 @@ export default function DetailMessageScreen() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-background">
+        <SafeAreaView className="flex-1 bg-gray-50">
             <KeyboardAvoidingView
                 className="flex-1"
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                 <View className="flex-1">
-                    {/* Header */}
-                    <View className="flex-row items-center justify-center p-3">
-                        <Pressable onPress={goBack} className="p-2">
-                            <ChevronLeft size={20} color="#09090b" />
-                        </Pressable>
+                    {/* Premium Header */}
+                    <View style={styles.header} className="bg-white px-4 py-3">
+                        <View className="flex-row items-center">
+                            {/* Back Button */}
+                            <TouchableOpacity
+                                onPress={goBack}
+                                className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center mr-3"
+                            >
+                                <ChevronLeft size={22} color="#374151" />
+                            </TouchableOpacity>
 
-                        <View className="relative">
-                            <Image
-                                source={
-                                    otherUser?.avatarUrl
-                                        ? { uri: otherUser.avatarUrl }
-                                        : require('@/assets/images/user-default.jpg')
-                                }
-                                className="w-12 h-12 rounded-full"
-                            />
-                            {otherUser?.id && (
-                                <OnlineIndicator userId={otherUser.id} size={14} position="bottom-right" />
-                            )}
-                        </View>
+                            {/* Avatar with Online Indicator */}
+                            <TouchableOpacity className="relative mr-3">
+                                <Image
+                                    source={
+                                        otherUser?.avatarUrl
+                                            ? { uri: otherUser.avatarUrl }
+                                            : require('@/assets/images/user-default.jpg')
+                                    }
+                                    className="w-11 h-11 rounded-full"
+                                />
+                                {isOtherUserOnline && (
+                                    <View className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-white" />
+                                )}
+                            </TouchableOpacity>
 
-                        <View className="justify-center ml-2 flex-1">
-                            <Text className="text-base font-semibold text-foreground">
-                                {otherUser?.displayName || 'Unknown User'}
-                            </Text>
-                            {isOtherUserOnline && (
-                                <Text
-                                    className={`text-sm ${filteredTypingUsers.length > 0
-                                        ? 'text-primary font-medium'
-                                        : 'text-muted-foreground'
-                                        }`}
-                                >
-                                    {filteredTypingUsers.length > 0 ? 'Đang nhập...' : 'Đang hoạt động'}
+                            {/* User Info */}
+                            <View className="flex-1">
+                                <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                                    {otherUser?.displayName || 'Unknown User'}
                                 </Text>
-                            )}
+                                <View className="flex-row items-center gap-1">
+                                    {filteredTypingUsers.length > 0 ? (
+                                        <Text className="text-xs font-medium text-purple-600">
+                                            Đang nhập...
+                                        </Text>
+                                    ) : isOtherUserOnline ? (
+                                        <>
+                                            <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                            <Text className="text-xs text-gray-500">
+                                                Đang hoạt động
+                                            </Text>
+                                        </>
+                                    ) : (
+                                        <Text className="text-xs text-gray-400">
+                                            Ngoại tuyến
+                                        </Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            {/* Action Buttons */}
+                            <View className="flex-row gap-1">
+                                <TouchableOpacity className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center">
+                                    <Phone size={18} color="#7C3BED" />
+                                </TouchableOpacity>
+                                <TouchableOpacity className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center">
+                                    <Video size={18} color="#7C3BED" />
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
-
-                    {/* Separator */}
-                    <View className="h-px bg-border mb-2" />
 
                     {/* Messages */}
                     <ScrollView
                         ref={scrollViewRef}
                         className="flex-1"
-                        contentContainerStyle={{ paddingBottom: 24 }}
+                        contentContainerStyle={{ paddingVertical: 16, paddingHorizontal: 12 }}
                         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                        showsVerticalScrollIndicator={false}
                     >
-                        <View className="gap-3 p-3">
+                        {/* Date Separator */}
+                        {chatMessages.length > 0 && (
+                            <View className="items-center mb-4">
+                                <View className="bg-gray-200 px-3 py-1 rounded-full">
+                                    <Text className="text-xs text-gray-500 font-medium">Hôm nay</Text>
+                                </View>
+                            </View>
+                        )}
+
+                        <View className="gap-2">
                             {chatMessages.map((chat) => (
                                 <MessageBubble key={chat.id} {...chat} />
                             ))}
                             {filteredTypingUsers.length > 0 && <TypingIndicator />}
                             {isUploading && (
-                                <View className="items-center p-3">
-                                    <ActivityIndicator size="small" color="#7C3BED" />
-                                    <Text className="text-xs text-foreground mt-2">
-                                        Đang tải ảnh lên...
-                                    </Text>
+                                <View className="items-start p-3">
+                                    <View className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-2">
+                                        <ActivityIndicator size="small" color="#7C3BED" />
+                                        <Text className="text-xs text-gray-500">
+                                            Đang tải ảnh...
+                                        </Text>
+                                    </View>
                                 </View>
                             )}
                         </View>
@@ -416,25 +450,33 @@ export default function DetailMessageScreen() {
 
                     {/* Editing indicator */}
                     {editingMessageId && (
-                        <View className="flex-row px-4 py-2 bg-secondary items-center justify-between">
-                            <Text className="text-sm text-foreground">
-                                Đang chỉnh sửa tin nhắn...
-                            </Text>
-                            <Pressable onPress={handleCancelEdit}>
-                                <Text className="text-sm text-primary font-semibold">Hủy</Text>
-                            </Pressable>
+                        <View className="flex-row px-4 py-3 bg-purple-50 items-center justify-between border-t border-purple-100">
+                            <View className="flex-row items-center gap-2">
+                                <View className="w-1 h-8 bg-purple-500 rounded-full" />
+                                <View>
+                                    <Text className="text-xs font-semibold text-purple-600">Chỉnh sửa tin nhắn</Text>
+                                    <Text className="text-xs text-gray-500" numberOfLines={1}>
+                                        {messages.find(m => m.id === editingMessageId)?.content}
+                                    </Text>
+                                </View>
+                            </View>
+                            <TouchableOpacity onPress={handleCancelEdit}>
+                                <Text className="text-sm text-purple-600 font-bold">Hủy</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
 
                     {/* Message Input */}
-                    <MessageInput
-                        value={messageText}
-                        onChangeText={handleTextChange}
-                        onSend={handleSendMessage}
-                        onImagePick={handleImagePick}
-                        disabled={isUploading}
-                        placeholder={editingMessageId ? 'Edit message' : 'Send Message'}
-                    />
+                    <View style={styles.inputContainer} className="bg-white border-t border-gray-100">
+                        <MessageInput
+                            value={messageText}
+                            onChangeText={handleTextChange}
+                            onSend={handleSendMessage}
+                            onImagePick={handleImagePick}
+                            disabled={isUploading}
+                            placeholder={editingMessageId ? 'Chỉnh sửa tin nhắn...' : 'Nhập tin nhắn...'}
+                        />
+                    </View>
 
                     {/* Action Sheet */}
                     <MessageActionSheet
@@ -451,3 +493,32 @@ export default function DetailMessageScreen() {
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    header: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+    inputContainer: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: -2 },
+                shadowOpacity: 0.03,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 8,
+            },
+        }),
+    },
+});

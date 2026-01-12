@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, ImageSourcePropType, StyleSheet, Platform } from 'react-native';
-import { MapPin, Mic2, Music2, Building2 } from 'lucide-react-native';
+import { MapPin, Mic2, Disc2, Building2 } from 'lucide-react-native';
 import type { UserRole } from '@/types/search.type';
 
 export type ArtistItem = {
@@ -23,11 +23,11 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
     // Get role badge config
     const getRoleBadge = () => {
         switch (item.role) {
-            case 'SINGER':
+            case 'singer':
                 return { icon: Mic2, text: 'Singer', className: 'bg-purple-100', textColor: 'text-purple-600', iconColor: '#7C3AED' };
-            case 'PRODUCER':
-                return { icon: Music2, text: 'Producer', className: 'bg-blue-100', textColor: 'text-blue-600', iconColor: '#2563EB' };
-            case 'VENUE':
+            case 'producer':
+                return { icon: Disc2, text: 'Producer', className: 'bg-blue-100', textColor: 'text-blue-600', iconColor: '#2563EB' };
+            case 'venue':
                 return { icon: Building2, text: 'Venue', className: 'bg-red-100', textColor: 'text-red-600', iconColor: '#DC2626' };
             default:
                 return null;
@@ -93,14 +93,23 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
                         </Text>
                     </View>
 
-                    {/* Skills Badge */}
-                    <View className="bg-gray-100 px-2 py-1 rounded-lg">
-                        <Text
-                            className="text-xs font-bold text-purple-600"
-                            numberOfLines={1}
-                        >
-                            {item.skills.split('/')[0]}
-                        </Text>
+                    {/* Skills Badges - Professional style */}
+                    <View className="flex-row flex-wrap justify-center gap-1">
+                        {item.skills.split('/').map((skill, index) => {
+                            const trimmedSkill = skill.trim();
+                            if (!trimmedSkill) return null;
+
+                            return (
+                                <View
+                                    key={index}
+                                    className="bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"
+                                >
+                                    <Text className="text-[10px] font-semibold text-purple-700">
+                                        {trimmedSkill}
+                                    </Text>
+                                </View>
+                            );
+                        })}
                     </View>
                 </View>
             </View>
