@@ -55,48 +55,50 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
   };
 
   return (
-    <View className="w-full px-4">
+    <View className="w-full">
       <View
         className="gap-4 p-4 rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
         style={styles.card}
       >
         {/* Top section with image and title */}
-        <View className="flex-row gap-3 items-start">
-          <View style={styles.imageContainer}>
+        <View className="flex-row gap-4 items-start">
+          <View style={styles.imageContainer} className="bg-white dark:bg-gray-700 rounded-2xl p-1">
             {imgUri ? (
               <Image
                 source={{ uri: imgUri }}
-                className="w-full h-full rounded-2xl"
+                className="w-full h-full rounded-xl"
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-full rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 items-center justify-center">
-                <Briefcase size={36} color="#7C3BED" />
+              <View className="w-full h-full rounded-xl bg-purple-50 dark:bg-purple-900/20 items-center justify-center">
+                <Briefcase size={32} color="#7C3BED" />
               </View>
             )}
           </View>
 
-          <View className="flex-1 gap-2">
+          <View className="flex-1 gap-1">
             <View className="flex-row justify-between items-start">
               <Text
-                className="text-lg font-black text-gray-900 dark:text-white flex-1 pr-2"
+                className="text-lg font-bold text-gray-900 dark:text-white flex-1 pr-2 leading-tight"
                 numberOfLines={2}
               >
                 {job.title}
               </Text>
-              <Pressable className="p-2 -mt-2 -mr-2">
-                <Bookmark size={22} color="#7C3BED" />
-              </Pressable>
+              <TouchableOpacity className="p-1">
+                <Bookmark size={20} color="#7C3BED" />
+              </TouchableOpacity>
             </View>
 
-            <View className="flex-row items-center gap-2 flex-wrap">
-              <Text className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {jobTypeDisplay}
-              </Text>
+            <View className="flex-row items-center gap-2 flex-wrap mt-1">
+              <View className="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md">
+                <Text className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
+                  {jobTypeDisplay}
+                </Text>
+              </View>
               {isOwned && (
-                <View className="flex-row items-center gap-1 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-full">
-                  <Crown size={12} color="#F59E0B" />
-                  <Text className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                <View className="flex-row items-center gap-1 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/50">
+                  <Crown size={10} color="#F59E0B" />
+                  <Text className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-tighter">
                     Của tôi
                   </Text>
                 </View>
@@ -105,112 +107,80 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
           </View>
         </View>
 
-        {/* Tags */}
-        {job.genres && job.genres.length > 0 && (
-          <View className="flex-row flex-wrap gap-2">
-            {job.genres.slice(0, 4).map((tag, index) => (
-              <View
-                key={index}
-                className="bg-purple-50 dark:bg-purple-900/20 px-3 py-1.5 rounded-full border border-purple-200 dark:border-purple-800"
-              >
-                <Text className="text-xs font-bold text-purple-700 dark:text-purple-300">
-                  {tag}
-                </Text>
-              </View>
-            ))}
-            {job.genres.length > 4 && (
-              <View className="bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full">
-                <Text className="text-xs font-bold text-gray-600 dark:text-gray-300">
-                  +{job.genres.length - 4}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
         {/* Info grid */}
-        <View className="flex-row flex-wrap gap-3">
-          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-xl flex-1 min-w-[45%]">
-            <Briefcase size={16} color="#7C3BED" />
-            <Text
-              className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-1"
-              numberOfLines={1}
-            >
-              {job.recruitment_type}
-            </Text>
+        <View className="flex-row flex-wrap gap-2 mt-2">
+          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
+            <View className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/30 items-center justify-center">
+              <Briefcase size={14} color="#7C3BED" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">Hình thức</Text>
+              <Text className="text-xs font-bold text-gray-700 dark:text-gray-200" numberOfLines={1}>
+                {job.recruitment_type}
+              </Text>
+            </View>
           </View>
-          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-xl flex-1 min-w-[45%]">
-            <DollarSign size={16} color="#10B981" />
-            <Text
-              className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-1"
-              numberOfLines={1}
-            >
-              {formattedBudget}
-            </Text>
+
+          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
+            <View className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900/30 items-center justify-center">
+              <DollarSign size={14} color="#10B981" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">Ngân sách</Text>
+              <Text className="text-xs font-bold text-gray-700 dark:text-gray-200" numberOfLines={1}>
+                {formattedBudget}
+              </Text>
+            </View>
           </View>
-          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-xl flex-1 min-w-[45%]">
-            <MapPin size={16} color="#EF4444" />
-            <Text
-              className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-1"
-              numberOfLines={1}
-            >
-              {job.location || "N/A"}
-            </Text>
+
+          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
+            <View className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 items-center justify-center">
+              <MapPin size={14} color="#EF4444" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">Địa điểm</Text>
+              <Text className="text-xs font-bold text-gray-700 dark:text-gray-200" numberOfLines={1}>
+                {job.location || "Toàn quốc"}
+              </Text>
+            </View>
           </View>
-          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 px-3 py-2 rounded-xl flex-1 min-w-[45%]">
-            <Calendar size={16} color="#3B82F6" />
-            <Text
-              className="text-xs font-semibold text-gray-700 dark:text-gray-300 flex-1"
-              numberOfLines={1}
-            >
-              {datePosted}
-            </Text>
+
+          <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
+            <View className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 items-center justify-center">
+              <Calendar size={14} color="#3B82F6" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">Ngày đăng</Text>
+              <Text className="text-xs font-bold text-gray-700 dark:text-gray-200" numberOfLines={1}>
+                {datePosted}
+              </Text>
+            </View>
           </View>
         </View>
 
         {/* Action Buttons */}
         <View className="flex-row gap-3 mt-2">
-          {isOwned ? (
-            <TouchableOpacity
-              onPress={handleEdit}
-              activeOpacity={0.8}
-              className="flex-1"
-              style={styles.primaryButton}
+          <TouchableOpacity
+            onPress={isOwned ? handleEdit : () => setShowApplyModal(true)}
+            activeOpacity={0.8}
+            className="flex-1"
+          >
+            <LinearGradient
+              colors={["#7C3BED", "#8B5CF6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.gradientButtonFix, { flex: 1 }]}
             >
-              <LinearGradient
-                colors={["#7C3BED", "#F471B7"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientButton}
-              >
-                <Text className="text-white font-bold text-sm">Chỉnh sửa</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              onPress={() => setShowApplyModal(true)}
-              activeOpacity={0.8}
-              className="flex-1"
-              style={styles.primaryButton}
-            >
-              <LinearGradient
-                colors={["#7C3BED", "#F471B7"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.gradientButton}
-              >
-                <Text className="text-white font-bold text-sm">
-                  Ứng tuyển ngay
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
+              <Text className="text-white font-bold text-sm">
+                {isOwned ? "Chỉnh sửa" : "Ứng tuyển ngay"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
           <TouchableOpacity
             onPress={handleViewDetails}
             activeOpacity={0.8}
-            className="flex-1 bg-gray-100 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 py-3.5 rounded-xl items-center justify-center"
-            style={styles.secondaryButton}
+            className="flex-1 bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 py-3.5 rounded-2xl items-center justify-center"
           >
             <Text className="text-gray-900 dark:text-white font-bold text-sm">
               Chi tiết
@@ -291,5 +261,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+  },
+  gradientButtonFix: {
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  detailsButtonFix: {
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: "#F3F4F6",
   },
 });

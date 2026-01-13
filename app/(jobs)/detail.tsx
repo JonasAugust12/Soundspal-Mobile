@@ -156,13 +156,18 @@ export default function JobDetailScreen() {
 
         {/* Description */}
         {job.description && (
-          <View className="gap-3">
-            <Text className="text-lg font-extrabold text-gray-900 dark:text-white">
-              Mô tả công việc
-            </Text>
-            <Text className="text-base text-gray-700 dark:text-gray-300 leading-6">
-              {job.description}
-            </Text>
+          <View className="gap-4 px-1">
+            <View className="flex-row items-center gap-2">
+              <View className="w-1.5 h-6 bg-purple-600 rounded-full" />
+              <Text className="text-xl font-black text-gray-900 dark:text-white">
+                Mô tả công việc
+              </Text>
+            </View>
+            <View className="bg-gray-50 dark:bg-gray-800/30 p-5 rounded-3xl border border-gray-100 dark:border-gray-700">
+              <Text className="text-base text-gray-700 dark:text-gray-300 leading-7">
+                {job.description}
+              </Text>
+            </View>
           </View>
         )}
 
