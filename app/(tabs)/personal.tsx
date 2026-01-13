@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React from "react";
+import { View, Text, ScrollView, TouchableOpacity, Image, Platform, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from 'expo-linear-gradient';
 import {
     UserSquare,
@@ -22,10 +22,10 @@ import { useRouter } from 'expo-router';
 import { MenuItem } from '@/components/profile';
 
 export default function PersonalScreen() {
-    const { mutateAsync: logoutApi, isPending: isLoggingOut } = useLogout();
-    const { user, logout: clearAuthState } = useAuthStore();
-    const { showSuccess, showError } = useToast();
-    const router = useRouter();
+  const { mutateAsync: logoutApi, isPending: isLoggingOut } = useLogout();
+  const { user, logout: clearAuthState } = useAuthStore();
+  const { showSuccess, showError } = useToast();
+  const router = useRouter();
 
     const handleLogout = async () => {
         try {
@@ -44,23 +44,23 @@ export default function PersonalScreen() {
         router.push('/(editprofile)/editProfile');
     };
 
-    const handleViewProfile = () => {
-        if (user?.role === 'singer' || user?.role === 'producer') {
-            router.push({
-                pathname: '/(profiles)/artistProfile',
-                params: { username: user.username },
-            });
-        } else if (user?.role === 'venue') {
-            router.push({
-                pathname: '/(profiles)/venueProfile',
-                params: { username: user.username },
-            });
-        }
-    };
+  const handleViewProfile = () => {
+    if (user?.role === "singer" || user?.role === "producer") {
+      router.push({
+        pathname: "/(profiles)/artistProfile",
+        params: { username: user.username },
+      });
+    } else if (user?.role === "venue") {
+      router.push({
+        pathname: "/(profiles)/venueProfile",
+        params: { username: user.username },
+      });
+    }
+  };
 
-    const handleManageCollaborations = () => {
-        router.push('/(profiles)/collabRequests');
-    };
+  const handleManageCollaborations = () => {
+    router.push("/(profiles)/collaboration");
+  };
 
     // Get role display text
     const getRoleDisplay = () => {
@@ -250,11 +250,11 @@ export default function PersonalScreen() {
                     <Text className="text-xs text-gray-400">TalentLink v1.0.0</Text>
                 </View>
 
-                {/* Bottom Spacing */}
-                <View className="h-20" />
-            </ScrollView>
-        </SafeAreaView>
-    );
+        {/* Bottom Spacing */}
+        <View className="h-20" />
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
