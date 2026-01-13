@@ -41,10 +41,10 @@ export function ContactInfoForm({ defaultValues, onSubmit, isLoading }: ContactI
     };
 
     return (
-        <View className="gap-4">
+        <View className="gap-6">
             {/* Email */}
             <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Email</Text>
+                <Text className="text-sm font-bold text-foreground">Email</Text>
                 <Controller
                     control={control}
                     name="email"
@@ -55,19 +55,20 @@ export function ContactInfoForm({ defaultValues, onSubmit, isLoading }: ContactI
                             onChangeText={onChange}
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            className={`px-4 py-3 bg-secondary rounded-xl text-foreground ${errors.email ? 'border border-red-500' : ''}`}
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${errors.email ? 'border border-red-500' : 'border border-transparent focus:border-primary'
+                                }`}
                             placeholderTextColor="#71717a"
                         />
                     )}
                 />
                 {errors.email && (
-                    <Text className="text-xs text-red-500">{errors.email.message}</Text>
+                    <Text className="text-xs font-medium text-red-500 ml-1">{errors.email.message}</Text>
                 )}
             </View>
 
             {/* Phone Number */}
             <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Số điện thoại</Text>
+                <Text className="text-sm font-bold text-foreground">Số điện thoại</Text>
                 <Controller
                     control={control}
                     name="phone_number"
@@ -77,7 +78,7 @@ export function ContactInfoForm({ defaultValues, onSubmit, isLoading }: ContactI
                             value={value}
                             onChangeText={onChange}
                             keyboardType="phone-pad"
-                            className="px-4 py-3 bg-secondary rounded-xl text-foreground"
+                            className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base border border-transparent focus:border-primary"
                             placeholderTextColor="#71717a"
                         />
                     )}
@@ -85,26 +86,26 @@ export function ContactInfoForm({ defaultValues, onSubmit, isLoading }: ContactI
             </View>
 
             {/* Action Buttons */}
-            <View className="flex-row gap-3 mt-2">
+            <View className="flex-row gap-3 mt-4">
                 <Pressable
                     onPress={() => reset(defaultValues)}
                     disabled={!isDirty}
-                    className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl border border-border ${!isDirty ? 'opacity-50' : ''}`}
+                    className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-xl border border-border bg-white dark:bg-gray-900 ${!isDirty ? 'opacity-50' : 'active:bg-gray-50 dark:active:bg-gray-800'}`}
                 >
                     <RotateCcw size={18} color="#71717a" />
-                    <Text className="text-foreground font-medium">Đặt lại</Text>
+                    <Text className="text-foreground font-bold">Đặt lại</Text>
                 </Pressable>
                 <Pressable
                     onPress={handleSubmit(handleFormSubmit)}
                     disabled={isLoading || !isDirty}
-                    className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl bg-primary ${isLoading || !isDirty ? 'opacity-50' : ''}`}
+                    className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-xl bg-purple-600 ${isLoading || !isDirty ? 'opacity-50' : 'active:bg-purple-700'}`}
                 >
                     {isLoading ? (
                         <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
                         <Save size={18} color="#ffffff" />
                     )}
-                    <Text className="text-white font-medium">{isLoading ? 'Đang lưu...' : 'Lưu'}</Text>
+                    <Text className="text-white font-bold">{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}</Text>
                 </Pressable>
             </View>
         </View>

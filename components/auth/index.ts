@@ -6,3 +6,4 @@ export { RegisterForm } from './RegisterForm';
 export { SelectInput } from './SelectInput';
 export { ForgotPasswordForm } from './ForgotPasswordForm';
 export { ResetPasswordForm } from './ResetPasswordForm';
+export { CompleteOAuthForm } from './CompleteOAuthForm';

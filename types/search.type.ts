@@ -39,10 +39,7 @@ export interface FeaturedUsersData {
     };
 }
 
-export interface FeaturedUsersResponse {
-    message: string;
-    data: FeaturedUsersData;
-}
+// FeaturedUsersResponse is now ApiResponse<FeaturedUsersData>
 
 export interface FeaturedJob {
     id: string;
@@ -93,13 +90,6 @@ export interface FeaturedJobsData {
     count: number;
     jobs: FeaturedJob[];
 }
-
-export interface FeaturedJobsResponse {
-    message: string;
-    data: FeaturedJobsData;
-}
-
-// Search types
 export interface UserProfile {
     id: string;
     username: string;
@@ -138,9 +128,12 @@ export interface SearchUsersRequest {
     sortOrder?: 'asc' | 'desc';
 }
 
-export type SearchUsersResponse = UserProfile[];
+export interface SearchUsersData {
+    users: UserProfile[];
+    total: number;
+}
 
-export interface GetGenresResponse {
+export interface GetGenresData {
     genres: Genre[];
 }
 

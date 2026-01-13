@@ -6,9 +6,10 @@ import {
     TextInput,
     TouchableOpacity,
     Image,
+    Platform,
+    StyleSheet,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, ChevronRight, Telescope } from 'lucide-react-native';
+import { Search, ChevronRight, Sparkles, TrendingUp, Briefcase } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -54,11 +55,11 @@ export default function HomeScreen() {
             image: user.avatar_url
                 ? { uri: user.avatar_url }
                 : require('@/assets/images/user_profile.png'),
-            role: user.role, // Add role for badge display
+            role: user.role,
         }));
     }, [featuredUsersData]);
 
-    // Transform featured jobs to JobItem format
+    // Transform featured jobs to JobItem format (NEW format for JobCard)
     const jobs: JobItem[] = useMemo(() => {
         if (!featuredJobsData) return [];
 
@@ -69,22 +70,23 @@ export default function HomeScreen() {
             return [];
         }
 
-        return jobsList.map((job: import('@/types/search.type').FeaturedJob) => {
-            // Parse date from published_at or created_at
-            const date = new Date(job.published_at || job.created_at).toLocaleDateString('vi-VN');
-
-            return {
-                id: job.id,
-                title: job.title,
-                date: date,
-                location: job.location,
-                time: job.work_time || 'Linh hoạt',
-                creator: job.creator_display_name,
-                image: job.creator_avatar_url
-                    ? { uri: job.creator_avatar_url }
-                    : require('@/assets/images/event_cover.png'),
-            };
-        });
+        return jobsList.map((job: import('@/types/search.type').FeaturedJob) => ({
+            id: job.id,
+            title: job.title,
+            briefDescription: job.brief_description,
+            location: job.location,
+            workTime: job.work_time,
+            budgetMin: job.budget_min,
+            budgetMax: job.budget_max,
+            budgetCurrency: job.budget_currency,
+            genres: job.genres,
+            recruitmentType: job.recruitment_type,
+            creatorName: job.creator_display_name,
+            creatorAvatar: job.creator_avatar_url
+                ? { uri: job.creator_avatar_url }
+                : undefined,
+            postType: job.post_type,
+        }));
     }, [featuredJobsData]);
 
     const handleSearch = () => {
@@ -98,110 +100,131 @@ export default function HomeScreen() {
 
     return (
         <TabScreenWrapper>
-            {/* Header */}
-            <View className="px-4 py-4 flex-row items-center justify-between">
+            {/* Modern Header */}
+            <View className="px-5 pt-2 pb-4 flex-row items-center justify-between">
                 <Image
                     source={require('@/assets/images/TalentLink-TextLogo.png')}
-                    className="w-24 h-8"
+                    className="w-28 h-9"
                     resizeMode="contain"
                 />
+                <TouchableOpacity
+                    className="w-10 h-10 rounded-full bg-purple-50 items-center justify-center"
+                    onPress={() => router.push('/(tabs)/explore')}
+                >
+                    <Sparkles size={20} color="#7C3BED" />
+                </TouchableOpacity>
             </View>
 
-            {/* Search Bar */}
-            <View className="px-4 mb-4">
-                <View className="flex-row items-center bg-gray-50 dark:bg-gray-800 rounded-2xl px-4 py-3 border border-gray-200 dark:border-gray-700">
-                    <View className="text-gray-400 dark:text-gray-500">
-                        <Search size={20} />
-                    </View>
-                    <TextInput
-                        value={searchText}
-                        onChangeText={setSearchText}
-                        placeholder="Tìm kiếm nghệ sĩ, địa điểm..."
-                        placeholderTextColor="#9CA3AF"
-                        className="flex-1 ml-3 text-base text-gray-900 dark:text-white"
-                        onSubmitEditing={handleSearch}
-                        returnKeyType="search"
-                    />
-                </View>
-            </View>
-
-            {/* Hero Section */}
-            <View className="px-4 py-8 relative overflow-hidden bg-white dark:bg-gray-900">
-                {/* Decorative Background Circle */}
-                <View
-                    className="absolute w-48 h-48 rounded-full bg-purple-600 opacity-5"
-                    style={{ top: -50, right: -50, zIndex: 0 }}
-                />
-
-                <View className="gap-4 z-10">
-                    <View className="gap-2">
-                        <Text className="text-3xl font-black text-gray-900 dark:text-white leading-tight">
-                            Tìm kiếm tài năng{'\n'}
-                            <Text className="text-purple-600">âm nhạc</Text>
-                        </Text>
-                        <Text className="text-base text-gray-600 dark:text-gray-400 max-w-[80%]">
-                            Khám phá và kết nối với những nghệ sĩ phù hợp nhất cho dự án của bạn.
-                        </Text>
-                    </View>
-
-                    {/* Gradient Button */}
-                    <TouchableOpacity
-                        onPress={() => router.push('/(tabs)/explore')}
-                        activeOpacity={0.8}
-                        style={{ alignSelf: 'flex-start' }}
-                    >
+            {/* Premium Search Bar */}
+            <View className="px-5 mb-6">
+                <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => router.push('/(tabs)/explore')}
+                    style={styles.searchShadow}
+                    className="flex-row items-center bg-white rounded-2xl px-4 py-4 border border-gray-100"
+                >
+                    <View className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 items-center justify-center mr-3">
                         <LinearGradient
-                            colors={['#7C3BED', '#F471B7']}
-                            start={{ x: 0, y: 0.5 }}
-                            end={{ x: 1, y: 0.5 }}
-                            style={{
-                                borderRadius: 9999,
-                                paddingVertical: 14,
-                                paddingHorizontal: 28,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                gap: 10,
-                            }}
+                            colors={['#7C3BED', '#EC4899']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}
                         >
-                            <Telescope size={18} color="#FFFFFF" />
-                            <Text className="text-white font-bold text-sm">
-                                Khám phá ngay
-                            </Text>
+                            <Search size={20} color="#FFFFFF" />
                         </LinearGradient>
-                    </TouchableOpacity>
-                </View>
+                    </View>
+                    <View className="flex-1">
+                        <Text className="text-base font-semibold text-gray-900">
+                            Tìm kiếm nghệ sĩ, địa điểm...
+                        </Text>
+                        <Text className="text-xs text-gray-400 mt-0.5">
+                            Ca sĩ, Producer, Địa điểm biểu diễn
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+            </View>
 
-                {/* Floating Gemini Icon */}
-                <View className="absolute" style={{ top: 20, right: 20, zIndex: 0 }}>
-                    <Image
-                        source={require('@/assets/icons/gemini.png')}
-                        className="w-20 h-20 rounded-2xl opacity-60"
-                        resizeMode="contain"
-                    />
-                </View>
+            {/* Hero Card */}
+            <View className="px-5 mb-8">
+                <LinearGradient
+                    colors={['#7C3BED', '#9333EA', '#A855F7']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.heroCard}
+                >
+                    {/* Background Pattern */}
+                    <View className="absolute top-0 right-0 opacity-20">
+                        <View className="w-32 h-32 rounded-full bg-white" style={{ marginTop: -40, marginRight: -40 }} />
+                    </View>
+                    <View className="absolute bottom-0 left-0 opacity-10">
+                        <View className="w-24 h-24 rounded-full bg-white" style={{ marginBottom: -30, marginLeft: -30 }} />
+                    </View>
+
+                    <View className="gap-3 z-10">
+                        <View className="flex-row items-center gap-2">
+                            <View className="bg-white/20 px-3 py-1 rounded-full flex-row items-center gap-1.5">
+                                <TrendingUp size={14} color="#FFFFFF" />
+                                <Text className="text-white text-xs font-bold">Hot</Text>
+                            </View>
+                        </View>
+
+                        <Text className="text-2xl font-black text-white leading-tight">
+                            Kết nối với{'\n'}tài năng âm nhạc
+                        </Text>
+
+                        <Text className="text-white/80 text-sm max-w-[85%]">
+                            Khám phá hàng nghìn nghệ sĩ tài năng cho dự án của bạn
+                        </Text>
+
+                        <TouchableOpacity
+                            onPress={() => router.push('/(tabs)/explore')}
+                            activeOpacity={0.9}
+                            className="self-start mt-2"
+                        >
+                            <View className="bg-white px-6 py-3 rounded-2xl flex-row items-center gap-2">
+                                <Text className="text-purple-600 font-bold text-sm">
+                                    Khám phá ngay
+                                </Text>
+                                <ChevronRight size={18} color="#7C3BED" />
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Floating Icon */}
+                    <View className="absolute" style={{ bottom: 20, right: 20 }}>
+                        <Image
+                            source={require('@/assets/icons/gemini.png')}
+                            className="w-16 h-16 opacity-80"
+                            resizeMode="contain"
+                        />
+                    </View>
+                    <View className="absolute" style={{ bottom: 45, right: 0 }}>
+                        <Image
+                            source={require('@/assets/icons/gemini.png')}
+                            className="w-16 h-16 opacity-80"
+                            resizeMode="contain"
+                        />
+                    </View>
+                </LinearGradient>
             </View>
 
             {/* Featured Artists Section */}
-            <View className="px-4 pt-8 gap-4">
-                <View className="flex-row justify-between items-end">
-                    <View className="gap-1">
-                        <Text className="text-xl font-extrabold text-gray-900 dark:text-white">
+            <View className="mb-8">
+                <View className="px-5 flex-row justify-between items-center mb-4">
+                    <View className="flex-row items-center gap-2">
+                        <View className="w-1 h-5 bg-purple-500 rounded-full" />
+                        <Text className="text-lg font-bold text-gray-900">
                             Nghệ sĩ nổi bật
-                        </Text>
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                            Những gương mặt tài năng nhất tuần qua
                         </Text>
                     </View>
                     <TouchableOpacity
                         onPress={() => router.push('/(tabs)/explore')}
-                        className="flex-row items-center gap-1 pb-1"
+                        className="flex-row items-center gap-1"
                     >
                         <Text className="text-sm font-semibold text-purple-600">
-                            Xem tất cả
+                            Tất cả
                         </Text>
-                        <View className="text-purple-600">
-                            <ChevronRight size={16} />
-                        </View>
+                        <ChevronRight size={16} color="#7C3BED" />
                     </TouchableOpacity>
                 </View>
 
@@ -210,8 +233,7 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="py-2"
-                        contentContainerStyle={{ gap: 12 }}
+                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
                     >
                         {[1, 2, 3].map((i) => (
                             <ArtistCardSkeleton key={i} width={170} />
@@ -221,11 +243,9 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="py-2"
-                        contentContainerStyle={{ gap: 12 }}
+                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
                     >
                         {artists.map((artist, index) => {
-                            // Get the original user data for navigation
                             const user = featuredUsersData?.data?.users?.users?.[index];
 
                             return (
@@ -235,14 +255,12 @@ export default function HomeScreen() {
                                     width={170}
                                     onPress={() => {
                                         if (!user?.username) return;
-                                        // Navigate based on role
                                         if (user.role === 'venue') {
                                             router.push({
                                                 pathname: '/(profiles)/venueProfile',
                                                 params: { username: user.username },
                                             });
                                         } else {
-                                            // Singer or Producer
                                             router.push({
                                                 pathname: '/(profiles)/artistProfile',
                                                 params: { username: user.username },
@@ -254,33 +272,34 @@ export default function HomeScreen() {
                         })}
                     </ScrollView>
                 ) : (
-                    <Text className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
+                    <Text className="text-sm text-gray-400 text-center py-8">
                         Chưa có nghệ sĩ nổi bật
                     </Text>
                 )}
             </View>
 
             {/* Featured Jobs Section */}
-            <View className="px-4 pt-10 gap-4">
-                <View className="flex-row justify-between items-end">
-                    <View className="gap-1">
-                        <Text className="text-xl font-extrabold text-gray-900 dark:text-white">
-                            Công việc nổi bật
+            <View className="mb-10">
+                <View className="px-5 flex-row justify-between items-center mb-4">
+                    <View className="flex-row items-center gap-2">
+                        <View className="w-1 h-5 bg-orange-500 rounded-full" />
+                        <Text className="text-lg font-bold text-gray-900">
+                            Việc làm hot
                         </Text>
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                            Đừng bỏ lỡ những cơ hội cộng tác hấp dẫn
-                        </Text>
+                        <View className="bg-orange-100 px-2 py-0.5 rounded-full ml-1">
+                            <Text className="text-[10px] font-bold text-orange-600">
+                                Mới
+                            </Text>
+                        </View>
                     </View>
                     <TouchableOpacity
                         onPress={() => router.push('/(tabs)/jobs')}
-                        className="flex-row items-center gap-1 pb-1"
+                        className="flex-row items-center gap-1"
                     >
                         <Text className="text-sm font-semibold text-purple-600">
-                            Xem tất cả
+                            Tất cả
                         </Text>
-                        <View className="text-purple-600">
-                            <ChevronRight size={16} />
-                        </View>
+                        <ChevronRight size={16} color="#7C3BED" />
                     </TouchableOpacity>
                 </View>
 
@@ -289,28 +308,26 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="py-2"
-                        contentContainerStyle={{ gap: 12 }}
+                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
                     >
                         {[1, 2, 3].map((i) => (
-                            <JobCardSkeleton key={i} width={210} />
+                            <JobCardSkeleton key={i} width={260} />
                         ))}
                     </ScrollView>
                 ) : jobs.length > 0 ? (
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        className="py-2"
-                        contentContainerStyle={{ gap: 12 }}
+                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
                     >
                         {jobs.map((job) => (
                             <JobCard
                                 key={job.id}
                                 item={job}
-                                width={210}
+                                width={260}
                                 onPress={() => {
                                     router.push({
-                                        pathname: '/(jobs)/detailJob',
+                                        pathname: '/(jobs)/detail',
                                         params: { id: job.id },
                                     });
                                 }}
@@ -318,11 +335,33 @@ export default function HomeScreen() {
                         ))}
                     </ScrollView>
                 ) : (
-                    <Text className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
-                        Chưa có công việc nổi bật
+                    <Text className="text-sm text-gray-400 text-center py-8">
+                        Chưa có việc làm nổi bật
                     </Text>
                 )}
             </View>
-        </TabScreenWrapper >
+        </TabScreenWrapper>
     );
 }
+
+const styles = StyleSheet.create({
+    searchShadow: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#7C3BED',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+    heroCard: {
+        borderRadius: 24,
+        padding: 24,
+        overflow: 'hidden',
+        minHeight: 200,
+    },
+});

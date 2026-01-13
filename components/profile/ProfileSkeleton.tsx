@@ -1,43 +1,75 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Animated } from 'react-native';
 
 export function ProfileSkeleton() {
+    const pulseAnim = useRef(new Animated.Value(0.4)).current;
+
+    useEffect(() => {
+        const pulse = Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, {
+                    toValue: 0.8,
+                    duration: 800,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(pulseAnim, {
+                    toValue: 0.4,
+                    duration: 800,
+                    useNativeDriver: true,
+                }),
+            ])
+        );
+        pulse.start();
+        return () => pulse.stop();
+    }, [pulseAnim]);
+
+    const SkeletonBox = ({ className }: { className?: string }) => (
+        <Animated.View
+            className={`bg-gray-200 dark:bg-gray-800 rounded-lg ${className}`}
+            style={{ opacity: pulseAnim }}
+        />
+    );
+
     return (
-        <View className="gap-4">
+        <View className="gap-4 bg-background">
             {/* Background skeleton */}
-            <View className="h-44 w-full bg-muted animate-pulse" />
+            <SkeletonBox className="h-60 w-full rounded-none" />
 
             {/* Avatar and info skeleton */}
-            <View className="flex-row items-center gap-4 px-5 -mt-14">
-                <View className="w-24 h-24 rounded-lg bg-muted animate-pulse" />
-                <View className="gap-2 flex-1">
-                    <View className="w-32 h-5 rounded bg-muted animate-pulse" />
-                    <View className="w-24 h-4 rounded bg-muted animate-pulse" />
+            <View className="flex-row items-end gap-4 px-5 -mt-16">
+                <SkeletonBox className="w-28 h-28 rounded-2xl border-4 border-background" />
+                <View className="gap-3 flex-1 mb-2">
+                    <SkeletonBox className="w-48 h-7 rounded-lg" />
+                    <View className="flex-row gap-4">
+                        <SkeletonBox className="w-24 h-5 rounded" />
+                        <SkeletonBox className="w-16 h-5 rounded-full" />
+                    </View>
                 </View>
             </View>
 
             {/* Bio skeleton */}
-            <View className="px-5 gap-2">
-                <View className="w-full h-4 rounded bg-muted animate-pulse" />
-                <View className="w-3/4 h-4 rounded bg-muted animate-pulse" />
+            <View className="px-5 gap-2 mt-4">
+                <SkeletonBox className="w-full h-5" />
+                <SkeletonBox className="w-full h-5" />
+                <SkeletonBox className="w-3/4 h-5" />
             </View>
 
             {/* Button skeleton */}
-            <View className="px-5">
-                <View className="w-full h-12 rounded-xl bg-muted animate-pulse" />
+            <View className="px-5 mt-2">
+                <SkeletonBox className="w-full h-14 rounded-xl" />
             </View>
 
             {/* Sections skeleton */}
-            <View className="px-5 gap-4">
-                <View className="w-32 h-5 rounded bg-muted animate-pulse" />
-                <View className="w-full h-48 rounded-xl bg-muted animate-pulse" />
+            <View className="px-5 gap-4 mt-4">
+                <SkeletonBox className="w-40 h-6" />
+                <SkeletonBox className="w-full h-52 rounded-2xl" />
             </View>
 
-            <View className="px-5 gap-4">
-                <View className="w-32 h-5 rounded bg-muted animate-pulse" />
-                <View className="flex-row gap-3">
-                    <View className="flex-1 h-40 rounded-xl bg-muted animate-pulse" />
-                    <View className="flex-1 h-40 rounded-xl bg-muted animate-pulse" />
+            <View className="px-5 gap-4 mt-4 pb-10">
+                <SkeletonBox className="w-40 h-6" />
+                <View className="flex-row gap-4">
+                    <SkeletonBox className="flex-1 h-44 rounded-2xl" />
+                    <SkeletonBox className="flex-1 h-44 rounded-2xl" />
                 </View>
             </View>
         </View>

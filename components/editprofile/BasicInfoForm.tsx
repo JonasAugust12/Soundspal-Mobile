@@ -47,10 +47,10 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
     };
 
     return (
-        <View className="gap-4">
+        <View className="gap-6">
             {/* Display Name */}
             <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Tên nghệ danh *</Text>
+                <Text className="text-sm font-bold text-foreground">Tên nghệ danh *</Text>
                 <Controller
                     control={control}
                     name="display_name"
@@ -59,19 +59,20 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                             placeholder="Nhập tên, nghệ danh"
                             value={value}
                             onChangeText={onChange}
-                            className={`px-4 py-3 bg-secondary rounded-xl text-foreground ${errors.display_name ? 'border border-red-500' : ''}`}
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${errors.display_name ? 'border border-red-500' : 'border border-transparent focus:border-primary'
+                                }`}
                             placeholderTextColor="#71717a"
                         />
                     )}
                 />
                 {errors.display_name && (
-                    <Text className="text-xs text-red-500">{errors.display_name.message}</Text>
+                    <Text className="text-xs font-medium text-red-500 ml-1">{errors.display_name.message}</Text>
                 )}
             </View>
 
             {/* Brief Bio */}
             <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Giới thiệu ngắn</Text>
+                <Text className="text-sm font-bold text-foreground">Giới thiệu ngắn</Text>
                 <Controller
                     control={control}
                     name="brief_bio"
@@ -82,7 +83,7 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                             onChangeText={onChange}
                             multiline
                             numberOfLines={3}
-                            className="px-4 py-3 bg-secondary rounded-xl text-foreground min-h-[80px]"
+                            className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base min-h-[100px] border border-transparent focus:border-primary"
                             placeholderTextColor="#71717a"
                             textAlignVertical="top"
                         />
@@ -92,7 +93,7 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
 
             {/* Detail Bio */}
             <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Giới thiệu chi tiết</Text>
+                <Text className="text-sm font-bold text-foreground">Giới thiệu chi tiết</Text>
                 <Controller
                     control={control}
                     name="detail_bio"
@@ -103,7 +104,7 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                             onChangeText={onChange}
                             multiline
                             numberOfLines={5}
-                            className="px-4 py-3 bg-secondary rounded-xl text-foreground min-h-[120px]"
+                            className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base min-h-[160px] border border-transparent focus:border-primary"
                             placeholderTextColor="#71717a"
                             textAlignVertical="top"
                         />
@@ -111,63 +112,65 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                 />
             </View>
 
-            {/* City */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Thành phố</Text>
-                <Controller
-                    control={control}
-                    name="city"
-                    render={({ field: { onChange, value } }) => (
-                        <TextInput
-                            placeholder="Thành phố của bạn"
-                            value={value}
-                            onChangeText={onChange}
-                            className="px-4 py-3 bg-secondary rounded-xl text-foreground"
-                            placeholderTextColor="#71717a"
-                        />
-                    )}
-                />
-            </View>
+            <View className="flex-row gap-4">
+                {/* City */}
+                <View className="flex-1 gap-2">
+                    <Text className="text-sm font-bold text-foreground">Thành phố</Text>
+                    <Controller
+                        control={control}
+                        name="city"
+                        render={({ field: { onChange, value } }) => (
+                            <TextInput
+                                placeholder="Thành phố"
+                                value={value}
+                                onChangeText={onChange}
+                                className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base border border-transparent focus:border-primary"
+                                placeholderTextColor="#71717a"
+                            />
+                        )}
+                    />
+                </View>
 
-            {/* Country */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-foreground">Quốc gia</Text>
-                <Controller
-                    control={control}
-                    name="country"
-                    render={({ field: { onChange, value } }) => (
-                        <TextInput
-                            placeholder="Quốc gia của bạn"
-                            value={value}
-                            onChangeText={onChange}
-                            className="px-4 py-3 bg-secondary rounded-xl text-foreground"
-                            placeholderTextColor="#71717a"
-                        />
-                    )}
-                />
+                {/* Country */}
+                <View className="flex-1 gap-2">
+                    <Text className="text-sm font-bold text-foreground">Quốc gia</Text>
+                    <Controller
+                        control={control}
+                        name="country"
+                        render={({ field: { onChange, value } }) => (
+                            <TextInput
+                                placeholder="Quốc gia"
+                                value={value}
+                                onChangeText={onChange}
+                                className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base border border-transparent focus:border-primary"
+                                placeholderTextColor="#71717a"
+                            />
+                        )}
+                    />
+                </View>
             </View>
 
             {/* Action Buttons */}
-            <View className="flex-row gap-3 mt-2">
+            <View className="flex-row gap-3 mt-4">
                 <Pressable
                     onPress={() => reset(defaultValues)}
                     disabled={!isDirty}
-                    className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl border border-border ${!isDirty ? 'opacity-50' : ''}`}
+                    className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-xl border border-border bg-white dark:bg-gray-900 ${!isDirty ? 'opacity-50' : 'active:bg-gray-50 dark:active:bg-gray-800'}`}
                 >
                     <RotateCcw size={18} color="#71717a" />
-                    <Text className="text-foreground font-medium">Đặt lại</Text>
+                    <Text className="text-foreground font-bold">Đặt lại</Text>
                 </Pressable>
                 <Pressable
                     onPress={handleSubmit(handleFormSubmit)}
                     disabled={isLoading || !isDirty}
-                    className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl bg-primary ${isLoading || !isDirty ? 'opacity-50' : ''}`}
+                    className={`flex-1 flex-row items-center justify-center gap-2 py-4 rounded-xl bg-purple-600 ${isLoading || !isDirty ? 'opacity-50' : 'active:bg-purple-700'}`}
                 >
                     {isLoading ? (
                         <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
                         <Save size={18} color="#ffffff" />
                     )}
-                    <Text className="text-white font-medium">{isLoading ? 'Đang lưu...' : 'Lưu'}</Text>
+                    <Text className="text-white font-bold">{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}</Text>
                 </Pressable>
             </View>
         </View>

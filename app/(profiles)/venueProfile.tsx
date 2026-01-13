@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageCircle, MapPin, Users, Calendar, Star } from 'lucide-react-native';
+import { ChevronLeft, MessageCircle, MapPin, Users, Calendar, Star, Building2, Image as ImageIcon } from 'lucide-react-native';
 
 import {
     InfoProfile,
@@ -87,9 +87,14 @@ export default function VenueProfile() {
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 {/* Back Button */}
-                <Pressable onPress={goBack} className="absolute top-4 left-4 z-10 p-2 bg-white/80 rounded-full">
-                    <ChevronLeft size={24} color="#09090b" />
-                </Pressable>
+                <View className="absolute top-4 left-4 z-10">
+                    <Pressable
+                        onPress={goBack}
+                        className="p-2 bg-black/20 dark:bg-white/10 rounded-full backdrop-blur-md border border-white/20"
+                    >
+                        <ChevronLeft size={24} color="#FFFFFF" />
+                    </Pressable>
+                </View>
 
                 {/* Profile Info */}
                 <InfoProfile
@@ -105,7 +110,7 @@ export default function VenueProfile() {
                     backgroundSource={
                         userData?.cover_url
                             ? { uri: userData.cover_url }
-                            : require('@/assets/images/background.png')
+                            : undefined
                     }
                     role="venue"
                 />
@@ -152,7 +157,10 @@ export default function VenueProfile() {
                     {/* About */}
                     {userData?.detail_bio && (
                         <View className="gap-3">
-                            <Text className="text-base font-bold text-foreground">Giới thiệu</Text>
+                            <View className="flex-row items-center gap-2">
+                                <Building2 size={20} className="text-primary" />
+                                <Text className="text-base font-bold text-foreground">Giới thiệu</Text>
+                            </View>
                             <View className="p-4 bg-card border border-border rounded-xl">
                                 <Text className="text-sm text-foreground leading-5">
                                     {userData.detail_bio}
@@ -162,8 +170,11 @@ export default function VenueProfile() {
                     )}
 
                     {/* Portfolio Images */}
+                    <View className="flex-row items-center gap-2 mb-3">
+                        <ImageIcon size={20} className="text-primary" />
+                        <Text className="text-base font-bold text-foreground">Không gian</Text>
+                    </View>
                     <ProfileImageList
-                        title="Không gian"
                         data={portfolioImages.map((media) => ({
                             id: media.id,
                             cover: { uri: media.file_url },

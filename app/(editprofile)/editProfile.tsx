@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, User, Phone, Share2 } from 'lucide-react-native';
@@ -37,14 +37,13 @@ const TABS: Tab[] = [
 ];
 
 const TabIcon = ({ tabKey, isActive }: { tabKey: TabKey; isActive: boolean }) => {
-    const color = isActive ? '#09090b' : '#71717a';
     switch (tabKey) {
         case 'basic':
-            return <User size={18} color={color} />;
+            return <User size={18} className={isActive ? 'text-foreground' : 'text-muted-foreground'} />;
         case 'contact':
-            return <Phone size={18} color={color} />;
+            return <Phone size={18} className={isActive ? 'text-foreground' : 'text-muted-foreground'} />;
         case 'social':
-            return <Share2 size={18} color={color} />;
+            return <Share2 size={18} className={isActive ? 'text-foreground' : 'text-muted-foreground'} />;
     }
 };
 
@@ -172,13 +171,24 @@ export default function EditProfileScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoadingUser}
+                        onRefresh={refetch}
+                        tintColor="#7C3BED"
+                        colors={['#7C3BED']}
+                    />
+                }
+            >
                 {/* Header */}
                 <View className="flex-row items-center p-4">
-                    <Pressable onPress={() => router.back()} className="p-2 -ml-2">
-                        <ChevronLeft size={24} color="#09090b" />
+                    <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-gray-100 dark:active:bg-gray-800">
+                        <ChevronLeft size={24} className="text-foreground" />
                     </Pressable>
-                    <Text className="text-lg font-bold text-foreground ml-2">Chỉnh sửa hồ sơ</Text>
+                    <Text className="text-xl font-bold text-foreground ml-2">Chỉnh sửa hồ sơ</Text>
                 </View>
 
                 {/* Cover & Avatar */}
@@ -199,7 +209,7 @@ export default function EditProfileScreen() {
                 </View>
 
                 {/* Tabs */}
-                <View className="flex-row mx-4 mb-4 bg-secondary rounded-xl p-1">
+                <View className="flex-row mx-4 mb-6 bg-secondary dark:bg-gray-800 rounded-xl p-1.5">
                     {TABS.map((tab) => {
                         const isActive = activeTab === tab.key;
                         return (
@@ -223,11 +233,8 @@ export default function EditProfileScreen() {
                             >
                                 <TabIcon tabKey={tab.key} isActive={isActive} />
                                 <Text
-                                    style={{
-                                        fontSize: 14,
-                                        fontWeight: '500',
-                                        color: isActive ? '#09090b' : '#71717a',
-                                    }}
+                                    className={`text-sm font-semibold ${isActive ? 'text-foreground' : 'text-muted-foreground'
+                                        }`}
                                 >
                                     {tab.label}
                                 </Text>
