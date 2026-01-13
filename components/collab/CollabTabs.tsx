@@ -15,11 +15,9 @@ export const CollabTabs = ({ activeTab, onTabChange }: CollabTabsProps) => {
           <TouchableOpacity
             key={tab}
             onPress={() => onTabChange(tab as "sent" | "received")}
-            // XÓA class "shadow" ở đây để tránh lỗi crash
             className={`flex-1 py-3 rounded-lg items-center justify-center transition-colors ${
               isActive ? "bg-white dark:bg-gray-700" : "bg-transparent"
             }`}
-            // Thêm style bóng đổ thủ công nếu cần (an toàn hơn NativeWind shadow trong trường hợp này)
             style={
               isActive
                 ? {
@@ -27,7 +25,7 @@ export const CollabTabs = ({ activeTab, onTabChange }: CollabTabsProps) => {
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.1,
                     shadowRadius: 4,
-                    elevation: 2, // Cho Android
+                    elevation: 2, 
                   }
                 : undefined
             }

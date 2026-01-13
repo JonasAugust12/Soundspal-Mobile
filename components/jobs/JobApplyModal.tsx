@@ -11,8 +11,10 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import { X } from "lucide-react-native";
+import { X, Play } from "lucide-react-native";
 import { useSubmitJobApplication } from "@/hooks/useJobApi";
+import { MediaPicker } from "./MediaPicker";
+import type { Media } from "@/types/media.type";
 
 interface JobApplyModalProps {
   visible: boolean;
@@ -29,8 +31,9 @@ export const JobApplyModal = ({
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [portfolioLinks, setPortfolioLinks] = useState("");
-  const [demoFile, setDemoFile] = useState("");
+  const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [coverLetter, setCoverLetter] = useState("");
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
 
   const { mutate: submitApplication, isPending: isLoading } =
     useSubmitJobApplication();
@@ -42,7 +45,7 @@ export const JobApplyModal = ({
       setEmail("");
       setPhoneNumber("");
       setPortfolioLinks("");
-      setDemoFile("");
+      setSelectedMedia(null);
       setCoverLetter("");
     }
   }, [visible]);
@@ -97,7 +100,7 @@ export const JobApplyModal = ({
       phone_number: phoneNumber.trim(),
       cover_letter: coverLetter.trim(),
       ...(parsedLinks.length > 0 && { portfolio_links: parsedLinks }),
-      ...(demoFile.trim() && { demo_file: demoFile.trim() }),
+      ...(selectedMedia && { demo_file: selectedMedia.file_url }),
     };
 
     submitApplication(
@@ -218,21 +221,42 @@ export const JobApplyModal = ({
                 />
               </View>
 
-              {/* Demo File */}
+              {/* Demo File / Media */}
               <View className="gap-2">
                 <Text className="text-base font-bold text-gray-900 dark:text-white">
-                  File demo (MP3, MP4, Google Drive...)
+                  File demo (ảnh, video, âm thanh)
                 </Text>
-                <TextInput
-                  value={demoFile}
-                  onChangeText={setDemoFile}
-                  placeholder="Link tải file hoặc đường dẫn chia sẻ"
-                  placeholderTextColor="#9CA3AF"
-                  className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
-                />
-                <Text className="text-xs text-gray-500 dark:text-gray-400">
-                  VD: https://drive.google.com/file/... hoặc link MP3
-                </Text>
+                {selectedMedia ? (
+                  <View className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 flex-row items-center justify-between">
+                    <View className="flex-1 gap-1">
+                      <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {selectedMedia.file_name}
+                      </Text>
+                      <Text className="text-xs text-gray-600 dark:text-gray-400">
+                        {(selectedMedia.file_size / 1024 / 1024).toFixed(2)} MB
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setSelectedMedia(null)}
+                      className="p-2"
+                    >
+                      <X size={20} color="#EF4444" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => setShowMediaPicker(true)}
+                    className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-xl py-6 items-center gap-2"
+                  >
+                    <Play size={24} color="#7C3BED" />
+                    <Text className="text-gray-700 dark:text-gray-300 font-semibold">
+                      Chọn từ phương tiện của tôi
+                    </Text>
+                    <Text className="text-xs text-gray-500 dark:text-gray-400">
+                      Hoặc upload từ profile
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Cover Letter */}
@@ -286,6 +310,14 @@ export const JobApplyModal = ({
           </View>
         </View>
       </View>
+
+      {/* Media Picker Modal */}
+      <MediaPicker
+        visible={showMediaPicker}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={setSelectedMedia}
+        selectedMediaId={selectedMedia?.id}
+      />
     </Modal>
   );
 };

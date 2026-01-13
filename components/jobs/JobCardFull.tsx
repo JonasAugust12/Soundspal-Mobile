@@ -50,7 +50,7 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
     if (onEdit) {
       onEdit();
     } else {
-      router.push(`/(jobs)/recruitment-form?id=${job.id}` as any);
+      router.push(`/(jobs)/edit-job?id=${job.id}` as any);
     }
   };
 

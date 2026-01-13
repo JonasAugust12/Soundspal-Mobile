@@ -45,7 +45,7 @@ export default function PersonalScreen() {
     // } else if (user?.role === 'venue') {
     //     router.push('/(editprofile)/venueEditProfile');
     // }
-    router.push("/(editprofile)/editProfile");
+    router.push("/(editprofile)/edit-profile");
   };
 
   const handleViewProfile = () => {
