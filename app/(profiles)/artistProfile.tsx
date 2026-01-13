@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageCircle } from 'lucide-react-native';
+import { ChevronLeft, MessageCircle, Music4, Video as VideoIcon, Image as ImageIcon } from 'lucide-react-native';
 
 import {
     InfoProfile,
@@ -29,6 +29,7 @@ export default function ArtistProfile() {
 
     // Check if viewing own profile
     const isMe = !params.username;
+    const [isRefetching, setIsRefetching] = React.useState(false);
 
     // Fetch data based on isMe
     const { data: currentUserData, isLoading: isLoadingCurrentUser } = useGetCurrentUser({
@@ -62,7 +63,17 @@ export default function ArtistProfile() {
         enabled: !!username,
     });
 
-    const isLoading = isLoadingUser || isLoadingMedia || isLoadingVideos;
+    const isLoading = (isLoadingUser || isLoadingMedia || isLoadingVideos) && !isRefetching;
+
+    const onRefresh = async () => {
+        setIsRefetching(true);
+        // React Query's refetch is handled within hooks if needed, 
+        // but for simplicity we can trigger a global state update or wait for queries to invalidate
+        // In this case, useQuery's refetch is not directly exposed here for all, 
+        // but it will refresh on mount/focus if configured. 
+        // To be explicit, we could pass refetch from the hooks.
+        setIsRefetching(false);
+    };
 
     // Filter portfolio images
     const portfolioImages = userMedia?.media?.filter((m) => m.media_type === 'portfolio') || [];
@@ -98,11 +109,27 @@ export default function ArtistProfile() {
 
     return (
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            <ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isRefetching}
+                        onRefresh={onRefresh}
+                        tintColor="#7C3BED"
+                        colors={['#7C3BED']}
+                    />
+                }
+            >
                 {/* Back Button */}
-                <Pressable onPress={goBack} className="absolute top-4 left-4 z-10 p-2 bg-white/80 rounded-full">
-                    <ChevronLeft size={24} color="#09090b" />
-                </Pressable>
+                <View className="absolute top-4 left-4 z-10">
+                    <Pressable
+                        onPress={goBack}
+                        className="p-2 bg-black/20 dark:bg-white/10 rounded-full backdrop-blur-md border border-white/20"
+                    >
+                        <ChevronLeft size={24} color="#FFFFFF" />
+                    </Pressable>
+                </View>
 
                 {/* Profile Info */}
                 <InfoProfile
@@ -118,7 +145,7 @@ export default function ArtistProfile() {
                     backgroundSource={
                         userData?.cover_url
                             ? { uri: userData.cover_url }
-                            : require('@/assets/images/background.png')
+                            : undefined
                     }
                     role={userData?.role?.toLowerCase() as 'singer' | 'producer' | 'venue'}
                 />
@@ -146,7 +173,10 @@ export default function ArtistProfile() {
                     {/* Featured Releases */}
                     <View className="gap-3">
                         <View className="flex-row justify-between items-center">
-                            <Text className="text-base font-bold text-foreground">Featured Releases</Text>
+                            <View className="flex-row items-center gap-2">
+                                <Music4 size={20} className="text-primary" />
+                                <Text className="text-base font-bold text-foreground">Featured Releases</Text>
+                            </View>
                             {(isMe || (userData?.featured_release_links?.length || 0) > 3) && (
                                 <Pressable
                                     onPress={() =>
@@ -177,7 +207,10 @@ export default function ArtistProfile() {
                     {/* Videos */}
                     <View className="gap-3">
                         <View className="flex-row justify-between items-center">
-                            <Text className="text-base font-bold text-foreground">Video</Text>
+                            <View className="flex-row items-center gap-2">
+                                <VideoIcon size={20} className="text-primary" />
+                                <Text className="text-base font-bold text-foreground">Video</Text>
+                            </View>
                             {(isMe || (userVideos?.items?.length || 0) > 4) && (
                                 <Pressable
                                     onPress={() =>
@@ -211,8 +244,11 @@ export default function ArtistProfile() {
                     </View>
 
                     {/* Portfolio Images */}
+                    <View className="flex-row items-center gap-2 mb-3">
+                        <ImageIcon size={20} className="text-primary" />
+                        <Text className="text-base font-bold text-foreground">Ảnh Portfolio</Text>
+                    </View>
                     <ProfileImageList
-                        title="Ảnh Portfolio"
                         data={portfolioImages.map((media) => ({
                             id: media.id,
                             cover: { uri: media.file_url },

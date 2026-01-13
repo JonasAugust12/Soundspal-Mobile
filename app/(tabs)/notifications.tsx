@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Platform, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Platform, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Search, MoreHorizontal } from 'lucide-react-native';
@@ -14,6 +14,10 @@ export default function MessagesScreen() {
     const router = useRouter();
     const { user: currentUser } = useAuthStore();
     const currentUserId = currentUser?.id;
+
+    const [activeTab, setActiveTab] = React.useState<'all' | 'unread'>('all');
+    const [isSearching, setIsSearching] = React.useState(false);
+    const [searchText, setSearchText] = React.useState('');
 
     // Read from store
     const {
@@ -86,7 +90,19 @@ export default function MessagesScreen() {
     };
 
     const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
-    const sortedConversations = getSortedConversations();
+    const sortedConversations = getSortedConversations().filter((conv) => {
+        // Tab filter
+        const isUnreadTab = activeTab === 'all' || (unreadCounts[conv.id] || 0) > 0;
+        if (!isUnreadTab) return false;
+
+        // Search filter
+        if (isSearching && searchText.trim()) {
+            const participant = getOtherParticipant(conv);
+            return participant.name.toLowerCase().includes(searchText.toLowerCase());
+        }
+
+        return true;
+    });
 
     if (isLoadingConversations && conversations.length === 0) {
         return (
@@ -106,34 +122,71 @@ export default function MessagesScreen() {
             <View className="flex-1">
                 {/* Modern Header */}
                 <View className="px-5 pt-2 pb-4">
-                    <View className="flex-row items-center justify-between mb-4">
-                        <View>
-                            <Text className="text-2xl font-black text-gray-900">Tin nhắn</Text>
-                            {totalUnread > 0 && (
-                                <Text className="text-sm text-gray-500 mt-1">
-                                    {totalUnread} tin chưa đọc
-                                </Text>
-                            )}
-                        </View>
-                        <View className="flex-row gap-2">
+                    {isSearching ? (
+                        <View className="flex-row items-center gap-3 mb-4">
+                            <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-4 py-2">
+                                <Search size={18} color="#9CA3AF" />
+                                <TextInput
+                                    autoFocus
+                                    placeholder="Tìm người trò chuyện.."
+                                    value={searchText}
+                                    onChangeText={setSearchText}
+                                    className="flex-1 ml-2 text-base text-gray-900"
+                                />
+                                {searchText.length > 0 && (
+                                    <TouchableOpacity onPress={() => setSearchText('')}>
+                                        <Text className="text-gray-400 text-xs font-bold">Xóa</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                             <TouchableOpacity
-                                style={styles.iconButton}
-                                className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center"
+                                onPress={() => {
+                                    setIsSearching(false);
+                                    setSearchText('');
+                                }}
                             >
-                                <Search size={20} color="#6B7280" />
+                                <Text className="text-purple-600 font-bold">Hủy</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
+                    ) : (
+                        <View className="flex-row items-center justify-between mb-4">
+                            <View>
+                                <Text className="text-2xl font-black text-gray-900">Tin nhắn</Text>
+                                {totalUnread > 0 && (
+                                    <Text className="text-sm text-gray-500 mt-1">
+                                        {totalUnread} tin chưa đọc
+                                    </Text>
+                                )}
+                            </View>
+                            <View className="flex-row gap-2">
+                                <TouchableOpacity
+                                    style={styles.iconButton}
+                                    onPress={() => setIsSearching(true)}
+                                    className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center"
+                                >
+                                    <Search size={20} color="#6B7280" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
 
                     {/* Quick Actions */}
-                    {sortedConversations.length > 0 && (
+                    {getSortedConversations().length > 0 && (
                         <View className="flex-row gap-3">
-                            <TouchableOpacity className="flex-row items-center bg-purple-50 px-4 py-2 rounded-full">
-                                <View className="w-2 h-2 rounded-full bg-purple-500 mr-2" />
-                                <Text className="text-purple-600 font-semibold text-sm">Tất cả</Text>
+                            <TouchableOpacity
+                                onPress={() => setActiveTab('all')}
+                                className={`flex-row items-center px-4 py-2 rounded-full ${activeTab === 'all' ? 'bg-purple-100' : 'bg-gray-50'
+                                    }`}
+                            >
+                                <View className={`w-2 h-2 rounded-full mr-2 ${activeTab === 'all' ? 'bg-purple-500' : 'bg-gray-400'}`} />
+                                <Text className={`font-semibold text-sm ${activeTab === 'all' ? 'text-purple-600' : 'text-gray-600'}`}>Tất cả</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity className="flex-row items-center bg-gray-50 px-4 py-2 rounded-full">
-                                <Text className="text-gray-600 font-medium text-sm">Chưa đọc</Text>
+                            <TouchableOpacity
+                                onPress={() => setActiveTab('unread')}
+                                className={`flex-row items-center px-4 py-2 rounded-full ${activeTab === 'unread' ? 'bg-purple-100' : 'bg-gray-50'
+                                    }`}
+                            >
+                                <Text className={`font-medium text-sm ${activeTab === 'unread' ? 'text-purple-600' : 'text-gray-600'}`}>Chưa đọc</Text>
                                 {totalUnread > 0 && (
                                     <View className="bg-red-500 rounded-full px-1.5 py-0.5 ml-2 min-w-[20px] items-center">
                                         <Text className="text-white text-[10px] font-bold">{totalUnread}</Text>
@@ -196,21 +249,31 @@ export default function MessagesScreen() {
                     ) : (
                         <View className="items-center justify-center px-8 py-20">
                             {/* Empty State */}
-                            <View className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 items-center justify-center mb-6">
+                            <View className="w-24 h-24 rounded-full bg-purple-50 dark:bg-gray-800 items-center justify-center mb-6">
                                 <MessageCircle size={48} color="#7C3BED" />
                             </View>
-                            <Text className="text-xl font-bold text-gray-900 mb-2 text-center">
-                                Chưa có tin nhắn
+                            <Text className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 text-center">
+                                {isSearching && searchText.trim()
+                                    ? 'Không tìm thấy kết quả'
+                                    : activeTab === 'unread'
+                                        ? 'Không có tin nhắn chưa đọc'
+                                        : 'Chưa có tin nhắn'}
                             </Text>
-                            <Text className="text-base text-gray-500 text-center max-w-[280px] leading-relaxed">
-                                Bắt đầu trò chuyện với nghệ sĩ và nhà tổ chức để tạo kết nối mới
+                            <Text className="text-base text-gray-500 dark:text-gray-400 text-center max-w-[280px] leading-relaxed">
+                                {isSearching && searchText.trim()
+                                    ? `Không tìm thấy ai tên "${searchText}"`
+                                    : activeTab === 'unread'
+                                        ? 'Cảm ơn bạn đã cập nhật nhanh chóng với các đối tác!'
+                                        : 'Bắt đầu trò chuyện với nghệ sĩ và nhà tổ chức để tạo kết nối mới'}
                             </Text>
-                            <TouchableOpacity
-                                className="mt-6 bg-purple-600 px-6 py-3 rounded-full"
-                                onPress={() => router.push('/(tabs)/explore')}
-                            >
-                                <Text className="text-white font-bold">Khám phá nghệ sĩ</Text>
-                            </TouchableOpacity>
+                            {activeTab === 'all' && !isSearching && (
+                                <TouchableOpacity
+                                    className="mt-6 bg-purple-600 px-6 py-3 rounded-full"
+                                    onPress={() => router.push('/(tabs)/explore')}
+                                >
+                                    <Text className="text-white font-bold">Khám phá nghệ sĩ</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     )}
                 </ScrollView>
