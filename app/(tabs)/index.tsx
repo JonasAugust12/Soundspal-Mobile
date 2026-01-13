@@ -198,6 +198,13 @@ export default function HomeScreen() {
                             resizeMode="contain"
                         />
                     </View>
+                    <View className="absolute" style={{ bottom: 45, right: 0 }}>
+                        <Image
+                            source={require('@/assets/icons/gemini.png')}
+                            className="w-16 h-16 opacity-80"
+                            resizeMode="contain"
+                        />
+                    </View>
                 </LinearGradient>
             </View>
 

@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useColorScheme } from 'nativewind';
 import { useThemeStore } from '@/stores/themeStore';
 import { useEffect } from 'react';
@@ -37,7 +38,9 @@ export default function RootLayout() {
     return (
         <QueryClientProvider client={queryClient}>
             <SafeAreaProvider>
-                <RootLayoutNav />
+                <KeyboardProvider>
+                    <RootLayoutNav />
+                </KeyboardProvider>
             </SafeAreaProvider>
         </QueryClientProvider>
     );

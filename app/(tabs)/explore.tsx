@@ -1,26 +1,27 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, ScrollView, Pressable, RefreshControl, Image } from 'react-native';
+import { View, Text, FlatList, ScrollView, Pressable, RefreshControl, Image, TextInput, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
-import { SearchBar } from '@/components/common/SearchBar';
-import { ArtistCardSearch } from '@/components/common/ArtistCardSearch';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Search, SlidersHorizontal, Disc2, MicVocal, Building2, Users, MapPin, BadgeCheck } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSearchUsers } from '@/hooks/useSearchApi';
-import { useSearchStore } from '@/stores/searchStore';
+import { useSearchStore, UserRole } from '@/stores/searchStore';
+import { FilterSheet } from '@/components/common';
 import type { UserProfile } from '@/types/search.type';
 
-const ROLE_TABS: { label: string; value: 'singer' | 'producer' | 'venue' | 'all' }[] = [
-    { label: 'Tất cả', value: 'all' },
-    { label: 'Ca sĩ', value: 'singer' },
-    { label: 'Nhà sản xuất', value: 'producer' },
-    { label: 'Địa điểm', value: 'venue' },
+const ROLE_TABS: { label: string; value: 'singer' | 'producer' | 'venue' | 'all'; icon: any; color: string }[] = [
+    { label: 'Tất cả', value: 'all', icon: Users, color: '#7C3AED' },
+    { label: 'Ca sĩ', value: 'singer', icon: MicVocal, color: '#EC4899' },
+    { label: 'Producer', value: 'producer', icon: Disc2, color: '#3B82F6' },
+    { label: 'Venue', value: 'venue', icon: Building2, color: '#F59E0B' },
 ];
 
 export default function ExploreScreen() {
     const params = useLocalSearchParams<{ query?: string }>();
+    const router = useRouter();
     const [searchText, setSearchText] = useState('');
-    const [selectedRole, setSelectedRole] = useState<'singer' | 'producer' | 'venue' | 'all'>(
-        'all'
-    );
+    const [selectedRole, setSelectedRole] = useState<'singer' | 'producer' | 'venue' | 'all'>('all');
+    const [showFilter, setShowFilter] = useState(false);
 
     const { filters, setQuery, setRole } = useSearchStore();
 
@@ -44,7 +45,9 @@ export default function ExploreScreen() {
 
     const { data, isLoading, refetch } = useSearchUsers(searchParams);
 
-    const userProfiles = data || [];
+    // API now returns ApiResponse<SearchUsersData> so access data.data.users
+    const userProfiles = data?.data?.users || [];
+    const totalResults = data?.data?.total || 0;
 
     // Handle search text change with debounce
     useEffect(() => {
@@ -67,128 +70,287 @@ export default function ExploreScreen() {
         refetch();
     }, [refetch]);
 
+    const handleUserPress = (userId: string) => {
+        router.push(`/(profiles)/${userId}`);
+    };
+
+    const getRoleColor = (role: string) => {
+        switch (role) {
+            case 'singer': return '#EC4899';
+            case 'producer': return '#3B82F6';
+            case 'venue': return '#F59E0B';
+            default: return '#7C3AED';
+        }
+    };
+
+    const getRoleLabel = (role: string) => {
+        switch (role) {
+            case 'singer': return 'Ca sĩ';
+            case 'producer': return 'Producer';
+            case 'venue': return 'Địa điểm';
+            default: return role;
+        }
+    };
+
     const renderItem = ({ item }: { item: UserProfile }) => {
-        // Create location string from city and country
-        const location = [item.city, item.country].filter(Boolean).join(', ') || 'N/A';
+        const location = [item.city, item.country].filter(Boolean).join(', ') || 'Chưa cập nhật';
+        const roleColor = getRoleColor(item.role);
 
         return (
-            <ArtistCardSearch
-                key={item.id}
-                item={{
-                    id: item.id,
-                    name: item.display_name,
-                    des: item.brief_bio || '',
-                    location: location,
-                    role: item.role.toLowerCase() as any,
-                    username: item.username,
-                    image: item.avatar_url
-                        ? { uri: item.avatar_url }
-                        : require('@/assets/images/profile_search.png'),
-                }}
-                width={260}
-            />
+            <TouchableOpacity
+                onPress={() => handleUserPress(item.id)}
+                style={styles.card}
+                className="bg-white rounded-2xl overflow-hidden"
+                activeOpacity={0.9}
+            >
+                {/* Cover Image */}
+                <View className="h-24 bg-gray-200">
+                    {item.cover_url ? (
+                        <Image
+                            source={{ uri: item.cover_url }}
+                            className="w-full h-full"
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <LinearGradient
+                            colors={[roleColor, `${roleColor}99`]}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            className="w-full h-full"
+                        />
+                    )}
+                </View>
+
+                {/* Avatar */}
+                <View className="absolute top-16 left-4">
+                    <View style={styles.avatarContainer}>
+                        <Image
+                            source={
+                                item.avatar_url
+                                    ? { uri: item.avatar_url }
+                                    : require('@/assets/images/user-default.jpg')
+                            }
+                            className="w-16 h-16 rounded-full"
+                        />
+                        {item.is_verified && (
+                            <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
+                                <BadgeCheck size={16} color="white" fill="#7C3AED" />
+                            </View>
+                        )}
+                    </View>
+                </View>
+
+                {/* Content */}
+                <View className="pt-10 px-4 pb-4">
+                    <View className="flex-row items-center justify-between">
+                        <View className="flex-1">
+                            <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                                {item.display_name}
+                            </Text>
+                            <Text className="text-xs text-gray-500">@{item.username}</Text>
+                        </View>
+                        <View
+                            className="px-2 py-1 rounded-full"
+                            style={{ backgroundColor: `${roleColor}15` }}
+                        >
+                            <Text className="text-xs font-semibold" style={{ color: roleColor }}>
+                                {getRoleLabel(item.role)}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {item.brief_bio && (
+                        <Text className="text-sm text-gray-600 mt-2" numberOfLines={2}>
+                            {item.brief_bio}
+                        </Text>
+                    )}
+
+                    <View className="flex-row items-center gap-1 mt-2">
+                        <MapPin size={12} color="#9CA3AF" />
+                        <Text className="text-xs text-gray-400">{location}</Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
         );
     };
 
     const renderEmpty = () => {
         if (isLoading) {
             return (
-                <View className="flex-1 items-center justify-center py-8">
-                    <Text className="text-muted-foreground">Đang tải...</Text>
+                <View className="flex-1 items-center justify-center py-20">
+                    <View className="w-16 h-16 rounded-full bg-purple-100 items-center justify-center mb-4">
+                        <Search size={28} color="#7C3AED" />
+                    </View>
+                    <Text className="text-gray-600 font-medium">Đang tìm kiếm...</Text>
                 </View>
             );
         }
 
         return (
-            <View className="flex-1 items-center justify-center py-8">
-                <Text className="text-muted-foreground text-base">Không tìm thấy kết quả</Text>
+            <View className="flex-1 items-center justify-center py-20">
+                <View className="w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-4">
+                    <Users size={32} color="#9CA3AF" />
+                </View>
+                <Text className="text-gray-900 font-bold text-lg">Không tìm thấy kết quả</Text>
+                <Text className="text-gray-500 text-sm mt-1 text-center px-8">
+                    Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc
+                </Text>
             </View>
         );
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-background" edges={['top', 'left', 'right', 'bottom']}>
-            <View className="flex-1 pb-8">
-                {/* Logo Header */}
-                <View className="flex-row items-center p-4 gap-2">
+        <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+            {/* Header */}
+            <View className="bg-white px-4 pt-2 pb-4">
+                <View className="flex-row items-center gap-2 mb-4">
                     <Image
                         source={require('@/assets/images/TalentLink-TextLogo.png')}
-                        className="w-30 h-6"
+                        style={{ width: 120, height: 24 }}
                         resizeMode="contain"
                     />
                 </View>
 
-                {/* Search bar */}
-                <SearchBar
-                    onFilterPress={() => {
-                        // TODO: Open filter sheet
-                        console.log('Filter pressed');
-                    }}
-                    value={searchText}
-                    onChangeText={setSearchText}
-                />
+                {/* Search Bar */}
+                <View style={styles.searchContainer} className="flex-row items-center bg-gray-100 rounded-2xl px-4">
+                    <Search size={20} color="#9CA3AF" />
+                    <TextInput
+                        value={searchText}
+                        onChangeText={setSearchText}
+                        placeholder="Tìm kiếm nghệ sĩ, producer, địa điểm..."
+                        placeholderTextColor="#9CA3AF"
+                        className="flex-1 py-3 px-3 text-base text-gray-900"
+                    />
+                    <TouchableOpacity
+                        className="w-10 h-10 rounded-xl bg-purple-600 items-center justify-center"
+                        onPress={() => setShowFilter(true)}
+                    >
+                        <SlidersHorizontal size={18} color="#FFFFFF" />
+                    </TouchableOpacity>
+                </View>
+            </View>
 
-                {/* Role Tabs */}
+            {/* Role Tabs */}
+            <View style={{ height: 70 }} className="bg-white border-b border-gray-100">
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    className="flex-grow-0"
+                    contentContainerStyle={{ paddingHorizontal: 12, alignItems: 'center', height: 70 }}
                 >
-                    <View className="flex-row px-4 pt-4 gap-2">
+                    <View className="flex-row gap-2">
                         {ROLE_TABS.map((tab) => {
                             const isSelected = selectedRole === tab.value;
+                            const IconComponent = tab.icon;
                             return (
-                                <Pressable
+                                <TouchableOpacity
                                     key={tab.value}
                                     onPress={() => handleRoleChange(tab.value)}
-                                    className={`px-4 py-2 rounded-full ${isSelected ? 'bg-primary' : 'bg-secondary'
+                                    style={{ minWidth: 80, height: 44 }}
+                                    className={`flex-row items-center justify-center gap-2 px-4 rounded-xl ${isSelected ? 'bg-purple-600' : 'bg-gray-100'
                                         }`}
                                 >
+                                    <IconComponent
+                                        size={18}
+                                        color={isSelected ? '#FFFFFF' : tab.color}
+                                    />
                                     <Text
-                                        className={`text-sm ${isSelected
-                                            ? 'text-primary-foreground'
-                                            : 'text-foreground'
+                                        className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-gray-700'
                                             }`}
                                     >
                                         {tab.label}
                                     </Text>
-                                </Pressable>
+                                </TouchableOpacity>
                             );
                         })}
                     </View>
                 </ScrollView>
-
-                {/* Featured Artists / Search Results */}
-                <View className="flex-1 px-4 pt-4">
-                    <View className="flex-row justify-between items-center mb-3">
-                        <Text className="text-foreground text-base font-bold">
-                            {filters.query ? 'Kết quả tìm kiếm' : 'Nghệ sĩ nổi bật'}
-                        </Text>
-                        {userProfiles.length > 0 && (
-                            <Text className="text-muted-foreground text-xs">
-                                {userProfiles.length} kết quả
-                            </Text>
-                        )}
-                    </View>
-
-                    <FlatList
-                        data={userProfiles}
-                        renderItem={renderItem}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={{
-                            paddingVertical: 8,
-                            alignItems: 'center',
-                            gap: 12,
-                        }}
-                        ItemSeparatorComponent={() => <View className="h-3" />}
-                        ListEmptyComponent={renderEmpty}
-                        refreshControl={
-                            <RefreshControl refreshing={isLoading} onRefresh={handleRefresh} />
-                        }
-                        showsVerticalScrollIndicator={false}
-                    />
-                </View>
             </View>
+
+            {/* Results Header */}
+            <View className="flex-row justify-between items-center px-4 py-3">
+                <Text className="text-gray-900 text-base font-bold">
+                    {filters.query ? 'Kết quả tìm kiếm' : 'Khám phá'}
+                </Text>
+                {totalResults > 0 && (
+                    <View className="bg-purple-100 px-3 py-1 rounded-full">
+                        <Text className="text-purple-600 text-xs font-semibold">
+                            {totalResults} kết quả
+                        </Text>
+                    </View>
+                )}
+            </View>
+
+            {/* Results List */}
+            <FlatList
+                data={userProfiles}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={{
+                    paddingHorizontal: 16,
+                    paddingBottom: 100,
+                    gap: 12,
+                }}
+                ListEmptyComponent={renderEmpty}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={isLoading}
+                        onRefresh={handleRefresh}
+                        colors={['#7C3AED']}
+                        tintColor="#7C3AED"
+                    />
+                }
+                showsVerticalScrollIndicator={false}
+            />
+            <FilterSheet
+                visible={showFilter}
+                onClose={() => setShowFilter(false)}
+                currentRole={selectedRole === 'all' ? undefined : (selectedRole as UserRole)}
+            />
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    searchContainer: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
+    },
+    card: {
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.08,
+                shadowRadius: 12,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+    },
+    avatarContainer: {
+        borderWidth: 3,
+        borderColor: '#FFFFFF',
+        borderRadius: 999,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 3,
+            },
+        }),
+    },
+});

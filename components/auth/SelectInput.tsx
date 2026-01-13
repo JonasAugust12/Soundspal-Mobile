@@ -1,9 +1,16 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
+
+interface SelectOption {
+    label: string;
+    value: string;
+    icon?: LucideIcon;
+}
 
 interface SelectInputProps {
     label: string;
-    options: Array<{ label: string; value: string }>;
+    options: SelectOption[];
     value: string;
     onValueChange: (value: string) => void;
     error?: string;
@@ -16,31 +23,42 @@ export function SelectInput({ label, options, value, onValueChange, error }: Sel
                 {label}
             </Text>
             <View className="flex-row gap-2">
-                {options.map((option) => (
-                    <TouchableOpacity
-                        key={option.value}
-                        onPress={() => onValueChange(option.value)}
-                        className={`
-                            flex-1 py-3 px-4 rounded-xl border-2
-                            ${value === option.value
-                                ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
-                                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-                            }
-                        `}
-                    >
-                        <Text
+                {options.map((option) => {
+                    const isSelected = value === option.value;
+                    const IconComponent = option.icon;
+
+                    return (
+                        <TouchableOpacity
+                            key={option.value}
+                            onPress={() => onValueChange(option.value)}
                             className={`
-                                text-center font-medium
-                                ${value === option.value
-                                    ? 'text-purple-600 dark:text-purple-400'
-                                    : 'text-gray-700 dark:text-gray-300'
+                                flex-1 py-3 px-3 rounded-xl border-2 items-center gap-1.5
+                                ${isSelected
+                                    ? 'border-purple-600 bg-purple-50'
+                                    : 'border-gray-200 bg-white'
                                 }
                             `}
                         >
-                            {option.label}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+                            {IconComponent && (
+                                <IconComponent
+                                    size={22}
+                                    color={isSelected ? '#7C3AED' : '#9CA3AF'}
+                                />
+                            )}
+                            <Text
+                                className={`
+                                    text-center font-semibold text-sm
+                                    ${isSelected
+                                        ? 'text-purple-600'
+                                        : 'text-gray-500'
+                                    }
+                                `}
+                            >
+                                {option.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
             {error && (
                 <Text className="text-red-500 text-xs mt-1">{error}</Text>

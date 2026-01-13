@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { createApiCall } from '@/lib/apiClient';
+import { ApiResponse } from '@/types/apiresponse.type';
 import type {
-    FeaturedUsersResponse,
-    FeaturedJobsResponse,
+    FeaturedUsersData,
+    FeaturedJobsData,
     SearchUsersRequest,
-    SearchUsersResponse,
-    GetGenresResponse,
+    SearchUsersData,
+    GetGenresData,
 } from '@/types/search.type';
 
 // API Calls
@@ -17,17 +18,17 @@ const searchApi = {
             Object.entries(restParams).filter(([_, v]) => v !== undefined)
         );
 
-        return createApiCall<SearchUsersResponse, typeof cleanParams>('POST', '/search/users')(
+        return createApiCall<ApiResponse<SearchUsersData>, typeof cleanParams>('POST', '/search/users')(
             cleanParams
         );
     },
 
-    getGenres: () => createApiCall<GetGenresResponse>('GET', '/users/genres')(),
+    getGenres: () => createApiCall<ApiResponse<GetGenresData>>('GET', '/users/genres')(),
 
     getFeaturedUsers: (limit: number) =>
-        createApiCall<FeaturedUsersResponse>('GET', `/landing/featured-users?limit=${limit}`)(),
+        createApiCall<ApiResponse<FeaturedUsersData>>('GET', `/landing/featured-users?limit=${limit}`)(),
     getFeaturedJobs: (limit: number) =>
-        createApiCall<FeaturedJobsResponse>('GET', `/landing/featured-jobs?limit=${limit}`)(),
+        createApiCall<ApiResponse<FeaturedJobsData>>('GET', `/landing/featured-jobs?limit=${limit}`)(),
 };
 
 // Search Users Hook

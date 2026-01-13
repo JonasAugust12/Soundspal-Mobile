@@ -8,14 +8,8 @@ import type {
     VideoItem,
     VideoResponse,
 } from '@/types/user.type';
+import { ApiResponse } from '@/types/apiresponse.type';
 
-// Wrapper response type
-interface ApiResponse<T> {
-    message: string;
-    data: T;
-}
-
-// API Calls
 const userApi = {
     getCurrentUser: async () => {
         const response = await createApiCall<ApiResponse<User>>('GET', '/users/me')();

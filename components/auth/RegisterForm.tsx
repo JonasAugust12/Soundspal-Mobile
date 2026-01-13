@@ -3,16 +3,16 @@ import { View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, AtSign, Mail, UserCircle2, Lock, ShieldCheck, UserPlus } from 'lucide-react-native';
+import { User, AtSign, Mail, Lock, ShieldCheck, UserPlus, Disc2, MicVocal, Building2 } from 'lucide-react-native';
 import { FormInput } from './FormInput';
 import { SelectInput } from './SelectInput';
 import { AuthButton } from './AuthButton';
 import type { UserRole } from '@/types/auth.type';
 
 const USER_ROLES = [
-    { label: 'Producer', value: 'producer' },
-    { label: 'Singer', value: 'singer' },
-    { label: 'Venue', value: 'venue' },
+    { label: 'Producer', value: 'producer', icon: Disc2 },
+    { label: 'Singer', value: 'singer', icon: MicVocal },
+    { label: 'Venue', value: 'venue', icon: Building2 },
 ];
 
 const registerSchema = z
