@@ -7,6 +7,7 @@ import type {
     MediaResponse,
     VideoItem,
     VideoResponse,
+    GenresResponse,
 } from '@/types/user.type';
 import { ApiResponse } from '@/types/apiresponse.type';
 
@@ -83,6 +84,48 @@ const userApi = {
         'PUT',
         '/users/me/featured-releases'
     ),
+
+    // Genre APIs
+    getAllGenres: async () => {
+        const response = await createApiCall<ApiResponse<GenresResponse>>('GET', '/users/genres')();
+        return response.data;
+    },
+
+    getUserGenres: async (username: string) => {
+        const response = await createApiCall<ApiResponse<GenresResponse>>('GET', `/users/genres/${username}`)();
+        return response.data;
+    },
+
+    updateUserGenres: (username: string, genreNames: string[]) => {
+        return createApiCall<any, { genre_names: string[] }>('PUT', `/users/genres/${username}`)({ genre_names: genreNames });
+    },
+    
+    updateUserServices: (services: any[]) => {
+        return createApiCall<any, { services: any[] }>('PUT', '/users/me/services')({ services });
+    },
+
+    // Venue APIs
+    updateVenueBasic: createApiCall<User, {
+        display_name?: string;
+        brief_bio?: string;
+        business_type?: string[];
+        capacity?: string;
+    }>('PUT', '/users/me/venue/basic'),
+
+    updateVenueContact: createApiCall<User, {
+        email?: string;
+        phone_number?: string;
+        city?: string;
+        country?: string;
+        detailed_address?: string;
+        website_url?: string;
+    }>('PUT', '/users/me/venue/contact'),
+
+    updateVenueAdditional: createApiCall<User, {
+        open_hour?: string;
+        convenient_facilities?: string[];
+        rent_price?: string;
+    }>('PUT', '/users/me/venue/additional'),
 };
 
 // Query Keys
@@ -95,6 +138,9 @@ export const userKeys = {
     userMedia: (username: string) => [...userKeys.media(), username] as const,
     videos: () => [...userKeys.all, 'videos'] as const,
     userVideos: (username: string) => [...userKeys.videos(), username] as const,
+    genres: () => [...userKeys.all, 'genres'] as const,
+    allGenres: () => [...userKeys.genres(), 'all'] as const,
+    userGenres: (username: string) => [...userKeys.genres(), username] as const,
 };
 
 // Get Current User Hook
@@ -261,6 +307,87 @@ export const useUpdateFeaturedReleases = () => {
 
     return useMutation({
         mutationFn: userApi.updateFeaturedReleases,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// Get All Genres Hook
+export const useGetAllGenres = (options?: { enabled?: boolean }) => {
+    return useQuery({
+        queryKey: userKeys.allGenres(),
+        queryFn: userApi.getAllGenres,
+        ...options,
+    });
+};
+
+// Get User Genres Hook
+export const useGetUserGenres = (username: string, options?: { enabled?: boolean }) => {
+    return useQuery({
+        queryKey: userKeys.userGenres(username),
+        queryFn: () => userApi.getUserGenres(username),
+        enabled: !!username && options?.enabled !== false,
+        ...options,
+    });
+};
+
+// Update User Genres Hook
+export const useUpdateUserGenres = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ username, genreNames }: { username: string; genreNames: string[] }) =>
+            userApi.updateUserGenres(username, genreNames),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: userKeys.userGenres(variables.username) });
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// Update User Services Hook
+export const useUpdateUserServices = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (services: any[]) => userApi.updateUserServices(services),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// Update Venue Basic Hook
+export const useUpdateVenueBasic = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: userApi.updateVenueBasic,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// Update Venue Contact Hook
+export const useUpdateVenueContact = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: userApi.updateVenueContact,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// Update Venue Additional Hook
+export const useUpdateVenueAdditional = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: userApi.updateVenueAdditional,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userKeys.current() });
         },

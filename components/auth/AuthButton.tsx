@@ -8,6 +8,8 @@ interface AuthButtonProps {
     children: React.ReactNode;
     leftIcon?: React.ComponentType<{ size?: number; color?: string }>;
     isLoading?: boolean;
+    style?: any;
+    className?: string;
 }
 
 export function AuthButton({
@@ -17,6 +19,8 @@ export function AuthButton({
     disabled,
     leftIcon: LeftIcon,
     isLoading,
+    style,
+    className: extraClassName,
 }: AuthButtonProps) {
     const isPrimary = variant === 'primary';
 
@@ -24,10 +28,12 @@ export function AuthButton({
         <TouchableOpacity
             onPress={onPress}
             disabled={disabled || isLoading}
+            style={style}
             className={`
                 w-full py-4 px-6 rounded-xl flex-row items-center justify-center
                 ${isPrimary ? 'bg-purple-600' : 'bg-transparent border-2 border-purple-600'}
                 ${(disabled || isLoading) ? 'opacity-50' : 'opacity-100'}
+                ${extraClassName || ''}
             `}
             activeOpacity={0.7}
         >

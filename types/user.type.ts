@@ -11,6 +11,13 @@ export enum UserStatus {
     REJECTED = 'rejected',
 }
 
+export interface UserService {
+    name: string;
+    price: number;
+    currency: string;
+    is_negotiable: boolean;
+}
+
 // Common fields for all user types
 export interface BaseUser {
     id: string;
@@ -37,6 +44,7 @@ export interface BaseUser {
     // Artist specific
     featured_release_links?: string[];
     genres?: string[];
+    services?: UserService[];
 }
 
 // Singer/Producer specific fields
@@ -114,5 +122,17 @@ export interface VideoItem {
 
 export interface VideoResponse {
     items: VideoItem[];
+    total: number;
+}
+
+export interface Genre {
+    id: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface GenresResponse {
+    genres: Genre[];
     total: number;
 }

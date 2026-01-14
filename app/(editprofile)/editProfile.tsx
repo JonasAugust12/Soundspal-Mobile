@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, User, Phone, Share2 } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, Share2, Music, Briefcase } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 
@@ -12,6 +12,8 @@ import {
     SocialLinksForm,
     AvatarFrame,
     CoverImage,
+    GenresForm,
+    ServicesForm,
 } from '@/components/editprofile';
 import {
     useGetCurrentUser,
@@ -23,27 +25,35 @@ import {
 } from '@/hooks/useUserApi';
 import { useAuthStore } from '@/stores/authStore';
 
-type TabKey = 'basic' | 'contact' | 'social';
+type TabKey = 'basic' | 'contact' | 'social' | 'genres' | 'services';
 
 interface Tab {
     key: TabKey;
     label: string;
+    forArtist?: boolean;
 }
 
 const TABS: Tab[] = [
     { key: 'basic', label: 'Cơ bản' },
     { key: 'contact', label: 'Liên hệ' },
     { key: 'social', label: 'Mạng XH' },
+    { key: 'genres', label: 'Thể loại', forArtist: true },
+    { key: 'services', label: 'Dịch vụ', forArtist: true },
 ];
 
 const TabIcon = ({ tabKey, isActive }: { tabKey: TabKey; isActive: boolean }) => {
+    const color = isActive ? '#FFFFFF' : '#6B7280';
     switch (tabKey) {
         case 'basic':
-            return <User size={18} className={isActive ? 'text-foreground' : 'text-muted-foreground'} />;
+            return <User size={16} color={color} />;
         case 'contact':
-            return <Phone size={18} className={isActive ? 'text-foreground' : 'text-muted-foreground'} />;
+            return <Phone size={16} color={color} />;
         case 'social':
-            return <Share2 size={18} className={isActive ? 'text-foreground' : 'text-muted-foreground'} />;
+            return <Share2 size={16} color={color} />;
+        case 'genres':
+            return <Music size={16} color={color} />;
+        case 'services':
+            return <Briefcase size={16} color={color} />;
     }
 };
 
@@ -209,31 +219,33 @@ export default function EditProfileScreen() {
                 </View>
 
                 {/* Tabs */}
-                <View className="flex-row mx-4 mb-6 bg-secondary dark:bg-gray-800 rounded-xl p-1.5">
-                    {TABS.map((tab) => {
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    className="mb-6"
+                    contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
+                >
+                    {TABS.filter(tab => !tab.forArtist || userData?.role === 'singer' || userData?.role === 'producer').map((tab) => {
                         const isActive = activeTab === tab.key;
                         return (
                             <Pressable
                                 key={tab.key}
                                 onPress={() => setActiveTab(tab.key)}
-                                style={{
-                                    flex: 1,
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 6,
-                                    paddingVertical: 10,
-                                    borderRadius: 8,
-                                    backgroundColor: isActive ? '#ffffff' : 'transparent',
-                                    shadowColor: isActive ? '#000' : 'transparent',
-                                    shadowOpacity: isActive ? 0.1 : 0,
-                                    shadowRadius: isActive ? 4 : 0,
-                                    elevation: isActive ? 2 : 0,
-                                }}
+                                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full ${isActive
+                                    ? 'bg-purple-600'
+                                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                                    }`}
+                                style={isActive ? {
+                                    shadowColor: '#7C3AED',
+                                    shadowOffset: { width: 0, height: 4 },
+                                    shadowOpacity: 0.3,
+                                    shadowRadius: 8,
+                                    elevation: 4,
+                                } : undefined}
                             >
                                 <TabIcon tabKey={tab.key} isActive={isActive} />
                                 <Text
-                                    className={`text-sm font-semibold ${isActive ? 'text-foreground' : 'text-muted-foreground'
+                                    className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'
                                         }`}
                                 >
                                     {tab.label}
@@ -241,7 +253,7 @@ export default function EditProfileScreen() {
                             </Pressable>
                         );
                     })}
-                </View>
+                </ScrollView>
 
                 {/* Tab Content */}
                 <View className="px-4 pb-8">
@@ -279,6 +291,23 @@ export default function EditProfileScreen() {
                             }}
                             onSubmit={handleSaveSocialLinks}
                             isLoading={updateSocialLinks.isPending}
+                        />
+                    )}
+
+                    {activeTab === 'genres' && (
+                        <GenresForm
+                            onSaveSuccess={() => {
+                                Toast.show({ type: 'success', text1: 'Đã cập nhật thể loại' });
+                                refetch();
+                            }}
+                        />
+                    )}
+                    {activeTab === 'services' && (
+                        <ServicesForm
+                            onSaveSuccess={() => {
+                                Toast.show({ type: 'success', text1: 'Đã cập nhật dịch vụ' });
+                                refetch();
+                            }}
                         />
                     )}
                 </View>

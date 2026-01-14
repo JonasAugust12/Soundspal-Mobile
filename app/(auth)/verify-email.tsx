@@ -5,6 +5,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, Mail, CheckCircle2, RefreshCw } from 'lucide-react-native';
 import { AuthButton } from '@/components/auth';
+import { OTPInput } from '@/components/auth/OTPInput';
 import { useVerifyEmail, useResendVerificationCode } from '@/hooks/useAuthApi';
 import { useToast } from '@/hooks/useToast';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -151,22 +152,17 @@ export default function VerifyEmailScreen() {
 
                         {/* Code Input */}
                         <View className="mb-4">
-                            <TextInput
+                            <OTPInput
                                 value={code}
-                                onChangeText={(text) => {
+                                onChange={(text) => {
                                     setCode(text);
                                     setError('');
                                 }}
-                                placeholder="000000"
-                                keyboardType="number-pad"
-                                maxLength={6}
-                                style={[styles.codeInput, { paddingRight: 24 }]}
-                                className={`w-full px-4 py-4 rounded-2xl border-2 text-center text-3xl font-bold bg-gray-50 ${error ? 'border-red-500' : 'border-gray-200'}`}
-                                placeholderTextColor="#D1D5DB"
-                                textAlign="center"
+                                hasError={!!error}
+                                activeColor="#0891B2"
                             />
                             {error && (
-                                <Text className="text-red-500 text-xs mt-2 text-center">{error}</Text>
+                                <Text className="text-red-500 text-xs mt-4 text-center">{error}</Text>
                             )}
                         </View>
 
@@ -265,8 +261,5 @@ const styles = StyleSheet.create({
                 elevation: 16,
             },
         }),
-    },
-    codeInput: {
-        letterSpacing: 12,
     },
 });

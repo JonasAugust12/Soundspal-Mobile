@@ -42,3 +42,5 @@ yarn-error.*
 
 .agent/
 .shared/
+
+google-services.json

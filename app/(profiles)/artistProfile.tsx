@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, MessageCircle, Music4, Video as VideoIcon, Image as ImageIcon } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, MessageCircle, Music4, Video as VideoIcon } from 'lucide-react-native';
 
 import {
     InfoProfile,
@@ -11,6 +11,7 @@ import {
     SocialList,
     YoutubeEmbed,
     ProfileSkeleton,
+    ServicesList,
 } from '@/components/profile';
 import {
     useGetCurrentUser,
@@ -18,6 +19,7 @@ import {
     useGetCurrentUserMedia,
     useGetUserMedia,
     useGetUserVideos,
+    useGetUserGenres,
 } from '@/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/hooks/useMessagingApi';
 import { useAuthStore } from '@/stores/authStore';
@@ -28,7 +30,7 @@ export default function ArtistProfile() {
     const { user: currentUser } = useAuthStore();
 
     // Check if viewing own profile
-    const isMe = !params.username;
+    const isMe = !params.username || params.username === currentUser?.username;
     const [isRefetching, setIsRefetching] = React.useState(false);
 
     // Fetch data based on isMe
@@ -62,6 +64,12 @@ export default function ArtistProfile() {
     const { data: userVideos, isLoading: isLoadingVideos } = useGetUserVideos(username, {
         enabled: !!username,
     });
+
+    // Get user genres
+    const { data: userGenresData } = useGetUserGenres(username, {
+        enabled: !!username,
+    });
+    const userGenres = userGenresData?.genres || [];
 
     const isLoading = (isLoadingUser || isLoadingMedia || isLoadingVideos) && !isRefetching;
 
@@ -170,12 +178,41 @@ export default function ArtistProfile() {
                         youtube={userData?.youtube_url}
                     />
 
+                    {/* Services */}
+                    <ServicesList services={userData?.services || []} />
+
+                    {/* Genres */}
+                    {userGenres.length > 0 && (
+                        <View className="gap-3">
+                            <View className="flex-row items-center gap-2">
+                                <View className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 items-center justify-center">
+                                    <Music4 size={18} color="#7C3AED" />
+                                </View>
+                                <Text className="text-lg font-bold text-foreground">Thể loại</Text>
+                            </View>
+                            <View className="flex-row flex-wrap gap-2">
+                                {userGenres.map((genre) => (
+                                    <View
+                                        key={genre.id}
+                                        className="px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-900/30"
+                                    >
+                                        <Text className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                                            {genre.name}
+                                        </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
+
                     {/* Featured Releases */}
-                    <View className="gap-3">
+                    <View className="gap-4">
                         <View className="flex-row justify-between items-center">
                             <View className="flex-row items-center gap-2">
-                                <Music4 size={20} className="text-primary" />
-                                <Text className="text-base font-bold text-foreground">Featured Releases</Text>
+                                <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
+                                    <Music4 size={18} color="#7C3AED" />
+                                </View>
+                                <Text className="text-lg font-bold text-foreground">Featured Releases</Text>
                             </View>
                             {(isMe || (userData?.featured_release_links?.length || 0) > 3) && (
                                 <Pressable
@@ -185,8 +222,10 @@ export default function ArtistProfile() {
                                             params: isMe ? {} : { username: userData?.username },
                                         })
                                     }
+                                    className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 active:bg-primary/20"
                                 >
-                                    <Text className="text-sm text-primary">Xem tất cả</Text>
+                                    <Text className="text-sm font-semibold text-primary">Xem tất cả</Text>
+                                    <ChevronRight size={14} color="#7C3AED" />
                                 </Pressable>
                             )}
                         </View>
@@ -198,18 +237,25 @@ export default function ArtistProfile() {
                                 ))}
                             </View>
                         ) : (
-                            <View className="p-4 border border-border rounded-xl bg-card items-center">
-                                <Text className="text-sm text-muted-foreground">Chưa có featured releases</Text>
+                            <View className="py-12 items-center gap-3 bg-muted/30 rounded-2xl">
+                                <View className="w-16 h-16 rounded-2xl bg-muted/60 items-center justify-center">
+                                    <Music4 size={32} color="#9CA3AF" />
+                                </View>
+                                <Text className="text-sm text-muted-foreground">
+                                    Chưa có featured releases
+                                </Text>
                             </View>
                         )}
                     </View>
 
                     {/* Videos */}
-                    <View className="gap-3">
+                    <View className="gap-4">
                         <View className="flex-row justify-between items-center">
                             <View className="flex-row items-center gap-2">
-                                <VideoIcon size={20} className="text-primary" />
-                                <Text className="text-base font-bold text-foreground">Video</Text>
+                                <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
+                                    <VideoIcon size={18} color="#7C3AED" />
+                                </View>
+                                <Text className="text-lg font-bold text-foreground">Video</Text>
                             </View>
                             {(isMe || (userVideos?.items?.length || 0) > 4) && (
                                 <Pressable
@@ -219,8 +265,10 @@ export default function ArtistProfile() {
                                             params: isMe ? {} : { username: userData?.username },
                                         })
                                     }
+                                    className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 active:bg-primary/20"
                                 >
-                                    <Text className="text-sm text-primary">Xem tất cả</Text>
+                                    <Text className="text-sm font-semibold text-primary">Xem tất cả</Text>
+                                    <ChevronRight size={14} color="#7C3AED" />
                                 </Pressable>
                             )}
                         </View>
@@ -237,18 +285,20 @@ export default function ArtistProfile() {
                                 ))}
                             </View>
                         ) : (
-                            <View className="p-4 border border-border rounded-xl bg-card items-center">
-                                <Text className="text-sm text-muted-foreground">Chưa có video demo</Text>
+                            <View className="py-12 items-center gap-3 bg-muted/30 rounded-2xl">
+                                <View className="w-16 h-16 rounded-2xl bg-muted/60 items-center justify-center">
+                                    <VideoIcon size={32} color="#9CA3AF" />
+                                </View>
+                                <Text className="text-sm text-muted-foreground">
+                                    Chưa có video demo
+                                </Text>
                             </View>
                         )}
                     </View>
 
                     {/* Portfolio Images */}
-                    <View className="flex-row items-center gap-2 mb-3">
-                        <ImageIcon size={20} className="text-primary" />
-                        <Text className="text-base font-bold text-foreground">Ảnh Portfolio</Text>
-                    </View>
                     <ProfileImageList
+                        title="Ảnh Portfolio"
                         data={portfolioImages.map((media) => ({
                             id: media.id,
                             cover: { uri: media.file_url },

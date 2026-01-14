@@ -5,3 +5,5 @@ export { SocialList } from "./SocialList";
 export { YoutubeEmbed } from "./YoutubeEmbed";
 export { ProfileSkeleton } from "./ProfileSkeleton";
 export { MenuItem } from "./MenuItem";
+export { AddVideoModal } from "./AddVideoModal";
+export { ServicesList } from "./ServicesList";

@@ -7,11 +7,15 @@ import { useColorScheme } from 'nativewind';
 import { useThemeStore } from '@/stores/themeStore';
 import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import '../global.css';
 
 function RootLayoutNav() {
     const { isDark } = useThemeStore();
     const { setColorScheme } = useColorScheme();
+
+    // Handle auth redirects
+    useProtectedRoute();
 
     // Sync theme with NativeWind
     useEffect(() => {

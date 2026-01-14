@@ -6,11 +6,11 @@ import type { RefreshTokenResponse } from "@/types/auth.type";
 // Tạo axios instance
 export const apiClient = axios.create({
   baseURL: "https://talentlink.io.vn/api/v1",
-  headers: {
-    accept: "application/json",
-    "User-Agent":
-      "Mozilla/5.0 (Linux; Android 13; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.135 Mobile Safari/537.36",
-  },
+  // headers: {
+  //   accept: "application/json",
+  //   "User-Agent":
+  //     "Mozilla/5.0 (Linux; Android 13; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.135 Mobile Safari/537.36",
+  // },
 });
 
 // Flag để tránh multiple refresh requests

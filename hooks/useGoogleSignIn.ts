@@ -17,7 +17,7 @@ export const useGoogleSignIn = () => {
         GoogleSignin.configure({
             webClientId: '419154220948-58io8pdnh0e0ngcd7v94cf4icprgpf4l.apps.googleusercontent.com',
             offlineAccess: true,
-            forceCodeForRefreshToken: true,
+            // forceCodeForRefreshToken: true,
         });
     };
 
@@ -32,6 +32,7 @@ export const useGoogleSignIn = () => {
 
             // Sign out first to ensure fresh login
             await GoogleSignin.signOut();
+            console.log('Google Sign out successful.');
 
             const userInfo = await GoogleSignin.signIn();
             console.log('Google Sign-In successful:', userInfo);

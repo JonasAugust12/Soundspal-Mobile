@@ -70,8 +70,18 @@ export default function ExploreScreen() {
         refetch();
     }, [refetch]);
 
-    const handleUserPress = (userId: string) => {
-        router.push(`/(profiles)/${userId}`);
+    const handleUserPress = (user: UserProfile) => {
+        if (user.role === 'venue') {
+            router.push({
+                pathname: '/(profiles)/venueProfile',
+                params: { username: user.username },
+            });
+        } else {
+            router.push({
+                pathname: '/(profiles)/artistProfile',
+                params: { username: user.username },
+            });
+        }
     };
 
     const getRoleColor = (role: string) => {
@@ -98,7 +108,7 @@ export default function ExploreScreen() {
 
         return (
             <TouchableOpacity
-                onPress={() => handleUserPress(item.id)}
+                onPress={() => handleUserPress(item)}
                 style={styles.card}
                 className="bg-white rounded-2xl overflow-hidden"
                 activeOpacity={0.9}

@@ -12,7 +12,7 @@ interface VideoPlayerProps {
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const cardWidth = (screenWidth - 48 - 12) / 2; // padding + gap
+const cardWidth = (screenWidth - 32 - 12) / 2; // px-4 (32) + gap-3 (12)
 const cardHeight = cardWidth * 1.2;
 
 export function VideoPlayer({ videoUrl, thumbnailUrl, title }: VideoPlayerProps) {
