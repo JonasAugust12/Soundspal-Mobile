@@ -23,16 +23,22 @@ const messagingApi = {
     },
 
     getUnreadCount: (conversationId: string) => {
-        return createApiCall<number>('GET', `/messages/conversation/${conversationId}/unread-count`)();
+        return createApiCall<number>(
+            'GET',
+            `/messages/conversation/${conversationId}/unread-count`,
+        )();
     },
 
     createConversation: createApiCall<Conversation, CreateConversationRequest>(
         'POST',
-        '/conversations'
+        '/conversations',
     ),
 
     getOrCreateConversation: (participantId: string) => {
-        return createApiCall<Conversation, CreateConversationRequest>('POST', '/conversations')({
+        return createApiCall<Conversation, CreateConversationRequest>(
+            'POST',
+            '/conversations',
+        )({
             name: 'TL-MESS',
             isGroup: false,
             participantIds: [participantId],
@@ -151,8 +157,13 @@ export const useDeleteMessage = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ messageId, conversationId }: { messageId: string; conversationId: string }) =>
-            messagingApi.deleteMessage(messageId),
+        mutationFn: ({
+            messageId,
+            conversationId,
+        }: {
+            messageId: string;
+            conversationId: string;
+        }) => messagingApi.deleteMessage(messageId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({
                 queryKey: messagingKeys.messages(variables.conversationId),
@@ -169,8 +180,13 @@ export const useMarkMessageAsRead = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ messageId, conversationId }: { messageId: string; conversationId: string }) =>
-            messagingApi.markMessageAsRead(messageId),
+        mutationFn: ({
+            messageId,
+            conversationId,
+        }: {
+            messageId: string;
+            conversationId: string;
+        }) => messagingApi.markMessageAsRead(messageId),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({
                 queryKey: messagingKeys.unreadCount(variables.conversationId),

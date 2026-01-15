@@ -17,12 +17,9 @@ export const ArtistCardSkeleton = React.memo(function ArtistCardSkeleton({ width
 
     React.useEffect(() => {
         opacity.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 800 }),
-                withTiming(0.3, { duration: 800 })
-            ),
+            withSequence(withTiming(1, { duration: 800 }), withTiming(0.3, { duration: 800 })),
             -1,
-            false
+            false,
         );
     }, [opacity]);
 
@@ -36,10 +33,7 @@ export const ArtistCardSkeleton = React.memo(function ArtistCardSkeleton({ width
             className="rounded-[20px] bg-white border border-gray-200 overflow-hidden"
         >
             {/* Image Skeleton */}
-            <Animated.View
-                style={animatedStyle}
-                className="w-full h-[140px] bg-gray-200"
-            />
+            <Animated.View style={animatedStyle} className="w-full h-[140px] bg-gray-200" />
 
             {/* Content Skeleton */}
             <View className="p-3 gap-1.5">
@@ -57,10 +51,7 @@ export const ArtistCardSkeleton = React.memo(function ArtistCardSkeleton({ width
 
                 <View className="gap-2 items-center">
                     {/* Location */}
-                    <Animated.View
-                        style={animatedStyle}
-                        className="h-3 w-20 rounded bg-gray-200"
-                    />
+                    <Animated.View style={animatedStyle} className="h-3 w-20 rounded bg-gray-200" />
 
                     {/* Skills Badge */}
                     <Animated.View

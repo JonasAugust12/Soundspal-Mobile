@@ -1,6 +1,14 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, Platform, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    Image,
+    Platform,
+    StyleSheet,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
     UserSquare,
@@ -49,40 +57,48 @@ export default function PersonalScreen() {
     };
 
     const handleViewProfile = () => {
-        if (user?.role === "singer" || user?.role === "producer") {
+        if (user?.role === 'singer' || user?.role === 'producer') {
             router.push({
-                pathname: "/(profiles)/artistProfile",
+                pathname: '/(profiles)/artistProfile',
                 params: { username: user.username },
             });
-        } else if (user?.role === "venue") {
+        } else if (user?.role === 'venue') {
             router.push({
-                pathname: "/(profiles)/venueProfile",
+                pathname: '/(profiles)/venueProfile',
                 params: { username: user.username },
             });
         }
     };
 
     const handleManageCollaborations = () => {
-        router.push("/(profiles)/collaboration");
+        router.push('/(profiles)/collaboration');
     };
 
     // Get role display text
     const getRoleDisplay = () => {
         switch (user?.role) {
-            case 'singer': return 'Ca sĩ';
-            case 'producer': return 'Nhà sản xuất';
-            case 'venue': return 'Địa điểm';
-            default: return 'Người dùng';
+            case 'singer':
+                return 'Ca sĩ';
+            case 'producer':
+                return 'Nhà sản xuất';
+            case 'venue':
+                return 'Địa điểm';
+            default:
+                return 'Người dùng';
         }
     };
 
     // Get role color
     const getRoleColor = () => {
         switch (user?.role) {
-            case 'singer': return ['#7C3BED', '#9333EA'];
-            case 'producer': return ['#2563EB', '#3B82F6'];
-            case 'venue': return ['#DC2626', '#EF4444'];
-            default: return ['#6B7280', '#9CA3AF'];
+            case 'singer':
+                return ['#7C3BED', '#9333EA'];
+            case 'producer':
+                return ['#2563EB', '#3B82F6'];
+            case 'venue':
+                return ['#DC2626', '#EF4444'];
+            default:
+                return ['#6B7280', '#9CA3AF'];
         }
     };
 
@@ -115,7 +131,10 @@ export default function PersonalScreen() {
                     >
                         {/* Background Pattern */}
                         <View className="absolute top-0 right-0 opacity-20">
-                            <View className="w-40 h-40 rounded-full bg-white" style={{ marginTop: -60, marginRight: -60 }} />
+                            <View
+                                className="w-40 h-40 rounded-full bg-white"
+                                style={{ marginTop: -60, marginRight: -60 }}
+                            />
                         </View>
 
                         <View className="flex-row items-center gap-4">
@@ -204,7 +223,10 @@ export default function PersonalScreen() {
                     <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-1">
                         Công việc
                     </Text>
-                    <View className="bg-white rounded-2xl overflow-hidden" style={styles.menuSection}>
+                    <View
+                        className="bg-white rounded-2xl overflow-hidden"
+                        style={styles.menuSection}
+                    >
                         <MenuItem
                             icon={<BriefcaseBusiness size={20} color="#7C3BED" />}
                             title="Quản lý hợp tác"
@@ -219,7 +241,10 @@ export default function PersonalScreen() {
                     <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-1">
                         Cài đặt
                     </Text>
-                    <View className="bg-white rounded-2xl overflow-hidden" style={styles.menuSection}>
+                    <View
+                        className="bg-white rounded-2xl overflow-hidden"
+                        style={styles.menuSection}
+                    >
                         <MenuItem
                             icon={<Shield size={20} color="#10B981" />}
                             title="Tài khoản và bảo mật"

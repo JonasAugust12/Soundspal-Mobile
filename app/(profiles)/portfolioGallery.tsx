@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, FlatList, Image, ActivityIndicator, Dimensions, Platform, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    Pressable,
+    FlatList,
+    Image,
+    ActivityIndicator,
+    Dimensions,
+    Platform,
+    StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Images, Plus, Trash2, ImagePlus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 
-import { useGetCurrentUserMedia, useGetUserMedia, useDeleteUserMedia, useUploadUserMedia } from '@/hooks/useUserApi';
+import {
+    useGetCurrentUserMedia,
+    useGetUserMedia,
+    useDeleteUserMedia,
+    useUploadUserMedia,
+} from '@/hooks/useUserApi';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmModal } from '@/components/common';
@@ -24,8 +39,11 @@ export default function PortfolioGalleryScreen() {
 
     const isMe = !params.username || params.username === currentUser?.username;
 
-    const { data: currentMedia, isLoading: isLoadingCurrent, refetch: refetchCurrent } =
-        useGetCurrentUserMedia({ enabled: isMe });
+    const {
+        data: currentMedia,
+        isLoading: isLoadingCurrent,
+        refetch: refetchCurrent,
+    } = useGetCurrentUserMedia({ enabled: isMe });
     const { data: otherMedia, isLoading: isLoadingOther } = useGetUserMedia(params.username || '', {
         enabled: !isMe,
     });
@@ -109,7 +127,10 @@ export default function PortfolioGalleryScreen() {
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
             {/* Header */}
             <View className="flex-row items-center px-4 py-3 border-b border-border">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-muted">
+                <Pressable
+                    onPress={() => router.back()}
+                    className="p-2 -ml-2 rounded-full active:bg-muted"
+                >
                     <ChevronLeft size={24} color="#09090b" />
                 </Pressable>
                 <Text className="text-lg font-bold text-foreground flex-1 ml-2">Portfolio</Text>
@@ -157,7 +178,8 @@ export default function PortfolioGalleryScreen() {
                         {isMe && (
                             <View className="mt-4 p-4 bg-muted/30 rounded-xl">
                                 <Text className="text-sm text-muted-foreground">
-                                    💡 Thêm ảnh vào portfolio của bạn để giới thiệu công việc và phong cách của mình.
+                                    💡 Thêm ảnh vào portfolio của bạn để giới thiệu công việc và
+                                    phong cách của mình.
                                 </Text>
                             </View>
                         )}

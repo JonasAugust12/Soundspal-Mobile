@@ -26,17 +26,19 @@ export function ConfirmModal({
     isLoading = false,
 }: ConfirmModalProps) {
     return (
-        <Modal
-            visible={visible}
-            animationType="fade"
-            transparent
-            onRequestClose={onCancel}
-        >
+        <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel}>
             <View className="flex-1 bg-black/40 items-center justify-center px-6">
-                <View style={styles.modalContainer} className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-3xl overflow-hidden">
+                <View
+                    style={styles.modalContainer}
+                    className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-3xl overflow-hidden"
+                >
                     {/* Header with icon */}
-                    <View className={`py-6 items-center ${isDestructive ? 'bg-red-50 dark:bg-red-950/30' : 'bg-purple-50 dark:bg-purple-950/30'}`}>
-                        <View className={`w-16 h-16 rounded-full items-center justify-center ${isDestructive ? 'bg-red-100 dark:bg-red-900/50' : 'bg-purple-100 dark:bg-purple-900/50'}`}>
+                    <View
+                        className={`py-6 items-center ${isDestructive ? 'bg-red-50 dark:bg-red-950/30' : 'bg-purple-50 dark:bg-purple-950/30'}`}
+                    >
+                        <View
+                            className={`w-16 h-16 rounded-full items-center justify-center ${isDestructive ? 'bg-red-100 dark:bg-red-900/50' : 'bg-purple-100 dark:bg-purple-900/50'}`}
+                        >
                             <AlertTriangle
                                 size={32}
                                 color={isDestructive ? '#EF4444' : '#7C3AED'}

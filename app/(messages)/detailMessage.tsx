@@ -1,5 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Platform, Image, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    ScrollView,
+    Platform,
+    Image,
+    ActivityIndicator,
+    StyleSheet,
+    TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Phone, Video } from 'lucide-react-native';
@@ -67,7 +76,9 @@ export default function DetailMessageScreen() {
 
         const fetchConversation = async () => {
             try {
-                const response = await apiClient.get<Conversation>(`/conversations/${conversationId}`);
+                const response = await apiClient.get<Conversation>(
+                    `/conversations/${conversationId}`,
+                );
                 setConversation(response.data);
             } catch (error) {
                 console.error('Failed to fetch conversation:', error);
@@ -91,7 +102,9 @@ export default function DetailMessageScreen() {
             setLoadingMessages(conversationId, true);
 
             try {
-                const response = await apiClient.get<Message[]>(`/messages/conversation/${conversationId}`);
+                const response = await apiClient.get<Message[]>(
+                    `/messages/conversation/${conversationId}`,
+                );
                 setMessages(conversationId, response.data);
             } catch (error) {
                 console.error('Failed to fetch messages:', error);
@@ -195,9 +208,13 @@ export default function DetailMessageScreen() {
                 } as any);
                 formData.append('folder', 'messages');
 
-                const uploadResponse = await apiClient.post<{ url: string }>('/storage/upload', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                });
+                const uploadResponse = await apiClient.post<{ url: string }>(
+                    '/storage/upload',
+                    formData,
+                    {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                    },
+                );
 
                 const messageResponse = await apiClient.post<Message>('/messages', {
                     conversationId,
@@ -317,8 +334,10 @@ export default function DetailMessageScreen() {
     }, [messages, currentUserId]);
 
     const selectedMessage = messages.find((m) => m.id === selectedMessageId);
-    const canEditSelected = selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
-    const canDeleteSelected = selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
+    const canEditSelected =
+        selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
+    const canDeleteSelected =
+        selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
 
     if (isLoadingMessages && messages.length === 0) {
         return (
@@ -379,7 +398,10 @@ export default function DetailMessageScreen() {
 
                             {/* User Info */}
                             <View className="flex-1">
-                                <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                                <Text
+                                    className="text-base font-bold text-gray-900"
+                                    numberOfLines={1}
+                                >
                                     {otherUser?.displayName || 'Unknown User'}
                                 </Text>
                                 <View className="flex-row items-center gap-1">
@@ -395,9 +417,7 @@ export default function DetailMessageScreen() {
                                             </Text>
                                         </>
                                     ) : (
-                                        <Text className="text-xs text-gray-400">
-                                            Ngoại tuyến
-                                        </Text>
+                                        <Text className="text-xs text-gray-400">Ngoại tuyến</Text>
                                     )}
                                 </View>
                             </View>
@@ -419,14 +439,18 @@ export default function DetailMessageScreen() {
                         ref={scrollViewRef}
                         className="flex-1"
                         contentContainerStyle={{ paddingVertical: 16, paddingHorizontal: 12 }}
-                        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                        onContentSizeChange={() =>
+                            scrollViewRef.current?.scrollToEnd({ animated: true })
+                        }
                         showsVerticalScrollIndicator={false}
                     >
                         {/* Date Separator */}
                         {chatMessages.length > 0 && (
                             <View className="items-center mb-4">
                                 <View className="bg-gray-200 px-3 py-1 rounded-full">
-                                    <Text className="text-xs text-gray-500 font-medium">Hôm nay</Text>
+                                    <Text className="text-xs text-gray-500 font-medium">
+                                        Hôm nay
+                                    </Text>
                                 </View>
                             </View>
                         )}
@@ -455,9 +479,11 @@ export default function DetailMessageScreen() {
                             <View className="flex-row items-center gap-2">
                                 <View className="w-1 h-8 bg-purple-500 rounded-full" />
                                 <View>
-                                    <Text className="text-xs font-semibold text-purple-600">Chỉnh sửa tin nhắn</Text>
+                                    <Text className="text-xs font-semibold text-purple-600">
+                                        Chỉnh sửa tin nhắn
+                                    </Text>
                                     <Text className="text-xs text-gray-500" numberOfLines={1}>
-                                        {messages.find(m => m.id === editingMessageId)?.content}
+                                        {messages.find((m) => m.id === editingMessageId)?.content}
                                     </Text>
                                 </View>
                             </View>
@@ -468,14 +494,19 @@ export default function DetailMessageScreen() {
                     )}
 
                     {/* Message Input */}
-                    <View style={styles.inputContainer} className="bg-white border-t border-gray-100">
+                    <View
+                        style={styles.inputContainer}
+                        className="bg-white border-t border-gray-100"
+                    >
                         <MessageInput
                             value={messageText}
                             onChangeText={handleTextChange}
                             onSend={handleSendMessage}
                             onImagePick={handleImagePick}
                             disabled={isUploading}
-                            placeholder={editingMessageId ? 'Chỉnh sửa tin nhắn...' : 'Nhập tin nhắn...'}
+                            placeholder={
+                                editingMessageId ? 'Chỉnh sửa tin nhắn...' : 'Nhập tin nhắn...'
+                            }
                         />
                     </View>
 

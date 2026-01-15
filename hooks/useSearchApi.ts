@@ -15,20 +15,27 @@ const searchApi = {
         // Remove undefined values and pagination params
         const { page, pageSize, ...restParams } = params;
         const cleanParams = Object.fromEntries(
-            Object.entries(restParams).filter(([_, v]) => v !== undefined)
+            Object.entries(restParams).filter(([_, v]) => v !== undefined),
         );
 
-        return createApiCall<ApiResponse<SearchUsersData>, typeof cleanParams>('POST', '/search/users')(
-            cleanParams
-        );
+        return createApiCall<ApiResponse<SearchUsersData>, typeof cleanParams>(
+            'POST',
+            '/search/users',
+        )(cleanParams);
     },
 
     getGenres: () => createApiCall<ApiResponse<GetGenresData>>('GET', '/users/genres')(),
 
     getFeaturedUsers: (limit: number) =>
-        createApiCall<ApiResponse<FeaturedUsersData>>('GET', `/landing/featured-users?limit=${limit}`)(),
+        createApiCall<ApiResponse<FeaturedUsersData>>(
+            'GET',
+            `/landing/featured-users?limit=${limit}`,
+        )(),
     getFeaturedJobs: (limit: number) =>
-        createApiCall<ApiResponse<FeaturedJobsData>>('GET', `/landing/featured-jobs?limit=${limit}`)(),
+        createApiCall<ApiResponse<FeaturedJobsData>>(
+            'GET',
+            `/landing/featured-jobs?limit=${limit}`,
+        )(),
 };
 
 // Search Users Hook

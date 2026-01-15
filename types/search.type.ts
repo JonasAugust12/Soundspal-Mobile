@@ -136,4 +136,3 @@ export interface SearchUsersData {
 export interface GetGenresData {
     genres: Genre[];
 }
-

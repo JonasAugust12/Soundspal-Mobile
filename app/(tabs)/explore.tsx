@@ -1,15 +1,41 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, FlatList, ScrollView, Pressable, RefreshControl, Image, TextInput, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    FlatList,
+    ScrollView,
+    Pressable,
+    RefreshControl,
+    Image,
+    TextInput,
+    StyleSheet,
+    Platform,
+    TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Search, SlidersHorizontal, Disc2, MicVocal, Building2, Users, MapPin, BadgeCheck } from 'lucide-react-native';
+import {
+    Search,
+    SlidersHorizontal,
+    Disc2,
+    MicVocal,
+    Building2,
+    Users,
+    MapPin,
+    BadgeCheck,
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSearchUsers } from '@/hooks/useSearchApi';
 import { useSearchStore, UserRole } from '@/stores/searchStore';
 import { FilterSheet } from '@/components/common';
 import type { UserProfile } from '@/types/search.type';
 
-const ROLE_TABS: { label: string; value: 'singer' | 'producer' | 'venue' | 'all'; icon: any; color: string }[] = [
+const ROLE_TABS: {
+    label: string;
+    value: 'singer' | 'producer' | 'venue' | 'all';
+    icon: any;
+    color: string;
+}[] = [
     { label: 'Tất cả', value: 'all', icon: Users, color: '#7C3AED' },
     { label: 'Ca sĩ', value: 'singer', icon: MicVocal, color: '#EC4899' },
     { label: 'Producer', value: 'producer', icon: Disc2, color: '#3B82F6' },
@@ -20,7 +46,9 @@ export default function ExploreScreen() {
     const params = useLocalSearchParams<{ query?: string }>();
     const router = useRouter();
     const [searchText, setSearchText] = useState('');
-    const [selectedRole, setSelectedRole] = useState<'singer' | 'producer' | 'venue' | 'all'>('all');
+    const [selectedRole, setSelectedRole] = useState<'singer' | 'producer' | 'venue' | 'all'>(
+        'all',
+    );
     const [showFilter, setShowFilter] = useState(false);
 
     const { filters, setQuery, setRole } = useSearchStore();
@@ -86,19 +114,27 @@ export default function ExploreScreen() {
 
     const getRoleColor = (role: string) => {
         switch (role) {
-            case 'singer': return '#EC4899';
-            case 'producer': return '#3B82F6';
-            case 'venue': return '#F59E0B';
-            default: return '#7C3AED';
+            case 'singer':
+                return '#EC4899';
+            case 'producer':
+                return '#3B82F6';
+            case 'venue':
+                return '#F59E0B';
+            default:
+                return '#7C3AED';
         }
     };
 
     const getRoleLabel = (role: string) => {
         switch (role) {
-            case 'singer': return 'Ca sĩ';
-            case 'producer': return 'Producer';
-            case 'venue': return 'Địa điểm';
-            default: return role;
+            case 'singer':
+                return 'Ca sĩ';
+            case 'producer':
+                return 'Producer';
+            case 'venue':
+                return 'Địa điểm';
+            default:
+                return role;
         }
     };
 
@@ -222,7 +258,10 @@ export default function ExploreScreen() {
                 </View>
 
                 {/* Search Bar */}
-                <View style={styles.searchContainer} className="flex-row items-center bg-gray-100 rounded-2xl px-4">
+                <View
+                    style={styles.searchContainer}
+                    className="flex-row items-center bg-gray-100 rounded-2xl px-4"
+                >
                     <Search size={20} color="#9CA3AF" />
                     <TextInput
                         value={searchText}
@@ -245,7 +284,11 @@ export default function ExploreScreen() {
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingHorizontal: 12, alignItems: 'center', height: 70 }}
+                    contentContainerStyle={{
+                        paddingHorizontal: 12,
+                        alignItems: 'center',
+                        height: 70,
+                    }}
                 >
                     <View className="flex-row gap-2">
                         {ROLE_TABS.map((tab) => {
@@ -256,16 +299,18 @@ export default function ExploreScreen() {
                                     key={tab.value}
                                     onPress={() => handleRoleChange(tab.value)}
                                     style={{ minWidth: 80, height: 44 }}
-                                    className={`flex-row items-center justify-center gap-2 px-4 rounded-xl ${isSelected ? 'bg-purple-600' : 'bg-gray-100'
-                                        }`}
+                                    className={`flex-row items-center justify-center gap-2 px-4 rounded-xl ${
+                                        isSelected ? 'bg-purple-600' : 'bg-gray-100'
+                                    }`}
                                 >
                                     <IconComponent
                                         size={18}
                                         color={isSelected ? '#FFFFFF' : tab.color}
                                     />
                                     <Text
-                                        className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-gray-700'
-                                            }`}
+                                        className={`text-sm font-semibold ${
+                                            isSelected ? 'text-white' : 'text-gray-700'
+                                        }`}
                                     >
                                         {tab.label}
                                     </Text>

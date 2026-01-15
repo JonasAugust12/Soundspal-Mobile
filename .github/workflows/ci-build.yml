@@ -1,0 +1,45 @@
+name: CI - Build Verification
+
+on:
+    pull_request:
+        branches: [main]
+
+jobs:
+    build-android:
+        name: Verify Android Build
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: 'temurin'
+                  java-version: '17'
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Setup Expo CLI
+              run: npm install -g expo-cli eas-cli
+
+            - name: Run Expo prebuild
+              run: npx expo prebuild --platform android --no-install
+
+            - name: Verify Android project structure
+              run: |
+                  if [ -d "android" ]; then
+                    echo "✅ Android project created successfully"
+                    ls -la android/
+                  else
+                    echo "❌ Android project not found"
+                    exit 1
+                  fi

@@ -54,7 +54,10 @@ export function ServicesList({ services }: ServicesListProps) {
                             <View className="flex-row justify-between items-start">
                                 {/* Service Info */}
                                 <View className="flex-1 pr-3">
-                                    <Text className="text-base font-bold text-gray-900 dark:text-white" numberOfLines={2}>
+                                    <Text
+                                        className="text-base font-bold text-gray-900 dark:text-white"
+                                        numberOfLines={2}
+                                    >
                                         {service.name}
                                     </Text>
 

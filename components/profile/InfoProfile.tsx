@@ -76,11 +76,7 @@ export function InfoProfile({
                         />
                     </View>
                     <View className="absolute -bottom-2 -right-2 bg-background p-1.5 rounded-full shadow-sm">
-                        <Image
-                            source={roleIcons[role]}
-                            className="w-6 h-6"
-                            resizeMode="contain"
-                        />
+                        <Image source={roleIcons[role]} className="w-6 h-6" resizeMode="contain" />
                     </View>
                 </View>
 
@@ -93,12 +89,16 @@ export function InfoProfile({
                     <View className="flex-row items-center gap-3">
                         <View className="flex-row items-center gap-1">
                             <MapPin size={14} className="text-muted-foreground" />
-                            <Text className="text-sm font-medium text-muted-foreground">{location}</Text>
+                            <Text className="text-sm font-medium text-muted-foreground">
+                                {location}
+                            </Text>
                         </View>
                         {rating > 0 && (
                             <View className="flex-row items-center gap-1 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
                                 <Star size={12} color="#f59e0b" fill="#f59e0b" />
-                                <Text className="text-xs font-bold text-amber-600 dark:text-amber-500">{rating}</Text>
+                                <Text className="text-xs font-bold text-amber-600 dark:text-amber-500">
+                                    {rating}
+                                </Text>
                             </View>
                         )}
                     </View>

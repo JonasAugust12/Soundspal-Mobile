@@ -33,9 +33,10 @@ export function SelectInput({ label, options, value, onValueChange, error }: Sel
                             onPress={() => onValueChange(option.value)}
                             className={`
                                 flex-1 py-3 px-3 rounded-xl border-2 items-center gap-1.5
-                                ${isSelected
-                                    ? 'border-purple-600 bg-purple-50'
-                                    : 'border-gray-200 bg-white'
+                                ${
+                                    isSelected
+                                        ? 'border-purple-600 bg-purple-50'
+                                        : 'border-gray-200 bg-white'
                                 }
                             `}
                         >
@@ -48,10 +49,7 @@ export function SelectInput({ label, options, value, onValueChange, error }: Sel
                             <Text
                                 className={`
                                     text-center font-semibold text-sm
-                                    ${isSelected
-                                        ? 'text-purple-600'
-                                        : 'text-gray-500'
-                                    }
+                                    ${isSelected ? 'text-purple-600' : 'text-gray-500'}
                                 `}
                             >
                                 {option.label}
@@ -60,9 +58,7 @@ export function SelectInput({ label, options, value, onValueChange, error }: Sel
                     );
                 })}
             </View>
-            {error && (
-                <Text className="text-red-500 text-xs mt-1">{error}</Text>
-            )}
+            {error && <Text className="text-red-500 text-xs mt-1">{error}</Text>}
         </View>
     );
 }

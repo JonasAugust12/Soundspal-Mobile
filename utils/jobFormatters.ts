@@ -51,12 +51,12 @@ export const formatDaysAgo = (dateStr: string): string => {
  */
 export const formatJobType = (type: string): string => {
     const typeMap: { [key: string]: string } = {
-        'venue': 'Venue',
-        'producer': 'Nhà sản xuất',
-        'singer': 'Ca sĩ',
-        'musician': 'Nhạc công',
-        'dj': 'DJ',
-        'band': 'Ban nhạc',
+        venue: 'Venue',
+        producer: 'Nhà sản xuất',
+        singer: 'Ca sĩ',
+        musician: 'Nhạc công',
+        dj: 'DJ',
+        band: 'Ban nhạc',
     };
     return typeMap[type?.toLowerCase()] || type || 'N/A';
 };
@@ -66,10 +66,10 @@ export const formatJobType = (type: string): string => {
  */
 export const formatRecruitmentType = (type: string): string => {
     const typeMap: { [key: string]: string } = {
-        'full_time': 'Toàn thời gian',
-        'part_time': 'Bán thời gian',
-        'contract': 'Hợp đồng',
-        'one_time': 'Một lần',
+        full_time: 'Toàn thời gian',
+        part_time: 'Bán thời gian',
+        contract: 'Hợp đồng',
+        one_time: 'Một lần',
     };
     return typeMap[type?.toLowerCase()] || type || 'N/A';
 };
@@ -79,9 +79,9 @@ export const formatRecruitmentType = (type: string): string => {
  */
 export const formatLocationType = (type: string): string => {
     const typeMap: { [key: string]: string } = {
-        'remote': 'Làm việc từ xa',
-        'onsite': 'Tại địa điểm',
-        'hybrid': 'Kết hợp',
+        remote: 'Làm việc từ xa',
+        onsite: 'Tại địa điểm',
+        hybrid: 'Kết hợp',
     };
     return typeMap[type?.toLowerCase()] || type || 'N/A';
 };

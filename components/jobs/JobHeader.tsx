@@ -30,9 +30,7 @@ export const JobHeader = () => {
                         style={styles.gradientButton}
                     >
                         <Plus size={20} color="white" />
-                        <Text className="text-white font-bold text-sm ml-1.5">
-                            Đăng tin
-                        </Text>
+                        <Text className="text-white font-bold text-sm ml-1.5">Đăng tin</Text>
                     </LinearGradient>
                 </TouchableOpacity>
             </View>

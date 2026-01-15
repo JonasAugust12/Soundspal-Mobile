@@ -3,7 +3,17 @@ import { View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { User, AtSign, Mail, Lock, ShieldCheck, UserPlus, Disc2, MicVocal, Building2 } from 'lucide-react-native';
+import {
+    User,
+    AtSign,
+    Mail,
+    Lock,
+    ShieldCheck,
+    UserPlus,
+    Disc2,
+    MicVocal,
+    Building2,
+} from 'lucide-react-native';
 import { FormInput } from './FormInput';
 import { SelectInput } from './SelectInput';
 import { AuthButton } from './AuthButton';

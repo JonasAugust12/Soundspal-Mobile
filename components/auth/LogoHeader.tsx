@@ -9,9 +9,7 @@ export function LogoHeader() {
                 className="w-12 h-12"
                 resizeMode="contain"
             />
-            <Text className="text-3xl font-bold text-purple-600 uppercase">
-                Talent Link
-            </Text>
+            <Text className="text-3xl font-bold text-purple-600 uppercase">Talent Link</Text>
         </View>
     );
 }

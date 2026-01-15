@@ -66,11 +66,7 @@ export function MessageBubble({
                         </View>
                     ) : (
                         <LinearGradient
-                            colors={
-                                isDeleted
-                                    ? ['#9ca3af', '#6b7280']
-                                    : ['#7C3BED', '#F471B7']
-                            }
+                            colors={isDeleted ? ['#9ca3af', '#6b7280'] : ['#7C3BED', '#F471B7']}
                             start={{ x: 0, y: 0.5 }}
                             end={{ x: 1, y: 0.5 }}
                             style={{
@@ -107,9 +103,7 @@ export function MessageBubble({
                 <View className="flex-row gap-2 items-center opacity-70 -mt-1">
                     {time && <Text className="text-muted-foreground text-xs">{time}</Text>}
                     {isEdited && !isDeleted && (
-                        <Text className="text-muted-foreground text-xs italic">
-                            Đã chỉnh sửa
-                        </Text>
+                        <Text className="text-muted-foreground text-xs italic">Đã chỉnh sửa</Text>
                     )}
                 </View>
             )}

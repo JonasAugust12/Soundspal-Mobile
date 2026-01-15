@@ -91,9 +91,7 @@ export const useGoogleSignIn = () => {
             }
 
             const errorMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                'Đăng nhập Google thất bại';
+                error?.response?.data?.message || error?.message || 'Đăng nhập Google thất bại';
 
             showError('Lỗi đăng nhập', errorMessage);
         }

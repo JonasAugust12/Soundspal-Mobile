@@ -17,7 +17,8 @@ export function useProtectedRoute() {
             segments[0] === '(editprofile)';
 
         const segmentsArray = segments as string[];
-        const isOnEmailVerificationRequired = segmentsArray.length > 1 && segmentsArray[1] === 'email-verification-required';
+        const isOnEmailVerificationRequired =
+            segmentsArray.length > 1 && segmentsArray[1] === 'email-verification-required';
         const isOnVerifyEmail = segmentsArray.length > 1 && segmentsArray[1] === 'verify-email';
 
         // 1. Not logged in and trying to access protected route → redirect to login

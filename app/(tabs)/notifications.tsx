@@ -1,5 +1,15 @@
 import React, { useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Platform, StyleSheet, TouchableOpacity, Image, TextInput } from 'react-native';
+import {
+    View,
+    Text,
+    ScrollView,
+    ActivityIndicator,
+    Platform,
+    StyleSheet,
+    TouchableOpacity,
+    Image,
+    TextInput,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Search, MoreHorizontal } from 'lucide-react-native';
@@ -175,21 +185,35 @@ export default function MessagesScreen() {
                         <View className="flex-row gap-3">
                             <TouchableOpacity
                                 onPress={() => setActiveTab('all')}
-                                className={`flex-row items-center px-4 py-2 rounded-full ${activeTab === 'all' ? 'bg-purple-100' : 'bg-gray-50'
-                                    }`}
+                                className={`flex-row items-center px-4 py-2 rounded-full ${
+                                    activeTab === 'all' ? 'bg-purple-100' : 'bg-gray-50'
+                                }`}
                             >
-                                <View className={`w-2 h-2 rounded-full mr-2 ${activeTab === 'all' ? 'bg-purple-500' : 'bg-gray-400'}`} />
-                                <Text className={`font-semibold text-sm ${activeTab === 'all' ? 'text-purple-600' : 'text-gray-600'}`}>Tất cả</Text>
+                                <View
+                                    className={`w-2 h-2 rounded-full mr-2 ${activeTab === 'all' ? 'bg-purple-500' : 'bg-gray-400'}`}
+                                />
+                                <Text
+                                    className={`font-semibold text-sm ${activeTab === 'all' ? 'text-purple-600' : 'text-gray-600'}`}
+                                >
+                                    Tất cả
+                                </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => setActiveTab('unread')}
-                                className={`flex-row items-center px-4 py-2 rounded-full ${activeTab === 'unread' ? 'bg-purple-100' : 'bg-gray-50'
-                                    }`}
+                                className={`flex-row items-center px-4 py-2 rounded-full ${
+                                    activeTab === 'unread' ? 'bg-purple-100' : 'bg-gray-50'
+                                }`}
                             >
-                                <Text className={`font-medium text-sm ${activeTab === 'unread' ? 'text-purple-600' : 'text-gray-600'}`}>Chưa đọc</Text>
+                                <Text
+                                    className={`font-medium text-sm ${activeTab === 'unread' ? 'text-purple-600' : 'text-gray-600'}`}
+                                >
+                                    Chưa đọc
+                                </Text>
                                 {totalUnread > 0 && (
                                     <View className="bg-red-500 rounded-full px-1.5 py-0.5 ml-2 min-w-[20px] items-center">
-                                        <Text className="text-white text-[10px] font-bold">{totalUnread}</Text>
+                                        <Text className="text-white text-[10px] font-bold">
+                                            {totalUnread}
+                                        </Text>
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -220,12 +244,17 @@ export default function MessagesScreen() {
                                     return (
                                         <View
                                             key={conversation.id}
-                                            style={unreadCount > 0 ? styles.unreadCard : styles.card}
+                                            style={
+                                                unreadCount > 0 ? styles.unreadCard : styles.card
+                                            }
                                             className={`rounded-2xl overflow-hidden ${unreadCount > 0 ? 'bg-purple-50' : 'bg-gray-50'}`}
                                         >
                                             <ChatItem
                                                 name={participant.name}
-                                                preview={conversation.lastMessage?.content || 'Chưa có tin nhắn'}
+                                                preview={
+                                                    conversation.lastMessage?.content ||
+                                                    'Chưa có tin nhắn'
+                                                }
                                                 avatarSource={
                                                     participant.avatarUrl
                                                         ? { uri: participant.avatarUrl }
@@ -233,13 +262,17 @@ export default function MessagesScreen() {
                                                 }
                                                 time={
                                                     conversation.lastMessage
-                                                        ? formatTime(conversation.lastMessage.createdAt)
+                                                        ? formatTime(
+                                                              conversation.lastMessage.createdAt,
+                                                          )
                                                         : undefined
                                                 }
                                                 unread={unreadCount > 0}
                                                 unreadCount={unreadCount}
                                                 userId={participant.id}
-                                                onPress={() => handleConversationPress(conversation.id)}
+                                                onPress={() =>
+                                                    handleConversationPress(conversation.id)
+                                                }
                                             />
                                         </View>
                                     );
@@ -256,15 +289,15 @@ export default function MessagesScreen() {
                                 {isSearching && searchText.trim()
                                     ? 'Không tìm thấy kết quả'
                                     : activeTab === 'unread'
-                                        ? 'Không có tin nhắn chưa đọc'
-                                        : 'Chưa có tin nhắn'}
+                                      ? 'Không có tin nhắn chưa đọc'
+                                      : 'Chưa có tin nhắn'}
                             </Text>
                             <Text className="text-base text-gray-500 dark:text-gray-400 text-center max-w-[280px] leading-relaxed">
                                 {isSearching && searchText.trim()
                                     ? `Không tìm thấy ai tên "${searchText}"`
                                     : activeTab === 'unread'
-                                        ? 'Cảm ơn bạn đã cập nhật nhanh chóng với các đối tác!'
-                                        : 'Bắt đầu trò chuyện với nghệ sĩ và nhà tổ chức để tạo kết nối mới'}
+                                      ? 'Cảm ơn bạn đã cập nhật nhanh chóng với các đối tác!'
+                                      : 'Bắt đầu trò chuyện với nghệ sĩ và nhà tổ chức để tạo kết nối mới'}
                             </Text>
                             {activeTab === 'all' && !isSearching && (
                                 <TouchableOpacity

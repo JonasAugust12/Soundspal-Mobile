@@ -1,11 +1,26 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, FlatList, TextInput, ActivityIndicator, Modal, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    Pressable,
+    FlatList,
+    TextInput,
+    ActivityIndicator,
+    Modal,
+    TouchableOpacity,
+    Platform,
+    StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Plus, Trash2, X, Music4 } from 'lucide-react-native';
 
 import { YoutubeEmbed } from '@/components/profile';
-import { useGetCurrentUser, useGetUserByUsername, useUpdateFeaturedReleases } from '@/hooks/useUserApi';
+import {
+    useGetCurrentUser,
+    useGetUserByUsername,
+    useUpdateFeaturedReleases,
+} from '@/hooks/useUserApi';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function FeaturedReleasesScreen() {
@@ -15,12 +30,19 @@ export default function FeaturedReleasesScreen() {
 
     const isMe = !params.username || params.username === currentUser?.username;
 
-    const { data: currentUserData, isLoading: isLoadingCurrent, refetch } = useGetCurrentUser({
+    const {
+        data: currentUserData,
+        isLoading: isLoadingCurrent,
+        refetch,
+    } = useGetCurrentUser({
         enabled: isMe,
     });
-    const { data: otherUser, isLoading: isLoadingOther } = useGetUserByUsername(params.username || '', {
-        enabled: !isMe,
-    });
+    const { data: otherUser, isLoading: isLoadingOther } = useGetUserByUsername(
+        params.username || '',
+        {
+            enabled: !isMe,
+        },
+    );
 
     const updateFeaturedReleases = useUpdateFeaturedReleases();
 
@@ -72,10 +94,15 @@ export default function FeaturedReleasesScreen() {
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
             {/* Header */}
             <View className="flex-row items-center px-4 py-3 border-b border-border">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-muted">
+                <Pressable
+                    onPress={() => router.back()}
+                    className="p-2 -ml-2 rounded-full active:bg-muted"
+                >
                     <ChevronLeft size={24} color="#09090b" />
                 </Pressable>
-                <Text className="text-lg font-bold text-foreground flex-1 ml-2">Featured Releases</Text>
+                <Text className="text-lg font-bold text-foreground flex-1 ml-2">
+                    Featured Releases
+                </Text>
             </View>
 
             {/* Links List */}
@@ -133,10 +160,15 @@ export default function FeaturedReleasesScreen() {
                 onRequestClose={() => setShowAddModal(false)}
             >
                 <View className="flex-1 bg-black/40 items-center justify-center px-6">
-                    <View className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl overflow-hidden" style={styles.modalContainer}>
+                    <View
+                        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl overflow-hidden"
+                        style={styles.modalContainer}
+                    >
                         {/* Header */}
                         <View className="flex-row items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-                            <Text className="text-xl font-bold text-gray-900 dark:text-white">Thêm YouTube Link</Text>
+                            <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                                Thêm YouTube Link
+                            </Text>
                             <TouchableOpacity
                                 onPress={() => setShowAddModal(false)}
                                 className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center"
@@ -167,12 +199,14 @@ export default function FeaturedReleasesScreen() {
                                     onPress={() => setShowAddModal(false)}
                                     className="flex-1 py-3.5 rounded-xl bg-gray-100 dark:bg-gray-800 items-center"
                                 >
-                                    <Text className="text-base font-bold text-gray-700 dark:text-gray-300">Hủy</Text>
+                                    <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
+                                        Hủy
+                                    </Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={handleAddLink}
                                     disabled={updateFeaturedReleases.isPending || !newUrl.trim()}
-                                    className={`flex-1 py-3.5 rounded-xl bg-purple-600 items-center ${(!newUrl.trim() || updateFeaturedReleases.isPending) ? 'opacity-50' : ''}`}
+                                    className={`flex-1 py-3.5 rounded-xl bg-purple-600 items-center ${!newUrl.trim() || updateFeaturedReleases.isPending ? 'opacity-50' : ''}`}
                                     activeOpacity={0.8}
                                 >
                                     <Text className="text-base font-bold text-white">

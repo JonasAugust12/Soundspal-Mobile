@@ -15,17 +15,17 @@ export const JobTabs = ({ activeTab, onTabChange }: JobTabsProps) => {
             >
                 <Pressable
                     onPress={() => onTabChange('others')}
-                    className={`flex-1 py-3 rounded-xl ${activeTab === 'others'
-                            ? 'bg-white dark:bg-gray-700'
-                            : 'bg-transparent'
-                        }`}
+                    className={`flex-1 py-3 rounded-xl ${
+                        activeTab === 'others' ? 'bg-white dark:bg-gray-700' : 'bg-transparent'
+                    }`}
                     style={activeTab === 'others' ? styles.activeTab : {}}
                 >
                     <Text
-                        className={`text-center font-bold text-sm ${activeTab === 'others'
+                        className={`text-center font-bold text-sm ${
+                            activeTab === 'others'
                                 ? 'text-purple-600 dark:text-purple-400'
                                 : 'text-gray-600 dark:text-gray-400'
-                            }`}
+                        }`}
                     >
                         Các job khác
                     </Text>
@@ -33,17 +33,17 @@ export const JobTabs = ({ activeTab, onTabChange }: JobTabsProps) => {
 
                 <Pressable
                     onPress={() => onTabChange('mine')}
-                    className={`flex-1 py-3 rounded-xl ${activeTab === 'mine'
-                            ? 'bg-white dark:bg-gray-700'
-                            : 'bg-transparent'
-                        }`}
+                    className={`flex-1 py-3 rounded-xl ${
+                        activeTab === 'mine' ? 'bg-white dark:bg-gray-700' : 'bg-transparent'
+                    }`}
                     style={activeTab === 'mine' ? styles.activeTab : {}}
                 >
                     <Text
-                        className={`text-center font-bold text-sm ${activeTab === 'mine'
+                        className={`text-center font-bold text-sm ${
+                            activeTab === 'mine'
                                 ? 'text-purple-600 dark:text-purple-400'
                                 : 'text-gray-600 dark:text-gray-400'
-                            }`}
+                        }`}
                     >
                         Job của tôi
                     </Text>

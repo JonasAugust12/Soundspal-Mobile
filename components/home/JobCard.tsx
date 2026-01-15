@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ImageSourcePropType, StyleSheet, Platform } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Image,
+    ImageSourcePropType,
+    StyleSheet,
+    Platform,
+} from 'react-native';
 import { MapPin, Clock, DollarSign, Briefcase } from 'lucide-react-native';
 
 export type JobItem = {
@@ -98,10 +106,7 @@ export const JobCard = React.memo(function JobCard({ item, width = 220, onPress 
             {/* Job Content */}
             <View className="p-3 gap-2">
                 {/* Title */}
-                <Text
-                    className="text-sm font-bold text-gray-900 leading-tight"
-                    numberOfLines={2}
-                >
+                <Text className="text-sm font-bold text-gray-900 leading-tight" numberOfLines={2}>
                     {item.title}
                 </Text>
 
@@ -116,7 +121,10 @@ export const JobCard = React.memo(function JobCard({ item, width = 220, onPress 
                 {item.genres && item.genres.length > 0 && (
                     <View className="flex-row flex-wrap gap-1">
                         {item.genres.slice(0, 3).map((genre, idx) => (
-                            <View key={idx} className="bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-full">
+                            <View
+                                key={idx}
+                                className="bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded-full"
+                            >
                                 <Text className="text-[9px] font-semibold text-purple-700">
                                     {genre}
                                 </Text>

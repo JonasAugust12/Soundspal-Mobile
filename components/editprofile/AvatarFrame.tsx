@@ -15,15 +15,18 @@ const roleIcons = {
     venue: require('@/assets/images/Venue.png'),
 };
 
-export function AvatarFrame({ avatarUri, roleIcon = 'singer', editable, onPickAvatar }: AvatarFrameProps) {
+export function AvatarFrame({
+    avatarUri,
+    roleIcon = 'singer',
+    editable,
+    onPickAvatar,
+}: AvatarFrameProps) {
     return (
         <View className="relative">
             <View className="border-4 border-background rounded-2xl shadow-lg">
                 <Image
                     source={
-                        avatarUri
-                            ? { uri: avatarUri }
-                            : require('@/assets/images/user_profile.png')
+                        avatarUri ? { uri: avatarUri } : require('@/assets/images/user_profile.png')
                     }
                     className="w-28 h-28 rounded-xl"
                     resizeMode="cover"

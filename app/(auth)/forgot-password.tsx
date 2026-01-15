@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Keyboard, Image, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,6 +29,7 @@ export default function ForgotPasswordScreen() {
                     params: { email: data.email },
                 });
             }
+            //eslint-disable-next-line
         } catch (error: any) {
             const errorMessage =
                 error?.response?.data?.message ||
@@ -79,7 +80,10 @@ export default function ForgotPasswordScreen() {
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                    >
                         {/* Icon */}
                         <View className="items-center mb-6">
                             <View className="w-16 h-16 rounded-full bg-orange-50 items-center justify-center mb-4">
@@ -98,13 +102,9 @@ export default function ForgotPasswordScreen() {
 
                         {/* Back to Login */}
                         <View className="flex-row items-center justify-center gap-1 mt-8">
-                            <Text className="text-sm text-gray-500">
-                                Nhớ mật khẩu rồi?
-                            </Text>
+                            <Text className="text-sm text-gray-500">Nhớ mật khẩu rồi?</Text>
                             <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-                                <Text className="text-sm font-bold text-orange-600">
-                                    Đăng nhập
-                                </Text>
+                                <Text className="text-sm font-bold text-orange-600">Đăng nhập</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

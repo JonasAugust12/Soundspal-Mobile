@@ -17,65 +17,63 @@ interface AuthState {
     refreshToken: string | null;
     user: AuthUser | null;
     isAuthenticated: boolean;
-    
+
     // Actions
-    setCredentials: (data: {
-        accessToken: string;
-        refreshToken: string;
-        user: AuthUser;
-    }) => void;
+    setCredentials: (data: { accessToken: string; refreshToken: string; user: AuthUser }) => void;
     updateAvatarUrl: (avatarUrl: string) => void;
     updateDisplayName: (displayName: string) => void;
     logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(persist(
-    (set) => ({
-        accessToken: null,
-        refreshToken: null,
-        user: null,
-        isAuthenticated: false,
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            accessToken: null,
+            refreshToken: null,
+            user: null,
+            isAuthenticated: false,
 
-        setCredentials: ({ accessToken, refreshToken, user }) => {
-            set({
-                accessToken,
-                refreshToken,
-                user,
-                isAuthenticated: true,
-            });
-        },
+            setCredentials: ({ accessToken, refreshToken, user }) => {
+                set({
+                    accessToken,
+                    refreshToken,
+                    user,
+                    isAuthenticated: true,
+                });
+            },
 
-        updateAvatarUrl: (avatarUrl) => {
-            set((state) => {
-                if (state.user) {
-                    const updatedUser = { ...state.user, avatar_url: avatarUrl };
-                    return { user: updatedUser };
-                }
-                return state;
-            });
-        },
+            updateAvatarUrl: (avatarUrl) => {
+                set((state) => {
+                    if (state.user) {
+                        const updatedUser = { ...state.user, avatar_url: avatarUrl };
+                        return { user: updatedUser };
+                    }
+                    return state;
+                });
+            },
 
-        updateDisplayName: (displayName) => {
-            set((state) => {
-                if (state.user) {
-                    const updatedUser = { ...state.user, display_name: displayName };
-                    return { user: updatedUser };
-                }
-                return state;
-            });
-        },
+            updateDisplayName: (displayName) => {
+                set((state) => {
+                    if (state.user) {
+                        const updatedUser = { ...state.user, display_name: displayName };
+                        return { user: updatedUser };
+                    }
+                    return state;
+                });
+            },
 
-        logout: () => {
-            set({
-                accessToken: null,
-                refreshToken: null,
-                user: null,
-                isAuthenticated: false,
-            });
+            logout: () => {
+                set({
+                    accessToken: null,
+                    refreshToken: null,
+                    user: null,
+                    isAuthenticated: false,
+                });
+            },
+        }),
+        {
+            name: 'auth-storage',
+            storage: createJSONStorage(() => mmkvStorage),
         },
-    }),
-    {
-        name: 'auth-storage',
-        storage: createJSONStorage(() => mmkvStorage),
-    }
-));
+    ),
+);

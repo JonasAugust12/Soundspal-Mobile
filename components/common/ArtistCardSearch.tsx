@@ -62,8 +62,8 @@ export function ArtistCardSearch({ item, width = 160 }: Props) {
                                     item.role === 'singer'
                                         ? require('@/assets/images/Singer.png')
                                         : item.role === 'producer'
-                                            ? require('@/assets/images/DJ.png')
-                                            : require('@/assets/images/Venue.png')
+                                          ? require('@/assets/images/DJ.png')
+                                          : require('@/assets/images/Venue.png')
                                 }
                                 className="w-10 h-10"
                                 resizeMode="contain"

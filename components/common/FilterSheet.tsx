@@ -10,7 +10,15 @@ import {
     Pressable,
     ActivityIndicator,
 } from 'react-native';
-import { X, MapPin, Music, Building2, Check, RotateCcw, SlidersHorizontal } from 'lucide-react-native';
+import {
+    X,
+    MapPin,
+    Music,
+    Building2,
+    Check,
+    RotateCcw,
+    SlidersHorizontal,
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSearchStore, UserRole } from '@/stores/searchStore';
 import { useGetGenres } from '@/hooks/useSearchApi';
@@ -23,7 +31,8 @@ export interface FilterSheetProps {
 }
 
 export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps) {
-    const { filters, toggleGenre, toggleBusinessType, setLocation, resetFilters, applyFilters } = useSearchStore();
+    const { filters, toggleGenre, toggleBusinessType, setLocation, resetFilters, applyFilters } =
+        useSearchStore();
 
     // Local state for filters before applying
     const [localLocation, setLocalLocation] = useState(filters.location || '');
@@ -49,17 +58,16 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
 
     const selectedGenresCount = filters.genres.length;
     const selectedBusinessTypesCount = filters.businessTypes.length;
-    const hasActiveFilters = selectedGenresCount > 0 || selectedBusinessTypesCount > 0 || !!filters.location;
+    const hasActiveFilters =
+        selectedGenresCount > 0 || selectedBusinessTypesCount > 0 || !!filters.location;
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent
-            onRequestClose={onClose}
-        >
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
             <View className="flex-1 bg-black/50 justify-end">
-                <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[90%]" style={styles.sheet}>
+                <View
+                    className="bg-white dark:bg-gray-900 rounded-t-3xl h-[90%]"
+                    style={styles.sheet}
+                >
                     {/* Handle */}
                     <View className="items-center pt-3 pb-2">
                         <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
@@ -72,7 +80,9 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                                 <SlidersHorizontal size={20} color="#7C3AED" />
                             </View>
                             <View>
-                                <Text className="text-lg font-bold text-gray-900 dark:text-white">Bộ lọc</Text>
+                                <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                                    Bộ lọc
+                                </Text>
                                 {hasActiveFilters && (
                                     <Text className="text-xs text-purple-600 dark:text-purple-400">
                                         {selectedGenresCount + selectedBusinessTypesCount} đã chọn
@@ -99,7 +109,9 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                             <View>
                                 <View className="flex-row items-center gap-2 mb-3">
                                     <MapPin size={18} color="#7C3AED" />
-                                    <Text className="text-base font-bold text-gray-900 dark:text-white">Địa điểm</Text>
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        Địa điểm
+                                    </Text>
                                 </View>
                                 <TouchableOpacity
                                     className="flex-row items-center px-4 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl"
@@ -119,7 +131,9 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                                 <View>
                                     <View className="flex-row items-center gap-2 mb-3">
                                         <Music size={18} color="#EC4899" />
-                                        <Text className="text-base font-bold text-gray-900 dark:text-white">Thể loại</Text>
+                                        <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                            Thể loại
+                                        </Text>
                                         {selectedGenresCount > 0 && (
                                             <View className="bg-pink-100 dark:bg-pink-900/30 px-2 py-0.5 rounded-full">
                                                 <Text className="text-xs font-semibold text-pink-600 dark:text-pink-400">
@@ -136,22 +150,32 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                                     ) : (
                                         <View className="flex-row flex-wrap gap-2">
                                             {genres.map((genre) => {
-                                                const isSelected = filters.genres.includes(genre.id);
+                                                const isSelected = filters.genres.includes(
+                                                    genre.id,
+                                                );
                                                 return (
                                                     <TouchableOpacity
                                                         key={genre.id}
                                                         onPress={() => toggleGenre(genre.id)}
-                                                        className={`flex-row items-center px-4 py-2.5 rounded-full border ${isSelected
-                                                            ? 'bg-purple-600 border-purple-600'
-                                                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                                                            }`}
+                                                        className={`flex-row items-center px-4 py-2.5 rounded-full border ${
+                                                            isSelected
+                                                                ? 'bg-purple-600 border-purple-600'
+                                                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                                        }`}
                                                     >
                                                         {isSelected && (
-                                                            <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                                                            <Check
+                                                                size={14}
+                                                                color="#FFFFFF"
+                                                                style={{ marginRight: 6 }}
+                                                            />
                                                         )}
                                                         <Text
-                                                            className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-                                                                }`}
+                                                            className={`text-sm font-semibold ${
+                                                                isSelected
+                                                                    ? 'text-white'
+                                                                    : 'text-gray-700 dark:text-gray-300'
+                                                            }`}
                                                         >
                                                             {genre.name}
                                                         </Text>
@@ -168,7 +192,9 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                                 <View>
                                     <View className="flex-row items-center gap-2 mb-3">
                                         <Building2 size={18} color="#F59E0B" />
-                                        <Text className="text-base font-bold text-gray-900 dark:text-white">Loại hình kinh doanh</Text>
+                                        <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                            Loại hình kinh doanh
+                                        </Text>
                                         {selectedBusinessTypesCount > 0 && (
                                             <View className="bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
                                                 <Text className="text-xs font-semibold text-amber-600 dark:text-amber-400">
@@ -180,22 +206,32 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
 
                                     <View className="flex-row flex-wrap gap-2">
                                         {businessTypes.map((type) => {
-                                            const isSelected = filters.businessTypes.includes(type.value);
+                                            const isSelected = filters.businessTypes.includes(
+                                                type.value,
+                                            );
                                             return (
                                                 <TouchableOpacity
                                                     key={type.value}
                                                     onPress={() => toggleBusinessType(type.value)}
-                                                    className={`flex-row items-center px-4 py-2.5 rounded-full border ${isSelected
-                                                        ? 'bg-amber-500 border-amber-500'
-                                                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                                                        }`}
+                                                    className={`flex-row items-center px-4 py-2.5 rounded-full border ${
+                                                        isSelected
+                                                            ? 'bg-amber-500 border-amber-500'
+                                                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                                    }`}
                                                 >
                                                     {isSelected && (
-                                                        <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
+                                                        <Check
+                                                            size={14}
+                                                            color="#FFFFFF"
+                                                            style={{ marginRight: 6 }}
+                                                        />
                                                     )}
                                                     <Text
-                                                        className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-                                                            }`}
+                                                        className={`text-sm font-semibold ${
+                                                            isSelected
+                                                                ? 'text-white'
+                                                                : 'text-gray-700 dark:text-gray-300'
+                                                        }`}
                                                     >
                                                         {type.label}
                                                     </Text>
@@ -209,13 +245,18 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                     </ScrollView>
 
                     {/* Actions */}
-                    <View style={styles.footer} className="flex-row gap-3 px-5 py-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+                    <View
+                        style={styles.footer}
+                        className="flex-row gap-3 px-5 py-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
+                    >
                         <TouchableOpacity
                             onPress={handleReset}
                             className="flex-1 flex-row items-center justify-center gap-2 py-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
                         >
                             <RotateCcw size={18} color="#6B7280" />
-                            <Text className="text-base font-bold text-gray-700 dark:text-gray-300">Đặt lại</Text>
+                            <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
+                                Đặt lại
+                            </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity

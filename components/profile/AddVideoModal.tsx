@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, Modal, ScrollView, Image, Platform, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    Pressable,
+    Modal,
+    ScrollView,
+    Image,
+    Platform,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+} from 'react-native';
 import { X, Upload, Image as ImageIcon, Video } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -113,14 +124,12 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
     const isValid = title.trim() && videoAsset;
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent
-            onRequestClose={handleClose}
-        >
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
             <View className="flex-1 bg-black/50 justify-end">
-                <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[85%]" style={styles.sheet}>
+                <View
+                    className="bg-white dark:bg-gray-900 rounded-t-3xl h-[85%]"
+                    style={styles.sheet}
+                >
                     {/* Handle */}
                     <View className="items-center pt-3 pb-2">
                         <View className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
@@ -129,7 +138,9 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                     {/* Header */}
                     <View className="flex-row items-center justify-between px-5 pb-4 border-b border-gray-100 dark:border-gray-800">
                         <View>
-                            <Text className="text-xl font-bold text-gray-900 dark:text-white">Thêm video mới</Text>
+                            <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                                Thêm video mới
+                            </Text>
                             <Text className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                                 Thêm video demo để giới thiệu tài năng
                             </Text>
@@ -171,13 +182,17 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                                 <View className="gap-3">
                                     <View className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden items-center justify-center border-2 border-purple-500">
                                         <Video size={48} color="#7C3AED" />
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2">Video đã chọn</Text>
+                                        <Text className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                                            Video đã chọn
+                                        </Text>
                                     </View>
                                     <TouchableOpacity
                                         onPress={handlePickVideo}
                                         className="py-3 items-center border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
                                     >
-                                        <Text className="text-sm font-semibold text-purple-600">Chọn video khác</Text>
+                                        <Text className="text-sm font-semibold text-purple-600">
+                                            Chọn video khác
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                             ) : (
@@ -187,7 +202,9 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                                     activeOpacity={0.7}
                                 >
                                     <Upload size={36} color="#7C3AED" />
-                                    <Text className="text-sm font-medium text-gray-600 dark:text-gray-400">Nhấn để chọn video</Text>
+                                    <Text className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        Nhấn để chọn video
+                                    </Text>
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -210,7 +227,9 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                                         onPress={handlePickThumbnail}
                                         className="py-3 items-center border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800"
                                     >
-                                        <Text className="text-sm font-semibold text-purple-600">Chọn ảnh khác</Text>
+                                        <Text className="text-sm font-semibold text-purple-600">
+                                            Chọn ảnh khác
+                                        </Text>
                                     </TouchableOpacity>
                                 </View>
                             ) : (
@@ -220,25 +239,32 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                                     activeOpacity={0.7}
                                 >
                                     <ImageIcon size={36} color="#9CA3AF" />
-                                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400">Nhấn để chọn ảnh</Text>
+                                    <Text className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        Nhấn để chọn ảnh
+                                    </Text>
                                 </TouchableOpacity>
                             )}
                         </View>
                     </ScrollView>
 
                     {/* Actions */}
-                    <View style={styles.footer} className="flex-row gap-3 px-5 py-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+                    <View
+                        style={styles.footer}
+                        className="flex-row gap-3 px-5 py-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
+                    >
                         <TouchableOpacity
                             onPress={handleClose}
                             disabled={uploadVideo.isPending}
                             className="flex-1 py-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 items-center"
                         >
-                            <Text className="text-base font-bold text-gray-700 dark:text-gray-300">Hủy</Text>
+                            <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
+                                Hủy
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={handleSubmit}
                             disabled={uploadVideo.isPending || !isValid}
-                            className={`flex-1 py-4 rounded-xl bg-purple-600 items-center ${(!isValid || uploadVideo.isPending) ? 'opacity-50' : ''}`}
+                            className={`flex-1 py-4 rounded-xl bg-purple-600 items-center ${!isValid || uploadVideo.isPending ? 'opacity-50' : ''}`}
                             activeOpacity={0.8}
                         >
                             <Text className="text-base font-bold text-white">

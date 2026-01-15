@@ -23,38 +23,56 @@ const userApi = {
     },
 
     getCurrentUserMedia: async () => {
-        const response = await createApiCall<ApiResponse<MediaResponse>>('GET', '/users/me/media')();
+        const response = await createApiCall<ApiResponse<MediaResponse>>(
+            'GET',
+            '/users/me/media',
+        )();
         return response.data;
     },
 
     getUserMedia: async (username: string) => {
-        const response = await createApiCall<ApiResponse<MediaResponse>>('GET', `/users/media/${username}`)();
+        const response = await createApiCall<ApiResponse<MediaResponse>>(
+            'GET',
+            `/users/media/${username}`,
+        )();
         return response.data;
     },
 
     getUserVideos: async (username: string) => {
-        const response = await createApiCall<ApiResponse<VideoResponse>>('GET', `/users/videos/all/${username}`)();
+        const response = await createApiCall<ApiResponse<VideoResponse>>(
+            'GET',
+            `/users/videos/all/${username}`,
+        )();
         return response.data;
     },
 
-    updateBasicInfo: createApiCall<User, {
-        display_name?: string;
-        brief_bio?: string;
-        detail_bio?: string;
-        city?: string;
-        country?: string;
-    }>('PUT', '/users/me/basic'),
+    updateBasicInfo: createApiCall<
+        User,
+        {
+            display_name?: string;
+            brief_bio?: string;
+            detail_bio?: string;
+            city?: string;
+            country?: string;
+        }
+    >('PUT', '/users/me/basic'),
 
-    updateContactInfo: createApiCall<User, {
-        email?: string;
-        phone_number?: string;
-    }>('PUT', '/users/me/contact'),
+    updateContactInfo: createApiCall<
+        User,
+        {
+            email?: string;
+            phone_number?: string;
+        }
+    >('PUT', '/users/me/contact'),
 
-    updateSocialLinks: createApiCall<User, {
-        facebook_url?: string;
-        instagram_url?: string;
-        youtube_url?: string;
-    }>('PUT', '/users/me/social'),
+    updateSocialLinks: createApiCall<
+        User,
+        {
+            facebook_url?: string;
+            instagram_url?: string;
+            youtube_url?: string;
+        }
+    >('PUT', '/users/me/social'),
 
     uploadUserAvatar: (formData: FormData) => {
         return createApiCall<MediaItem, FormData>('POST', '/users/me/avatar')(formData);
@@ -82,7 +100,7 @@ const userApi = {
 
     updateFeaturedReleases: createApiCall<User, { featured_release_links: string[] }>(
         'PUT',
-        '/users/me/featured-releases'
+        '/users/me/featured-releases',
     ),
 
     // Genre APIs
@@ -92,40 +110,55 @@ const userApi = {
     },
 
     getUserGenres: async (username: string) => {
-        const response = await createApiCall<ApiResponse<GenresResponse>>('GET', `/users/genres/${username}`)();
+        const response = await createApiCall<ApiResponse<GenresResponse>>(
+            'GET',
+            `/users/genres/${username}`,
+        )();
         return response.data;
     },
 
     updateUserGenres: (username: string, genreNames: string[]) => {
-        return createApiCall<any, { genre_names: string[] }>('PUT', `/users/genres/${username}`)({ genre_names: genreNames });
+        return createApiCall<any, { genre_names: string[] }>(
+            'PUT',
+            `/users/genres/${username}`,
+        )({ genre_names: genreNames });
     },
-    
+
     updateUserServices: (services: any[]) => {
         return createApiCall<any, { services: any[] }>('PUT', '/users/me/services')({ services });
     },
 
     // Venue APIs
-    updateVenueBasic: createApiCall<User, {
-        display_name?: string;
-        brief_bio?: string;
-        business_type?: string[];
-        capacity?: string;
-    }>('PUT', '/users/me/venue/basic'),
+    updateVenueBasic: createApiCall<
+        User,
+        {
+            display_name?: string;
+            brief_bio?: string;
+            business_type?: string[];
+            capacity?: string;
+        }
+    >('PUT', '/users/me/venue/basic'),
 
-    updateVenueContact: createApiCall<User, {
-        email?: string;
-        phone_number?: string;
-        city?: string;
-        country?: string;
-        detailed_address?: string;
-        website_url?: string;
-    }>('PUT', '/users/me/venue/contact'),
+    updateVenueContact: createApiCall<
+        User,
+        {
+            email?: string;
+            phone_number?: string;
+            city?: string;
+            country?: string;
+            detailed_address?: string;
+            website_url?: string;
+        }
+    >('PUT', '/users/me/venue/contact'),
 
-    updateVenueAdditional: createApiCall<User, {
-        open_hour?: string;
-        convenient_facilities?: string[];
-        rent_price?: string;
-    }>('PUT', '/users/me/venue/additional'),
+    updateVenueAdditional: createApiCall<
+        User,
+        {
+            open_hour?: string;
+            convenient_facilities?: string[];
+            rent_price?: string;
+        }
+    >('PUT', '/users/me/venue/additional'),
 };
 
 // Query Keys

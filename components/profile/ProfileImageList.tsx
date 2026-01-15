@@ -21,7 +21,7 @@ export function ProfileImageList({
     data = [],
     onPressSeeAll,
     showSeeAll = true,
-    hideHeader = false
+    hideHeader = false,
 }: Props) {
     const items = React.useMemo(() => data.slice(0, 6), [data]);
     const hasMore = data.length > 6;
@@ -63,7 +63,10 @@ export function ProfileImageList({
                                 className="active:scale-95"
                             >
                                 <View
-                                    style={[styles.imageWrapper, { width: imageSize, height: imageSize }]}
+                                    style={[
+                                        styles.imageWrapper,
+                                        { width: imageSize, height: imageSize },
+                                    ]}
                                     className="rounded-2xl overflow-hidden"
                                 >
                                     <Image
@@ -75,8 +78,12 @@ export function ProfileImageList({
                                     {/* Show remaining count on last visible image */}
                                     {isLastItem && (
                                         <View className="absolute inset-0 bg-black/60 items-center justify-center">
-                                            <Text className="text-white text-2xl font-bold">+{remainingCount}</Text>
-                                            <Text className="text-white/80 text-xs mt-1">Xem thêm</Text>
+                                            <Text className="text-white text-2xl font-bold">
+                                                +{remainingCount}
+                                            </Text>
+                                            <Text className="text-white/80 text-xs mt-1">
+                                                Xem thêm
+                                            </Text>
                                         </View>
                                     )}
                                 </View>
@@ -89,9 +96,7 @@ export function ProfileImageList({
                     <View className="w-16 h-16 rounded-2xl bg-muted/60 items-center justify-center">
                         <Images size={32} color="#9CA3AF" />
                     </View>
-                    <Text className="text-sm text-muted-foreground">
-                        Chưa có ảnh portfolio
-                    </Text>
+                    <Text className="text-sm text-muted-foreground">Chưa có ảnh portfolio</Text>
                 </View>
             )}
         </View>

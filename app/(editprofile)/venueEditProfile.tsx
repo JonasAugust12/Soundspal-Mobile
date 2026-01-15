@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl, TextInput, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    ScrollView,
+    Pressable,
+    ActivityIndicator,
+    RefreshControl,
+    TextInput,
+    TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Building2, Phone, MapPin, Clock, Check, Plus, X } from 'lucide-react-native';
+import { ChevronLeft, Building2, Phone, Clock, Check } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { AvatarFrame, CoverImage } from '@/components/editprofile';
 import {
@@ -26,8 +34,26 @@ const TABS = [
     { key: 'additional' as TabKey, label: 'Hoạt động', icon: Clock },
 ];
 
-const BUSINESS_TYPES = ['Quán Bar', 'Pub', 'Café', 'Nhà hàng', 'Club', 'Sân khấu', 'Phòng trà', 'Khác'];
-const FACILITIES = ['WiFi', 'Điều hòa', 'Bãi đỗ xe', 'Sân khấu', 'Âm thanh', 'Ánh sáng', 'VIP Room', 'Ngoài trời'];
+const BUSINESS_TYPES = [
+    'Quán Bar',
+    'Pub',
+    'Café',
+    'Nhà hàng',
+    'Club',
+    'Sân khấu',
+    'Phòng trà',
+    'Khác',
+];
+const FACILITIES = [
+    'WiFi',
+    'Điều hòa',
+    'Bãi đỗ xe',
+    'Sân khấu',
+    'Âm thanh',
+    'Ánh sáng',
+    'VIP Room',
+    'Ngoài trời',
+];
 
 export default function VenueEditProfileScreen() {
     const router = useRouter();
@@ -75,6 +101,7 @@ export default function VenueEditProfileScreen() {
             setCountry(userData.country || '');
 
             // Venue specific
+            //eslint-disable-next-line
             const venueData = userData as any;
             setCapacity(venueData.capacity || '');
             setBusinessTypes(venueData.business_types || []);
@@ -99,10 +126,12 @@ export default function VenueEditProfileScreen() {
             setSelectedAvatar(uri);
             try {
                 const formData = new FormData();
+                //eslint-disable-next-line
                 formData.append('file', { uri, type: 'image/jpeg', name: 'avatar.jpg' } as any);
                 const uploadResult = await uploadAvatar.mutateAsync(formData);
                 updateAvatarUrl(uploadResult.file_url);
                 Toast.show({ type: 'success', text1: 'Đã cập nhật ảnh đại diện' });
+                //eslint-disable-next-line
             } catch (error) {
                 setSelectedAvatar(userData?.avatar_url);
                 Toast.show({ type: 'error', text1: 'Không thể tải lên ảnh đại diện' });
@@ -123,9 +152,11 @@ export default function VenueEditProfileScreen() {
             setSelectedCover(uri);
             try {
                 const formData = new FormData();
+                //eslint-disable-next-line
                 formData.append('file', { uri, type: 'image/jpeg', name: 'cover.jpg' } as any);
                 await uploadCover.mutateAsync(formData);
                 Toast.show({ type: 'success', text1: 'Đã cập nhật ảnh bìa' });
+                //eslint-disable-next-line
             } catch (error) {
                 setSelectedCover(userData?.cover_url);
                 Toast.show({ type: 'error', text1: 'Không thể tải lên ảnh bìa' });
@@ -144,6 +175,7 @@ export default function VenueEditProfileScreen() {
             updateDisplayName(displayName);
             Toast.show({ type: 'success', text1: 'Đã cập nhật thông tin cơ bản' });
             refetch();
+            //eslint-disable-next-line
         } catch (error) {
             Toast.show({ type: 'error', text1: 'Không thể cập nhật' });
         }
@@ -161,6 +193,7 @@ export default function VenueEditProfileScreen() {
             });
             Toast.show({ type: 'success', text1: 'Đã cập nhật thông tin liên hệ' });
             refetch();
+            //eslint-disable-next-line
         } catch (error) {
             Toast.show({ type: 'error', text1: 'Không thể cập nhật' });
         }
@@ -175,20 +208,21 @@ export default function VenueEditProfileScreen() {
             });
             Toast.show({ type: 'success', text1: 'Đã cập nhật thông tin hoạt động' });
             refetch();
+            //eslint-disable-next-line
         } catch (error) {
             Toast.show({ type: 'error', text1: 'Không thể cập nhật' });
         }
     };
 
     const toggleBusinessType = (type: string) => {
-        setBusinessTypes(prev =>
-            prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+        setBusinessTypes((prev) =>
+            prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
         );
     };
 
     const toggleFacility = (facility: string) => {
-        setFacilities(prev =>
-            prev.includes(facility) ? prev.filter(f => f !== facility) : [...prev, facility]
+        setFacilities((prev) =>
+            prev.includes(facility) ? prev.filter((f) => f !== facility) : [...prev, facility],
         );
     };
 
@@ -202,7 +236,8 @@ export default function VenueEditProfileScreen() {
         );
     }
 
-    const isLoading = updateBasic.isPending || updateContact.isPending || updateAdditional.isPending;
+    const isLoading =
+        updateBasic.isPending || updateContact.isPending || updateAdditional.isPending;
 
     return (
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -210,15 +245,24 @@ export default function VenueEditProfileScreen() {
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={isLoadingUser} onRefresh={refetch} tintColor="#7C3BED" />
+                    <RefreshControl
+                        refreshing={isLoadingUser}
+                        onRefresh={refetch}
+                        tintColor="#7C3BED"
+                    />
                 }
             >
                 {/* Header */}
                 <View className="flex-row items-center p-4">
-                    <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-gray-100">
+                    <Pressable
+                        onPress={() => router.back()}
+                        className="p-2 -ml-2 rounded-full active:bg-gray-100"
+                    >
                         <ChevronLeft size={24} color="#09090b" />
                     </Pressable>
-                    <Text className="text-xl font-bold text-foreground ml-2">Chỉnh sửa địa điểm</Text>
+                    <Text className="text-xl font-bold text-foreground ml-2">
+                        Chỉnh sửa địa điểm
+                    </Text>
                 </View>
 
                 {/* Cover & Avatar */}
@@ -248,13 +292,16 @@ export default function VenueEditProfileScreen() {
                             <Pressable
                                 key={tab.key}
                                 onPress={() => setActiveTab(tab.key)}
-                                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full ${isActive
+                                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full ${
+                                    isActive
                                         ? 'bg-blue-600'
                                         : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                                    }`}
+                                }`}
                             >
                                 <Icon size={16} color={isActive ? '#FFFFFF' : '#6B7280'} />
-                                <Text className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                                <Text
+                                    className={`text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'}`}
+                                >
                                     {tab.label}
                                 </Text>
                             </Pressable>
@@ -267,7 +314,9 @@ export default function VenueEditProfileScreen() {
                     {activeTab === 'basic' && (
                         <View className="gap-5">
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Tên địa điểm</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Tên địa điểm
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={displayName}
@@ -278,7 +327,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Mô tả ngắn</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Mô tả ngắn
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={briefBio}
@@ -293,7 +344,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Sức chứa</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Sức chứa
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={capacity}
@@ -304,7 +357,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-2">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Loại hình kinh doanh</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Loại hình kinh doanh
+                                </Text>
                                 <View className="flex-row flex-wrap gap-2">
                                     {BUSINESS_TYPES.map((type) => {
                                         const isSelected = businessTypes.includes(type);
@@ -312,10 +367,15 @@ export default function VenueEditProfileScreen() {
                                             <TouchableOpacity
                                                 key={type}
                                                 onPress={() => toggleBusinessType(type)}
-                                                className={`px-3 py-2 rounded-full ${isSelected ? 'bg-blue-600' : 'bg-gray-100 dark:bg-gray-800'
-                                                    }`}
+                                                className={`px-3 py-2 rounded-full ${
+                                                    isSelected
+                                                        ? 'bg-blue-600'
+                                                        : 'bg-gray-100 dark:bg-gray-800'
+                                                }`}
                                             >
-                                                <Text className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-600'}`}>
+                                                <Text
+                                                    className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-600'}`}
+                                                >
                                                     {type}
                                                 </Text>
                                             </TouchableOpacity>
@@ -339,7 +399,9 @@ export default function VenueEditProfileScreen() {
                     {activeTab === 'contact' && (
                         <View className="gap-5">
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Email</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Email
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={email}
@@ -351,7 +413,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Số điện thoại</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Số điện thoại
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={phoneNumber}
@@ -364,7 +428,9 @@ export default function VenueEditProfileScreen() {
 
                             <View className="flex-row gap-3">
                                 <View className="flex-1 gap-1.5">
-                                    <Text className="text-sm font-semibold text-gray-500 ml-1">Thành phố</Text>
+                                    <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                        Thành phố
+                                    </Text>
                                     <TextInput
                                         className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                         value={city}
@@ -374,7 +440,9 @@ export default function VenueEditProfileScreen() {
                                     />
                                 </View>
                                 <View className="flex-1 gap-1.5">
-                                    <Text className="text-sm font-semibold text-gray-500 ml-1">Quốc gia</Text>
+                                    <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                        Quốc gia
+                                    </Text>
                                     <TextInput
                                         className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                         value={country}
@@ -386,7 +454,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Địa chỉ chi tiết</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Địa chỉ chi tiết
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={detailedAddress}
@@ -399,7 +469,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Website</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Website
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={websiteUrl}
@@ -416,7 +488,9 @@ export default function VenueEditProfileScreen() {
                                 className="py-4 rounded-xl bg-blue-600 items-center mt-2"
                             >
                                 <Text className="text-white font-bold">
-                                    {updateContact.isPending ? 'Đang lưu...' : 'Lưu thông tin liên hệ'}
+                                    {updateContact.isPending
+                                        ? 'Đang lưu...'
+                                        : 'Lưu thông tin liên hệ'}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -425,7 +499,9 @@ export default function VenueEditProfileScreen() {
                     {activeTab === 'additional' && (
                         <View className="gap-5">
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Giờ mở cửa</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Giờ mở cửa
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={openHour}
@@ -436,7 +512,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-1.5">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Giá thuê (tham khảo)</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Giá thuê (tham khảo)
+                                </Text>
                                 <TextInput
                                     className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
                                     value={rentPrice}
@@ -447,7 +525,9 @@ export default function VenueEditProfileScreen() {
                             </View>
 
                             <View className="gap-2">
-                                <Text className="text-sm font-semibold text-gray-500 ml-1">Tiện ích</Text>
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Tiện ích
+                                </Text>
                                 <View className="flex-row flex-wrap gap-2">
                                     {FACILITIES.map((facility) => {
                                         const isSelected = facilities.includes(facility);
@@ -455,11 +535,16 @@ export default function VenueEditProfileScreen() {
                                             <TouchableOpacity
                                                 key={facility}
                                                 onPress={() => toggleFacility(facility)}
-                                                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full ${isSelected ? 'bg-green-600' : 'bg-gray-100 dark:bg-gray-800'
-                                                    }`}
+                                                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full ${
+                                                    isSelected
+                                                        ? 'bg-green-600'
+                                                        : 'bg-gray-100 dark:bg-gray-800'
+                                                }`}
                                             >
                                                 {isSelected && <Check size={14} color="#FFFFFF" />}
-                                                <Text className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-600'}`}>
+                                                <Text
+                                                    className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-600'}`}
+                                                >
                                                     {facility}
                                                 </Text>
                                             </TouchableOpacity>
@@ -474,7 +559,9 @@ export default function VenueEditProfileScreen() {
                                 className="py-4 rounded-xl bg-blue-600 items-center mt-2"
                             >
                                 <Text className="text-white font-bold">
-                                    {updateAdditional.isPending ? 'Đang lưu...' : 'Lưu thông tin hoạt động'}
+                                    {updateAdditional.isPending
+                                        ? 'Đang lưu...'
+                                        : 'Lưu thông tin hoạt động'}
                                 </Text>
                             </TouchableOpacity>
                         </View>

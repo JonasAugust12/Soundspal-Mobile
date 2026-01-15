@@ -17,12 +17,9 @@ export const JobCardSkeleton = React.memo(function JobCardSkeleton({ width = 210
 
     React.useEffect(() => {
         opacity.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 800 }),
-                withTiming(0.3, { duration: 800 })
-            ),
+            withSequence(withTiming(1, { duration: 800 }), withTiming(0.3, { duration: 800 })),
             -1,
-            false
+            false,
         );
     }, [opacity]);
 
@@ -36,25 +33,16 @@ export const JobCardSkeleton = React.memo(function JobCardSkeleton({ width = 210
             className="rounded-[20px] bg-white border border-gray-200 overflow-hidden"
         >
             {/* Image Skeleton */}
-            <Animated.View
-                style={animatedStyle}
-                className="w-full h-[130px] bg-gray-200"
-            />
+            <Animated.View style={animatedStyle} className="w-full h-[130px] bg-gray-200" />
 
             {/* Content Skeleton */}
             <View className="p-3 gap-2">
                 {/* Title */}
-                <Animated.View
-                    style={animatedStyle}
-                    className="h-4 w-[85%] rounded bg-gray-200"
-                />
+                <Animated.View style={animatedStyle} className="h-4 w-[85%] rounded bg-gray-200" />
 
                 {/* Date and Location Row */}
                 <View className="flex-row gap-3 items-center">
-                    <Animated.View
-                        style={animatedStyle}
-                        className="h-3 w-15 rounded bg-gray-200"
-                    />
+                    <Animated.View style={animatedStyle} className="h-3 w-15 rounded bg-gray-200" />
                     <Animated.View
                         style={animatedStyle}
                         className="h-3 flex-1 rounded bg-gray-200"
@@ -63,10 +51,7 @@ export const JobCardSkeleton = React.memo(function JobCardSkeleton({ width = 210
 
                 {/* Footer */}
                 <View className="flex-row justify-between items-center mt-1">
-                    <Animated.View
-                        style={animatedStyle}
-                        className="h-3 w-15 rounded bg-gray-200"
-                    />
+                    <Animated.View style={animatedStyle} className="h-3 w-15 rounded bg-gray-200" />
                     <Animated.View
                         style={animatedStyle}
                         className="h-6 w-20 rounded-lg bg-gray-200"

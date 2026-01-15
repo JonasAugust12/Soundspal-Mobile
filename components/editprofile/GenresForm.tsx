@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    ActivityIndicator,
-    ScrollView,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Check, Music } from 'lucide-react-native';
 
 import { useGetAllGenres, useGetUserGenres, useUpdateUserGenres } from '@/hooks/useUserApi';
@@ -21,7 +15,11 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
     const username = user?.username || '';
 
     const { data: allGenresData, isLoading: isLoadingAll } = useGetAllGenres();
-    const { data: userGenresData, isLoading: isLoadingUser, refetch } = useGetUserGenres(username, {
+    const {
+        data: userGenresData,
+        isLoading: isLoadingUser,
+        refetch,
+    } = useGetUserGenres(username, {
         enabled: !!username,
     });
     const updateGenres = useUpdateUserGenres();
@@ -40,15 +38,13 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
 
     const toggleGenre = (genreName: string) => {
         setSelectedGenres((prev) =>
-            prev.includes(genreName)
-                ? prev.filter((g) => g !== genreName)
-                : [...prev, genreName]
+            prev.includes(genreName) ? prev.filter((g) => g !== genreName) : [...prev, genreName],
         );
     };
 
     const handleSave = async () => {
         try {
-            console.log(selectedGenres)
+            console.log(selectedGenres);
             await updateGenres.mutateAsync({
                 username,
                 genreNames: selectedGenres,
@@ -93,18 +89,20 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
                         <TouchableOpacity
                             key={genre.id}
                             onPress={() => toggleGenre(genre.name)}
-                            className={`flex-row items-center px-4 py-2.5 rounded-full border ${isSelected
-                                ? 'bg-purple-600 border-purple-600'
-                                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                                }`}
+                            className={`flex-row items-center px-4 py-2.5 rounded-full border ${
+                                isSelected
+                                    ? 'bg-purple-600 border-purple-600'
+                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                            }`}
                             activeOpacity={0.7}
                         >
                             {isSelected && (
                                 <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
                             )}
                             <Text
-                                className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-                                    }`}
+                                className={`text-sm font-semibold ${
+                                    isSelected ? 'text-white' : 'text-gray-700 dark:text-gray-300'
+                                }`}
                             >
                                 {genre.name}
                             </Text>
@@ -117,7 +115,9 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
             {selectedGenres.length > 0 && (
                 <View className="flex-row items-center gap-2 bg-purple-50 dark:bg-purple-900/20 p-3 rounded-xl">
                     <View className="bg-purple-600 px-2 py-0.5 rounded-full">
-                        <Text className="text-xs font-bold text-white">{selectedGenres.length}</Text>
+                        <Text className="text-xs font-bold text-white">
+                            {selectedGenres.length}
+                        </Text>
                     </View>
                     <Text className="text-sm text-purple-700 dark:text-purple-300">
                         thể loại đã chọn
@@ -129,8 +129,9 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
             <TouchableOpacity
                 onPress={handleSave}
                 disabled={updateGenres.isPending}
-                className={`py-4 rounded-xl bg-purple-600 items-center ${updateGenres.isPending ? 'opacity-50' : ''
-                    }`}
+                className={`py-4 rounded-xl bg-purple-600 items-center ${
+                    updateGenres.isPending ? 'opacity-50' : ''
+                }`}
                 activeOpacity={0.8}
             >
                 <Text className="text-base font-bold text-white">

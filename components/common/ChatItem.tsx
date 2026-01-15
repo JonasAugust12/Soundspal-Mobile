@@ -28,10 +28,7 @@ export function ChatItem({
     return (
         <Pressable
             onPress={onPress}
-            style={({ pressed }) => [
-                styles.container,
-                pressed && styles.pressed,
-            ]}
+            style={({ pressed }) => [styles.container, pressed && styles.pressed]}
             className="flex-row items-center gap-3 p-3 rounded-2xl"
         >
             {/* Avatar with Online Indicator */}
@@ -55,7 +52,9 @@ export function ChatItem({
                         {name}
                     </Text>
                     {time && (
-                        <Text className={`text-[11px] ${hasUnread ? 'font-semibold text-purple-600' : 'text-gray-400'}`}>
+                        <Text
+                            className={`text-[11px] ${hasUnread ? 'font-semibold text-purple-600' : 'text-gray-400'}`}
+                        >
                             {time}
                         </Text>
                     )}

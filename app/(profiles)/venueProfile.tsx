@@ -17,12 +17,7 @@ import {
     Check,
 } from 'lucide-react-native';
 
-import {
-    InfoProfile,
-    ProfileImageList,
-    SocialList,
-    ProfileSkeleton,
-} from '@/components/profile';
+import { InfoProfile, ProfileImageList, SocialList, ProfileSkeleton } from '@/components/profile';
 import {
     useGetCurrentUser,
     useGetUserByUsername,
@@ -45,7 +40,7 @@ export default function VenueProfile() {
     });
     const { data: otherUserData, isLoading: isLoadingOtherUser } = useGetUserByUsername(
         params.username || '',
-        { enabled: !isMe }
+        { enabled: !isMe },
     );
 
     const { data: currentUserMedia, isLoading: isLoadingCurrentMedia } = useGetCurrentUserMedia({
@@ -53,7 +48,7 @@ export default function VenueProfile() {
     });
     const { data: otherUserMedia, isLoading: isLoadingOtherMedia } = useGetUserMedia(
         params.username || '',
-        { enabled: !isMe }
+        { enabled: !isMe },
     );
 
     const getOrCreateConversation = useGetOrCreateConversation();
@@ -122,11 +117,7 @@ export default function VenueProfile() {
                             ? { uri: userData.avatar_url }
                             : require('@/assets/images/user_profile.png')
                     }
-                    backgroundSource={
-                        userData?.cover_url
-                            ? { uri: userData.cover_url }
-                            : undefined
-                    }
+                    backgroundSource={userData?.cover_url ? { uri: userData.cover_url } : undefined}
                     role="venue"
                 />
 
@@ -147,8 +138,13 @@ export default function VenueProfile() {
                     {businessTypes.length > 0 && (
                         <View className="flex-row flex-wrap gap-2">
                             {businessTypes.map((type: string, index: number) => (
-                                <View key={index} className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                                    <Text className="text-sm font-semibold text-blue-700 dark:text-blue-400">{type}</Text>
+                                <View
+                                    key={index}
+                                    className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-full"
+                                >
+                                    <Text className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                                        {type}
+                                    </Text>
                                 </View>
                             ))}
                         </View>
@@ -161,7 +157,9 @@ export default function VenueProfile() {
                                 <View className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 items-center justify-center">
                                     <Users size={20} color="#3B82F6" />
                                 </View>
-                                <Text className="text-sm font-bold text-foreground text-center">{venueData.capacity}</Text>
+                                <Text className="text-sm font-bold text-foreground text-center">
+                                    {venueData.capacity}
+                                </Text>
                                 <Text className="text-xs text-muted-foreground">Sức chứa</Text>
                             </View>
                         )}
@@ -170,7 +168,9 @@ export default function VenueProfile() {
                                 <View className="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 items-center justify-center">
                                     <Clock size={20} color="#22C55E" />
                                 </View>
-                                <Text className="text-sm font-bold text-foreground text-center">{venueData.open_hour}</Text>
+                                <Text className="text-sm font-bold text-foreground text-center">
+                                    {venueData.open_hour}
+                                </Text>
                                 <Text className="text-xs text-muted-foreground">Giờ mở cửa</Text>
                             </View>
                         )}
@@ -183,8 +183,12 @@ export default function VenueProfile() {
                                 <Banknote size={24} color="#FFFFFF" />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-xs text-muted-foreground font-medium">Giá thuê tham khảo</Text>
-                                <Text className="text-base font-bold text-blue-600 dark:text-blue-400">{venueData.rent_price}</Text>
+                                <Text className="text-xs text-muted-foreground font-medium">
+                                    Giá thuê tham khảo
+                                </Text>
+                                <Text className="text-base font-bold text-blue-600 dark:text-blue-400">
+                                    {venueData.rent_price}
+                                </Text>
                             </View>
                         </View>
                     )}
@@ -194,7 +198,9 @@ export default function VenueProfile() {
                         {venueData?.detailed_address && (
                             <View className="flex-row items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                                 <MapPin size={18} color="#6B7280" />
-                                <Text className="flex-1 text-sm text-gray-700 dark:text-gray-300">{venueData.detailed_address}</Text>
+                                <Text className="flex-1 text-sm text-gray-700 dark:text-gray-300">
+                                    {venueData.detailed_address}
+                                </Text>
                             </View>
                         )}
                         {userData?.phone_number && (
@@ -203,7 +209,9 @@ export default function VenueProfile() {
                                 className="flex-row items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl"
                             >
                                 <Phone size={18} color="#6B7280" />
-                                <Text className="text-sm text-gray-700 dark:text-gray-300">{userData.phone_number}</Text>
+                                <Text className="text-sm text-gray-700 dark:text-gray-300">
+                                    {userData.phone_number}
+                                </Text>
                             </Pressable>
                         )}
                         {venueData?.website_url && (
@@ -212,7 +220,9 @@ export default function VenueProfile() {
                                 className="flex-row items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl"
                             >
                                 <Globe size={18} color="#6B7280" />
-                                <Text className="text-sm text-blue-600 dark:text-blue-400">{venueData.website_url}</Text>
+                                <Text className="text-sm text-blue-600 dark:text-blue-400">
+                                    {venueData.website_url}
+                                </Text>
                             </Pressable>
                         )}
                     </View>
@@ -228,9 +238,14 @@ export default function VenueProfile() {
                             </View>
                             <View className="flex-row flex-wrap gap-2">
                                 {facilities.map((facility: string, index: number) => (
-                                    <View key={index} className="flex-row items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-full">
+                                    <View
+                                        key={index}
+                                        className="flex-row items-center gap-1.5 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-full"
+                                    >
                                         <Check size={12} color="#22C55E" />
-                                        <Text className="text-sm font-medium text-green-700 dark:text-green-400">{facility}</Text>
+                                        <Text className="text-sm font-medium text-green-700 dark:text-green-400">
+                                            {facility}
+                                        </Text>
                                     </View>
                                 ))}
                             </View>
@@ -251,7 +266,9 @@ export default function VenueProfile() {
                                 <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
                                     <Building2 size={18} color="#7C3AED" />
                                 </View>
-                                <Text className="text-lg font-bold text-foreground">Giới thiệu</Text>
+                                <Text className="text-lg font-bold text-foreground">
+                                    Giới thiệu
+                                </Text>
                             </View>
                             <View className="p-4 bg-card border border-border rounded-xl">
                                 <Text className="text-sm text-foreground leading-5">
@@ -272,12 +289,12 @@ export default function VenueProfile() {
                             isMe
                                 ? () => router.push('/(profiles)/portfolioGallery')
                                 : portfolioImages.length > 8
-                                    ? () =>
+                                  ? () =>
                                         router.push({
                                             pathname: '/(profiles)/portfolioGallery',
                                             params: { username: userData?.username },
                                         })
-                                    : undefined
+                                  : undefined
                         }
                     />
                 </View>

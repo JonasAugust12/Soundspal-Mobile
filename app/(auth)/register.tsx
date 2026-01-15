@@ -29,6 +29,7 @@ export default function RegisterScreen() {
                 pathname: '/(auth)/verify-email',
                 params: { email: formData.email },
             });
+            //eslint-disable-next-line
         } catch (error: any) {
             const errorMessage =
                 error?.response?.data?.message ||
@@ -82,11 +83,16 @@ export default function RegisterScreen() {
                             />
                         </View>
                         <Text className="text-white text-lg font-bold mt-3">Tạo tài khoản mới</Text>
-                        <Text className="text-white/70 text-sm mt-1">Bắt đầu hành trình của bạn</Text>
+                        <Text className="text-white/70 text-sm mt-1">
+                            Bắt đầu hành trình của bạn
+                        </Text>
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-6">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-6"
+                    >
                         {/* Welcome Text */}
                         <View className="items-center mb-4">
                             <Text className="text-xl font-black text-gray-900 text-center">
@@ -128,13 +134,9 @@ export default function RegisterScreen() {
 
                         {/* Login Link */}
                         <View className="flex-row items-center justify-center gap-1 mt-6 mb-4">
-                            <Text className="text-sm text-gray-500">
-                                Đã có tài khoản?
-                            </Text>
+                            <Text className="text-sm text-gray-500">Đã có tài khoản?</Text>
                             <TouchableOpacity onPress={handleLogin}>
-                                <Text className="text-sm font-bold text-blue-600">
-                                    Đăng nhập
-                                </Text>
+                                <Text className="text-sm font-bold text-blue-600">Đăng nhập</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -143,7 +145,8 @@ export default function RegisterScreen() {
                             <Text className="text-[10px] text-gray-400 text-center max-w-[280px]">
                                 Bằng việc đăng ký, bạn đồng ý với{' '}
                                 <Text className="text-blue-600">Điều khoản dịch vụ</Text> và{' '}
-                                <Text className="text-blue-600">Chính sách bảo mật</Text> của chúng tôi.
+                                <Text className="text-blue-600">Chính sách bảo mật</Text> của chúng
+                                tôi.
                             </Text>
                         </View>
                     </View>

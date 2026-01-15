@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Keyboard, Platform, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    TextInput,
+    Keyboard,
+    Platform,
+    StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -126,11 +134,16 @@ export default function VerifyResetCodeScreen() {
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                    >
                         {/* Email Display */}
                         <View className="items-center mb-6">
                             <View className="bg-orange-50 px-4 py-2 rounded-full mb-4">
-                                <Text className="text-orange-700 font-semibold text-sm">{email}</Text>
+                                <Text className="text-orange-700 font-semibold text-sm">
+                                    {email}
+                                </Text>
                             </View>
                             <Text className="text-lg font-bold text-gray-900 text-center">
                                 Nhập mã 6 số
@@ -152,7 +165,9 @@ export default function VerifyResetCodeScreen() {
                                 activeColor="#F59E0B"
                             />
                             {error && (
-                                <Text className="text-red-500 text-xs mt-4 text-center">{error}</Text>
+                                <Text className="text-red-500 text-xs mt-4 text-center">
+                                    {error}
+                                </Text>
                             )}
                         </View>
 
@@ -174,8 +189,13 @@ export default function VerifyResetCodeScreen() {
                                 disabled={countdown > 0 || isResending}
                                 className={`flex-row items-center gap-2 px-4 py-2 rounded-full ${countdown > 0 ? 'bg-gray-100' : 'bg-orange-50'}`}
                             >
-                                <RefreshCw size={16} color={countdown > 0 ? '#9CA3AF' : '#F59E0B'} />
-                                <Text className={`font-semibold ${countdown > 0 ? 'text-gray-400' : 'text-orange-600'}`}>
+                                <RefreshCw
+                                    size={16}
+                                    color={countdown > 0 ? '#9CA3AF' : '#F59E0B'}
+                                />
+                                <Text
+                                    className={`font-semibold ${countdown > 0 ? 'text-gray-400' : 'text-orange-600'}`}
+                                >
                                     {countdown > 0 ? `Gửi lại sau ${countdown}s` : 'Gửi lại mã'}
                                 </Text>
                             </TouchableOpacity>
@@ -184,7 +204,8 @@ export default function VerifyResetCodeScreen() {
                         {/* Security Note */}
                         <View className="mt-8 bg-gray-50 rounded-2xl p-4">
                             <Text className="text-xs text-gray-500 text-center">
-                                💡 Mã xác thực sẽ hết hạn sau 15 phút. Nếu không nhận được email, hãy kiểm tra thư mục spam.
+                                💡 Mã xác thực sẽ hết hạn sau 15 phút. Nếu không nhận được email,
+                                hãy kiểm tra thư mục spam.
                             </Text>
                         </View>
                     </View>

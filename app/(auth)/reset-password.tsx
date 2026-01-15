@@ -29,10 +29,11 @@ export default function ResetPasswordScreen() {
             if (response.data || response.message) {
                 showSuccess(
                     'Đặt lại mật khẩu thành công! 🎉',
-                    'Bạn có thể đăng nhập bằng mật khẩu mới.'
+                    'Bạn có thể đăng nhập bằng mật khẩu mới.',
                 );
                 router.replace('/(auth)/login');
             }
+            //eslint-disable-next-line
         } catch (error: any) {
             const errorMessage =
                 error?.response?.data?.message ||
@@ -83,7 +84,10 @@ export default function ResetPasswordScreen() {
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                    >
                         {/* Icon */}
                         <View className="items-center mb-6">
                             <View className="w-16 h-16 rounded-full bg-emerald-50 items-center justify-center mb-4">
@@ -106,9 +110,15 @@ export default function ResetPasswordScreen() {
                                 💡 Mẹo tạo mật khẩu mạnh:
                             </Text>
                             <View className="gap-1">
-                                <Text className="text-xs text-gray-500">• Kết hợp chữ hoa, chữ thường và số</Text>
-                                <Text className="text-xs text-gray-500">• Sử dụng ký tự đặc biệt (@, #, $...)</Text>
-                                <Text className="text-xs text-gray-500">• Tránh dùng thông tin cá nhân</Text>
+                                <Text className="text-xs text-gray-500">
+                                    • Kết hợp chữ hoa, chữ thường và số
+                                </Text>
+                                <Text className="text-xs text-gray-500">
+                                    • Sử dụng ký tự đặc biệt (@, #, $...)
+                                </Text>
+                                <Text className="text-xs text-gray-500">
+                                    • Tránh dùng thông tin cá nhân
+                                </Text>
                             </View>
                         </View>
                     </View>

@@ -17,7 +17,7 @@ const loginSchema = z.object({
                 const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
                 return emailRegex.test(val) || usernameRegex.test(val);
             },
-            { message: 'Email hoặc username không hợp lệ' }
+            { message: 'Email hoặc username không hợp lệ' },
         ),
     password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
 });
@@ -77,11 +77,7 @@ export function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 )}
             />
 
-            <AuthButton
-                onPress={handleSubmit(onSubmit)}
-                isLoading={isLoading}
-                leftIcon={LogIn}
-            >
+            <AuthButton onPress={handleSubmit(onSubmit)} isLoading={isLoading} leftIcon={LogIn}>
                 {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </AuthButton>
         </View>

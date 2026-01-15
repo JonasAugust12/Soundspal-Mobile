@@ -10,13 +10,7 @@ interface MenuItemProps {
     showChevron?: boolean;
 }
 
-export function MenuItem({
-    icon,
-    title,
-    subtitle,
-    onPress,
-    showChevron = true,
-}: MenuItemProps) {
+export function MenuItem({ icon, title, subtitle, onPress, showChevron = true }: MenuItemProps) {
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -25,9 +19,7 @@ export function MenuItem({
         >
             <View className="flex-row items-center px-4 py-3 gap-3">
                 {/* Icon Container */}
-                <View className="w-10 h-10 items-center justify-center rounded-lg">
-                    {icon}
-                </View>
+                <View className="w-10 h-10 items-center justify-center rounded-lg">{icon}</View>
 
                 {/* Content */}
                 <View className="flex-1 gap-1">
@@ -35,9 +27,7 @@ export function MenuItem({
                         {title}
                     </Text>
                     {subtitle && (
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                            {subtitle}
-                        </Text>
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">{subtitle}</Text>
                     )}
                 </View>
 

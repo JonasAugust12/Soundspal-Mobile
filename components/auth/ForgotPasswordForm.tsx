@@ -49,11 +49,7 @@ export function ForgotPasswordForm({ onSubmit, isLoading }: ForgotPasswordFormPr
                 )}
             />
 
-            <AuthButton
-                onPress={handleSubmit(onSubmit)}
-                isLoading={isLoading}
-                leftIcon={Send}
-            >
+            <AuthButton onPress={handleSubmit(onSubmit)} isLoading={isLoading} leftIcon={Send}>
                 {isLoading ? 'Đang gửi...' : 'Gửi mã xác thực'}
             </AuthButton>
         </View>

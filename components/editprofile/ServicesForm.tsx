@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Switch, Platform, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Switch,
+    Platform,
+    StyleSheet,
+} from 'react-native';
 import { Plus, Trash2, Tag, DollarSign, Info, Check, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUpdateUserServices, useGetCurrentUser } from '@/hooks/useUserApi';
@@ -12,9 +20,9 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
     const updateServices = useUpdateUserServices();
 
     const [services, setServices] = useState<UserService[]>(
-        userData?.services?.length ? userData.services : [
-            { name: '', price: 0, currency: 'VND', is_negotiable: true }
-        ]
+        userData?.services?.length
+            ? userData.services
+            : [{ name: '', price: 0, currency: 'VND', is_negotiable: true }],
     );
 
     useEffect(() => {
@@ -29,7 +37,11 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
 
     const handleRemoveService = (index: number) => {
         const newServices = services.filter((_, i) => i !== index);
-        setServices(newServices.length > 0 ? newServices : [{ name: '', price: 0, currency: 'VND', is_negotiable: true }]);
+        setServices(
+            newServices.length > 0
+                ? newServices
+                : [{ name: '', price: 0, currency: 'VND', is_negotiable: true }],
+        );
     };
 
     const handleUpdateService = (index: number, field: keyof UserService, value: any) => {
@@ -39,7 +51,7 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
     };
 
     const handleSubmit = async () => {
-        const validServices = services.filter(s => s.name.trim() !== '');
+        const validServices = services.filter((s) => s.name.trim() !== '');
         try {
             await updateServices.mutateAsync(validServices);
             onSaveSuccess?.();
@@ -49,7 +61,7 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
     };
 
     const formatPrice = (price: number) => {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
     return (
@@ -115,7 +127,9 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
                                     placeholder="VD: MC sự kiện 3 tiếng"
                                     placeholderTextColor="#9CA3AF"
                                     value={service.name}
-                                    onChangeText={(text) => handleUpdateService(index, 'name', text)}
+                                    onChangeText={(text) =>
+                                        handleUpdateService(index, 'name', text)
+                                    }
                                 />
                             </View>
                         </View>
@@ -134,7 +148,13 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
                                         placeholderTextColor="#9CA3AF"
                                         keyboardType="number-pad"
                                         value={service.price === 0 ? '' : service.price.toString()}
-                                        onChangeText={(text) => handleUpdateService(index, 'price', parseInt(text.replace(/,/g, '')) || 0)}
+                                        onChangeText={(text) =>
+                                            handleUpdateService(
+                                                index,
+                                                'price',
+                                                parseInt(text.replace(/,/g, '')) || 0,
+                                            )
+                                        }
                                     />
                                 </View>
                             </View>
@@ -146,7 +166,9 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
                                     className="bg-purple-600 rounded-xl py-3 items-center justify-center"
                                     activeOpacity={0.8}
                                 >
-                                    <Text className="text-white font-bold text-sm">{service.currency}</Text>
+                                    <Text className="text-white font-bold text-sm">
+                                        {service.currency}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -157,16 +179,20 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
                                 <TouchableOpacity
                                     key={curr}
                                     onPress={() => handleUpdateService(index, 'currency', curr)}
-                                    className={`flex-1 py-2 rounded-lg items-center ${service.currency === curr
+                                    className={`flex-1 py-2 rounded-lg items-center ${
+                                        service.currency === curr
                                             ? 'bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700'
                                             : 'bg-gray-100 dark:bg-gray-800 border border-transparent'
-                                        }`}
+                                    }`}
                                     activeOpacity={0.7}
                                 >
-                                    <Text className={`text-xs font-bold ${service.currency === curr
-                                            ? 'text-purple-600 dark:text-purple-400'
-                                            : 'text-gray-500 dark:text-gray-400'
-                                        }`}>
+                                    <Text
+                                        className={`text-xs font-bold ${
+                                            service.currency === curr
+                                                ? 'text-purple-600 dark:text-purple-400'
+                                                : 'text-gray-500 dark:text-gray-400'
+                                        }`}
+                                    >
                                         {curr}
                                     </Text>
                                 </TouchableOpacity>
@@ -175,26 +201,43 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
 
                         {/* Negotiable Toggle */}
                         <TouchableOpacity
-                            onPress={() => handleUpdateService(index, 'is_negotiable', !service.is_negotiable)}
-                            className={`flex-row items-center justify-between p-3 rounded-xl ${service.is_negotiable
+                            onPress={() =>
+                                handleUpdateService(index, 'is_negotiable', !service.is_negotiable)
+                            }
+                            className={`flex-row items-center justify-between p-3 rounded-xl ${
+                                service.is_negotiable
                                     ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
                                     : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                                }`}
+                            }`}
                             activeOpacity={0.7}
                         >
                             <View className="flex-row items-center gap-2">
-                                <View className={`w-6 h-6 rounded-md items-center justify-center ${service.is_negotiable ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}>
-                                    {service.is_negotiable && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                                <View
+                                    className={`w-6 h-6 rounded-md items-center justify-center ${
+                                        service.is_negotiable
+                                            ? 'bg-green-500'
+                                            : 'bg-gray-300 dark:bg-gray-600'
+                                    }`}
+                                >
+                                    {service.is_negotiable && (
+                                        <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                                    )}
                                 </View>
-                                <Text className={`text-sm font-semibold ${service.is_negotiable ? 'text-green-700 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'
-                                    }`}>
+                                <Text
+                                    className={`text-sm font-semibold ${
+                                        service.is_negotiable
+                                            ? 'text-green-700 dark:text-green-400'
+                                            : 'text-gray-600 dark:text-gray-400'
+                                    }`}
+                                >
                                     Có thể thương lượng
                                 </Text>
                             </View>
                             <Switch
                                 value={service.is_negotiable}
-                                onValueChange={(val) => handleUpdateService(index, 'is_negotiable', val)}
+                                onValueChange={(val) =>
+                                    handleUpdateService(index, 'is_negotiable', val)
+                                }
                                 trackColor={{ false: '#D1D5DB', true: '#22C55E' }}
                                 thumbColor="#FFFFFF"
                             />

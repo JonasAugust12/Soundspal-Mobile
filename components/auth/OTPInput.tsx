@@ -107,8 +107,15 @@ export function OTPInput({
                             }}
                             style={[
                                 styles.input,
-                                isFilled && { borderColor: activeColor, backgroundColor: '#FFFFFF' },
-                                isFocused && { borderColor: activeColor, borderWidth: 3, shadowOpacity: 0.2 },
+                                isFilled && {
+                                    borderColor: activeColor,
+                                    backgroundColor: '#FFFFFF',
+                                },
+                                isFocused && {
+                                    borderColor: activeColor,
+                                    borderWidth: 3,
+                                    shadowOpacity: 0.2,
+                                },
                                 hasError && styles.inputError,
                             ]}
                             value={value[index] || ''}

@@ -17,7 +17,7 @@ export function ProfileSkeleton() {
                     duration: 800,
                     useNativeDriver: true,
                 }),
-            ])
+            ]),
         );
         pulse.start();
         return () => pulse.stop();

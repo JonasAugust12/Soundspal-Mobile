@@ -31,9 +31,7 @@ export function FormInput({ label, error, icon: Icon, ...props }: FormInputProps
                     placeholderTextColor="#9ca3af"
                 />
             </View>
-            {error && (
-                <Text className="text-red-500 text-xs mt-1">{error}</Text>
-            )}
+            {error && <Text className="text-red-500 text-xs mt-1">{error}</Text>}
         </View>
     );
 }

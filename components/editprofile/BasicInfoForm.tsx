@@ -59,14 +59,19 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                             placeholder="Nhập tên, nghệ danh"
                             value={value}
                             onChangeText={onChange}
-                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${errors.display_name ? 'border border-red-500' : 'border border-transparent focus:border-primary'
-                                }`}
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${
+                                errors.display_name
+                                    ? 'border border-red-500'
+                                    : 'border border-transparent focus:border-primary'
+                            }`}
                             placeholderTextColor="#71717a"
                         />
                     )}
                 />
                 {errors.display_name && (
-                    <Text className="text-xs font-medium text-red-500 ml-1">{errors.display_name.message}</Text>
+                    <Text className="text-xs font-medium text-red-500 ml-1">
+                        {errors.display_name.message}
+                    </Text>
                 )}
             </View>
 
@@ -170,7 +175,9 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                     ) : (
                         <Save size={18} color="#ffffff" />
                     )}
-                    <Text className="text-white font-bold">{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}</Text>
+                    <Text className="text-white font-bold">
+                        {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                    </Text>
                 </Pressable>
             </View>
         </View>

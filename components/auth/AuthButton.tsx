@@ -32,7 +32,7 @@ export function AuthButton({
             className={`
                 w-full py-4 px-6 rounded-xl flex-row items-center justify-center
                 ${isPrimary ? 'bg-purple-600' : 'bg-transparent border-2 border-purple-600'}
-                ${(disabled || isLoading) ? 'opacity-50' : 'opacity-100'}
+                ${disabled || isLoading ? 'opacity-50' : 'opacity-100'}
                 ${extraClassName || ''}
             `}
             activeOpacity={0.7}
@@ -47,8 +47,9 @@ export function AuthButton({
                         </View>
                     )}
                     <Text
-                        className={`font-semibold text-base ${isPrimary ? 'text-white' : 'text-purple-600'
-                            }`}
+                        className={`font-semibold text-base ${
+                            isPrimary ? 'text-white' : 'text-purple-600'
+                        }`}
                     >
                         {children}
                     </Text>

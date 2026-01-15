@@ -8,7 +8,11 @@ interface OnlineIndicatorProps {
     position?: 'top-right' | 'bottom-right';
 }
 
-export function OnlineIndicator({ userId, size = 12, position = 'bottom-right' }: OnlineIndicatorProps) {
+export function OnlineIndicator({
+    userId,
+    size = 12,
+    position = 'bottom-right',
+}: OnlineIndicatorProps) {
     const { onlineUsers } = useMessagingStore();
     const isOnline = onlineUsers.includes(userId);
 
@@ -18,10 +22,7 @@ export function OnlineIndicator({ userId, size = 12, position = 'bottom-right' }
 
     return (
         <View className={`absolute ${positionClasses} rounded-full bg-white p-0.5`}>
-            <View
-                className="rounded-full bg-green-500"
-                style={{ width: size, height: size }}
-            />
+            <View className="rounded-full bg-green-500" style={{ width: size, height: size }} />
         </View>
     );
 }

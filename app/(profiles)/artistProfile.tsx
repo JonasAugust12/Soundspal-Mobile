@@ -2,7 +2,13 @@ import React from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, ChevronRight, MessageCircle, Music4, Video as VideoIcon } from 'lucide-react-native';
+import {
+    ChevronLeft,
+    ChevronRight,
+    MessageCircle,
+    Music4,
+    Video as VideoIcon,
+} from 'lucide-react-native';
 
 import {
     InfoProfile,
@@ -40,7 +46,7 @@ export default function ArtistProfile() {
 
     const { data: otherUserData, isLoading: isLoadingOtherUser } = useGetUserByUsername(
         params.username || '',
-        { enabled: !isMe }
+        { enabled: !isMe },
     );
 
     const { data: currentUserMedia, isLoading: isLoadingCurrentMedia } = useGetCurrentUserMedia({
@@ -48,7 +54,7 @@ export default function ArtistProfile() {
     });
     const { data: otherUserMedia, isLoading: isLoadingOtherMedia } = useGetUserMedia(
         params.username || '',
-        { enabled: !isMe }
+        { enabled: !isMe },
     );
 
     const getOrCreateConversation = useGetOrCreateConversation();
@@ -75,10 +81,10 @@ export default function ArtistProfile() {
 
     const onRefresh = async () => {
         setIsRefetching(true);
-        // React Query's refetch is handled within hooks if needed, 
+        // React Query's refetch is handled within hooks if needed,
         // but for simplicity we can trigger a global state update or wait for queries to invalidate
-        // In this case, useQuery's refetch is not directly exposed here for all, 
-        // but it will refresh on mount/focus if configured. 
+        // In this case, useQuery's refetch is not directly exposed here for all,
+        // but it will refresh on mount/focus if configured.
         // To be explicit, we could pass refetch from the hooks.
         setIsRefetching(false);
     };
@@ -150,11 +156,7 @@ export default function ArtistProfile() {
                             ? { uri: userData.avatar_url }
                             : require('@/assets/images/user_profile.png')
                     }
-                    backgroundSource={
-                        userData?.cover_url
-                            ? { uri: userData.cover_url }
-                            : undefined
-                    }
+                    backgroundSource={userData?.cover_url ? { uri: userData.cover_url } : undefined}
                     role={userData?.role?.toLowerCase() as 'singer' | 'producer' | 'venue'}
                 />
 
@@ -212,7 +214,9 @@ export default function ArtistProfile() {
                                 <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
                                     <Music4 size={18} color="#7C3AED" />
                                 </View>
-                                <Text className="text-lg font-bold text-foreground">Featured Releases</Text>
+                                <Text className="text-lg font-bold text-foreground">
+                                    Featured Releases
+                                </Text>
                             </View>
                             {(isMe || (userData?.featured_release_links?.length || 0) > 3) && (
                                 <Pressable
@@ -224,13 +228,16 @@ export default function ArtistProfile() {
                                     }
                                     className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 active:bg-primary/20"
                                 >
-                                    <Text className="text-sm font-semibold text-primary">Xem tất cả</Text>
+                                    <Text className="text-sm font-semibold text-primary">
+                                        Xem tất cả
+                                    </Text>
                                     <ChevronRight size={14} color="#7C3AED" />
                                 </Pressable>
                             )}
                         </View>
 
-                        {userData?.featured_release_links && userData.featured_release_links.length > 0 ? (
+                        {userData?.featured_release_links &&
+                        userData.featured_release_links.length > 0 ? (
                             <View className="gap-3">
                                 {userData.featured_release_links.slice(0, 3).map((link, index) => (
                                     <YoutubeEmbed key={index} url={link} />
@@ -267,7 +274,9 @@ export default function ArtistProfile() {
                                     }
                                     className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 active:bg-primary/20"
                                 >
-                                    <Text className="text-sm font-semibold text-primary">Xem tất cả</Text>
+                                    <Text className="text-sm font-semibold text-primary">
+                                        Xem tất cả
+                                    </Text>
                                     <ChevronRight size={14} color="#7C3AED" />
                                 </Pressable>
                             )}
@@ -307,12 +316,12 @@ export default function ArtistProfile() {
                             isMe
                                 ? () => router.push('/(profiles)/portfolioGallery')
                                 : portfolioImages.length > 8
-                                    ? () =>
+                                  ? () =>
                                         router.push({
                                             pathname: '/(profiles)/portfolioGallery',
                                             params: { username: userData?.username },
                                         })
-                                    : undefined
+                                  : undefined
                         }
                     />
                 </View>

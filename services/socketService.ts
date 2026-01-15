@@ -126,11 +126,10 @@ class SocketService {
 
         this.socket.on('message:edited', (message: Message) => {
             console.log('✏️ Message edited:', message.id);
-            useMessagingStore.getState().updateMessage(
-                message.conversationId,
-                message.id,
-                { content: message.content, isEdited: true }
-            );
+            useMessagingStore.getState().updateMessage(message.conversationId, message.id, {
+                content: message.content,
+                isEdited: true,
+            });
         });
 
         this.socket.on(
@@ -138,7 +137,7 @@ class SocketService {
             ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
                 console.log('🗑️ Message deleted:', messageId);
                 useMessagingStore.getState().removeMessage(conversationId, messageId);
-            }
+            },
         );
 
         // Typing events
@@ -150,7 +149,7 @@ class SocketService {
                     console.log('⌨️ User typing:', userId);
                     useMessagingStore.getState().addTypingUser(conversationId, userId);
                 }
-            }
+            },
         );
 
         this.socket.on(
@@ -161,7 +160,7 @@ class SocketService {
                     console.log('⏸️ User stopped typing:', userId);
                     useMessagingStore.getState().removeTypingUser(conversationId, userId);
                 }
-            }
+            },
         );
 
         // Online status events
@@ -188,9 +187,7 @@ class SocketService {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
-            console.log(`🔄 Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`)
-
-;
+            console.log(`🔄 Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
 
             this.isConnecting = false;
             setTimeout(() => {

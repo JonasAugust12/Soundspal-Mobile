@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, FlatList, ActivityIndicator, Dimensions, Platform, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    Pressable,
+    FlatList,
+    ActivityIndicator,
+    Dimensions,
+    Platform,
+    StyleSheet,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Video as VideoIcon, Trash2, Plus } from 'lucide-react-native';
@@ -25,7 +34,11 @@ export default function VideoGalleryScreen() {
     const isMe = !params.username || params.username === currentUser?.username;
     const username = isMe ? currentUser?.username || '' : params.username || '';
 
-    const { data: userVideos, isLoading, refetch } = useGetUserVideos(username, {
+    const {
+        data: userVideos,
+        isLoading,
+        refetch,
+    } = useGetUserVideos(username, {
         enabled: !!username,
     });
     const deleteVideo = useDeleteUserVideo();
@@ -73,7 +86,10 @@ export default function VideoGalleryScreen() {
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
             {/* Header */}
             <View className="flex-row items-center px-4 py-3 border-b border-border">
-                <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-muted">
+                <Pressable
+                    onPress={() => router.back()}
+                    className="p-2 -ml-2 rounded-full active:bg-muted"
+                >
                     <ChevronLeft size={24} color="#09090b" />
                 </Pressable>
                 <Text className="text-lg font-bold text-foreground flex-1 ml-2">Video</Text>
@@ -97,7 +113,9 @@ export default function VideoGalleryScreen() {
                             className="rounded-2xl p-5 items-center"
                         >
                             <VideoIcon size={32} color="#FFFFFF" />
-                            <Text className="text-white text-lg font-bold mt-2">Thư viện video</Text>
+                            <Text className="text-white text-lg font-bold mt-2">
+                                Thư viện video
+                            </Text>
                             <Text className="text-white/80 text-sm text-center mt-1">
                                 {videos.length} video trong thư viện
                             </Text>
@@ -118,7 +136,8 @@ export default function VideoGalleryScreen() {
                         {isMe && (
                             <View className="mt-4 p-4 bg-muted/30 rounded-xl">
                                 <Text className="text-sm text-muted-foreground">
-                                    💡 Thêm video demo để giới thiệu tài năng của bạn với khách hàng tiềm năng.
+                                    💡 Thêm video demo để giới thiệu tài năng của bạn với khách hàng
+                                    tiềm năng.
                                 </Text>
                             </View>
                         )}

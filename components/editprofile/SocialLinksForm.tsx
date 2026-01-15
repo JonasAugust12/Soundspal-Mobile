@@ -59,14 +59,19 @@ export function SocialLinksForm({ defaultValues, onSubmit, isLoading }: SocialLi
                             value={value}
                             onChangeText={onChange}
                             autoCapitalize="none"
-                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${errors.facebook_url ? 'border border-red-500' : 'border border-transparent focus:border-primary'
-                                }`}
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${
+                                errors.facebook_url
+                                    ? 'border border-red-500'
+                                    : 'border border-transparent focus:border-primary'
+                            }`}
                             placeholderTextColor="#71717a"
                         />
                     )}
                 />
                 {errors.facebook_url && (
-                    <Text className="text-xs font-medium text-red-500 ml-1">{errors.facebook_url.message}</Text>
+                    <Text className="text-xs font-medium text-red-500 ml-1">
+                        {errors.facebook_url.message}
+                    </Text>
                 )}
             </View>
 
@@ -85,14 +90,19 @@ export function SocialLinksForm({ defaultValues, onSubmit, isLoading }: SocialLi
                             value={value}
                             onChangeText={onChange}
                             autoCapitalize="none"
-                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${errors.instagram_url ? 'border border-red-500' : 'border border-transparent focus:border-primary'
-                                }`}
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${
+                                errors.instagram_url
+                                    ? 'border border-red-500'
+                                    : 'border border-transparent focus:border-primary'
+                            }`}
                             placeholderTextColor="#71717a"
                         />
                     )}
                 />
                 {errors.instagram_url && (
-                    <Text className="text-xs font-medium text-red-500 ml-1">{errors.instagram_url.message}</Text>
+                    <Text className="text-xs font-medium text-red-500 ml-1">
+                        {errors.instagram_url.message}
+                    </Text>
                 )}
             </View>
 
@@ -111,14 +121,19 @@ export function SocialLinksForm({ defaultValues, onSubmit, isLoading }: SocialLi
                             value={value}
                             onChangeText={onChange}
                             autoCapitalize="none"
-                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${errors.youtube_url ? 'border border-red-500' : 'border border-transparent focus:border-primary'
-                                }`}
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${
+                                errors.youtube_url
+                                    ? 'border border-red-500'
+                                    : 'border border-transparent focus:border-primary'
+                            }`}
                             placeholderTextColor="#71717a"
                         />
                     )}
                 />
                 {errors.youtube_url && (
-                    <Text className="text-xs font-medium text-red-500 ml-1">{errors.youtube_url.message}</Text>
+                    <Text className="text-xs font-medium text-red-500 ml-1">
+                        {errors.youtube_url.message}
+                    </Text>
                 )}
             </View>
 
@@ -142,7 +157,9 @@ export function SocialLinksForm({ defaultValues, onSubmit, isLoading }: SocialLi
                     ) : (
                         <Save size={18} color="#ffffff" strokeWidth={2.5} />
                     )}
-                    <Text className="text-white font-bold">{isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}</Text>
+                    <Text className="text-white font-bold">
+                        {isLoading ? 'Đang lưu...' : 'Lưu thay đổi'}
+                    </Text>
                 </Pressable>
             </View>
         </View>

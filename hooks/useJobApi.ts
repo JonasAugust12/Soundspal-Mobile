@@ -49,7 +49,7 @@ const jobApi = {
     submitJobApplication: (jobId: string, body: SubmitApplicationRequest) => {
         return createApiCall<Application, SubmitApplicationRequest>(
             'POST',
-            `/posts/${jobId}/submit`
+            `/posts/${jobId}/submit`,
         )(body);
     },
 
@@ -60,7 +60,7 @@ const jobApi = {
         });
         return createApiCall<MySubmissionsResponse>(
             'GET',
-            `/my-submissions?${searchParams.toString()}`
+            `/my-submissions?${searchParams.toString()}`,
         )();
     },
 };

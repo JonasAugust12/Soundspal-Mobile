@@ -11,7 +11,7 @@ interface SearchBarProps {
 export const SearchBar = ({
     value,
     onChangeText,
-    placeholder = 'Tìm kiếm công việc...'
+    placeholder = 'Tìm kiếm công việc...',
 }: SearchBarProps) => {
     return (
         <View className="w-full px-4">

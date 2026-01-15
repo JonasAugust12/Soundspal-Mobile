@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Platform, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MailWarning, RefreshCcw, LogOut, AlertTriangle } from 'lucide-react-native';
@@ -24,6 +24,7 @@ export default function EmailVerificationRequiredScreen() {
                 pathname: '/(auth)/verify-email',
                 params: { email: user?.email || '', fromLogin: 'true' },
             });
+            //eslint-disable-next-line
         } catch (error: any) {
             const errorMessage =
                 error?.response?.data?.message ||
@@ -58,11 +59,16 @@ export default function EmailVerificationRequiredScreen() {
                         <AlertTriangle size={44} color="#F59E0B" />
                     </View>
                     <Text className="text-white text-xl font-bold mt-4">Cần xác thực</Text>
-                    <Text className="text-white/70 text-sm mt-1">Tài khoản chưa được kích hoạt</Text>
+                    <Text className="text-white/70 text-sm mt-1">
+                        Tài khoản chưa được kích hoạt
+                    </Text>
                 </View>
 
                 {/* Main Content Card */}
-                <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                <View
+                    style={styles.contentCard}
+                    className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                >
                     {/* Warning Icon */}
                     <View className="items-center mb-6">
                         <View className="w-20 h-20 rounded-full bg-amber-50 items-center justify-center mb-4">
@@ -78,7 +84,9 @@ export default function EmailVerificationRequiredScreen() {
 
                     {/* Email Display */}
                     <View className="bg-amber-50 rounded-2xl p-4 mb-6">
-                        <Text className="text-xs text-amber-600 font-medium mb-1">Email đăng ký:</Text>
+                        <Text className="text-xs text-amber-600 font-medium mb-1">
+                            Email đăng ký:
+                        </Text>
                         <Text className="text-base font-bold text-gray-900">{user?.email}</Text>
                     </View>
 
@@ -107,9 +115,15 @@ export default function EmailVerificationRequiredScreen() {
                             💡 Tại sao cần xác thực?
                         </Text>
                         <View className="gap-1">
-                            <Text className="text-xs text-gray-500">• Bảo mật tài khoản của bạn</Text>
-                            <Text className="text-xs text-gray-500">• Nhận thông báo quan trọng qua email</Text>
-                            <Text className="text-xs text-gray-500">• Khôi phục mật khẩu khi cần thiết</Text>
+                            <Text className="text-xs text-gray-500">
+                                • Bảo mật tài khoản của bạn
+                            </Text>
+                            <Text className="text-xs text-gray-500">
+                                • Nhận thông báo quan trọng qua email
+                            </Text>
+                            <Text className="text-xs text-gray-500">
+                                • Khôi phục mật khẩu khi cần thiết
+                            </Text>
                         </View>
                     </View>
 

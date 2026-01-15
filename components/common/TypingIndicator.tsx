@@ -21,7 +21,7 @@ export function TypingIndicator() {
                         duration: 400,
                         useNativeDriver: true,
                     }),
-                ])
+                ]),
             ).start();
         };
 
@@ -47,18 +47,9 @@ export function TypingIndicator() {
 
     return (
         <View className="flex-row items-center gap-1.5 self-start py-2.5 px-3 rounded-2xl border border-primary bg-background">
-            <Animated.View
-                className="w-2 h-2 rounded-full bg-primary"
-                style={dotStyle(dot1)}
-            />
-            <Animated.View
-                className="w-2 h-2 rounded-full bg-primary"
-                style={dotStyle(dot2)}
-            />
-            <Animated.View
-                className="w-2 h-2 rounded-full bg-primary"
-                style={dotStyle(dot3)}
-            />
+            <Animated.View className="w-2 h-2 rounded-full bg-primary" style={dotStyle(dot1)} />
+            <Animated.View className="w-2 h-2 rounded-full bg-primary" style={dotStyle(dot2)} />
+            <Animated.View className="w-2 h-2 rounded-full bg-primary" style={dotStyle(dot3)} />
         </View>
     );
 }

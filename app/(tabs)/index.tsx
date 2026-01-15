@@ -18,7 +18,7 @@ import {
     ArtistCardSkeleton,
     JobCardSkeleton,
     type ArtistItem,
-    type JobItem
+    type JobItem,
 } from '@/components/home';
 import { useFeaturedUsers, useFeaturedJobs } from '@/hooks/useSearchApi';
 import { TabScreenWrapper } from '@/components/navigation/TabScreenWrapper';
@@ -51,7 +51,9 @@ export default function HomeScreen() {
                 user.city && user.country
                     ? `${user.city}, ${user.country}`
                     : user.city || user.country || 'Chưa cập nhật',
-            skills: user.genres?.map((g: import('@/types/search.type').Genre) => g.name).join('/') || 'Chưa cập nhật',
+            skills:
+                user.genres?.map((g: import('@/types/search.type').Genre) => g.name).join('/') ||
+                'Chưa cập nhật',
             image: user.avatar_url
                 ? { uri: user.avatar_url }
                 : require('@/assets/images/user_profile.png'),
@@ -82,9 +84,7 @@ export default function HomeScreen() {
             genres: job.genres,
             recruitmentType: job.recruitment_type,
             creatorName: job.creator_display_name,
-            creatorAvatar: job.creator_avatar_url
-                ? { uri: job.creator_avatar_url }
-                : undefined,
+            creatorAvatar: job.creator_avatar_url ? { uri: job.creator_avatar_url } : undefined,
             postType: job.post_type,
         }));
     }, [featuredJobsData]);
@@ -128,7 +128,13 @@ export default function HomeScreen() {
                             colors={['#7C3BED', '#EC4899']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
-                            style={{ width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}
+                            style={{
+                                width: 40,
+                                height: 40,
+                                borderRadius: 12,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
                         >
                             <Search size={20} color="#FFFFFF" />
                         </LinearGradient>
@@ -154,10 +160,16 @@ export default function HomeScreen() {
                 >
                     {/* Background Pattern */}
                     <View className="absolute top-0 right-0 opacity-20">
-                        <View className="w-32 h-32 rounded-full bg-white" style={{ marginTop: -40, marginRight: -40 }} />
+                        <View
+                            className="w-32 h-32 rounded-full bg-white"
+                            style={{ marginTop: -40, marginRight: -40 }}
+                        />
                     </View>
                     <View className="absolute bottom-0 left-0 opacity-10">
-                        <View className="w-24 h-24 rounded-full bg-white" style={{ marginBottom: -30, marginLeft: -30 }} />
+                        <View
+                            className="w-24 h-24 rounded-full bg-white"
+                            style={{ marginBottom: -30, marginLeft: -30 }}
+                        />
                     </View>
 
                     <View className="gap-3 z-10">
@@ -213,17 +225,13 @@ export default function HomeScreen() {
                 <View className="px-5 flex-row justify-between items-center mb-4">
                     <View className="flex-row items-center gap-2">
                         <View className="w-1 h-5 bg-purple-500 rounded-full" />
-                        <Text className="text-lg font-bold text-gray-900">
-                            Nghệ sĩ nổi bật
-                        </Text>
+                        <Text className="text-lg font-bold text-gray-900">Nghệ sĩ nổi bật</Text>
                     </View>
                     <TouchableOpacity
                         onPress={() => router.push('/(tabs)/explore')}
                         className="flex-row items-center gap-1"
                     >
-                        <Text className="text-sm font-semibold text-purple-600">
-                            Tất cả
-                        </Text>
+                        <Text className="text-sm font-semibold text-purple-600">Tất cả</Text>
                         <ChevronRight size={16} color="#7C3BED" />
                     </TouchableOpacity>
                 </View>
@@ -283,22 +291,16 @@ export default function HomeScreen() {
                 <View className="px-5 flex-row justify-between items-center mb-4">
                     <View className="flex-row items-center gap-2">
                         <View className="w-1 h-5 bg-orange-500 rounded-full" />
-                        <Text className="text-lg font-bold text-gray-900">
-                            Việc làm hot
-                        </Text>
+                        <Text className="text-lg font-bold text-gray-900">Việc làm hot</Text>
                         <View className="bg-orange-100 px-2 py-0.5 rounded-full ml-1">
-                            <Text className="text-[10px] font-bold text-orange-600">
-                                Mới
-                            </Text>
+                            <Text className="text-[10px] font-bold text-orange-600">Mới</Text>
                         </View>
                     </View>
                     <TouchableOpacity
                         onPress={() => router.push('/(tabs)/jobs')}
                         className="flex-row items-center gap-1"
                     >
-                        <Text className="text-sm font-semibold text-purple-600">
-                            Tất cả
-                        </Text>
+                        <Text className="text-sm font-semibold text-purple-600">Tất cả</Text>
                         <ChevronRight size={16} color="#7C3BED" />
                     </TouchableOpacity>
                 </View>

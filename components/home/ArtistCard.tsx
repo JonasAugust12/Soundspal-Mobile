@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ImageSourcePropType, StyleSheet, Platform } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Image,
+    ImageSourcePropType,
+    StyleSheet,
+    Platform,
+} from 'react-native';
 import { MapPin, Mic2, Disc2, Building2 } from 'lucide-react-native';
 import type { UserRole } from '@/types/search.type';
 
@@ -24,11 +32,29 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
     const getRoleBadge = () => {
         switch (item.role) {
             case 'singer':
-                return { icon: Mic2, text: 'Singer', className: 'bg-purple-100', textColor: 'text-purple-600', iconColor: '#7C3AED' };
+                return {
+                    icon: Mic2,
+                    text: 'Singer',
+                    className: 'bg-purple-100',
+                    textColor: 'text-purple-600',
+                    iconColor: '#7C3AED',
+                };
             case 'producer':
-                return { icon: Disc2, text: 'Producer', className: 'bg-blue-100', textColor: 'text-blue-600', iconColor: '#2563EB' };
+                return {
+                    icon: Disc2,
+                    text: 'Producer',
+                    className: 'bg-blue-100',
+                    textColor: 'text-blue-600',
+                    iconColor: '#2563EB',
+                };
             case 'venue':
-                return { icon: Building2, text: 'Venue', className: 'bg-red-100', textColor: 'text-red-600', iconColor: '#DC2626' };
+                return {
+                    icon: Building2,
+                    text: 'Venue',
+                    className: 'bg-red-100',
+                    textColor: 'text-red-600',
+                    iconColor: '#DC2626',
+                };
             default:
                 return null;
         }
@@ -45,11 +71,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
         >
             {/* Artist Image */}
             <View className="w-full h-[140px] relative">
-                <Image
-                    source={item.image}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                />
+                <Image source={item.image} className="w-full h-full" resizeMode="cover" />
 
                 {/* Role Badge on Image */}
                 {roleBadge && (
@@ -67,17 +89,11 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
 
             {/* Artist Info */}
             <View className="p-3 gap-1.5">
-                <Text
-                    className="text-base font-bold text-gray-900 text-center"
-                    numberOfLines={1}
-                >
+                <Text className="text-base font-bold text-gray-900 text-center" numberOfLines={1}>
                     {item.name}
                 </Text>
 
-                <Text
-                    className="text-xs text-gray-600 text-center mb-1"
-                    numberOfLines={1}
-                >
+                <Text className="text-xs text-gray-600 text-center mb-1" numberOfLines={1}>
                     {item.description}
                 </Text>
 
@@ -85,10 +101,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
                     {/* Location */}
                     <View className="flex-row items-center gap-1.5">
                         <MapPin size={12} color="#7C3BED" />
-                        <Text
-                            className="text-xs text-gray-600 font-medium"
-                            numberOfLines={1}
-                        >
+                        <Text className="text-xs text-gray-600 font-medium" numberOfLines={1}>
                             {item.location}
                         </Text>
                     </View>

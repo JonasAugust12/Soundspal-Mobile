@@ -1,5 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Keyboard, Image, Platform, StyleSheet, Dimensions } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    Keyboard,
+    Image,
+    Platform,
+    StyleSheet,
+    Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -80,7 +89,10 @@ export default function LoginScreen() {
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                    >
                         {/* Welcome Text */}
                         <View className="items-center mb-6">
                             <Text className="text-2xl font-black text-gray-900 text-center">
@@ -95,7 +107,10 @@ export default function LoginScreen() {
                         <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
 
                         {/* Forgot Password */}
-                        <TouchableOpacity onPress={handleForgotPassword} className="items-center mt-4">
+                        <TouchableOpacity
+                            onPress={handleForgotPassword}
+                            className="items-center mt-4"
+                        >
                             <Text className="text-sm text-purple-600 font-semibold">
                                 Quên mật khẩu?
                             </Text>
@@ -129,9 +144,7 @@ export default function LoginScreen() {
 
                         {/* Register Link */}
                         <View className="flex-row items-center justify-center gap-1 mt-8 mb-6">
-                            <Text className="text-sm text-gray-500">
-                                Chưa có tài khoản?
-                            </Text>
+                            <Text className="text-sm text-gray-500">Chưa có tài khoản?</Text>
                             <TouchableOpacity onPress={handleRegister}>
                                 <Text className="text-sm font-bold text-purple-600">
                                     Đăng ký ngay
@@ -144,7 +157,8 @@ export default function LoginScreen() {
                             <Text className="text-[10px] text-gray-400 text-center max-w-[280px]">
                                 Bằng việc đăng nhập, bạn đồng ý với{' '}
                                 <Text className="text-purple-600">Điều khoản dịch vụ</Text> và{' '}
-                                <Text className="text-purple-600">Chính sách bảo mật</Text> của chúng tôi.
+                                <Text className="text-purple-600">Chính sách bảo mật</Text> của
+                                chúng tôi.
                             </Text>
                         </View>
                     </View>

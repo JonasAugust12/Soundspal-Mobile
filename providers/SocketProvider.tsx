@@ -40,7 +40,5 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         };
     }, [user, accessToken, queryClient]);
 
-    return (
-        <SocketContext.Provider value={{ isConnected }}>{children}</SocketContext.Provider>
-    );
+    return <SocketContext.Provider value={{ isConnected }}>{children}</SocketContext.Provider>;
 }

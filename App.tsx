@@ -2,5 +2,5 @@
 // Keeping this file for backwards compatibility but it won't be executed
 
 export default function App() {
-  return null;
+    return null;
 }

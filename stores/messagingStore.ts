@@ -68,20 +68,23 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
             conversations,
             unreadCounts: conversations.reduce(
                 (acc, conv) => ({ ...acc, [conv.id]: conv.unreadCount || 0 }),
-                {}
+                {},
             ),
         }),
 
     addConversation: (conversation) =>
         set((state) => ({
             conversations: [conversation, ...state.conversations],
-            unreadCounts: { ...state.unreadCounts, [conversation.id]: conversation.unreadCount || 0 },
+            unreadCounts: {
+                ...state.unreadCounts,
+                [conversation.id]: conversation.unreadCount || 0,
+            },
         })),
 
     updateConversation: (conversationId, updates) =>
         set((state) => ({
             conversations: state.conversations.map((conv) =>
-                conv.id === conversationId ? { ...conv, ...updates } : conv
+                conv.id === conversationId ? { ...conv, ...updates } : conv,
             ),
         })),
 
@@ -89,7 +92,9 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
         set((state) => ({
             conversations: state.conversations.filter((conv) => conv.id !== conversationId),
             messagesByConversation: Object.fromEntries(
-                Object.entries(state.messagesByConversation).filter(([id]) => id !== conversationId)
+                Object.entries(state.messagesByConversation).filter(
+                    ([id]) => id !== conversationId,
+                ),
             ),
         })),
 
@@ -116,7 +121,7 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
             const updatedConversations = state.conversations.map((conv) =>
                 conv.id === conversationId
                     ? { ...conv, lastMessage: message, updatedAt: message.createdAt }
-                    : conv
+                    : conv,
             );
 
             return {
@@ -135,7 +140,7 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
                 messagesByConversation: {
                     ...state.messagesByConversation,
                     [conversationId]: currentMessages.map((msg) =>
-                        msg.id === messageId ? { ...msg, ...updates } : msg
+                        msg.id === messageId ? { ...msg, ...updates } : msg,
                     ),
                 },
             };
@@ -148,7 +153,7 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
                 messagesByConversation: {
                     ...state.messagesByConversation,
                     [conversationId]: currentMessages.map((msg) =>
-                        msg.id === messageId ? { ...msg, isDeleted: true, content: '' } : msg
+                        msg.id === messageId ? { ...msg, isDeleted: true, content: '' } : msg,
                     ),
                 },
             };
@@ -233,8 +238,12 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
     getSortedConversations: () => {
         const state = get();
         return [...state.conversations].sort((a, b) => {
-            const dateA = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
-            const dateB = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+            const dateA = a.lastMessage?.createdAt
+                ? new Date(a.lastMessage.createdAt).getTime()
+                : 0;
+            const dateB = b.lastMessage?.createdAt
+                ? new Date(b.lastMessage.createdAt).getTime()
+                : 0;
             return dateB - dateA;
         });
     },

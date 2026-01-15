@@ -42,5 +42,6 @@ yarn-error.*
 
 .agent/
 .shared/
+.github/prompts/
 
 google-services.json

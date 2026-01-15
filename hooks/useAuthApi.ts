@@ -32,35 +32,35 @@ const authApi = {
     logout: createApiCall<LogoutResponse, LogoutRequest>('POST', '/auth/logout'),
     verifyEmail: createApiCall<VerifyEmailResponse, VerifyEmailRequest>(
         'POST',
-        '/auth/verify-email'
+        '/auth/verify-email',
     ),
-    resendVerification: createApiCall<
-        ResendVerificationResponse,
-        ResendVerificationRequest
-    >('POST', '/auth/verification-email-resend'),
-    requestPasswordReset: createApiCall<
-        RequestPasswordResetResponse,
-        RequestPasswordResetRequest
-    >('POST', '/auth/reset-password-request'),
-    confirmResetPassword: createApiCall<
-        ConfirmResetPasswordResponse,
-        ConfirmResetPasswordRequest
-    >('POST', '/auth/confirm-reset-password-request'),
+    resendVerification: createApiCall<ResendVerificationResponse, ResendVerificationRequest>(
+        'POST',
+        '/auth/verification-email-resend',
+    ),
+    requestPasswordReset: createApiCall<RequestPasswordResetResponse, RequestPasswordResetRequest>(
+        'POST',
+        '/auth/reset-password-request',
+    ),
+    confirmResetPassword: createApiCall<ConfirmResetPasswordResponse, ConfirmResetPasswordRequest>(
+        'POST',
+        '/auth/confirm-reset-password-request',
+    ),
     resendResetPasswordCode: createApiCall<
         RequestPasswordResetResponse,
         RequestPasswordResetRequest
     >('POST', '/auth/reset-password-request-resend'),
     resetPassword: createApiCall<ResetPasswordResponse, ResetPasswordRequest>(
         'POST',
-        '/auth/reset-password'
+        '/auth/reset-password',
     ),
     mobileOAuth: createApiCall<MobileOAuthResponse, MobileOAuthRequest>(
         'POST',
-        '/auth/mobile-oauth'
+        '/auth/mobile-oauth',
     ),
     completeOAuth: createApiCall<CompleteOAuthResponse, CompleteOAuthRequest>(
         'POST',
-        '/auth/complete-oauth'
+        '/auth/complete-oauth',
     ),
 };
 
@@ -175,11 +175,7 @@ export const useMobileOAuth = () => {
     return useMutation({
         mutationFn: authApi.mobileOAuth,
         onSuccess: (data) => {
-            if (
-                data.data?.is_registered &&
-                data.data?.access_token &&
-                data.data?.refresh_token
-            ) {
+            if (data.data?.is_registered && data.data?.access_token && data.data?.refresh_token) {
                 const user = getUserFromToken(data.data.access_token);
                 if (user) {
                     setCredentials({

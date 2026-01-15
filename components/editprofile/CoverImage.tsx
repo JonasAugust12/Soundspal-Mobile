@@ -13,11 +13,7 @@ export function CoverImage({ coverUri, editable, onPickCover }: CoverImageProps)
     return (
         <View className="h-44 w-full relative">
             <Image
-                source={
-                    coverUri
-                        ? { uri: coverUri }
-                        : require('@/assets/images/background.png')
-                }
+                source={coverUri ? { uri: coverUri } : require('@/assets/images/background.png')}
                 className="w-full h-full absolute"
                 resizeMode="cover"
             />

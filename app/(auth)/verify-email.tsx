@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Keyboard, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -53,13 +53,14 @@ export default function VerifyEmailScreen() {
 
                 if (isFromLogin && user) {
                     useAuthStore.setState((state) => ({
-                        user: state.user ? { ...state.user, is_verified: true } : state.user
+                        user: state.user ? { ...state.user, is_verified: true } : state.user,
                     }));
                     router.replace('/(tabs)');
                 } else {
                     router.replace('/(auth)/login');
                 }
             }
+            //eslint-disable-next-line
         } catch (err: any) {
             const errorMessage =
                 err?.response?.data?.message ||
@@ -78,6 +79,7 @@ export default function VerifyEmailScreen() {
             setCountdown(30);
             setCode('');
             setError('');
+            //eslint-disable-next-line
         } catch (err: any) {
             const errorMessage =
                 err?.response?.data?.message ||
@@ -136,7 +138,10 @@ export default function VerifyEmailScreen() {
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                    >
                         {/* Email Display */}
                         <View className="items-center mb-6">
                             <View className="bg-cyan-50 px-4 py-2 rounded-full mb-4">
@@ -162,7 +167,9 @@ export default function VerifyEmailScreen() {
                                 activeColor="#0891B2"
                             />
                             {error && (
-                                <Text className="text-red-500 text-xs mt-4 text-center">{error}</Text>
+                                <Text className="text-red-500 text-xs mt-4 text-center">
+                                    {error}
+                                </Text>
                             )}
                         </View>
 
@@ -184,8 +191,13 @@ export default function VerifyEmailScreen() {
                                 disabled={countdown > 0 || isResending}
                                 className={`flex-row items-center gap-2 px-4 py-2 rounded-full ${countdown > 0 ? 'bg-gray-100' : 'bg-cyan-50'}`}
                             >
-                                <RefreshCw size={16} color={countdown > 0 ? '#9CA3AF' : '#0891B2'} />
-                                <Text className={`font-semibold ${countdown > 0 ? 'text-gray-400' : 'text-cyan-600'}`}>
+                                <RefreshCw
+                                    size={16}
+                                    color={countdown > 0 ? '#9CA3AF' : '#0891B2'}
+                                />
+                                <Text
+                                    className={`font-semibold ${countdown > 0 ? 'text-gray-400' : 'text-cyan-600'}`}
+                                >
                                     {countdown > 0 ? `Gửi lại sau ${countdown}s` : 'Gửi lại mã'}
                                 </Text>
                             </TouchableOpacity>

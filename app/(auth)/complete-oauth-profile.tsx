@@ -3,7 +3,7 @@ import { View, Text, Keyboard, Platform, StyleSheet, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
-import { UserCog, Sparkles } from 'lucide-react-native';
+import { Sparkles } from 'lucide-react-native';
 import { CompleteOAuthForm } from '@/components/auth';
 import { useCompleteOAuth } from '@/hooks/useAuthApi';
 import { useToast } from '@/hooks/useToast';
@@ -51,6 +51,7 @@ export default function CompleteOAuthProfileScreen() {
                     router.replace('/(tabs)');
                 }
             }
+            //eslint-disable-next-line
         } catch (error: any) {
             const errorMessage =
                 error?.response?.data?.message ||
@@ -89,17 +90,26 @@ export default function CompleteOAuthProfileScreen() {
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text className="text-white text-xl font-bold mt-4">Một bước nữa thôi!</Text>
-                        <Text className="text-white/70 text-sm mt-1">Hoàn tất thông tin để bắt đầu</Text>
+                        <Text className="text-white text-xl font-bold mt-4">
+                            Một bước nữa thôi!
+                        </Text>
+                        <Text className="text-white/70 text-sm mt-1">
+                            Hoàn tất thông tin để bắt đầu
+                        </Text>
                     </View>
 
                     {/* Main Content Card */}
-                    <View style={styles.contentCard} className="flex-1 bg-white rounded-t-[32px] px-6 pt-8">
+                    <View
+                        style={styles.contentCard}
+                        className="flex-1 bg-white rounded-t-[32px] px-6 pt-8"
+                    >
                         {/* Header */}
                         <View className="items-center mb-6">
                             <View className="flex-row items-center gap-2 bg-pink-50 px-4 py-2 rounded-full mb-4">
                                 <Sparkles size={16} color="#EC4899" />
-                                <Text className="text-pink-600 font-semibold text-sm">Google Sign-In</Text>
+                                <Text className="text-pink-600 font-semibold text-sm">
+                                    Google Sign-In
+                                </Text>
                             </View>
                             <Text className="text-xl font-black text-gray-900 text-center">
                                 Hoàn tất đăng ký ✨
@@ -110,10 +120,7 @@ export default function CompleteOAuthProfileScreen() {
                         </View>
 
                         {/* Form */}
-                        <CompleteOAuthForm
-                            onSubmit={handleCompleteProfile}
-                            isLoading={isLoading}
-                        />
+                        <CompleteOAuthForm onSubmit={handleCompleteProfile} isLoading={isLoading} />
 
                         {/* Info Box */}
                         <View className="mt-8 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4">
@@ -123,15 +130,24 @@ export default function CompleteOAuthProfileScreen() {
                             <View className="gap-1.5">
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-pink-500" />
-                                    <Text className="text-xs text-gray-600"><Text className="font-semibold">Producer:</Text> Sáng tác, hòa âm, phối khí</Text>
+                                    <Text className="text-xs text-gray-600">
+                                        <Text className="font-semibold">Producer:</Text> Sáng tác,
+                                        hòa âm, phối khí
+                                    </Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                                    <Text className="text-xs text-gray-600"><Text className="font-semibold">Singer:</Text> Ca sĩ, nghệ sĩ biểu diễn</Text>
+                                    <Text className="text-xs text-gray-600">
+                                        <Text className="font-semibold">Singer:</Text> Ca sĩ, nghệ
+                                        sĩ biểu diễn
+                                    </Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-                                    <Text className="text-xs text-gray-600"><Text className="font-semibold">Venue:</Text> Địa điểm tổ chức sự kiện</Text>
+                                    <Text className="text-xs text-gray-600">
+                                        <Text className="font-semibold">Venue:</Text> Địa điểm tổ
+                                        chức sự kiện
+                                    </Text>
                                 </View>
                             </View>
                         </View>

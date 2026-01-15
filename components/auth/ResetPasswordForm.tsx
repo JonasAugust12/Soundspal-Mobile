@@ -75,11 +75,7 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
                 )}
             />
 
-            <AuthButton
-                onPress={handleSubmit(onSubmit)}
-                isLoading={isLoading}
-                leftIcon={RotateCcw}
-            >
+            <AuthButton onPress={handleSubmit(onSubmit)} isLoading={isLoading} leftIcon={RotateCcw}>
                 {isLoading ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
             </AuthButton>
         </View>
