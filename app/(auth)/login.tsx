@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    Keyboard,
-    Image,
-    Platform,
-    StyleSheet,
-    Dimensions,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Keyboard, Image, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,8 +9,6 @@ import { useGoogleSignIn } from '@/hooks/useGoogleSignIn';
 import { useToast } from '@/hooks/useToast';
 import { useRouter } from 'expo-router';
 import type { LoginFormData } from '@/components/auth/LoginForm';
-
-const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
     const { mutateAsync: login, isPending: isLoading } = useLogin();
@@ -37,6 +26,7 @@ export default function LoginScreen() {
                 showSuccess('Đăng nhập thành công! 🎉', 'Chào mừng bạn trở lại.');
                 router.replace('/(tabs)');
             }
+            //eslint-disable-next-line
         } catch (error: any) {
             const errorMessage =
                 error?.response?.data?.message ||

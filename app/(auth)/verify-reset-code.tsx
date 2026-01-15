@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    TextInput,
-    Keyboard,
-    Platform,
-    StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -67,6 +59,7 @@ export default function VerifyResetCodeScreen() {
                     },
                 });
             }
+            //eslint-disable-next-line
         } catch (err: any) {
             const errorMessage =
                 err?.response?.data?.message ||
@@ -85,6 +78,7 @@ export default function VerifyResetCodeScreen() {
             setCountdown(30);
             setCode('');
             setError('');
+            //eslint-disable-next-line
         } catch (err: any) {
             const errorMessage =
                 err?.response?.data?.message ||

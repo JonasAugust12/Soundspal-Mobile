@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -7,8 +7,6 @@ import {
     TextInput,
     ActivityIndicator,
     Alert,
-    Platform,
-    StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -16,13 +14,13 @@ import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCreateJob } from '@/hooks/useJobApi';
 import type { CreateJobRequest } from '@/types/job.type';
-import { formatDate } from '@/utils/jobFormatters';
 
 type FormStep = 'basic' | 'details' | 'requirements' | 'review';
 
 const JOB_TYPES = ['venue', 'producer', 'singer'];
 const RECRUITMENT_TYPES = ['full_time', 'part_time', 'contract', 'one_time'];
 const LOCATION_TYPES = ['remote', 'onsite', 'hybrid'];
+//eslint-disable-next-line
 const CURRENCIES = ['VND', 'USD', 'EUR'];
 const PAYMENT_TYPES = ['bySession', 'byHour', 'byProject', 'byMonth'];
 const EXPERIENCE_LEVELS = ['beginner', 'intermediate', 'expert', 'any'];
