@@ -3,6 +3,7 @@ import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import reactNativePlugin from 'eslint-plugin-react-native';
+import expoPlugin from 'eslint-plugin-expo';
 import prettierConfig from 'eslint-config-prettier';
 
 export default tseslint.config(
@@ -36,6 +37,7 @@ export default tseslint.config(
             react: reactPlugin,
             'react-hooks': reactHooksPlugin,
             'react-native': reactNativePlugin,
+            expo: expoPlugin,
         },
         languageOptions: {
             parserOptions: {

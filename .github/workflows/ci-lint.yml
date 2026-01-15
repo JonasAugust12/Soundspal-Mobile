@@ -2,9 +2,9 @@ name: CI - Lint & Type Check
 
 on:
     push:
-        branches: ['*']
+        branches: [dev, main, 'feature/**']
     pull_request:
-        branches: [main, develop]
+        branches: [dev, main]
 
 jobs:
     lint:

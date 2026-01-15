@@ -25,11 +25,6 @@ jobs:
             - name: Setup EAS CLI
               run: npm install -g eas-cli
 
-            - name: Configure EAS
-              run: eas build:configure --platform android
-              env:
-                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
             - name: Build Android Production
               run: eas build --platform android --profile production --non-interactive
               env:
@@ -38,4 +33,4 @@ jobs:
             - name: Get Build URL
               run: |
                   echo "✅ Build submitted to EAS!"
-                  echo "Check your builds at: https://expo.dev/accounts/[your-account]/projects/talent_link/builds"
+                  echo "Check your builds at: https://expo.dev/accounts/jonasaugust12/projects/talent_link/builds"
