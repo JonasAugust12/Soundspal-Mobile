@@ -17,7 +17,7 @@ export const useGoogleSignIn = () => {
         GoogleSignin.configure({
             webClientId: '419154220948-58io8pdnh0e0ngcd7v94cf4icprgpf4l.apps.googleusercontent.com',
             offlineAccess: true,
-            // forceCodeForRefreshToken: true,
+            forceCodeForRefreshToken: true,
         });
     };
 
