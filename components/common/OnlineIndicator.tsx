@@ -13,8 +13,8 @@ export function OnlineIndicator({
     size = 12,
     position = 'bottom-right',
 }: OnlineIndicatorProps) {
-    const { onlineUsers } = useMessagingStore();
-    const isOnline = onlineUsers.includes(userId);
+    const { isUserOnline } = useMessagingStore();
+    const isOnline = isUserOnline(userId);
 
     if (!isOnline) return null;
 

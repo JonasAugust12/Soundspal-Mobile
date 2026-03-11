@@ -1,13 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createApiCall } from '@/lib/apiClient';
 import type {
-    MySubmission,
     MySubmissionsResponse,
     OpportunitySubmissionsResponse,
     WithdrawSubmissionRequest,
     ReviewSubmissionRequest,
     ReviewSubmissionResponse,
-    OpportunitySubmission,
 } from '@/types/collaboration.type';
 import type { JobListResponse } from '@/types/job.type';
 
@@ -208,7 +206,7 @@ export const useReviewSubmission = () => {
     return useMutation({
         mutationFn: ({ id, body }: { id: string; body: ReviewSubmissionRequest }) =>
             collabApi.reviewSubmission(id, body),
-        onSuccess: (_, variables) => {
+        onSuccess: (_, _variables) => {
             // Invalidate opportunity submissions
             queryClient.invalidateQueries({
                 queryKey: collabKeys.opportunitySubmissions(),

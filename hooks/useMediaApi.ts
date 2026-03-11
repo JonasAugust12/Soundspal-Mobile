@@ -9,7 +9,7 @@ const mediaApi = {
     },
 
     uploadMedia: (formData: FormData) => {
-        console.log('🔍 Sending FormData to /submissions/media');
+        console.warn('🔍 Sending FormData to /submissions/media');
         return createApiCall<UploadMediaResponse, FormData>('POST', 'submissions/media')(formData);
     },
 

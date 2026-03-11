@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Modal, Alert } from 'react-native';
-import { ChevronRight, Edit, X } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Modal } from 'react-native';
+import { Edit, X } from 'lucide-react-native';
 
 interface EditCardProps {
     title: string;
     value: string | number | string[] | undefined;
-    onSave: (value: any) => void;
+    onSave: (value: string | number | string[] | boolean | undefined) => void;
     type?: 'text' | 'number' | 'multiline' | 'select' | 'tags' | 'toggle' | 'budget';
     options?: Array<{ label: string; value: string }>;
     placeholder?: string;
@@ -17,7 +17,7 @@ export const JobEditCard = ({
     value,
     onSave,
     type = 'text',
-    options = [],
+    options: _options = [],
     placeholder,
     children,
 }: EditCardProps) => {

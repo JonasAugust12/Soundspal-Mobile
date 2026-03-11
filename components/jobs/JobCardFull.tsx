@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Pressable, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Platform, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Bookmark, Briefcase, Calendar, DollarSign, MapPin, Crown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Job } from '@/types/job.type';
 import { formatBudget, formatDate, formatJobType } from '@/utils/jobFormatters';
-import { Info } from './Info';
+
 import { JobApplyModal } from './JobApplyModal';
 
 interface JobCardFullProps {
@@ -24,14 +24,14 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
     const jobTypeDisplay = formatJobType(job.type);
 
     const handleViewDetails = () => {
-        router.push(`/(jobs)/detail?id=${job.id}` as any);
+        router.push(`/(jobs)/detail?id=${job.id}` as `${string}`);
     };
 
     const handleEdit = () => {
         if (onEdit) {
             onEdit();
         } else {
-            router.push(`/(jobs)/edit-job?id=${job.id}` as any);
+            router.push(`/(jobs)/edit-job?id=${job.id}` as `${string}`);
         }
     };
 
@@ -232,53 +232,10 @@ const styles = StyleSheet.create({
             },
         }),
     },
-    primaryButton: {
-        borderRadius: 12,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#7C3BED',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-            },
-            android: {
-                elevation: 6,
-            },
-        }),
-    },
-    secondaryButton: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    gradientButton: {
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
     gradientButtonFix: {
         paddingVertical: 14,
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    detailsButtonFix: {
-        paddingVertical: 14,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
-        borderWidth: 2,
-        borderColor: '#F3F4F6',
     },
 });

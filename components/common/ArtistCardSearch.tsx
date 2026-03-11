@@ -1,7 +1,6 @@
-import { Role } from '@/types/user.type';
 import { router } from 'expo-router';
 import React from 'react';
-import { View, Text, Image, Pressable } from 'react-native';
+import { View, Text, Image, Pressable, ImageSourcePropType } from 'react-native';
 
 export type UserRole = 'singer' | 'producer' | 'venue';
 
@@ -12,7 +11,7 @@ export type ArtistItem = {
     location: string;
     role: UserRole;
     username?: string;
-    image: any;
+    image: ImageSourcePropType;
 };
 
 type Props = { item: ArtistItem; width?: number };

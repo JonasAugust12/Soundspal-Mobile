@@ -1,15 +1,15 @@
 {
     "expo": {
-        "name": "Talent Link",
-        "slug": "talent_link",
+        "name": "Soundspal",
+        "slug": "soundspal",
         "version": "1.0.0",
         "orientation": "portrait",
-        "icon": "./assets/images/TalentLink-Logo1.png",
-        "scheme": "talentlink",
+        "icon": "./assets/images/Soundspal-Logo1.png",
+        "scheme": "soundspal",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "splash": {
-            "image": "./assets/images/TalentLink-TextLogo.png",
+            "image": "./assets/images/Soundspal-TextLogo.png",
             "resizeMode": "contain",
             "backgroundColor": "#ffffff"
         },
@@ -21,7 +21,7 @@
                 "backgroundColor": "#E6F4FE"
             },
             "edgeToEdgeEnabled": true,
-            "package": "com.jonasaugust12.talent_link"
+            "package": "com.jonasaugust12.soundspal"
         },
         "web": {
             "favicon": "./assets/favicon.png"
@@ -31,7 +31,7 @@
             [
                 "expo-splash-screen",
                 {
-                    "image": "./assets/images/TalentLink-TextLogo.png",
+                    "image": "./assets/images/Soundspal-TextLogo.png",
                     "imageWidth": 200,
                     "resizeMode": "contain",
                     "backgroundColor": "#ffffff",

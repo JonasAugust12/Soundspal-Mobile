@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, Images, Plus, Trash2, ImagePlus } from 'lucide-react-native';
+import { ChevronLeft, Images, Trash2, ImagePlus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -80,15 +80,16 @@ export default function PortfolioGalleryScreen() {
                     uri: asset.uri,
                     type: asset.mimeType || 'image/jpeg',
                     name: asset.fileName || 'portfolio.jpg',
-                } as any);
+                } as unknown as Blob);
                 formData.append('media_type', 'portfolio');
 
                 await uploadMedia.mutateAsync(formData);
                 showSuccess('Thành công', 'Đã thêm ảnh vào portfolio');
                 refetchCurrent();
             }
-        } catch (error: any) {
-            showError('Lỗi', error?.message || 'Không thể tải ảnh lên');
+        } catch (error: unknown) {
+            const err = error as { message?: string };
+            showError('Lỗi', err?.message || 'Không thể tải ảnh lên');
         }
     };
 
@@ -100,8 +101,9 @@ export default function PortfolioGalleryScreen() {
             showSuccess('Đã xóa', 'Ảnh đã được xóa khỏi portfolio');
             setDeleteConfirm({ visible: false, mediaId: null });
             refetchCurrent();
-        } catch (error: any) {
-            showError('Lỗi', error?.message || 'Không thể xóa ảnh');
+        } catch (error: unknown) {
+            const err = error as { message?: string };
+            showError('Lỗi', err?.message || 'Không thể xóa ảnh');
         }
     };
 

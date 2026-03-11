@@ -1,6 +1,6 @@
 import { createMMKV } from 'react-native-mmkv';
 
 export const storage = createMMKV({
-    id: 'talentlink-storage',
-    encryptionKey: 'talentlink-secret-key',
+    id: 'soundspal-storage',
+    encryptionKey: 'soundspal-secret-key',
 });

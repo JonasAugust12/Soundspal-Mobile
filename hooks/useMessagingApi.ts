@@ -159,7 +159,7 @@ export const useDeleteMessage = () => {
     return useMutation({
         mutationFn: ({
             messageId,
-            conversationId,
+            conversationId: _conversationId,
         }: {
             messageId: string;
             conversationId: string;
@@ -182,7 +182,7 @@ export const useMarkMessageAsRead = () => {
     return useMutation({
         mutationFn: ({
             messageId,
-            conversationId,
+            conversationId: _conversationId,
         }: {
             messageId: string;
             conversationId: string;

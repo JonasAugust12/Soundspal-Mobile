@@ -23,7 +23,7 @@ export const CollabList = ({ tab, onViewJobDetail, onViewJobSubmissions }: Colla
         error: myPostsError,
     } = useGetMyPosts({ page: 1, pageSize: 20 });
 
-    const { mutate: withdrawSubmission, isPending: isWithdrawing } = useWithdrawSubmission();
+    const { mutate: withdrawSubmission } = useWithdrawSubmission();
 
     const handleWithdraw = (id: string, reason: string) => {
         withdrawSubmission(
@@ -32,8 +32,9 @@ export const CollabList = ({ tab, onViewJobDetail, onViewJobSubmissions }: Colla
                 onSuccess: () => {
                     Alert.alert('Thành công', 'Đã rút đơn ứng tuyển');
                 },
-                onError: (error: any) => {
-                    Alert.alert('Lỗi', error?.message || 'Không thể rút đơn');
+                onError: (error: unknown) => {
+                    const err = error as { message?: string };
+                    Alert.alert('Lỗi', err?.message || 'Không thể rút đơn');
                 },
             },
         );

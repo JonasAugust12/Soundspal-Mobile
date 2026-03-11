@@ -41,11 +41,8 @@ export default function DetailMessageScreen() {
 
     // Read from store
     const {
-        onlineUsers,
         typingUsers,
-        messagesByConversation,
         loadingMessages,
-        conversations,
         setActiveConversation,
         setMessages,
         addMessage,
@@ -54,9 +51,11 @@ export default function DetailMessageScreen() {
         setLoadingMessages,
         hasMessages,
         clearUnread,
+        getMessages,
+        isUserOnline,
     } = useMessagingStore();
 
-    const messages = messagesByConversation[conversationId || ''] || [];
+    const messages = getMessages(conversationId || '');
     const isLoadingMessages = loadingMessages[conversationId || ''] || false;
     const allTypingUsers = typingUsers[conversationId || ''] || [];
     const filteredTypingUsers = allTypingUsers.filter((userId) => userId !== currentUserId);
@@ -94,11 +93,11 @@ export default function DetailMessageScreen() {
 
         const fetchMessages = async () => {
             if (hasMessages(conversationId)) {
-                console.log('📦 Using cached messages for:', conversationId);
+                console.warn('📦 Using cached messages for:', conversationId);
                 return;
             }
 
-            console.log('📡 Fetching messages for:', conversationId);
+            console.warn('📡 Fetching messages for:', conversationId);
             setLoadingMessages(conversationId, true);
 
             try {
@@ -205,7 +204,7 @@ export default function DetailMessageScreen() {
                     uri: asset.uri,
                     type: 'image/jpeg',
                     name: 'image.jpg',
-                } as any);
+                } as unknown as Blob);
                 formData.append('folder', 'messages');
 
                 const uploadResponse = await apiClient.post<{ url: string }>(
@@ -311,7 +310,7 @@ export default function DetailMessageScreen() {
         return conversation.participants.find((p) => p.id !== currentUserId) || null;
     }, [conversation, currentUserId]);
 
-    const isOtherUserOnline = otherUser?.id ? onlineUsers.includes(otherUser.id) : false;
+    const isOtherUserOnline = otherUser?.id ? isUserOnline(otherUser.id) : false;
 
     // Transform messages for display
     const chatMessages: ChatMessage[] = useMemo(() => {
@@ -391,8 +390,8 @@ export default function DetailMessageScreen() {
                                     }
                                     className="w-11 h-11 rounded-full"
                                 />
-                                {isOtherUserOnline && (
-                                    <View className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-white" />
+                                {otherUser?.id && (
+                                    <OnlineIndicator userId={otherUser.id} size={14} />
                                 )}
                             </TouchableOpacity>
 

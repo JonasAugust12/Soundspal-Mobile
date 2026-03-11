@@ -47,7 +47,7 @@ export default function CompleteOAuthProfileScreen() {
                         },
                     });
 
-                    showSuccess('Đăng ký thành công! 🎉', 'Chào mừng bạn đến với TalentLink.');
+                    showSuccess('Đăng ký thành công! 🎉', 'Chào mừng bạn đến với Soundspal.');
                     router.replace('/(tabs)');
                 }
             }
@@ -85,7 +85,7 @@ export default function CompleteOAuthProfileScreen() {
                     <View className="items-center pt-8 pb-10">
                         <View style={styles.logoContainer}>
                             <Image
-                                source={require('@/assets/images/TalentLink-Logo.png')}
+                                source={require('@/assets/images/Soundspal-Logo.png')}
                                 style={{ width: 60, height: 60 }}
                                 resizeMode="contain"
                             />
@@ -115,7 +115,7 @@ export default function CompleteOAuthProfileScreen() {
                                 Hoàn tất đăng ký ✨
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center max-w-[280px]">
-                                Chọn username và vai trò của bạn trên TalentLink
+                                Chọn username và vai trò của bạn trên Soundspal
                             </Text>
                         </View>
 

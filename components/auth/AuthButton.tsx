@@ -1,5 +1,12 @@
 import React from 'react';
-import { TouchableOpacity, Text, View, ActivityIndicator } from 'react-native';
+import {
+    TouchableOpacity,
+    Text,
+    View,
+    ActivityIndicator,
+    StyleProp,
+    ViewStyle,
+} from 'react-native';
 
 interface AuthButtonProps {
     variant?: 'primary' | 'outlined';
@@ -8,7 +15,7 @@ interface AuthButtonProps {
     children: React.ReactNode;
     leftIcon?: React.ComponentType<{ size?: number; color?: string }>;
     isLoading?: boolean;
-    style?: any;
+    style?: StyleProp<ViewStyle>;
     className?: string;
 }
 

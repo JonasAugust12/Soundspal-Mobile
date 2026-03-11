@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, Pressable } from 'react-native';
+import { View, Text, Image, ImageSourcePropType } from 'react-native';
 import { MapPin, Star, BadgeCheck } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -9,8 +9,8 @@ interface InfoProfileProps {
     rating?: number;
     reviewCount?: number;
     bio: string;
-    avatarSource: any;
-    backgroundSource?: any;
+    avatarSource: ImageSourcePropType;
+    backgroundSource?: ImageSourcePropType;
     role?: 'singer' | 'producer' | 'venue';
 }
 
@@ -31,7 +31,6 @@ export function InfoProfile({
     name,
     location,
     rating = 0,
-    reviewCount = 0,
     bio,
     avatarSource,
     backgroundSource,
@@ -39,14 +38,17 @@ export function InfoProfile({
 }: InfoProfileProps) {
     const roleColor = roleColors[role] || roleColors.default;
 
+    const hasBackgroundUri =
+        backgroundSource && typeof backgroundSource === 'object' && 'uri' in backgroundSource;
+
     return (
         <View className="gap-4">
             {/* Background with gradient overlay */}
             <View className="h-60 w-full relative bg-gray-100 dark:bg-gray-800">
-                {backgroundSource?.uri ? (
+                {hasBackgroundUri ? (
                     <>
                         <Image
-                            source={backgroundSource}
+                            source={backgroundSource as ImageSourcePropType}
                             className="w-full h-full absolute"
                             resizeMode="cover"
                         />
@@ -70,7 +72,7 @@ export function InfoProfile({
                 <View className="relative shadow-2xl">
                     <View className="p-1 bg-background rounded-2xl">
                         <Image
-                            source={avatarSource}
+                            source={avatarSource as ImageSourcePropType}
                             className="w-28 h-28 rounded-xl"
                             resizeMode="cover"
                         />

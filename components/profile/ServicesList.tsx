@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Platform, StyleSheet } from 'react-native';
-import { Briefcase, Check, Tag, MessageCircle } from 'lucide-react-native';
+import { Briefcase, Check, MessageCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserService } from '@/types/user.type';
 

@@ -8,11 +8,9 @@ import {
     MapPin,
     Users,
     Clock,
-    Star,
     Building2,
     Globe,
     Phone,
-    Mail,
     Banknote,
     Check,
 } from 'lucide-react-native';
@@ -26,6 +24,7 @@ import {
 } from '@/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/hooks/useMessagingApi';
 import { useAuthStore } from '@/stores/authStore';
+import { VenueUser } from '@/types/user.type';
 
 export default function VenueProfile() {
     const router = useRouter();
@@ -60,7 +59,7 @@ export default function VenueProfile() {
     const isLoading = isLoadingUser || isLoadingMedia;
 
     // Venue specific data
-    const venueData = userData as any;
+    const venueData = userData as unknown as VenueUser;
     const businessTypes = venueData?.business_types || [];
     const facilities = venueData?.convenient_facilities || [];
     const portfolioImages = userMedia?.media?.filter((m) => m.media_type === 'portfolio') || [];
@@ -216,7 +215,9 @@ export default function VenueProfile() {
                         )}
                         {venueData?.website_url && (
                             <Pressable
-                                onPress={() => Linking.openURL(venueData.website_url)}
+                                onPress={() =>
+                                    venueData.website_url && Linking.openURL(venueData.website_url)
+                                }
                                 className="flex-row items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl"
                             >
                                 <Globe size={18} color="#6B7280" />

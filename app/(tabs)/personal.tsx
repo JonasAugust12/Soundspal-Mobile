@@ -20,7 +20,6 @@ import {
     LogOut,
     ChevronRight,
     Settings,
-    Sparkles,
     BadgeCheck,
 } from 'lucide-react-native';
 import { useLogout } from '@/hooks/useAuthApi';
@@ -41,7 +40,7 @@ export default function PersonalScreen() {
             showSuccess('Đăng xuất thành công! 👋', 'Hẹn gặp lại bạn.');
             clearAuthState();
             router.replace('/(auth)/login');
-        } catch (error: any) {
+        } catch {
             showError('Lỗi', 'Không thể đăng xuất từ server, nhưng đã xóa session local.');
             clearAuthState();
             router.replace('/(auth)/login');
@@ -207,7 +206,7 @@ export default function PersonalScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        onPress={() => console.log('QR Share')}
+                        onPress={() => console.warn('QR Share')}
                         className="flex-1 bg-white rounded-2xl p-4 items-center gap-2"
                         style={styles.quickAction}
                     >
@@ -248,13 +247,13 @@ export default function PersonalScreen() {
                         <MenuItem
                             icon={<Shield size={20} color="#10B981" />}
                             title="Tài khoản và bảo mật"
-                            onPress={() => console.log('Account Security')}
+                            onPress={() => console.warn('Account Security')}
                         />
                         <View className="h-px bg-gray-100 mx-4" />
                         <MenuItem
                             icon={<Lock size={20} color="#F59E0B" />}
                             title="Quyền riêng tư"
-                            onPress={() => console.log('Privacy')}
+                            onPress={() => console.warn('Privacy')}
                         />
                     </View>
                 </View>
@@ -276,7 +275,7 @@ export default function PersonalScreen() {
 
                 {/* App Version */}
                 <View className="items-center pb-8">
-                    <Text className="text-xs text-gray-400">TalentLink v1.0.0</Text>
+                    <Text className="text-xs text-gray-400">Soundspal v1.0.0</Text>
                 </View>
 
                 {/* Bottom Spacing */}

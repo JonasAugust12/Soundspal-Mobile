@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { TabScreenWrapper } from '@/components/navigation/TabScreenWrapper';
 import { JobHeader, JobTabs, JobList } from '@/components/jobs';
 import { useGetJobs, useGetMyPosts } from '@/hooks/useJobApi';
+import { Job } from '@/types/job.type';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function JobsScreen() {
@@ -39,7 +40,7 @@ export default function JobsScreen() {
         const jobs =
             jobTab === 'mine'
                 ? myJobsData?.posts || []
-                : (allJobsData?.posts || []).filter((job: any) =>
+                : (allJobsData?.posts || []).filter((job: Job) =>
                       currentUserId
                           ? String(job.creator_id).trim() !== String(currentUserId).trim()
                           : true,
@@ -65,7 +66,7 @@ export default function JobsScreen() {
     ]);
 
     // Add ownership info to jobs
-    const jobsWithOwnership = displayJobs.map((job: any) => ({
+    const jobsWithOwnership = displayJobs.map((job: Job) => ({
         ...job,
         isOwned: currentUserId
             ? String(job.creator_id).trim() === String(currentUserId).trim()

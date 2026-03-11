@@ -7,7 +7,6 @@ import {
     ScrollView,
     StyleSheet,
     Platform,
-    Pressable,
     ActivityIndicator,
 } from 'react-native';
 import {
@@ -31,7 +30,7 @@ export interface FilterSheetProps {
 }
 
 export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps) {
-    const { filters, toggleGenre, toggleBusinessType, setLocation, resetFilters, applyFilters } =
+    const { filters, toggleGenre, toggleBusinessType, resetFilters, applyFilters } =
         useSearchStore();
 
     // Local state for filters before applying

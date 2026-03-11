@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { FileText, Mail, Phone, CheckCircle, XCircle } from 'lucide-react-native';
+import { Mail, Phone, CheckCircle, XCircle } from 'lucide-react-native';
 import type { OpportunitySubmission } from '@/types/collaboration.type';
 import { formatDate } from '@/utils/jobFormatters';
 import { CollabStatusBadge } from './CollabStatusBadge';

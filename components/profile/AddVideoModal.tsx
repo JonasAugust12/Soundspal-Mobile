@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
     View,
     Text,
-    Pressable,
     Modal,
     ScrollView,
     Image,
@@ -30,8 +29,8 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
     const [title, setTitle] = useState('');
     const [videoUri, setVideoUri] = useState<string | null>(null);
     const [thumbnailUri, setThumbnailUri] = useState<string | null>(null);
-    const [videoAsset, setVideoAsset] = useState<any>(null);
-    const [thumbnailAsset, setThumbnailAsset] = useState<any>(null);
+    const [videoAsset, setVideoAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+    const [thumbnailAsset, setThumbnailAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
 
     const handlePickVideo = async () => {
         try {
@@ -89,7 +88,7 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                 uri: videoAsset.uri,
                 type: videoAsset.mimeType || 'video/mp4',
                 name: videoAsset.fileName || 'video.mp4',
-            } as any);
+            } as unknown as Blob);
 
             // Add title
             formData.append('title', title.trim());
@@ -100,15 +99,16 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                     uri: thumbnailAsset.uri,
                     type: thumbnailAsset.mimeType || 'image/jpeg',
                     name: thumbnailAsset.fileName || 'thumbnail.jpg',
-                } as any);
+                } as unknown as Blob);
             }
 
             await uploadVideo.mutateAsync(formData);
             showSuccess('Thành công', 'Đã thêm video vào thư viện');
             handleClose();
             onSuccess?.();
-        } catch (error: any) {
-            showError('Lỗi', error?.message || 'Không thể tải video lên');
+        } catch (error: unknown) {
+            const err = error as { message?: string };
+            showError('Lỗi', err?.message || 'Không thể tải video lên');
         }
     };
 

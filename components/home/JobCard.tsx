@@ -33,7 +33,7 @@ type Props = {
 };
 
 // Helper to format budget
-const formatBudget = (min?: number, max?: number, currency?: string) => {
+const formatBudget = (min?: number, max?: number, _currency?: string) => {
     if (!min && !max) return 'Thỏa thuận';
 
     const formatNum = (n: number) => {

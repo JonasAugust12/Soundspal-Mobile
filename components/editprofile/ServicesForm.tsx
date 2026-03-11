@@ -8,7 +8,7 @@ import {
     Platform,
     StyleSheet,
 } from 'react-native';
-import { Plus, Trash2, Tag, DollarSign, Info, Check, Sparkles } from 'lucide-react-native';
+import { Plus, Trash2, Tag, DollarSign, Check, Sparkles } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUpdateUserServices, useGetCurrentUser } from '@/hooks/useUserApi';
 import { UserService } from '@/types/user.type';
@@ -29,7 +29,7 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
         if (userData?.services?.length && services.length === 1 && services[0].name === '') {
             setServices(userData.services);
         }
-    }, [userData?.services]);
+    }, [userData?.services, services]);
 
     const handleAddService = () => {
         setServices([...services, { name: '', price: 0, currency: 'VND', is_negotiable: true }]);
@@ -44,7 +44,11 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
         );
     };
 
-    const handleUpdateService = (index: number, field: keyof UserService, value: any) => {
+    const handleUpdateService = (
+        index: number,
+        field: keyof UserService,
+        value: string | number | boolean,
+    ) => {
         const newServices = [...services];
         newServices[index] = { ...newServices[index], [field]: value };
         setServices(newServices);
@@ -58,10 +62,6 @@ export function ServicesForm({ onSaveSuccess }: { onSaveSuccess?: () => void }) 
         } catch (error) {
             console.error('Update services failed:', error);
         }
-    };
-
-    const formatPrice = (price: number) => {
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
     return (

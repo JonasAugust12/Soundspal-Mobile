@@ -41,5 +41,5 @@ export function useProtectedRoute() {
             router.replace('/(tabs)');
             return;
         }
-    }, [isAuthenticated, user?.is_verified, segments, router]);
+    }, [isAuthenticated, user, segments, router]);
 }

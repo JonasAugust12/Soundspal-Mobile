@@ -107,11 +107,11 @@ export default function JobSubmissionsScreen() {
                                                         `Đã ${actionText} ứng tuyển`,
                                                     );
                                                 },
-                                                onError: (error: any) => {
+                                                onError: (error: unknown) => {
+                                                    const err = error as { message?: string };
                                                     Alert.alert(
                                                         'Lỗi',
-                                                        error?.message ||
-                                                            'Không thể xử lý ứng tuyển',
+                                                        err?.message || 'Không thể xử lý ứng tuyển',
                                                     );
                                                 },
                                             },

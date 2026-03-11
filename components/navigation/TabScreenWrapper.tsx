@@ -1,6 +1,6 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ScrollView, ScrollViewProps, ViewStyle } from 'react-native';
+import { ScrollView, ScrollViewProps } from 'react-native';
 
 interface TabScreenWrapperProps {
     children: React.ReactNode;

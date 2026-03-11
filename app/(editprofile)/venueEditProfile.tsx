@@ -236,8 +236,7 @@ export default function VenueEditProfileScreen() {
         );
     }
 
-    const isLoading =
-        updateBasic.isPending || updateContact.isPending || updateAdditional.isPending;
+    /* Unused: const isLoading = updateBasic.isPending || updateContact.isPending || updateAdditional.isPending; */
 
     return (
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>

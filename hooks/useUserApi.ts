@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createApiCall } from '@/lib/apiClient';
 import type {
     User,
-    UpdateUserRequest,
     MediaItem,
     MediaResponse,
     VideoItem,
@@ -118,14 +117,19 @@ const userApi = {
     },
 
     updateUserGenres: (username: string, genreNames: string[]) => {
-        return createApiCall<any, { genre_names: string[] }>(
+        return createApiCall<unknown, { genre_names: string[] }>(
             'PUT',
             `/users/genres/${username}`,
         )({ genre_names: genreNames });
     },
 
-    updateUserServices: (services: any[]) => {
-        return createApiCall<any, { services: any[] }>('PUT', '/users/me/services')({ services });
+    updateUserServices: (services: unknown[]) => {
+        return createApiCall<unknown, { services: unknown[] }>(
+            'PUT',
+            '/users/me/services',
+        )({
+            services,
+        });
     },
 
     // Venue APIs
@@ -384,7 +388,7 @@ export const useUpdateUserServices = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (services: any[]) => userApi.updateUserServices(services),
+        mutationFn: (services: unknown[]) => userApi.updateUserServices(services),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userKeys.current() });
         },

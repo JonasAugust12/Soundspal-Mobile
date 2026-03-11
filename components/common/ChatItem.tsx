@@ -1,11 +1,19 @@
 import React from 'react';
-import { View, Text, Pressable, Image, Platform, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    Pressable,
+    Image,
+    Platform,
+    StyleSheet,
+    ImageSourcePropType,
+} from 'react-native';
 import { OnlineIndicator } from './OnlineIndicator';
 
 export type ChatItemProps = {
     name: string;
     preview: string;
-    avatarSource: any;
+    avatarSource: ImageSourcePropType;
     time?: string;
     unread?: boolean;
     unreadCount?: number;

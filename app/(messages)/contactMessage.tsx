@@ -17,12 +17,12 @@ export default function ContactMessageScreen() {
 
     const handleAccept = () => {
         // TODO: Implement accept logic
-        console.log('Accepted');
+        console.warn('Accepted');
     };
 
     const handleReject = () => {
         // TODO: Implement reject logic
-        console.log('Rejected');
+        console.warn('Rejected');
     };
 
     return (

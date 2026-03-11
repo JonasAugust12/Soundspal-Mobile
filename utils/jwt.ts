@@ -1,4 +1,4 @@
-export const decodeJWT = (token: string): any | null => {
+export const decodeJWT = (token: string): Record<string, unknown> | null => {
     try {
         const parts = token.split('.');
         if (parts.length !== 3) {
@@ -19,7 +19,7 @@ export const decodeJWT = (token: string): any | null => {
                 .join(''),
         );
 
-        return JSON.parse(jsonPayload);
+        return JSON.parse(jsonPayload) as Record<string, unknown>;
     } catch (error) {
         console.error('Error decoding JWT:', error);
         return null;
@@ -34,7 +34,7 @@ export const isTokenValid = (token: string): boolean => {
 
     // exp là timestamp tính bằng giây, Date.now() tính bằng milliseconds
     const currentTime = Date.now() / 1000;
-    return decoded.exp > currentTime;
+    return (decoded.exp as number) > currentTime;
 };
 
 export const getUserFromToken = (
@@ -54,12 +54,12 @@ export const getUserFromToken = (
     }
 
     return {
-        id: decoded.sub,
-        email: decoded.email,
-        role: decoded.role,
-        is_verified: decoded.is_verified,
-        username: decoded.username,
-        avatar_url: decoded.avatar_url,
-        display_name: decoded.display_name,
+        id: (decoded.sub as string) || '',
+        email: (decoded.email as string) || '',
+        role: (decoded.role as string) || '',
+        is_verified: !!decoded.is_verified,
+        username: (decoded.username as string) || '',
+        avatar_url: (decoded.avatar_url as string) || '',
+        display_name: (decoded.display_name as string) || '',
     };
 };

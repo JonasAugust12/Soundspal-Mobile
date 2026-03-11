@@ -19,7 +19,7 @@ export const JobHeader = () => {
                     </Text>
                 </View>
                 <TouchableOpacity
-                    onPress={() => router.push('/(jobs)/recruitment-form' as any)}
+                    onPress={() => router.push('/(jobs)/recruitment-form' as `${string}`)}
                     activeOpacity={0.8}
                     style={styles.shadow}
                 >

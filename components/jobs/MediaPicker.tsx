@@ -8,10 +8,9 @@ import {
     Image,
     ActivityIndicator,
     Alert,
-    FlatList,
     Dimensions,
 } from 'react-native';
-import { X, FileVideo, Music } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useGetMyMedia } from '@/hooks/useMediaApi';
 import type { Media } from '@/types/media.type';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Job } from '@/types/job.type';
 import { SearchBar } from './SearchBar';
 import { JobCardFull } from './JobCardFull';
@@ -8,7 +8,7 @@ import { JobCardSkeleton } from './JobCardSkeleton';
 interface JobListProps {
     jobs: (Job & { isOwned?: boolean })[];
     isLoading: boolean;
-    error?: any;
+    error?: unknown;
     onRetry?: () => void;
     search: string;
     onSearchChange: (text: string) => void;

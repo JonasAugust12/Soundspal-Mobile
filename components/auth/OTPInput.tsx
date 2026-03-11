@@ -1,5 +1,12 @@
 import React, { useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Platform } from 'react-native';
+import {
+    View,
+    TextInput,
+    StyleSheet,
+    Platform,
+    NativeSyntheticEvent,
+    TextInputKeyPressEventData,
+} from 'react-native';
 
 interface OTPInputProps {
     value: string;
@@ -69,7 +76,7 @@ export function OTPInput({
         }
     };
 
-    const handleKeyPress = (e: any, index: number) => {
+    const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
         if (e.nativeEvent.key === 'Backspace') {
             if (!value[index] && index > 0) {
                 // If current is empty, go back and clear previous

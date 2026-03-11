@@ -69,12 +69,12 @@ export default function LoginScreen() {
                     <View className="items-center pt-8 pb-10">
                         <View style={styles.logoContainer}>
                             <Image
-                                source={require('@/assets/images/TalentLink-Logo.png')}
+                                source={require('@/assets/images/Soundspal-Logo.png')}
                                 style={{ width: 80, height: 80 }}
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text className="text-white text-xl font-bold mt-4">TalentLink</Text>
+                        <Text className="text-white text-xl font-bold mt-4">Soundspal</Text>
                         <Text className="text-white/70 text-sm mt-1">Kết nối tài năng âm nhạc</Text>
                     </View>
 

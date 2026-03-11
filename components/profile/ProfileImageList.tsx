@@ -1,12 +1,20 @@
 import React from 'react';
-import { View, Text, Image, Pressable, Dimensions, Platform, StyleSheet } from 'react-native';
-import { Images, ChevronRight, Plus } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+    View,
+    Text,
+    Image,
+    Pressable,
+    Dimensions,
+    Platform,
+    StyleSheet,
+    ImageSourcePropType,
+} from 'react-native';
+import { Images, ChevronRight } from 'lucide-react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
 const imageSize = (screenWidth - 32 - 24) / 3; // px-4 (32) + 2 gaps of 12px (24)
 
-type ImageItem = { id: string; cover: any };
+type ImageItem = { id: string; cover: ImageSourcePropType };
 
 type Props = {
     title?: string;

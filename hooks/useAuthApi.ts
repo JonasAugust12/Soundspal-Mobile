@@ -118,7 +118,7 @@ export const useVerifyEmail = () => {
 
     return useMutation({
         mutationFn: authApi.verifyEmail,
-        onSuccess: (_, variables) => {
+        onSuccess: (_, _variables) => {
             // Update user verification status if needed
             const store = useAuthStore.getState();
             if (store.user) {

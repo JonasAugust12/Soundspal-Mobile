@@ -1,4 +1,4 @@
-// Collaboration/Partnership Types - từ TalentLink-Mobile job submissions
+// Collaboration/Partnership Types - từ Soundspal job submissions
 // API endpoint: https://talentlink.io.vn/api/v1/
 
 export type SubmissionStatus = 'pending_review' | 'accepted' | 'rejected' | 'withdrawn';

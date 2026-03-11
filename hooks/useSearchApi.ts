@@ -13,7 +13,7 @@ import type {
 const searchApi = {
     searchUsers: (params: SearchUsersRequest) => {
         // Remove undefined values and pagination params
-        const { page, pageSize, ...restParams } = params;
+        const { page: _page, pageSize: _pageSize, ...restParams } = params;
         const cleanParams = Object.fromEntries(
             Object.entries(restParams).filter(([_, v]) => v !== undefined),
         );

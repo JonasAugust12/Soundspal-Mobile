@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, Image, Pressable, useWindowDimensions } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    Pressable,
+    useWindowDimensions,
+    ImageSourcePropType,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export type ChatMessage = {
@@ -7,7 +14,7 @@ export type ChatMessage = {
     text: string;
     time?: string;
     side: string;
-    avatarSource?: any;
+    avatarSource?: ImageSourcePropType;
     attachmentUrl?: string | null;
     isEdited?: boolean;
     isDeleted?: boolean;

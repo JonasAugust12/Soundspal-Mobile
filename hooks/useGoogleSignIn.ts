@@ -28,17 +28,17 @@ export const useGoogleSignIn = () => {
             await GoogleSignin.hasPlayServices({
                 showPlayServicesUpdateDialog: true,
             });
-            console.log('Google Play Services are available.');
+            console.warn('Google Play Services are available.');
 
             // Sign out first to ensure fresh login
             await GoogleSignin.signOut();
-            console.log('Google Sign out successful.');
+            console.warn('Google Sign out successful.');
 
             const userInfo = await GoogleSignin.signIn();
-            console.log('Google Sign-In successful:', userInfo);
+            console.warn('Google Sign-In successful:', userInfo);
 
             const authCode = userInfo.data?.serverAuthCode;
-            console.log('Authorization Code:', authCode);
+            console.warn('Authorization Code:', authCode);
 
             if (!authCode) {
                 showError('Lỗi', 'Không thể lấy authorization code từ Google');
@@ -49,7 +49,7 @@ export const useGoogleSignIn = () => {
                 code: authCode,
             });
 
-            console.log('mobile-oauth response:', response);
+            console.warn('mobile-oauth response:', response);
 
             if (response.data.is_registered) {
                 const userInfoFromToken = getUserFromToken(response.data.access_token!);
@@ -82,16 +82,22 @@ export const useGoogleSignIn = () => {
                     },
                 });
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Google Sign-In Error:', error);
 
-            if (error.code === 'SIGN_IN_CANCELLED') {
+            const err = error as {
+                code?: string;
+                message?: string;
+                response?: { data?: { message?: string } };
+            };
+
+            if (err.code === 'SIGN_IN_CANCELLED') {
                 // User cancelled, do nothing
                 return;
             }
 
             const errorMessage =
-                error?.response?.data?.message || error?.message || 'Đăng nhập Google thất bại';
+                err?.response?.data?.message || err?.message || 'Đăng nhập Google thất bại';
 
             showError('Lỗi đăng nhập', errorMessage);
         }

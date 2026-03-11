@@ -1,160 +1,272 @@
 import { create } from 'zustand';
 import type { Conversation, Message } from '@/types/messaging.type';
 
+// ─── Normalized State Shape ───────────────────────────────────────────────────
+//
+//  conversationsById   Record<id, Conversation>   O(1) lookup & update
+//  conversationOrder   string[]                   ordered by latest message (most-recent first)
+//
+//  messagesById        Record<id, Message>         O(1) lookup & update
+//  conversationMessages Record<convId, msgId[]>   ordered message IDs per conversation
+//
+//  onlineUsers         Set<string>                 O(1) has() check
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface MessagingState {
-    // Data
-    conversations: Conversation[];
-    messagesByConversation: Record<string, Message[]>; // conversationId -> messages
-    unreadCounts: Record<string, number>; // conversationId -> unread count
+    // Data — Conversations
+    conversationsById: Record<string, Conversation>;
+    conversationOrder: string[]; // most-recent first, maintained on addMessage
+
+    // Data — Messages
+    messagesById: Record<string, Message>;
+    conversationMessages: Record<string, string[]>; // convId → ordered messageIds
+
+    // Data — Unread
+    unreadCounts: Record<string, number>; // convId → count
 
     // Real-time state
-    onlineUsers: string[];
-    typingUsers: Record<string, string[]>; // conversationId -> array of user IDs typing
+    onlineUsers: Set<string>;
+    typingUsers: Record<string, string[]>; // convId → userId[]
     activeConversationId: string | null;
 
     // Loading states
     isLoadingConversations: boolean;
-    loadingMessages: Record<string, boolean>; // conversationId -> loading state
+    loadingMessages: Record<string, boolean>;
 
-    // Actions - Conversations
+    // ── Actions: Conversations ───────────────────────────────────────────────
     setConversations: (conversations: Conversation[]) => void;
     addConversation: (conversation: Conversation) => void;
     updateConversation: (conversationId: string, updates: Partial<Conversation>) => void;
     removeConversation: (conversationId: string) => void;
     setLoadingConversations: (loading: boolean) => void;
 
-    // Actions - Messages
+    // ── Actions: Messages ────────────────────────────────────────────────────
     setMessages: (conversationId: string, messages: Message[]) => void;
+    prependMessages: (conversationId: string, messages: Message[]) => void;
     addMessage: (conversationId: string, message: Message) => void;
     updateMessage: (conversationId: string, messageId: string, updates: Partial<Message>) => void;
     removeMessage: (conversationId: string, messageId: string) => void;
     setLoadingMessages: (conversationId: string, loading: boolean) => void;
     hasMessages: (conversationId: string) => boolean;
 
-    // Actions - Unread
+    // ── Actions: Unread ──────────────────────────────────────────────────────
     setUnreadCount: (conversationId: string, count: number) => void;
     incrementUnread: (conversationId: string) => void;
     clearUnread: (conversationId: string) => void;
 
-    // Actions - Online/Typing
+    // ── Actions: Online / Typing ─────────────────────────────────────────────
     setOnlineUsers: (users: string[]) => void;
     addOnlineUser: (userId: string) => void;
     removeOnlineUser: (userId: string) => void;
     addTypingUser: (conversationId: string, userId: string) => void;
     removeTypingUser: (conversationId: string, userId: string) => void;
 
-    // Actions - Active conversation
+    // ── Actions: Active conversation ─────────────────────────────────────────
     setActiveConversation: (conversationId: string | null) => void;
 
-    // Selectors
+    // ── Selectors ────────────────────────────────────────────────────────────
     getMessages: (conversationId: string) => Message[];
     getSortedConversations: () => Conversation[];
+    getConversation: (conversationId: string) => Conversation | undefined;
+    isUserOnline: (userId: string) => boolean;
+}
+
+// Helper: move a conversationId to the front of the order array
+function bringToFront(order: string[], id: string): string[] {
+    if (order[0] === id) return order; // already first, no mutation needed
+    const filtered = order.filter((cid) => cid !== id);
+    return [id, ...filtered];
 }
 
 export const useMessagingStore = create<MessagingState>()((set, get) => ({
-    // Initial state
-    conversations: [],
-    messagesByConversation: {},
+    // ── Initial state ────────────────────────────────────────────────────────
+    conversationsById: {},
+    conversationOrder: [],
+    messagesById: {},
+    conversationMessages: {},
     unreadCounts: {},
-    onlineUsers: [],
+    onlineUsers: new Set<string>(),
     typingUsers: {},
     activeConversationId: null,
     isLoadingConversations: false,
     loadingMessages: {},
 
-    // Conversations
-    setConversations: (conversations) =>
-        set({
-            conversations,
-            unreadCounts: conversations.reduce(
-                (acc, conv) => ({ ...acc, [conv.id]: conv.unreadCount || 0 }),
-                {},
-            ),
-        }),
+    // ── Conversations ────────────────────────────────────────────────────────
+
+    setConversations: (conversations) => {
+        const conversationsById: Record<string, Conversation> = {};
+        const conversationOrder: string[] = [];
+        const unreadCounts: Record<string, number> = {};
+
+        for (const conv of conversations) {
+            conversationsById[conv.id] = conv;
+            conversationOrder.push(conv.id);
+            unreadCounts[conv.id] = conv.unreadCount || 0;
+        }
+
+        set({ conversationsById, conversationOrder, unreadCounts });
+    },
 
     addConversation: (conversation) =>
-        set((state) => ({
-            conversations: [conversation, ...state.conversations],
-            unreadCounts: {
-                ...state.unreadCounts,
-                [conversation.id]: conversation.unreadCount || 0,
-            },
-        })),
+        set((state) => {
+            // Upsert: if already exists, just update
+            const alreadyExists = !!state.conversationsById[conversation.id];
+            return {
+                conversationsById: {
+                    ...state.conversationsById,
+                    [conversation.id]: conversation,
+                },
+                conversationOrder: alreadyExists
+                    ? state.conversationOrder
+                    : [conversation.id, ...state.conversationOrder],
+                unreadCounts: {
+                    ...state.unreadCounts,
+                    [conversation.id]: conversation.unreadCount || 0,
+                },
+            };
+        }),
 
     updateConversation: (conversationId, updates) =>
-        set((state) => ({
-            conversations: state.conversations.map((conv) =>
-                conv.id === conversationId ? { ...conv, ...updates } : conv,
-            ),
-        })),
+        set((state) => {
+            const existing = state.conversationsById[conversationId];
+            if (!existing) return state;
+            return {
+                conversationsById: {
+                    ...state.conversationsById,
+                    [conversationId]: { ...existing, ...updates },
+                },
+            };
+        }),
 
     removeConversation: (conversationId) =>
-        set((state) => ({
-            conversations: state.conversations.filter((conv) => conv.id !== conversationId),
-            messagesByConversation: Object.fromEntries(
-                Object.entries(state.messagesByConversation).filter(
-                    ([id]) => id !== conversationId,
-                ),
-            ),
-        })),
+        set((state) => {
+            // Remove messages belonging to this conversation
+            const msgIds = state.conversationMessages[conversationId] || [];
+            const newMessagesById = { ...state.messagesById };
+            for (const id of msgIds) {
+                delete newMessagesById[id];
+            }
+            const newConvMessages = { ...state.conversationMessages };
+            delete newConvMessages[conversationId];
+
+            const newById = { ...state.conversationsById };
+            delete newById[conversationId];
+
+            return {
+                conversationsById: newById,
+                conversationOrder: state.conversationOrder.filter((id) => id !== conversationId),
+                messagesById: newMessagesById,
+                conversationMessages: newConvMessages,
+            };
+        }),
 
     setLoadingConversations: (loading) => set({ isLoadingConversations: loading }),
 
-    // Messages
-    setMessages: (conversationId, messages) =>
-        set((state) => ({
-            messagesByConversation: {
-                ...state.messagesByConversation,
-                [conversationId]: messages,
-            },
-        })),
+    // ── Messages ─────────────────────────────────────────────────────────────
+
+    setMessages: (conversationId, messages) => {
+        set((state) => {
+            const newMessagesById = { ...state.messagesById };
+            const msgIds: string[] = [];
+
+            for (const msg of messages) {
+                newMessagesById[msg.id] = msg;
+                msgIds.push(msg.id);
+            }
+
+            return {
+                messagesById: newMessagesById,
+                conversationMessages: {
+                    ...state.conversationMessages,
+                    [conversationId]: msgIds,
+                },
+            };
+        });
+    },
+
+    // Prepend older messages (pagination: load more history).
+    // New messages from API are placed at the FRONT; existing (newer) stay at end.
+    // Dedupes automatically — skips any message already in the store.
+    prependMessages: (conversationId, messages) => {
+        set((state) => {
+            const newMessagesById = { ...state.messagesById };
+            const newIds: string[] = [];
+
+            for (const msg of messages) {
+                if (!newMessagesById[msg.id]) {
+                    newMessagesById[msg.id] = msg;
+                    newIds.push(msg.id);
+                }
+            }
+
+            const existing = state.conversationMessages[conversationId] || [];
+
+            return {
+                messagesById: newMessagesById,
+                conversationMessages: {
+                    ...state.conversationMessages,
+                    // older messages first, then existing newer messages
+                    [conversationId]: [...newIds, ...existing],
+                },
+            };
+        });
+    },
 
     addMessage: (conversationId, message) =>
         set((state) => {
-            const currentMessages = state.messagesByConversation[conversationId] || [];
-            // Check if message already exists
-            if (currentMessages.some((m) => m.id === message.id)) {
-                return state;
-            }
+            // Dedupe: ignore if message already exists
+            if (state.messagesById[message.id]) return state;
 
-            // Update last message in conversation
-            const updatedConversations = state.conversations.map((conv) =>
-                conv.id === conversationId
-                    ? { ...conv, lastMessage: message, updatedAt: message.createdAt }
-                    : conv,
-            );
+            const currentIds = state.conversationMessages[conversationId] || [];
+
+            // Update last message in conversation + reorder conversation to front
+            const existingConv = state.conversationsById[conversationId];
+            const updatedConv = existingConv
+                ? { ...existingConv, lastMessage: message, updatedAt: message.createdAt }
+                : existingConv;
 
             return {
-                messagesByConversation: {
-                    ...state.messagesByConversation,
-                    [conversationId]: [...currentMessages, message],
+                messagesById: {
+                    ...state.messagesById,
+                    [message.id]: message,
                 },
-                conversations: updatedConversations,
+                conversationMessages: {
+                    ...state.conversationMessages,
+                    [conversationId]: [...currentIds, message.id],
+                },
+                // Bring conversation to top (no runtime sort on every render)
+                conversationOrder: bringToFront(state.conversationOrder, conversationId),
+                conversationsById: updatedConv
+                    ? { ...state.conversationsById, [conversationId]: updatedConv }
+                    : state.conversationsById,
             };
         }),
 
     updateMessage: (conversationId, messageId, updates) =>
         set((state) => {
-            const currentMessages = state.messagesByConversation[conversationId] || [];
+            const existing = state.messagesById[messageId];
+            if (!existing) return state;
             return {
-                messagesByConversation: {
-                    ...state.messagesByConversation,
-                    [conversationId]: currentMessages.map((msg) =>
-                        msg.id === messageId ? { ...msg, ...updates } : msg,
-                    ),
+                messagesById: {
+                    ...state.messagesById,
+                    [messageId]: { ...existing, ...updates },
                 },
             };
         }),
 
-    removeMessage: (conversationId, messageId) =>
+    removeMessage: (_conversationId, messageId) =>
         set((state) => {
-            const currentMessages = state.messagesByConversation[conversationId] || [];
+            const existing = state.messagesById[messageId];
+            if (!existing) return state;
             return {
-                messagesByConversation: {
-                    ...state.messagesByConversation,
-                    [conversationId]: currentMessages.map((msg) =>
-                        msg.id === messageId ? { ...msg, isDeleted: true, content: '' } : msg,
-                    ),
+                messagesById: {
+                    ...state.messagesById,
+                    [messageId]: {
+                        ...existing,
+                        isDeleted: true,
+                        content: 'Tin nhắn đã bị xóa',
+                    },
                 },
             };
         }),
@@ -165,11 +277,11 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
         })),
 
     hasMessages: (conversationId) => {
-        const state = get();
-        return !!state.messagesByConversation[conversationId];
+        return !!get().conversationMessages[conversationId];
     },
 
-    // Unread
+    // ── Unread ───────────────────────────────────────────────────────────────
+
     setUnreadCount: (conversationId, count) =>
         set((state) => ({
             unreadCounts: { ...state.unreadCounts, [conversationId]: count },
@@ -188,63 +300,74 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
             unreadCounts: { ...state.unreadCounts, [conversationId]: 0 },
         })),
 
-    // Online/Typing
-    setOnlineUsers: (users) => set({ onlineUsers: users }),
+    // ── Online / Typing ──────────────────────────────────────────────────────
+
+    setOnlineUsers: (users) => set({ onlineUsers: new Set(users) }),
 
     addOnlineUser: (userId) =>
-        set((state) => ({
-            onlineUsers: state.onlineUsers.includes(userId)
-                ? state.onlineUsers
-                : [...state.onlineUsers, userId],
-        })),
+        set((state) => {
+            if (state.onlineUsers.has(userId)) return state;
+            const next = new Set(state.onlineUsers);
+            next.add(userId);
+            return { onlineUsers: next };
+        }),
 
     removeOnlineUser: (userId) =>
-        set((state) => ({
-            onlineUsers: state.onlineUsers.filter((id) => id !== userId),
-        })),
+        set((state) => {
+            if (!state.onlineUsers.has(userId)) return state;
+            const next = new Set(state.onlineUsers);
+            next.delete(userId);
+            return { onlineUsers: next };
+        }),
 
     addTypingUser: (conversationId, userId) =>
         set((state) => {
-            const currentTyping = state.typingUsers[conversationId] || [];
-            if (currentTyping.includes(userId)) return state;
+            const current = state.typingUsers[conversationId] || [];
+            if (current.includes(userId)) return state;
             return {
                 typingUsers: {
                     ...state.typingUsers,
-                    [conversationId]: [...currentTyping, userId],
+                    [conversationId]: [...current, userId],
                 },
             };
         }),
 
     removeTypingUser: (conversationId, userId) =>
         set((state) => {
-            const currentTyping = state.typingUsers[conversationId] || [];
+            const current = state.typingUsers[conversationId] || [];
             return {
                 typingUsers: {
                     ...state.typingUsers,
-                    [conversationId]: currentTyping.filter((id) => id !== userId),
+                    [conversationId]: current.filter((id) => id !== userId),
                 },
             };
         }),
 
-    // Active conversation
+    // ── Active conversation ───────────────────────────────────────────────────
+
     setActiveConversation: (conversationId) => set({ activeConversationId: conversationId }),
 
-    // Selectors
+    // ── Selectors ─────────────────────────────────────────────────────────────
+
     getMessages: (conversationId) => {
         const state = get();
-        return state.messagesByConversation[conversationId] || [];
+        const ids = state.conversationMessages[conversationId];
+        if (!ids) return [];
+        return ids.map((id) => state.messagesById[id]).filter(Boolean) as Message[];
     },
 
     getSortedConversations: () => {
         const state = get();
-        return [...state.conversations].sort((a, b) => {
-            const dateA = a.lastMessage?.createdAt
-                ? new Date(a.lastMessage.createdAt).getTime()
-                : 0;
-            const dateB = b.lastMessage?.createdAt
-                ? new Date(b.lastMessage.createdAt).getTime()
-                : 0;
-            return dateB - dateA;
-        });
+        return state.conversationOrder
+            .map((id) => state.conversationsById[id])
+            .filter(Boolean) as Conversation[];
+    },
+
+    getConversation: (conversationId) => {
+        return get().conversationsById[conversationId];
+    },
+
+    isUserOnline: (userId) => {
+        return get().onlineUsers.has(userId);
     },
 }));

@@ -7,12 +7,11 @@ import {
     Platform,
     StyleSheet,
     TouchableOpacity,
-    Image,
     TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { MessageCircle, Search, MoreHorizontal } from 'lucide-react-native';
+import { MessageCircle, Search } from 'lucide-react-native';
 import { ChatItem } from '@/components/common';
 import { useMessagingStore } from '@/stores/messagingStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -31,7 +30,7 @@ export default function MessagesScreen() {
 
     // Read from store
     const {
-        conversations,
+        conversationOrder,
         unreadCounts,
         isLoadingConversations,
         setConversations,
@@ -114,7 +113,7 @@ export default function MessagesScreen() {
         return true;
     });
 
-    if (isLoadingConversations && conversations.length === 0) {
+    if (isLoadingConversations && conversationOrder.length === 0) {
         return (
             <SafeAreaView className="flex-1 bg-white">
                 <View className="flex-1 items-center justify-center">

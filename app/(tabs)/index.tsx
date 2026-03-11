@@ -1,15 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
     View,
     Text,
     ScrollView,
-    TextInput,
     TouchableOpacity,
     Image,
     Platform,
     StyleSheet,
 } from 'react-native';
-import { Search, ChevronRight, Sparkles, TrendingUp, Briefcase } from 'lucide-react-native';
+import { Search, ChevronRight, Sparkles, TrendingUp } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import {
@@ -25,7 +24,6 @@ import { TabScreenWrapper } from '@/components/navigation/TabScreenWrapper';
 
 export default function HomeScreen() {
     const router = useRouter();
-    const [searchText, setSearchText] = useState('');
 
     // Fetch featured data
     const { data: featuredUsersData, isLoading: isLoadingUsers } = useFeaturedUsers(10);
@@ -89,21 +87,12 @@ export default function HomeScreen() {
         }));
     }, [featuredJobsData]);
 
-    const handleSearch = () => {
-        if (searchText.trim()) {
-            router.push({
-                pathname: '/(tabs)/explore',
-                params: { query: searchText },
-            });
-        }
-    };
-
     return (
         <TabScreenWrapper>
             {/* Modern Header */}
             <View className="px-5 pt-2 pb-4 flex-row items-center justify-between">
                 <Image
-                    source={require('@/assets/images/TalentLink-TextLogo.png')}
+                    source={require('@/assets/images/Soundspal-TextLogo.png')}
                     className="w-28 h-9"
                     resizeMode="contain"
                 />

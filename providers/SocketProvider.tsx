@@ -22,7 +22,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
 
         // Connect socket when user is authenticated
         if (user && accessToken) {
-            console.log('🔌 Initializing socket connection...');
+            console.warn('🔌 Initializing socket connection...');
             const socket = socketService.connect();
 
             if (socket) {
@@ -33,7 +33,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         // Cleanup on unmount or when user logs out
         return () => {
             if (!user || !accessToken) {
-                console.log('🔌 Disconnecting socket...');
+                console.warn('🔌 Disconnecting socket...');
                 socketService.disconnect();
                 setIsConnected(false);
             }

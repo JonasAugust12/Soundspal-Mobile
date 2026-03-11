@@ -16,7 +16,7 @@ export const JobDetailActions = ({ jobId, isOwned, onApply }: JobDetailActionsPr
         return (
             <View className="gap-3">
                 <TouchableOpacity
-                    onPress={() => router.push(`/(jobs)/edit-job?id=${jobId}` as any)}
+                    onPress={() => router.push(`/(jobs)/edit-job?id=${jobId}` as `${string}`)}
                     activeOpacity={0.8}
                     style={styles.primaryButton}
                 >

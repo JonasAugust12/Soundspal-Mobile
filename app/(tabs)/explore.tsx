@@ -4,7 +4,6 @@ import {
     Text,
     FlatList,
     ScrollView,
-    Pressable,
     RefreshControl,
     Image,
     TextInput,
@@ -33,7 +32,7 @@ import type { UserProfile } from '@/types/search.type';
 const ROLE_TABS: {
     label: string;
     value: 'singer' | 'producer' | 'venue' | 'all';
-    icon: any;
+    icon: React.ElementType;
     color: string;
 }[] = [
     { label: 'Tất cả', value: 'all', icon: Users, color: '#7C3AED' },
@@ -251,7 +250,7 @@ export default function ExploreScreen() {
             <View className="bg-white px-4 pt-2 pb-4">
                 <View className="flex-row items-center gap-2 mb-4">
                     <Image
-                        source={require('@/assets/images/TalentLink-TextLogo.png')}
+                        source={require('@/assets/images/Soundspal-TextLogo.png')}
                         style={{ width: 120, height: 24 }}
                         resizeMode="contain"
                     />

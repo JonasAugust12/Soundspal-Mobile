@@ -15,7 +15,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const cardWidth = (screenWidth - 32 - 12) / 2; // px-4 (32) + gap-3 (12)
 const cardHeight = cardWidth * 1.2;
 
-export function VideoPlayer({ videoUrl, thumbnailUrl, title }: VideoPlayerProps) {
+export function VideoPlayer({ videoUrl, thumbnailUrl, title: _title }: VideoPlayerProps) {
     const [hasStarted, setHasStarted] = useState(false);
     const [inFullscreen, setInFullscreen] = useState(false);
     const refVideo = useRef<Video>(null!);

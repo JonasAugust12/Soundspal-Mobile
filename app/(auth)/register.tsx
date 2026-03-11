@@ -77,7 +77,7 @@ export default function RegisterScreen() {
                     <View className="items-center pt-6 pb-8">
                         <View style={styles.logoContainer}>
                             <Image
-                                source={require('@/assets/images/TalentLink-Logo.png')}
+                                source={require('@/assets/images/Soundspal-Logo.png')}
                                 style={{ width: 70, height: 70 }}
                                 resizeMode="contain"
                             />
@@ -96,7 +96,7 @@ export default function RegisterScreen() {
                         {/* Welcome Text */}
                         <View className="items-center mb-4">
                             <Text className="text-xl font-black text-gray-900 text-center">
-                                Đăng ký TalentLink ✨
+                                Đăng ký Soundspal ✨
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center">
                                 Nhập thông tin để tạo tài khoản

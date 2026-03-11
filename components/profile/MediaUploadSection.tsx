@@ -5,12 +5,11 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     Alert,
-    FlatList,
     Image,
     Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Plus, Trash2, FileVideo, Music } from 'lucide-react-native';
+import { Plus, Trash2 } from 'lucide-react-native';
 import { useGetMyMedia, useUploadMedia, useDeleteMedia } from '@/hooks/useMediaApi';
 import type { Media } from '@/types/media.type';
 
@@ -82,7 +81,7 @@ const MediaCard = ({
 };
 
 export const MediaUploadSection = () => {
-    const [selectedMediaId, setSelectedMediaId] = useState<string | undefined>();
+    const [_selectedMediaId, _setSelectedMediaId] = useState<string | undefined>();
 
     const {
         data: mediaData,
@@ -98,7 +97,7 @@ export const MediaUploadSection = () => {
         const mediaType = type === 'image' ? ['images'] : ['videos'];
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: mediaType as any,
+            mediaTypes: mediaType as unknown as ImagePicker.MediaTypeOptions,
             allowsEditing: false,
             quality: 0.8,
         });
@@ -110,30 +109,33 @@ export const MediaUploadSection = () => {
             const mimeType = type === 'image' ? 'image/jpeg' : 'video/mp4';
             const fileName = asset.fileName || `media.${type === 'image' ? 'jpg' : 'mp4'}`;
 
-            console.log('📤 Uploading media:', {
+            console.warn('📤 Uploading media:', {
                 fileName,
                 mimeType,
                 type,
                 uri: asset.uri,
             });
 
-            formData.append('file', {
+            const fileToUpload = {
                 uri: asset.uri,
                 type: mimeType,
                 name: fileName,
-            } as any);
+            } as unknown as Blob;
+
+            formData.append('file', fileToUpload);
 
             uploadMedia(formData, {
                 onSuccess: () => {
-                    console.log('✅ Upload thành công!');
+                    console.warn('✅ Upload thành công!');
                     Alert.alert(
                         'Thành công',
                         `Tải lên ${type === 'image' ? 'ảnh' : 'video'} thành công`,
                     );
                 },
-                onError: (error: any) => {
-                    console.error('❌ Upload lỗi:', error);
-                    Alert.alert('Lỗi', error?.message || 'Không thể tải lên phương tiện');
+                onError: (error: unknown) => {
+                    const err = error as { message?: string };
+                    console.error('❌ Upload lỗi:', err);
+                    Alert.alert('Lỗi', err?.message || 'Không thể tải lên phương tiện');
                 },
             });
         }

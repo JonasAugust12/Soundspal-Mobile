@@ -1,8 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/stores/authStore';
 import { useMessagingStore } from '@/stores/messagingStore';
-import { useQueryClient } from '@tanstack/react-query';
-import { messagingKeys } from '@/hooks/useMessagingApi';
 import type { Message } from '@/types/messaging.type';
 
 class SocketService {
@@ -12,17 +10,17 @@ class SocketService {
     private hasReachedMaxAttempts = false;
     private isConnecting = false;
     private hasAttemptedTokenRefresh = false;
-    private queryClient: any = null;
+    private queryClient: unknown = null;
 
     // Set query client from provider
-    setQueryClient(client: any) {
+    setQueryClient(client: unknown) {
         this.queryClient = client;
     }
 
     connect() {
         // Prevent multiple simultaneous connection attempts
         if (this.isConnecting) {
-            console.log('🔌 Connection already in progress...');
+            console.warn('🔌 Connection already in progress...');
             return this.socket;
         }
 
@@ -34,7 +32,7 @@ class SocketService {
 
         // Already connected
         if (this.socket?.connected) {
-            console.log('✅ Socket already connected');
+            console.warn('✅ Socket already connected');
             return this.socket;
         }
 
@@ -79,8 +77,8 @@ class SocketService {
 
         // Connection events
         this.socket.on('connect', () => {
-            console.log('✅ Connected to messaging service');
-            console.log('🆔 Socket ID:', this.socket?.id);
+            console.warn('✅ Connected to messaging service');
+            console.warn('🆔 Socket ID:', this.socket?.id);
             this.reconnectAttempts = 0;
             this.hasReachedMaxAttempts = false;
             this.hasAttemptedTokenRefresh = false;
@@ -107,7 +105,7 @@ class SocketService {
 
         // Message events
         this.socket.on('message:new', (message: Message) => {
-            console.log('📨 New message received:', {
+            console.warn('📨 New message received:', {
                 id: message.id,
                 conversationId: message.conversationId,
                 senderId: message.senderId,
@@ -125,7 +123,7 @@ class SocketService {
         });
 
         this.socket.on('message:edited', (message: Message) => {
-            console.log('✏️ Message edited:', message.id);
+            console.warn('✏️ Message edited:', message.id);
             useMessagingStore.getState().updateMessage(message.conversationId, message.id, {
                 content: message.content,
                 isEdited: true,
@@ -135,7 +133,7 @@ class SocketService {
         this.socket.on(
             'message:deleted',
             ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
-                console.log('🗑️ Message deleted:', messageId);
+                console.warn('🗑️ Message deleted:', messageId);
                 useMessagingStore.getState().removeMessage(conversationId, messageId);
             },
         );
@@ -146,7 +144,7 @@ class SocketService {
             ({ conversationId, userId }: { conversationId: string; userId: string }) => {
                 const currentUserId = useAuthStore.getState().user?.id;
                 if (userId !== currentUserId) {
-                    console.log('⌨️ User typing:', userId);
+                    console.warn('⌨️ User typing:', userId);
                     useMessagingStore.getState().addTypingUser(conversationId, userId);
                 }
             },
@@ -157,7 +155,7 @@ class SocketService {
             ({ conversationId, userId }: { conversationId: string; userId: string }) => {
                 const currentUserId = useAuthStore.getState().user?.id;
                 if (userId !== currentUserId) {
-                    console.log('⏸️ User stopped typing:', userId);
+                    console.warn('⏸️ User stopped typing:', userId);
                     useMessagingStore.getState().removeTypingUser(conversationId, userId);
                 }
             },
@@ -165,12 +163,12 @@ class SocketService {
 
         // Online status events
         this.socket.on('user:online', ({ userId }: { userId: string }) => {
-            console.log('🟢 User online:', userId);
+            console.warn('🟢 User online:', userId);
             useMessagingStore.getState().addOnlineUser(userId);
         });
 
         this.socket.on('user:offline', ({ userId }: { userId: string }) => {
-            console.log('⚫ User offline:', userId);
+            console.warn('⚫ User offline:', userId);
             useMessagingStore.getState().removeOnlineUser(userId);
         });
     }
@@ -187,7 +185,7 @@ class SocketService {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
-            console.log(`🔄 Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
+            console.warn(`🔄 Reconnecting in ${delay}ms... (attempt ${this.reconnectAttempts})`);
 
             this.isConnecting = false;
             setTimeout(() => {
@@ -206,13 +204,13 @@ class SocketService {
             console.warn('⚠️ Cannot join conversation - socket not connected');
             return;
         }
-        console.log('📥 Joining conversation:', conversationId);
+        console.warn('📥 Joining conversation:', conversationId);
         this.socket.emit('conversation:join', { conversationId });
     }
 
     leaveConversation(conversationId: string) {
         if (!this.socket?.connected) return;
-        console.log('📤 Leaving conversation:', conversationId);
+        console.warn('📤 Leaving conversation:', conversationId);
         this.socket.emit('conversation:leave', { conversationId });
     }
 

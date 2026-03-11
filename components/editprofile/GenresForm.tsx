@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Check, Music } from 'lucide-react-native';
 
 import { useGetAllGenres, useGetUserGenres, useUpdateUserGenres } from '@/hooks/useUserApi';
@@ -44,7 +44,7 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
 
     const handleSave = async () => {
         try {
-            console.log(selectedGenres);
+            console.warn('Selected genres for update:', selectedGenres);
             await updateGenres.mutateAsync({
                 username,
                 genreNames: selectedGenres,

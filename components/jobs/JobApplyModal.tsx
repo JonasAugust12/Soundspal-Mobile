@@ -100,8 +100,10 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
         submitApplication(
             { jobId, body: requestBody },
             {
-                onSuccess: (data: any) => {
-                    const successMessage = data?.message || 'Đã gửi đơn ứng tuyển thành công!';
+                onSuccess: (data) => {
+                    const successMessage =
+                        (data as { message?: string })?.message ||
+                        'Đã gửi đơn ứng tuyển thành công!';
                     Alert.alert('Thành công', successMessage, [
                         {
                             text: 'OK',
@@ -109,10 +111,14 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
                         },
                     ]);
                 },
-                onError: (error: any) => {
+                onError: (error: unknown) => {
+                    const err = error as {
+                        response?: { data?: { message?: string } };
+                        message?: string;
+                    };
                     const errorMessage =
-                        error?.response?.data?.message ||
-                        error?.message ||
+                        err?.response?.data?.message ||
+                        err?.message ||
                         'Không thể gửi đơn ứng tuyển';
                     Alert.alert('Lỗi', errorMessage);
                 },

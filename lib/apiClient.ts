@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { getUserFromToken } from '@/utils/jwt';
 import type { RefreshTokenResponse } from '@/types/auth.type';
@@ -16,11 +16,11 @@ export const apiClient = axios.create({
 // Flag để tránh multiple refresh requests
 let isRefreshing = false;
 let failedQueue: Array<{
-    resolve: (value?: any) => void;
-    reject: (reason?: any) => void;
+    resolve: (value?: unknown) => void;
+    reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue.forEach((prom) => {
         if (error) {
             prom.reject(error);
@@ -148,12 +148,12 @@ export const createApiCall = <TResponse, TRequest = unknown>(
     return async (data?: TRequest): Promise<TResponse> => {
         const isFormData = data instanceof FormData;
 
-        console.log(`📡 ${method} request to ${url}`, {
+        console.warn(`📡 ${method} request to ${url}`, {
             isFormData,
             dataType: data ? typeof data : 'undefined',
         });
 
-        const config: any = {
+        const config: Record<string, unknown> = {
             method,
             url,
             data: method !== 'GET' ? data : undefined,
@@ -172,14 +172,15 @@ export const createApiCall = <TResponse, TRequest = unknown>(
         }
 
         try {
-            const response = await apiClient.request<TResponse>(config);
-            console.log(`✅ ${method} ${url} success`, response.data);
+            const response = await apiClient.request<TResponse>(config as AxiosRequestConfig);
+            console.warn(`✅ ${method} ${url} success`, response.data);
             return response.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const err = error as AxiosError;
             console.error(`❌ ${method} ${url} error:`, {
-                status: error.response?.status,
-                message: error.message,
-                data: error.response?.data,
+                status: err.response?.status,
+                message: err.message,
+                data: err.response?.data,
             });
             throw error;
         }

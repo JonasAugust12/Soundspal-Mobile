@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCreateJob } from '@/hooks/useJobApi';
-import type { CreateJobRequest } from '@/types/job.type';
+import type { CreateJobRequest, Job } from '@/types/job.type';
 
 type FormStep = 'basic' | 'details' | 'requirements' | 'review';
 
@@ -58,7 +58,10 @@ export default function RecruitmentFormScreen() {
         visibility: 'public',
     });
 
-    const handleInputChange = (field: keyof CreateJobRequest, value: any) => {
+    const handleInputChange = (
+        field: keyof CreateJobRequest,
+        value: string | number | boolean | string[] | undefined,
+    ) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -118,10 +121,6 @@ export default function RecruitmentFormScreen() {
         formData.brief_description?.trim() &&
         formData.description?.trim();
 
-    const isDetailsValid = true; // All optional
-
-    const isRequirementsValid = true; // All optional
-
     const handleSubmit = () => {
         if (!isBasicValid) {
             Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin cơ bản');
@@ -129,15 +128,20 @@ export default function RecruitmentFormScreen() {
         }
 
         createJob(formData, {
-            onSuccess: (data: any) => {
-                const successMessage = data?.message || 'Bài đăng đã được tạo thành công';
+            onSuccess: (data: Job) => {
+                const successMessage =
+                    (data as { message?: string })?.message || 'Bài đăng đã được tạo thành công';
                 Alert.alert('Thành công', successMessage, [
                     { text: 'OK', onPress: () => router.back() },
                 ]);
             },
-            onError: (error: any) => {
+            onError: (error: unknown) => {
+                const err = error as {
+                    response?: { data?: { message?: string } };
+                    message?: string;
+                };
                 const errorMessage =
-                    error?.response?.data?.message || error?.message || 'Không thể tạo bài đăng';
+                    err?.response?.data?.message || err?.message || 'Không thể tạo bài đăng';
                 Alert.alert('Lỗi', errorMessage);
             },
         });

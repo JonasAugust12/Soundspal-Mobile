@@ -5,7 +5,6 @@ import {
     Pressable,
     FlatList,
     ActivityIndicator,
-    Dimensions,
     Platform,
     StyleSheet,
 } from 'react-native';
@@ -20,7 +19,6 @@ import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmModal } from '@/components/common';
 
-const { width: screenWidth } = Dimensions.get('window');
 const PADDING = 16;
 const GAP = 12;
 
@@ -57,8 +55,9 @@ export default function VideoGalleryScreen() {
             showSuccess('Đã xóa', 'Video đã được xóa khỏi thư viện');
             setDeleteConfirm({ visible: false, videoId: null });
             refetch();
-        } catch (error: any) {
-            showError('Lỗi', error?.message || 'Không thể xóa video');
+        } catch (error: unknown) {
+            const err = error as { message?: string };
+            showError('Lỗi', err?.message || 'Không thể xóa video');
         }
     };
 
