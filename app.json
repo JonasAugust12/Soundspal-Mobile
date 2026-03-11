@@ -1,8 +1,8 @@
 {
     "expo": {
-        "name": "TalentLink",
+        "name": "Soundspal",
         "slug": "talent_link",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "orientation": "portrait",
         "icon": "./assets/images/Soundspal-Logo1.png",
         "scheme": "soundspal",
@@ -21,7 +21,8 @@
                 "backgroundColor": "#E6F4FE"
             },
             "edgeToEdgeEnabled": true,
-            "package": "com.jonasaugust12.soundspal"
+            "package": "com.jonasaugust12.soundspal",
+            "versionCode": 2
         },
         "web": {
             "favicon": "./assets/favicon.png"
