@@ -1,6 +1,6 @@
 # TalentLink
 
-Dự án React Native Expo với TypeScript và NativeWind (Tailwind CSS).
+Dự án React Native Expo với TypeScript và NativeWind (Tailwind CSS) version 1.0.1.
 
 ## Cài đặt
 
