@@ -1,0 +1,49 @@
+# ./fastlane/Fastfile
+default_platform(:android)
+
+platform :android do
+  
+  desc "Check environment readiness and CLI dependencies"
+  lane :doctor do
+    puts "--- Checking Environment Compatibility ---"
+    begin
+      sh("eas --version")
+      puts "✅ EAS CLI is installed and accessible."
+      sh("node -v")
+      puts "✅ Node.js runtime is ready."
+    rescue => e
+      UI.error("Environment check failed: #{e.message}")
+    end
+  end
+
+  desc "Automate versioning: Increment patch and sync app.json"
+  lane :bump_version do
+    # 1. Tăng version trong package.json (Lệnh này chạy ở root nên vẫn giữ nguyên)
+    sh("npm version patch --no-git-tag-version")
+    
+    # 2. Xác định đường dẫn tuyệt đối đến script (Nhảy ra 2 bậc: ../../)
+    # Từ fastlane/Fastfile -> ra ngoài là fastlane/ -> ra ngoài nữa là TL-Mobile/
+    script_path = File.expand_path("../../scripts/sync-version.js", __FILE__)
+    
+    UI.message("Executing script at: #{script_path}")
+    sh("node #{script_path}")
+    
+    # 3. Đọc version mới (Cũng cần nhảy ra 2 bậc để tìm package.json)
+    pkg_path = File.expand_path("../../package.json", __FILE__)
+    new_version = sh("node -p \"require('#{pkg_path}').version\"").strip
+    
+    UI.success("Successfully bumped version to: #{new_version}")
+  end
+
+  desc "Full Pipeline: Increment version and trigger EAS Cloud Build"
+  lane :deploy_preview do
+    # Step 1: Handle Versioning
+    bump_version
+    
+    # Step 2: Trigger EAS Build (Non-interactive for CI/CD compatibility)
+    UI.message("Triggering EAS Cloud Build for Android...")
+    sh("eas build --platform android --profile preview --non-interactive")
+    
+    UI.success("Deployment pipeline initiated successfully!")
+  end
+end
