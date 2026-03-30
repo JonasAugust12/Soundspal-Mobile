@@ -1,0 +1,79 @@
+# ./fastlane/Fastfile
+default_platform(:android)
+
+platform :android do
+  
+  desc "Check environment readiness and CLI dependencies"
+  lane :doctor do
+    puts "--- Checking Environment Compatibility ---"
+    begin
+      sh("eas --version")
+      puts "✅ EAS CLI is installed and accessible."
+      sh("node -v")
+      puts "✅ Node.js runtime is ready."
+    rescue => e
+      UI.error("Environment check failed: #{e.message}")
+    end
+  end
+
+  desc "Automate versioning: Increment patch and sync app.json"
+  lane :bump_version do
+    # 1. Tăng version trong package.json
+    sh("npm version patch --no-git-tag-version")
+    
+    # 2. Đồng bộ sang app.json
+    script_path = File.expand_path("../../scripts/sync-version.js", __FILE__)
+    UI.message("Executing script at: #{script_path}")
+    sh("node #{script_path}")
+    
+    # 3. Đọc version mới
+    pkg_path = File.expand_path("../../package.json", __FILE__)
+    new_version = sh("node -p \"require('#{pkg_path}').version\"").strip
+    
+    UI.success("Successfully bumped version to: #{new_version}")
+  end
+
+  # ==========================================
+  # CÁC LANE MỚI CHO LUỒNG CI/CD (TAG-BASED)
+  # ==========================================
+
+  desc "Lệnh Khai Hỏa (Local): Tăng version, Commit, Đánh Tag và Push lên GitHub"
+  lane :trigger_release do
+    # 1. Gọi lane tăng version
+    bump_version
+    
+    # 2. Lấy version mới nhất để làm Git Message và Tag
+    pkg_path = File.expand_path("../../package.json", __FILE__)
+    new_version = sh("node -p \"require('#{pkg_path}').version\"").strip
+    
+    UI.message("Đang tự động Commit và Push Tag release-v#{new_version} lên GitHub...")
+    
+    # 3. Tự động hóa các lệnh Git (Dùng lệnh sh cho chắc cú trên Windows)
+    sh("git add ../package.json ../app.json")
+    sh("git commit -m \"chore(release): bump version to v#{new_version}\"")
+    sh("git tag release-v#{new_version}")
+    
+    # Push code và push thẻ tag lên repository
+    sh("git push origin HEAD")
+    sh("git push origin release-v#{new_version}")
+    
+    UI.success("🚀 Đã bắn tín hiệu release-v#{new_version} lên GitHub thành công!")
+    UI.message("Bây giờ GitHub Actions sẽ nhận Tag này và bắt đầu build app!")
+  end
+
+  desc "Lệnh Giao Hàng (CI/CD): Lấy file .aab ném lên Google Play Console"
+  lane :upload_to_playstore do
+    # LƯU Ý: Lệnh này KHÔNG chạy ở máy bạn. Nó sẽ được GitHub Actions gọi sau khi build xong .aab!
+    UI.message("Đang upload bản build lên Google Play (Internal Track)...")
+    
+    upload_to_play_store(
+      track: 'internal', 
+      aab: '../app-release.aab', # Đường dẫn file aab mặc định sau khi CI build xong
+      json_key_data: ENV["PLAY_STORE_JSON_KEY"], # Biến môi trường chứa key của CH Play
+      skip_upload_metadata: true,
+      skip_upload_images: true
+    )
+    
+    UI.success("✅ Đã đưa app lên Google Play Console thành công!")
+  end
+end
