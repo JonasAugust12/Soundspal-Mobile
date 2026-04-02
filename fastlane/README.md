@@ -30,13 +30,21 @@ Check environment readiness and CLI dependencies
 
 Automate versioning: Increment patch and sync app.json
 
-### android deploy_preview
+### android trigger_release
 
 ```sh
-[bundle exec] fastlane android deploy_preview
+[bundle exec] fastlane android trigger_release
 ```
 
-Full Pipeline: Increment version and trigger EAS Cloud Build
+Lệnh Khai Hỏa (Local): Tăng version, Commit, Đánh Tag và Push lên GitHub
+
+### android upload_to_playstore
+
+```sh
+[bundle exec] fastlane android upload_to_playstore
+```
+
+Lệnh Giao Hàng (CI/CD): Lấy file .aab ném lên Google Play Console
 
 ---
 

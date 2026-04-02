@@ -1,12 +1,13 @@
-name: CD - EAS Build Production
+name: CD - EAS Build Production & Deploy Play Store
 
 on:
     push:
-        branches: [main]
+        tags:
+            - 'release-v*'
 
 jobs:
-    eas-build:
-        name: EAS Build Android Production
+    eas-build-and-deploy:
+        name: EAS Build & Fastlane Deploy
         runs-on: ubuntu-latest
 
         steps:
@@ -25,12 +26,23 @@ jobs:
             - name: Setup EAS CLI
               run: npm install -g eas-cli
 
-            - name: Build Android Production
-              run: eas build --platform android --profile production --non-interactive
+            - name: Build Android Production & Download AAB
+              run: eas build --platform android --profile production --non-interactive --wait --output ./app-release.aab
               env:
                   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-            - name: Get Build URL
-              run: |
-                  echo "✅ Build submitted to EAS!"
-                  echo "Check your builds at: https://expo.dev/accounts/jonasaugust12/projects/talent_link/builds"
+            - name: Setup Ruby & Fastlane
+              uses: ruby/setup-ruby@v1
+              with:
+                  ruby-version: '3.2'
+
+            - name: Install Fastlane CLI
+              run: gem install fastlane
+
+            - name: 🚀 Upload to Google Play Console via Fastlane
+              run: fastlane android upload_to_playstore
+              env:
+                  PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+
+            - name: Done
+              run: echo "🎉 Pushed app Soundspal to Google Play Console successfully!"

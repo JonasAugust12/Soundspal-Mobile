@@ -68,7 +68,7 @@ platform :android do
     
     upload_to_play_store(
       track: 'internal', 
-      aab: '../app-release.aab', # Đường dẫn file aab mặc định sau khi CI build xong
+      aab: 'app-release.aab', # Đường dẫn file aab mặc định sau khi CI build xong
       json_key_data: ENV["PLAY_STORE_JSON_KEY"], # Biến môi trường chứa key của CH Play
       skip_upload_metadata: true,
       skip_upload_images: true

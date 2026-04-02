@@ -5,22 +5,57 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.0317267">
+      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.1524478">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="1: npm version patch --no-git-tag-version" time="1.4094362">
+      <testcase classname="fastlane.lanes" name="01: Switch to android bump_version lane" time="0.0019509">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="2: node D:/TL-Mobile/scripts/sync-version.js" time="0.1072409">
+      <testcase classname="fastlane.lanes" name="02: npm version patch --no-git-tag-version" time="2.2322014">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="3: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.1134655">
+      <testcase classname="fastlane.lanes" name="03: node D:/TL-Mobile/scripts/sync-version.js" time="0.10252">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="04: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.1092559">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="05: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.1070523">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="06: git add ../package.json ../app.json" time="0.1080026">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="07: git commit -m &quot;chore(release): bump version to v1.0.15&quot;" time="7.8964742">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="08: git tag release-v1.0.15" time="0.0890444">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="09: git push origin HEAD" time="11.3455657">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="10: git push origin release-v1.0.15" time="9.6289912">
         
       </testcase>
     
