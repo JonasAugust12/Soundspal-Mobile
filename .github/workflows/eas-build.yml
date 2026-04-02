@@ -26,8 +26,15 @@ jobs:
             - name: Setup EAS CLI
               run: npm install -g eas-cli
 
-            - name: Build Android Production & Download AAB
-              run: eas build --platform android --profile production --non-interactive --wait --output ./app-release.aab
+            # Step 1: Trigger the build on Expo servers and wait for completion
+            - name: Build Android Production on EAS
+              run: eas build --platform android --profile production --non-interactive --wait
+              env:
+                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+            # Step 2: Download the generated .aab file to the GitHub runner
+            - name: Download AAB file from EAS
+              run: eas build:download --platform android --latest --output ./app-release.aab
               env:
                   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -39,10 +46,10 @@ jobs:
             - name: Install Fastlane CLI
               run: gem install fastlane
 
-            - name: 🚀 Upload to Google Play Console via Fastlane
+            - name: Upload to Google Play Console via Fastlane
               run: fastlane android upload_to_playstore
               env:
                   PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
 
-            - name: Done
-              run: echo "🎉 Pushed app Soundspal to Google Play Console successfully!"
+            - name: Deployment Completion
+              run: echo "🎉 Successfully pushed Soundspal to Google Play Console!"
