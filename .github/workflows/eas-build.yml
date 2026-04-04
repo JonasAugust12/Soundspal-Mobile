@@ -23,24 +23,23 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            # TODO: Re-enable when switching back from fixed-artifact download flow
-            # - name: Setup EAS CLI
-            #   run: npm install -g eas-cli
+            - name: Setup EAS CLI
+              run: npm install -g eas-cli
 
-            # Step 1: Trigger the build on Expo servers and wait for completion (disabled temporarily)
-            # - name: Build Android Production on EAS
-            #   run: eas build --platform android --profile production --non-interactive --wait
-            #   env:
-            #       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+            # JSON is written to stdout (--json redirects normal logs to stderr)
+            - name: Build Android Production on EAS
+              run: eas build --platform android --profile production --non-interactive --wait --json > eas-build.json
+              env:
+                  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-            # Step 2: Download .aab (temporary: direct Expo artifact URL; replace URL after each build)
-            # Note: eas build:download in current eas-cli targets dev/simulator builds (--fingerprint), not store AABs.
-            # Long-term: use artifact URL from build logs, or eas build:submit --url ... for Play (skips separate Fastlane).
-            - name: Download AAB file
+            # eas build:download does not support store AABs with --latest/--output; use archive URL from build JSON
+            - name: Download AAB from EAS artifact
               run: |
+                  set -euo pipefail
+                  URL=$(jq -er '.[0].artifacts.applicationArchiveUrl' eas-build.json)
                   curl -fSL -o ./app-release.aab \
                     -H "Authorization: Bearer ${EXPO_TOKEN}" \
-                    "https://expo.dev/artifacts/eas/pkB2KswagezCsQYW9obU71.aab"
+                    "$URL"
               env:
                   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
