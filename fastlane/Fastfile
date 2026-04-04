@@ -63,12 +63,12 @@ platform :android do
 
   desc "Lệnh Giao Hàng (CI/CD): Lấy file .aab ném lên Google Play Console"
   lane :upload_to_playstore do
-    # LƯU Ý: Lệnh này KHÔNG chạy ở máy bạn. Nó sẽ được GitHub Actions gọi sau khi build xong .aab!
+    # CI must provide ./app-release.aab at the workspace root (e.g. curl from an Expo artifact URL or eas build:download <BUILD_ID>).
     UI.message("Đang upload bản build lên Google Play (Internal Track)...")
     
     upload_to_play_store(
       track: 'internal', 
-      aab: 'app-release.aab', # Đường dẫn file aab mặc định sau khi CI build xong
+      aab: 'app-release.aab',
       json_key_data: ENV["PLAY_STORE_JSON_KEY"], # Biến môi trường chứa key của CH Play
       skip_upload_metadata: true,
       skip_upload_images: true
