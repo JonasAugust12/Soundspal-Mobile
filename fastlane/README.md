@@ -1,5 +1,4 @@
-fastlane documentation
-----
+## fastlane documentation
 
 # Installation
 
@@ -47,7 +46,7 @@ Lệnh Khai Hỏa (Local): Tăng version, Commit, Đánh Tag và Push lên GitHu
 
 Lệnh Giao Hàng (CI/CD): Lấy file .aab ném lên Google Play Console
 
-----
+---
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
 

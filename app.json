@@ -1,62 +1,62 @@
 {
-  "expo": {
-    "name": "Soundspal",
-    "slug": "talent_link",
-    "version": "1.0.20",
-    "orientation": "portrait",
-    "icon": "./assets/images/Soundspal-Logo1.png",
-    "scheme": "soundspal",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/Soundspal-TextLogo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.jonasaugust12.talent_link",
-      "versionCode": 10
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-font",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/Soundspal-TextLogo.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+    "expo": {
+        "name": "Soundspal",
+        "slug": "talent_link",
+        "version": "1.0.20",
+        "orientation": "portrait",
+        "icon": "./assets/images/Soundspal-Logo.png",
+        "scheme": "soundspal",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "splash": {
+            "image": "./assets/images/Soundspal-TextLogo.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "backgroundColor": "#E6F4FE"
+            },
+            "edgeToEdgeEnabled": true,
+            "package": "com.jonasaugust12.talent_link",
+            "versionCode": 10
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        },
+        "plugins": [
+            "expo-font",
+            [
+                "expo-splash-screen",
+                {
+                    "image": "./assets/images/Soundspal-TextLogo.png",
+                    "imageWidth": 200,
+                    "resizeMode": "contain",
+                    "backgroundColor": "#ffffff",
+                    "dark": {
+                        "backgroundColor": "#000000"
+                    }
+                }
+            ],
+            [
+                "expo-build-properties",
+                {
+                    "android": {
+                        "minSdkVersion": 28,
+                        "targetSdkVersion": 35,
+                        "compileSdkVersion": 35,
+                        "buildToolsVersion": "35.0.0"
+                    }
+                }
+            ]
+        ],
+        "extra": {
+            "eas": {
+                "projectId": "fa723f0b-e065-4a57-91f2-1f4b8f64e880"
+            }
         }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "minSdkVersion": 28,
-            "targetSdkVersion": 35,
-            "compileSdkVersion": 35,
-            "buildToolsVersion": "35.0.0"
-          }
-        }
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "fa723f0b-e065-4a57-91f2-1f4b8f64e880"
-      }
     }
-  }
 }

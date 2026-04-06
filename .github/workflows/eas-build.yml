@@ -1,9 +1,7 @@
 name: CD - EAS Build Production & Deploy Play Store
 
 on:
-    push:
-        tags:
-            - 'release-v*'
+    workflow_dispatch:
 
 jobs:
     eas-build-and-deploy:
