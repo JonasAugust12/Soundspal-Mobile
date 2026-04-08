@@ -1,15 +1,20 @@
 import React from 'react';
 import { View, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Search } from 'lucide-react-native';
+import { ChevronLeft, Search, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
 interface CommonHeaderProps {
     showSearch?: boolean;
     showAvatar?: boolean;
+    showCreate?: boolean;
 }
 
-export function CommonHeader({ showSearch = true, showAvatar = true }: CommonHeaderProps) {
+export function CommonHeader({
+    showSearch = true,
+    showAvatar = true,
+    showCreate = false,
+}: CommonHeaderProps) {
     const router = useRouter();
 
     return (
@@ -29,6 +34,15 @@ export function CommonHeader({ showSearch = true, showAvatar = true }: CommonHea
                     {showSearch && (
                         <TouchableOpacity activeOpacity={0.7}>
                             <Search size={24} color="#374151" />
+                        </TouchableOpacity>
+                    )}
+                    {showCreate && (
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            onPress={() => router.push('/(challenge)/create')}
+                            className="bg-primary/10 w-8 h-8 rounded-full items-center justify-center mr-1"
+                        >
+                            <Plus size={20} color="#7d3bed" />
                         </TouchableOpacity>
                     )}
                     {showAvatar && (

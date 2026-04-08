@@ -2,6 +2,8 @@ import React from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BeatCard } from './BeatCard';
+import { BeatCardSkeleton } from './BeatCardSkeleton';
+import { useGetBeats } from '@/hooks/useChallengeApi';
 
 const DUMMY_DATA = [
     {
@@ -54,24 +56,82 @@ const DUMMY_DATA = [
     },
 ];
 
-export function BeatList() {
+export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
     const router = useRouter();
+
+    // construct params block
+    const fetchParams = selectedGenre ? { genre: selectedGenre } : {};
+    const { data: beatsData, isLoading, isError } = useGetBeats(fetchParams);
+
+    const formatDuration = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    if (isLoading) {
+        return (
+            <View className="mb-24">
+                {[1, 2, 3].map((i) => (
+                    <BeatCardSkeleton key={i} />
+                ))}
+            </View>
+        );
+    }
+
+    const beats = beatsData?.beats || [];
+
+    // Fallback to DUMMY_DATA if API has no beats (app is new) or failed
+    if (beats.length === 0 || isError) {
+        return (
+            <View className="mb-24">
+                {DUMMY_DATA.map((beat) => (
+                    <BeatCard
+                        key={beat.id}
+                        title={beat.title}
+                        producer={beat.producer}
+                        bpm={beat.bpm}
+                        duration={beat.duration}
+                        genre={beat.genre}
+                        entries={beat.entries}
+                        imageUrl={beat.imageUrl}
+                        isHot={beat.isHot}
+                        tagColorType={beat.tagColorType}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/(challenge)/beat-detail',
+                                params: { id: beat.id },
+                            })
+                        }
+                    />
+                ))}
+            </View>
+        );
+    }
 
     return (
         <View className="mb-24">
-            {DUMMY_DATA.map((beat) => (
+            {beats.map((beat) => (
                 <BeatCard
                     key={beat.id}
                     title={beat.title}
-                    producer={beat.producer}
-                    bpm={beat.bpm}
-                    duration={beat.duration}
-                    genre={beat.genre}
-                    entries={beat.entries}
-                    imageUrl={beat.imageUrl}
-                    isHot={beat.isHot}
-                    tagColorType={beat.tagColorType}
-                    onPress={() => router.push('/(challenge)/beat-detail')}
+                    producer={beat.creator_username || 'Unknown'}
+                    bpm={beat.bpm || 120}
+                    duration={formatDuration(beat.duration_seconds || 0)}
+                    genre={beat.genre || 'Beat'}
+                    entries={beat.entry_count?.toString() || '0'}
+                    imageUrl={
+                        beat.cover_image_url ||
+                        'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80'
+                    }
+                    isHot={(beat.entry_count || 0) > 50}
+                    tagColorType="primary"
+                    onPress={() =>
+                        router.push({
+                            pathname: '/(challenge)/beat-detail',
+                            params: { id: beat.id },
+                        })
+                    }
                 />
             ))}
         </View>

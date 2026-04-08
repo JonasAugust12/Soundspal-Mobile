@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MoreVertical } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useGetLeaderboard } from '@/hooks/useChallengeApi';
+import { type BeatEntry } from '@/types/challenge.type';
 
 const TOP_ENTRIES = [
     {
@@ -22,8 +24,14 @@ const TOP_ENTRIES = [
     },
 ];
 
-export function TopEntries() {
+interface TopEntriesProps {
+    beatId: string;
+}
+
+export function TopEntries({ beatId }: TopEntriesProps) {
     const router = useRouter();
+    const { data } = useGetLeaderboard(beatId, 2);
+    const apiEntries = data?.entries || [];
 
     return (
         <View className="px-6 pb-6">
@@ -38,7 +46,12 @@ export function TopEntries() {
                 </View>
                 <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => router.push('/(challenge)/leaderboard')}
+                    onPress={() =>
+                        router.push({
+                            pathname: '/(challenge)/leaderboard',
+                            params: { id: beatId },
+                        })
+                    }
                 >
                     <Text className="text-primary font-bold text-xs uppercase tracking-widest font-body">
                         Xem tất cả
@@ -47,41 +60,57 @@ export function TopEntries() {
             </View>
 
             <View className="gap-3">
-                {TOP_ENTRIES.map((entry) => (
-                    <TouchableOpacity
-                        key={entry.rank}
-                        activeOpacity={0.7}
-                        className="bg-white p-4 rounded-2xl flex-row items-center gap-4 border border-gray-100"
-                        style={styles.cardShadow}
-                    >
-                        <View className="relative">
-                            <View className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100">
-                                <Image source={{ uri: entry.avatar }} className="w-full h-full" />
-                            </View>
-                            <View
-                                className={`absolute -top-2 -left-2 ${entry.rankBg} w-6 h-6 rounded-full flex items-center justify-center border-2 border-white`}
+                {(apiEntries.length > 0 ? apiEntries : TOP_ENTRIES).map(
+                    (entry: BeatEntry | (typeof TOP_ENTRIES)[number], index: number) => {
+                        const isMock = !('vote_count' in entry);
+                        return (
+                            <TouchableOpacity
+                                key={isMock ? entry.rank : entry.id}
+                                activeOpacity={0.7}
+                                className="bg-white p-4 rounded-2xl flex-row items-center gap-4 border border-gray-100"
+                                style={styles.cardShadow}
                             >
-                                <Text className="text-[10px] text-white font-black font-heading">
-                                    {entry.rank}
-                                </Text>
-                            </View>
-                        </View>
+                                <View className="relative">
+                                    <View className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100">
+                                        <Image
+                                            source={{
+                                                uri: isMock
+                                                    ? entry.avatar
+                                                    : 'https://api.dicebear.com/7.x/avataaars/png?seed=' +
+                                                      entry.username,
+                                            }}
+                                            className="w-full h-full"
+                                        />
+                                    </View>
+                                    <View
+                                        className={`absolute -top-2 -left-2 ${index === 0 ? 'bg-primary' : 'bg-gray-400'} w-6 h-6 rounded-full flex items-center justify-center border-2 border-white`}
+                                    >
+                                        <Text className="text-[10px] text-white font-black font-heading">
+                                            {index + 1}
+                                        </Text>
+                                    </View>
+                                </View>
 
-                        <View className="flex-1">
-                            <Text className="font-heading font-bold text-sm text-gray-900 mb-1">
-                                {entry.name}
-                            </Text>
-                            <Text className="text-gray-500 text-[10px] uppercase font-bold tracking-tighter">
-                                {entry.score} •{' '}
-                                <Text className="text-[#f471b7]">🔥 {entry.votes}</Text>
-                            </Text>
-                        </View>
+                                <View className="flex-1">
+                                    <Text className="font-heading font-bold text-sm text-gray-900 mb-1">
+                                        {isMock ? entry.name : entry.display_name || entry.username}
+                                    </Text>
+                                    <Text className="text-gray-500 text-[10px] uppercase font-bold tracking-tighter">
+                                        {isMock ? entry.score : `${entry.total_score} ĐIỂM`} •{' '}
+                                        <Text className="text-[#f471b7]">
+                                            🔥{' '}
+                                            {isMock ? entry.votes : `${entry.vote_count} BÌNH CHỌN`}
+                                        </Text>
+                                    </Text>
+                                </View>
 
-                        <TouchableOpacity className="p-2">
-                            <MoreVertical size={20} color="#9ca3af" />
-                        </TouchableOpacity>
-                    </TouchableOpacity>
-                ))}
+                                <TouchableOpacity className="p-2">
+                                    <MoreVertical size={20} color="#9ca3af" />
+                                </TouchableOpacity>
+                            </TouchableOpacity>
+                        );
+                    },
+                )}
             </View>
         </View>
     );

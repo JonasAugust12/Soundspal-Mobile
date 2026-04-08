@@ -1,9 +1,15 @@
 import React from 'react';
 import { View, ScrollView, StatusBar } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { HeroSection, InfoCard, TopEntries } from '@/components/beatDetail';
 import { CommonHeader } from '@/components/common';
+import { useGetBeatById } from '@/hooks/useChallengeApi';
 
 export default function BeatDetailScreen() {
+    const { id } = useLocalSearchParams<{ id: string }>();
+    const { data: beatData, isLoading } = useGetBeatById(id);
+    const beat = beatData;
+
     return (
         <View className="flex-1 bg-white">
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
@@ -15,9 +21,9 @@ export default function BeatDetailScreen() {
                 showsVerticalScrollIndicator={false}
                 bounces={false} // Prevents pulling down the image ungracefully
             >
-                <HeroSection />
-                <InfoCard />
-                <TopEntries />
+                <HeroSection beat={beat} />
+                <InfoCard beat={beat} isLoading={isLoading} />
+                <TopEntries beatId={id || ''} />
             </ScrollView>
         </View>
     );

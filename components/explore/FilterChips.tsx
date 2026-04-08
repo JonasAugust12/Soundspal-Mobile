@@ -1,11 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useGetAllGenres } from '@/hooks/useUserApi';
+import type { Genre } from '@/types/user.type';
 
-const FILTERS = ['Tất cả', 'Phonk', 'Hyperpop', 'Drill', 'Vaporwave', 'Techno'];
+interface FilterChipsProps {
+    selectedGenre: string;
+    onSelectGenre: (genreId: string) => void;
+}
 
-export function FilterChips() {
-    const [active, setActive] = useState('Tất cả');
+export function FilterChips({ selectedGenre, onSelectGenre }: FilterChipsProps) {
+    const { data } = useGetAllGenres();
+    const genresContent = data?.genres || [];
+
+    // Prefix "All" item and map actual genres
+    const allGenres = [
+        { id: '', name: 'Tất cả' },
+        ...genresContent.map((g: Genre) => ({ id: g.name, name: g.name })),
+    ];
 
     return (
         <ScrollView
@@ -14,15 +26,15 @@ export function FilterChips() {
             contentContainerStyle={{ paddingHorizontal: 0, gap: 10, paddingBottom: 32 }}
             className="flex-row"
         >
-            {FILTERS.map((item) => {
-                const isActive = active === item;
+            {allGenres.map((item) => {
+                const isActive = selectedGenre === item.id;
 
                 if (isActive) {
                     return (
                         <TouchableOpacity
-                            key={item}
+                            key={item.id}
                             activeOpacity={0.8}
-                            onPress={() => setActive(item)}
+                            onPress={() => onSelectGenre(item.id)}
                             style={[styles.shadowChip, { borderRadius: 9999 }]}
                         >
                             <LinearGradient
@@ -33,7 +45,7 @@ export function FilterChips() {
                                 className="px-5 py-2.5"
                             >
                                 <Text className="text-white font-body font-bold text-sm tracking-wide">
-                                    {item}
+                                    {item.name}
                                 </Text>
                             </LinearGradient>
                         </TouchableOpacity>
@@ -42,13 +54,13 @@ export function FilterChips() {
 
                 return (
                     <TouchableOpacity
-                        key={item}
+                        key={item.id}
                         activeOpacity={0.6}
-                        onPress={() => setActive(item)}
+                        onPress={() => onSelectGenre(item.id)}
                         className="bg-gray-100 px-5 py-2.5 rounded-full border border-gray-200"
                     >
                         <Text className="text-gray-600 font-body font-medium text-sm tracking-wide">
-                            {item}
+                            {item.name}
                         </Text>
                     </TouchableOpacity>
                 );

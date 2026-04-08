@@ -3,12 +3,30 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react
 import { Mic, Trophy } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import type { Beat } from '@/types/challenge.type';
 
-export function InfoCard() {
+interface InfoCardProps {
+    beat?: Beat;
+    isLoading?: boolean;
+}
+
+export function InfoCard({ beat, isLoading }: InfoCardProps) {
     const router = useRouter();
 
+    if (isLoading) {
+        return (
+            <View style={styles.cardShadow} className="px-6 -mt-8 relative z-10 w-full mb-10">
+                <View className="bg-white rounded-[32px] p-6 border border-gray-100 flex-col gap-4">
+                    <View className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
+                    <View className="h-10 bg-gray-200 rounded animate-pulse" />
+                    <View className="h-20 bg-gray-200 rounded animate-pulse w-full mt-4" />
+                </View>
+            </View>
+        );
+    }
+
     return (
-        <View style={styles.cardShadow} className="px-6 -mt-8 relative z-10 w-full mb-10">
+        <View style={styles.cardShadow} className="px-5 -mt-6 relative z-10 w-full mb-10">
             <View className="bg-white rounded-[32px] p-6 border border-gray-100">
                 {/* Header Info */}
                 <View className="mb-6">
@@ -16,19 +34,24 @@ export function InfoCard() {
                         Sản phẩm nổi bật
                     </Text>
                     <Text className="font-heading text-4xl font-black tracking-tight leading-tight mb-3 text-gray-900">
-                        NEON ECLIPSE
+                        {beat?.title || 'NEON ECLIPSE'}
                     </Text>
                     <View className="flex-row items-center gap-3">
                         <View className="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
                             <Image
                                 source={{
-                                    uri: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&q=80',
+                                    uri:
+                                        beat?.cover_image_url ||
+                                        'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&q=80',
                                 }}
                                 className="w-full h-full"
                             />
                         </View>
                         <Text className="font-body text-gray-500 text-sm font-medium">
-                            Sản xuất bởi <Text className="text-gray-900 font-bold">VNDR_WAVE</Text>
+                            Sản xuất bởi{' '}
+                            <Text className="text-gray-900 font-bold">
+                                {beat?.creator_username || 'VNDR_WAVE'}
+                            </Text>
                         </Text>
                     </View>
                 </View>
@@ -41,7 +64,7 @@ export function InfoCard() {
                         </Text>
                         <View className="flex-row items-end gap-1">
                             <Text className="text-2xl font-heading font-black text-gray-900">
-                                142
+                                {beat?.bpm || 142}
                             </Text>
                             <Text className="text-[10px] font-bold text-gray-500 pb-1 font-body">
                                 BPM
@@ -54,10 +77,7 @@ export function InfoCard() {
                         </Text>
                         <View className="flex-row items-end gap-1">
                             <Text className="text-2xl font-heading font-black text-gray-900">
-                                Cm
-                            </Text>
-                            <Text className="text-[10px] font-bold text-gray-500 pb-1 font-body">
-                                THỨ
+                                {beat?.key_signature || 'Cm'}
                             </Text>
                         </View>
                     </View>
@@ -69,19 +89,13 @@ export function InfoCard() {
                         Về Beat này
                     </Text>
                     <Text className="text-gray-600 leading-relaxed text-sm font-body mb-3">
-                        Một bản trap mang đậm chất điện ảnh với dải synth mượt mà và tiếng 808 mạnh
-                        mẽ. Lấy cảm hứng từ cuộc sống về đêm ở Neo-Tokyo, beat này đòi hỏi năng
-                        lượng cao và phong cách trình diễn chính xác.
+                        {beat?.description ||
+                            'Một bản trap mang đậm chất điện ảnh với dải synth mượt mà và tiếng 808 mạnh mẽ...'}
                     </Text>
                     <View className="flex-row gap-2">
                         <View className="bg-gray-100 px-3 py-1.5 rounded-full">
                             <Text className="text-[10px] font-bold text-gray-700 uppercase tracking-wider font-body">
-                                #DARK_TRAP
-                            </Text>
-                        </View>
-                        <View className="bg-gray-100 px-3 py-1.5 rounded-full">
-                            <Text className="text-[10px] font-bold text-gray-700 uppercase tracking-wider font-body">
-                                #FUTURISTIC
+                                #{beat?.genre?.toUpperCase() || 'DARK_TRAP'}
                             </Text>
                         </View>
                     </View>
@@ -117,7 +131,12 @@ export function InfoCard() {
                     <TouchableOpacity
                         activeOpacity={0.8}
                         style={[styles.actionShadow, { borderRadius: 9999 }]}
-                        onPress={() => router.push('/(challenge)/record')}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/(challenge)/record',
+                                params: { id: beat?.id },
+                            })
+                        }
                     >
                         <LinearGradient
                             colors={['#7d3bed', '#f471b7']}
@@ -136,7 +155,12 @@ export function InfoCard() {
                     <TouchableOpacity
                         activeOpacity={0.7}
                         className="bg-primary/5 h-14 rounded-full flex-row items-center justify-center gap-3 border border-primary/20"
-                        onPress={() => router.push('/(challenge)/leaderboard')}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/(challenge)/leaderboard',
+                                params: { id: beat?.id },
+                            })
+                        }
                     >
                         <Trophy size={20} color="#7d3bed" />
                         <Text className="text-primary font-heading font-bold text-base">

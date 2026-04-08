@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StatusBar } from 'react-native';
 import { HeroSection, FilterChips, BeatList, MiniPlayer } from '@/components/explore';
 import { CommonHeader } from '@/components/common';
 
 export default function ExploreScreen() {
+    const [selectedGenre, setSelectedGenre] = useState('');
+
     return (
         <View className="flex-1 bg-white">
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-            <CommonHeader />
+            <CommonHeader showCreate={true} />
 
             <ScrollView
                 contentContainerStyle={{
@@ -19,8 +21,8 @@ export default function ExploreScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <HeroSection />
-                <FilterChips />
-                <BeatList />
+                <FilterChips selectedGenre={selectedGenre} onSelectGenre={setSelectedGenre} />
+                <BeatList selectedGenre={selectedGenre} />
             </ScrollView>
 
             <MiniPlayer />
