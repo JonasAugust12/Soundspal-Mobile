@@ -19,6 +19,7 @@ try {
     }
 
     fs.writeFileSync(appConfigPath, JSON.stringify(appConfig, null, 2));
+    // eslint-disable-next-line no-console
     console.log(`✅ Version synced: ${pkg.version}`);
 } catch (error) {
     console.error(`❌ Sync failed: ${error.message}`);
