@@ -58,7 +58,7 @@ export function CreateChallengeForm() {
             } as unknown as Blob);
 
             if (image) {
-                formData.append('image', {
+                formData.append('cover_image', {
                     uri: image.uri,
                     name: image.name,
                     type: image.type,

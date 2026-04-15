@@ -10,7 +10,11 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ beat }: HeroSectionProps) {
-    const { currentBeat, isPlaying, isLoading, playBeat, togglePlay } = useAudioStore();
+    const currentBeat = useAudioStore((state) => state.currentBeat);
+    const isPlaying = useAudioStore((state) => state.isPlaying);
+    const isLoading = useAudioStore((state) => state.isLoading);
+    const playBeat = useAudioStore((state) => state.playBeat);
+    const togglePlay = useAudioStore((state) => state.togglePlay);
 
     const isCurrentBeat = currentBeat?.id === beat?.id;
 

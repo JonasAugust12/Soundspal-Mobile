@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export function WaveformCanvas() {
+export const WaveformCanvas = memo(function WaveformCanvas() {
     const bars = [
         { height: 48, type: 'inactive' },
         { height: 64, type: 'inactive' },
@@ -76,7 +76,7 @@ export function WaveformCanvas() {
             </View>
         </View>
     );
-}
+});
 
 const styles = StyleSheet.create({
     glowShadow: {

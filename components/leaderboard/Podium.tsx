@@ -1,8 +1,19 @@
-import React from 'react';
-import { View, Text, Image, Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+    View,
+    Text,
+    Image,
+    Platform,
+    StyleSheet,
+    TouchableOpacity,
+    ActivityIndicator,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ThumbsUp } from 'lucide-react-native';
+import { ThumbsUp, Play, Square } from 'lucide-react-native';
 import { type BeatEntry } from '@/types/challenge.type';
+import { useAudioStore } from '@/stores/audioStore';
+import { challengeApi } from '@/hooks/useChallengeApi';
+import Toast from 'react-native-toast-message';
 
 interface PodiumProps {
     topEntries: BeatEntry[];
@@ -13,24 +24,119 @@ export function Podium({ topEntries }: PodiumProps) {
     const rank2 = topEntries[1];
     const rank3 = topEntries[2];
 
+    const playEntry = useAudioStore((s) => s.playEntry);
+    const stopEntry = useAudioStore((s) => s.stopEntry);
+    const currentEntry = useAudioStore((s) => s.currentEntry);
+    const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
+    const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
+
+    const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+    const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+
+    useEffect(() => {
+        return () => {
+            stopEntry();
+        };
+    }, [stopEntry]);
+
+    const handleVote = async (entry: BeatEntry) => {
+        const alreadyVoted = votedIds.has(entry.id);
+        try {
+            if (alreadyVoted) {
+                await challengeApi.removeVote(entry.id);
+                setVotedIds((prev) => {
+                    const s = new Set(prev);
+                    s.delete(entry.id);
+                    return s;
+                });
+                setVoteCounts((prev) => ({
+                    ...prev,
+                    [entry.id]: (prev[entry.id] ?? entry.vote_count) - 1,
+                }));
+            } else {
+                await challengeApi.voteEntry(entry.id, 'up');
+                setVotedIds((prev) => new Set(prev).add(entry.id));
+                setVoteCounts((prev) => ({
+                    ...prev,
+                    [entry.id]: (prev[entry.id] ?? entry.vote_count) + 1,
+                }));
+            }
+        } catch {
+            Toast.show({ type: 'error', text1: 'Lỗi', text2: 'Không thể bình chọn.' });
+        }
+    };
+
     const getAvatar = (entry?: BeatEntry) =>
         entry?.id
             ? `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.username}`
             : 'https://i.pravatar.cc/150';
 
+    const PlayButton = ({ entry, size = 18 }: { entry: BeatEntry; size?: number }) => {
+        const isThis = currentEntry?.id === entry.id;
+        const isThisPlaying = isThis && isEntryPlaying;
+        const isThisLoading = isThis && isEntryLoading;
+        return (
+            <TouchableOpacity
+                onPress={() => playEntry(entry)}
+                className="w-8 h-8 rounded-full bg-white/80 items-center justify-center border border-gray-100"
+                activeOpacity={0.7}
+            >
+                {isThisLoading ? (
+                    <ActivityIndicator size="small" color="#7d3bed" />
+                ) : isThisPlaying ? (
+                    <Square size={size - 2} color="#7d3bed" fill="#7d3bed" />
+                ) : (
+                    <Play
+                        size={size - 2}
+                        color="#7d3bed"
+                        fill="#7d3bed"
+                        style={{ marginLeft: 1 }}
+                    />
+                )}
+            </TouchableOpacity>
+        );
+    };
+
+    const VoteChip = ({ entry, light = false }: { entry: BeatEntry; light?: boolean }) => {
+        const isVoted = votedIds.has(entry.id);
+        const count = voteCounts[entry.id] ?? entry.vote_count;
+        return (
+            <TouchableOpacity
+                onPress={() => handleVote(entry)}
+                activeOpacity={0.7}
+                className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full border ${isVoted ? 'bg-pink-50 border-pink-200' : light ? 'bg-gray-50 border-gray-100' : 'border-primary/30'}`}
+            >
+                <ThumbsUp
+                    size={11}
+                    color={isVoted ? '#f471b7' : light ? '#9ca3af' : '#7d3bed'}
+                    fill={isVoted ? '#f471b7' : 'transparent'}
+                />
+                <Text
+                    className={`text-[10px] font-bold ${isVoted ? 'text-[#f471b7]' : light ? 'text-gray-700' : 'text-primary'}`}
+                >
+                    {count}
+                </Text>
+            </TouchableOpacity>
+        );
+    };
+
     const EmptyRank = ({ flex }: { flex: number }) => <View style={{ flex }} />;
 
     return (
-        <View className="flex-row items-end justify-center gap-3 mb-10 h-[340px]">
+        <View className="flex-row items-end justify-center gap-3 mb-10 h-[360px]">
             {/* Rank 2 (Silver) */}
             {rank2 ? (
                 <View
                     style={[styles.cardShadow]}
-                    className="flex-1 bg-white p-4 rounded-3xl border border-gray-100 items-center justify-end h-[260px] relative overflow-hidden"
+                    className="flex-1 bg-white p-4 rounded-3xl border border-gray-100 items-center justify-end h-[270px] relative overflow-hidden"
                 >
                     <Text className="absolute top-4 right-4 text-3xl font-black text-gray-100 italic font-heading">
                         #2
                     </Text>
+
+                    <View className="absolute top-4 left-4">
+                        <PlayButton entry={rank2} />
+                    </View>
 
                     <View className="w-16 h-16 rounded-full border-[3px] border-gray-300 p-0.5 mb-3">
                         <Image
@@ -40,21 +146,17 @@ export function Podium({ topEntries }: PodiumProps) {
                     </View>
 
                     <Text
-                        className="font-heading text-base font-bold text-gray-900"
+                        className="font-heading text-sm font-bold text-gray-900"
                         numberOfLines={1}
                     >
                         {rank2.display_name || rank2.username}
                     </Text>
                     <Text className="font-heading text-2xl font-black text-gray-600">
-                        {Number(rank2.total_score).toFixed(1)}
+                        {rank2.scoring_status === 'pending'
+                            ? '—'
+                            : Number(rank2.total_score).toFixed(1)}
                     </Text>
-
-                    <View className="mt-3 flex-row items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
-                        <ThumbsUp size={12} color="#f471b7" fill="#f471b7" />
-                        <Text className="text-[10px] font-bold text-gray-700">
-                            {rank2.vote_count}
-                        </Text>
-                    </View>
+                    <VoteChip entry={rank2} light />
                 </View>
             ) : (
                 <EmptyRank flex={1} />
@@ -64,7 +166,7 @@ export function Podium({ topEntries }: PodiumProps) {
             {rank1 ? (
                 <View
                     style={[styles.primaryShadow]}
-                    className="flex-[1.2] bg-white p-5 rounded-3xl border border-primary/20 items-center justify-end h-[320px] relative overflow-hidden z-10"
+                    className="flex-[1.2] bg-white p-5 rounded-3xl border border-primary/20 items-center justify-end h-[330px] relative overflow-hidden z-10"
                 >
                     <LinearGradient
                         colors={['#7d3bed', '#f471b7', '#7d3bed']}
@@ -75,6 +177,10 @@ export function Podium({ topEntries }: PodiumProps) {
                     <Text className="absolute top-4 right-4 text-5xl font-black text-primary/10 italic font-heading">
                         #1
                     </Text>
+
+                    <View className="absolute top-4 left-4">
+                        <PlayButton entry={rank1} size={20} />
+                    </View>
 
                     <View
                         style={styles.avatarGlow}
@@ -93,20 +199,11 @@ export function Podium({ topEntries }: PodiumProps) {
                         {rank1.display_name || rank1.username}
                     </Text>
                     <Text className="font-heading text-4xl font-black text-gray-900 mb-2">
-                        {Number(rank1.total_score).toFixed(1)}
+                        {rank1.scoring_status === 'pending'
+                            ? '—'
+                            : Number(rank1.total_score).toFixed(1)}
                     </Text>
-
-                    <LinearGradient
-                        colors={['#7d3bed', '#f471b7']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        className="mt-2 flex-row items-center gap-1.5 px-5 py-2 rounded-full"
-                    >
-                        <ThumbsUp size={14} color="white" fill="white" />
-                        <Text className="text-white text-[10px] font-black uppercase tracking-widest">
-                            {rank1.vote_count}
-                        </Text>
-                    </LinearGradient>
+                    <VoteChip entry={rank1} />
                 </View>
             ) : (
                 <EmptyRank flex={1.2} />
@@ -116,11 +213,15 @@ export function Podium({ topEntries }: PodiumProps) {
             {rank3 ? (
                 <View
                     style={[styles.cardShadow]}
-                    className="flex-1 bg-white p-4 rounded-3xl border border-gray-100 items-center justify-end h-[240px] relative overflow-hidden"
+                    className="flex-1 bg-white p-4 rounded-3xl border border-gray-100 items-center justify-end h-[250px] relative overflow-hidden"
                 >
                     <Text className="absolute top-4 right-4 text-3xl font-black text-gray-100 italic font-heading">
                         #3
                     </Text>
+
+                    <View className="absolute top-4 left-4">
+                        <PlayButton entry={rank3} />
+                    </View>
 
                     <View className="w-16 h-16 rounded-full border-[3px] border-orange-300 p-0.5 mb-3">
                         <Image
@@ -130,21 +231,17 @@ export function Podium({ topEntries }: PodiumProps) {
                     </View>
 
                     <Text
-                        className="font-heading text-base font-bold text-gray-900"
+                        className="font-heading text-sm font-bold text-gray-900"
                         numberOfLines={1}
                     >
                         {rank3.display_name || rank3.username}
                     </Text>
                     <Text className="font-heading text-2xl font-black text-orange-500">
-                        {Number(rank3.total_score).toFixed(1)}
+                        {rank3.scoring_status === 'pending'
+                            ? '—'
+                            : Number(rank3.total_score).toFixed(1)}
                     </Text>
-
-                    <View className="mt-3 flex-row items-center gap-1.5 px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
-                        <ThumbsUp size={12} color="#f471b7" fill="#f471b7" />
-                        <Text className="text-[10px] font-bold text-gray-700">
-                            {rank3.vote_count}
-                        </Text>
-                    </View>
+                    <VoteChip entry={rank3} light />
                 </View>
             ) : (
                 <EmptyRank flex={1} />
@@ -162,9 +259,7 @@ const styles = StyleSheet.create({
                 shadowOpacity: 0.05,
                 shadowRadius: 10,
             },
-            android: {
-                elevation: 4,
-            },
+            android: { elevation: 4 },
         }),
     },
     primaryShadow: {
@@ -175,9 +270,7 @@ const styles = StyleSheet.create({
                 shadowOpacity: 0.2,
                 shadowRadius: 20,
             },
-            android: {
-                elevation: 10,
-            },
+            android: { elevation: 10 },
         }),
     },
     avatarGlow: {
@@ -188,9 +281,7 @@ const styles = StyleSheet.create({
                 shadowOpacity: 0.4,
                 shadowRadius: 10,
             },
-            android: {
-                elevation: 6,
-            },
+            android: { elevation: 6 },
         }),
     },
 });

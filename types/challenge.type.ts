@@ -41,6 +41,7 @@ export interface BeatEntry {
     created_at: string;
     display_name: string;
     explanation: string;
+    scoring_status?: 'pending' | 'completed' | 'failed';
     expression_score: number;
     normalized_score: number;
     pitch_score: number;
@@ -57,6 +58,7 @@ export interface BeatEntry {
 export interface GetLeaderboardResponse {
     beat_id: string;
     entries: BeatEntry[];
+    has_scored_entries?: boolean;
 }
 
 export interface UserStats {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useGetBeatById } from '@/hooks/useChallengeApi';
@@ -14,6 +14,9 @@ export default function RecordStudioScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { data: beatData, isLoading } = useGetBeatById(id);
     const beat = beatData;
+
+    const [durationMillis, setDurationMillis] = useState(0);
+    const [isRecording, setIsRecording] = useState(false);
 
     return (
         <View className="flex-1 bg-white">
@@ -33,9 +36,17 @@ export default function RecordStudioScreen() {
                     </View>
                 ) : (
                     <>
-                        <HeaderInfo beat={beat} />
+                        <HeaderInfo
+                            beat={beat}
+                            durationMillis={durationMillis}
+                            isRecording={isRecording}
+                        />
                         <WaveformCanvas />
-                        <StudioDashboard beatId={id} />
+                        <StudioDashboard
+                            beat={beat}
+                            onDurationUpdate={setDurationMillis}
+                            onRecordingStateChange={setIsRecording}
+                        />
                         <EffectsBento />
                     </>
                 )}

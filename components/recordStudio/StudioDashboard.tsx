@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import {
     View,
     Text,
@@ -21,25 +21,42 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { challengeApi } from '@/hooks/useChallengeApi';
 import Toast from 'react-native-toast-message';
 import { Audio } from 'expo-av';
+import { useRouter } from 'expo-router';
+import type { Beat } from '@/types/challenge.type';
+import { useAudioStore } from '@/stores/audioStore';
 
 interface StudioDashboardProps {
-    beatId?: string;
+    beat?: Beat;
+    onDurationUpdate?: (durationMillis: number) => void;
+    onRecordingStateChange?: (isRecording: boolean) => void;
 }
 
-export function StudioDashboard({ beatId }: StudioDashboardProps) {
+export const StudioDashboard = memo(function StudioDashboard({
+    beat,
+    onDurationUpdate,
+    onRecordingStateChange,
+}: StudioDashboardProps) {
+    const router = useRouter();
+    const stopEntry = useAudioStore((s) => s.stopEntry);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPreparingRecord, setIsPreparingRecord] = useState(false);
 
     // Recording States
-    const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [recordURI, setRecordURI] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
+
+    // Audio Ref Management to prevent overlaps
+    const backgroundSoundRef = useRef<Audio.Sound | null>(null);
+    const recordingRef = useRef<Audio.Recording | null>(null);
+    const isProcessing = useRef(false);
 
     // Preview playback states
     const [previewSound, setPreviewSound] = useState<Audio.Sound | null>(null);
     const [isPlayingPreview, setIsPlayingPreview] = useState(false);
 
-    // Request permissions on mount
+    // Request permissions on mount; stop any entry preview from leaderboard
     useEffect(() => {
+        stopEntry();
         (async () => {
             const permission = await Audio.requestPermissionsAsync();
             if (permission.status !== 'granted') {
@@ -53,100 +70,185 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
 
         return () => {
             // Cleanup on unmount
-            if (recording) recording.stopAndUnloadAsync();
+            if (recordingRef.current) recordingRef.current.stopAndUnloadAsync();
             if (previewSound) previewSound.unloadAsync();
+            if (backgroundSoundRef.current) backgroundSoundRef.current.unloadAsync();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const startRecording = async () => {
-        try {
-            if (previewSound) {
-                await previewSound.unloadAsync();
-                setPreviewSound(null);
+    const safeUnloadAll = async () => {
+        if (recordingRef.current) {
+            try {
+                await recordingRef.current.stopAndUnloadAsync();
+            } catch {
+                /* ignore */
             }
+            recordingRef.current = null;
+        }
+        if (previewSound) {
+            try {
+                await previewSound.unloadAsync();
+            } catch {
+                /* ignore */
+            }
+            setPreviewSound(null);
+        }
+        if (backgroundSoundRef.current) {
+            try {
+                await backgroundSoundRef.current.unloadAsync();
+            } catch {
+                /* ignore */
+            }
+            backgroundSoundRef.current = null;
+        }
+        setIsPlayingPreview(false);
+    };
+
+    const startRecording = async () => {
+        if (isProcessing.current) return;
+        isProcessing.current = true;
+        setIsPreparingRecord(true);
+
+        try {
+            await safeUnloadAll();
+            setRecordURI(null);
 
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
                 playsInSilentModeIOS: true,
+                playThroughEarpieceAndroid: false,
             });
+
+            // Prepare background beat first if exists
+            let bgSoundInstance: Audio.Sound | null = null;
+            if (beat?.audio_url) {
+                const { sound } = await Audio.Sound.createAsync(
+                    { uri: beat.audio_url },
+                    { shouldPlay: false, isLooping: true },
+                );
+                bgSoundInstance = sound;
+            }
+
+            // check if user interrupted during loading
+            if (!isProcessing.current) {
+                if (bgSoundInstance) await bgSoundInstance.unloadAsync();
+                setIsPreparingRecord(false);
+                return;
+            }
 
             const { recording: newRecording } = await Audio.Recording.createAsync(
                 Audio.RecordingOptionsPresets.HIGH_QUALITY,
+                (status) => {
+                    if (status.isRecording && onDurationUpdate) {
+                        onDurationUpdate(status.durationMillis);
+                    }
+                },
+                100,
             );
 
-            setRecording(newRecording);
+            recordingRef.current = newRecording;
             setIsRecording(true);
-            setRecordURI(null); // Clear previous recording
+            onRecordingStateChange?.(true);
+
+            if (bgSoundInstance) {
+                backgroundSoundRef.current = bgSoundInstance;
+                await bgSoundInstance.playAsync();
+            }
         } catch (err) {
             console.error('Failed to start recording', err);
             Toast.show({ type: 'error', text1: 'Lỗi', text2: 'Không thể khởi động micro.' });
+            await safeUnloadAll();
+            setIsRecording(false);
+            onRecordingStateChange?.(false);
+        } finally {
+            isProcessing.current = false;
+            setIsPreparingRecord(false);
         }
     };
 
     const stopRecording = async () => {
-        if (!recording) return;
+        if (isProcessing.current || !recordingRef.current) return;
+        isProcessing.current = true;
 
         try {
             setIsRecording(false);
-            await recording.stopAndUnloadAsync();
-            const uri = recording.getURI();
+            onRecordingStateChange?.(false);
+
+            // Stop background beat quickly
+            if (backgroundSoundRef.current) {
+                await backgroundSoundRef.current.stopAsync();
+            }
+
+            await recordingRef.current.stopAndUnloadAsync();
+            const uri = recordingRef.current.getURI();
             setRecordURI(uri);
-            setRecording(null);
+            recordingRef.current = null;
+
+            if (backgroundSoundRef.current) {
+                await backgroundSoundRef.current.unloadAsync();
+                backgroundSoundRef.current = null;
+            }
 
             await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
         } catch (err) {
             console.error('Failed to stop recording', err);
+        } finally {
+            isProcessing.current = false;
         }
     };
 
     const togglePreview = async () => {
-        if (!recordURI) return;
+        if (isProcessing.current || !recordURI) return;
+        isProcessing.current = true;
 
         try {
             if (isPlayingPreview && previewSound) {
                 await previewSound.pauseAsync();
                 setIsPlayingPreview(false);
-                return;
-            }
-
-            if (previewSound) {
-                await previewSound.playAsync();
-                setIsPlayingPreview(true);
             } else {
-                const { sound } = await Audio.Sound.createAsync(
-                    { uri: recordURI },
-                    { shouldPlay: true },
-                    (status) => {
-                        if (status.isLoaded && status.didJustFinish) {
-                            setIsPlayingPreview(false);
-                            sound.setPositionAsync(0);
-                        }
-                    },
-                );
-                setPreviewSound(sound);
-                setIsPlayingPreview(true);
+                if (previewSound) {
+                    await previewSound.playAsync();
+                    setIsPlayingPreview(true);
+                } else {
+                    const { sound } = await Audio.Sound.createAsync(
+                        { uri: recordURI },
+                        { shouldPlay: true },
+                        (status) => {
+                            if (status.isLoaded && status.didJustFinish) {
+                                setIsPlayingPreview(false);
+                                sound.setPositionAsync(0);
+                            }
+                        },
+                    );
+                    setPreviewSound(sound);
+                    setIsPlayingPreview(true);
+                }
             }
         } catch (err) {
             console.error('Playback failed', err);
+        } finally {
+            isProcessing.current = false;
         }
     };
 
-    const resetRecording = () => {
-        if (recording) {
-            stopRecording();
+    const resetRecording = async () => {
+        if (isProcessing.current) return;
+        isProcessing.current = true;
+        try {
+            await safeUnloadAll();
+            setRecordURI(null);
+            recordingRef.current = null;
+            setIsRecording(false);
+            onRecordingStateChange?.(false);
+            onDurationUpdate?.(0);
+        } finally {
+            isProcessing.current = false;
         }
-        if (previewSound) {
-            previewSound.unloadAsync();
-        }
-        setRecordURI(null);
-        setRecording(null);
-        setPreviewSound(null);
-        setIsPlayingPreview(false);
-        setIsRecording(false);
     };
 
     const handleSubmit = async () => {
-        if (!beatId) return;
+        if (!beat) return;
         if (!recordURI) {
             Toast.show({
                 type: 'error',
@@ -171,13 +273,19 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
             } as unknown as Blob);
             formData.append('explanation', 'Recorded using Sonic Pulse Studio');
 
-            await challengeApi.submitEntry(beatId, formData);
+            const entry = await challengeApi.submitEntry(beat.id, formData);
             Toast.show({
                 type: 'success',
                 text1: 'Thành công',
                 text2: 'Bài dự thi của bạn đã được gửi.',
             });
             resetRecording();
+
+            // Navigate to result screen with entry data
+            router.push({
+                pathname: '/(challenge)/result',
+                params: { data: JSON.stringify(entry), beatId: beat.id },
+            });
         } catch (error) {
             console.error('Entry submit error:', error);
             Toast.show({
@@ -219,27 +327,33 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
                 </View>
 
                 {/* Main Action Hub */}
-                <View className="flex-row items-center justify-between gap-4 mb-8">
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100"
-                        onPress={recordURI && !isRecording ? togglePreview : resetRecording}
-                    >
-                        {recordURI && !isRecording ? (
-                            isPlayingPreview ? (
-                                <Square size={24} color="#7d3bed" fill="#7d3bed" />
+                <View className="flex-row items-baseline justify-between px-2 mb-10 mt-4">
+                    <View className="items-center gap-2">
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 shadow-sm"
+                            onPress={recordURI && !isRecording ? togglePreview : resetRecording}
+                            disabled={isPreparingRecord}
+                        >
+                            {recordURI && !isRecording ? (
+                                isPlayingPreview ? (
+                                    <Square size={24} color="#7d3bed" fill="#7d3bed" />
+                                ) : (
+                                    <Play
+                                        size={24}
+                                        color="#7d3bed"
+                                        fill="#7d3bed"
+                                        style={{ marginLeft: 3 }}
+                                    />
+                                )
                             ) : (
-                                <Play
-                                    size={24}
-                                    color="#7d3bed"
-                                    fill="#7d3bed"
-                                    style={{ marginLeft: 3 }}
-                                />
-                            )
-                        ) : (
-                            <RotateCcw size={24} color={isRecording ? '#d1d5db' : '#6b7280'} />
-                        )}
-                    </TouchableOpacity>
+                                <RotateCcw size={24} color={isRecording ? '#d1d5db' : '#6b7280'} />
+                            )}
+                        </TouchableOpacity>
+                        <Text className="text-[10px] font-bold font-body uppercase text-gray-500 tracking-wider">
+                            {recordURI && !isRecording ? 'Nghe Lại' : 'Làm mới'}
+                        </Text>
+                    </View>
 
                     <View className="relative flex items-center justify-center">
                         <View
@@ -249,6 +363,7 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
                             activeOpacity={0.9}
                             style={[styles.recordShadow, { borderRadius: 9999 }]}
                             onPress={isRecording ? stopRecording : startRecording}
+                            disabled={isPreparingRecord}
                         >
                             <LinearGradient
                                 colors={
@@ -259,7 +374,9 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
                                 style={{ borderRadius: 9999 }}
                                 className="w-20 h-20 rounded-full flex items-center justify-center z-10"
                             >
-                                {isRecording ? (
+                                {isPreparingRecord ? (
+                                    <ActivityIndicator size={'large'} color="#ffffff" />
+                                ) : isRecording ? (
                                     <View className="w-8 h-8 bg-white rounded-[4px]" />
                                 ) : recordURI ? (
                                     <RotateCcw size={32} color="#ffffff" />
@@ -268,20 +385,36 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
                                 )}
                             </LinearGradient>
                         </TouchableOpacity>
+                        <Text className="text-[10px] font-bold font-body uppercase text-gray-500 tracking-wider absolute -bottom-7">
+                            {isPreparingRecord
+                                ? 'Đang Tải'
+                                : isRecording
+                                  ? 'Dừng Thu'
+                                  : recordURI
+                                    ? 'Thu Lại'
+                                    : 'Thu Âm'}
+                        </Text>
                     </View>
 
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        className={`w-14 h-14 rounded-full flex items-center justify-center border ${recordURI && !isSubmitting ? 'bg-primary/10 border-primary/20' : 'bg-gray-50 border-gray-100'}`}
-                        onPress={handleSubmit}
-                        disabled={isSubmitting || !recordURI}
-                    >
-                        {isSubmitting ? (
-                            <ActivityIndicator color="#7d3bed" />
-                        ) : (
-                            <Check size={28} color={recordURI ? '#7d3bed' : '#d1d5db'} />
-                        )}
-                    </TouchableOpacity>
+                    <View className="items-center gap-2">
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            className={`w-14 h-14 rounded-full flex items-center justify-center border shadow-sm ${recordURI && !isSubmitting ? 'bg-primary/10 border-primary/30' : 'bg-gray-50 border-gray-100'}`}
+                            onPress={handleSubmit}
+                            disabled={isSubmitting || !recordURI}
+                        >
+                            {isSubmitting ? (
+                                <ActivityIndicator color="#7d3bed" />
+                            ) : (
+                                <Check size={28} color={recordURI ? '#7d3bed' : '#d1d5db'} />
+                            )}
+                        </TouchableOpacity>
+                        <Text
+                            className={`text-[10px] font-bold font-body uppercase tracking-wider ${recordURI ? 'text-primary' : 'text-gray-400'}`}
+                        >
+                            Nộp bài
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Secondary Controls */}
@@ -310,7 +443,7 @@ export function StudioDashboard({ beatId }: StudioDashboardProps) {
             </View>
         </View>
     );
-}
+});
 
 const styles = StyleSheet.create({
     cardShadow: {

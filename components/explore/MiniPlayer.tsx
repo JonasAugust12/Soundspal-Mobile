@@ -12,7 +12,10 @@ import { PlayCircle, PauseCircle } from 'lucide-react-native';
 import { useAudioStore } from '@/stores/audioStore';
 
 export function MiniPlayer() {
-    const { currentBeat, isPlaying, isLoading, togglePlay } = useAudioStore();
+    const currentBeat = useAudioStore((state) => state.currentBeat);
+    const isPlaying = useAudioStore((state) => state.isPlaying);
+    const isLoading = useAudioStore((state) => state.isLoading);
+    const togglePlay = useAudioStore((state) => state.togglePlay);
 
     if (!currentBeat) return null;
 

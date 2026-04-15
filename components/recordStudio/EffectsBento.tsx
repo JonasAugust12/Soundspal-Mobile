@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text } from 'react-native';
 import { Wand2, Ear } from 'lucide-react-native';
 
-export function EffectsBento() {
+export const EffectsBento = memo(function EffectsBento() {
     return (
         <View className="px-6 flex-row gap-4">
             <View className="flex-1 bg-gray-50 p-4 rounded-2xl flex-row items-center gap-3 border border-gray-100">
@@ -30,4 +30,4 @@ export function EffectsBento() {
             </View>
         </View>
     );
-}
+});

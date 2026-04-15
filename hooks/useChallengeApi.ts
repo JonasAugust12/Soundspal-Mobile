@@ -30,10 +30,15 @@ export const challengeApi = {
 
     getBeatById: (id: string) => createApiCall<Beat>('GET', `/beats/${id}`)(),
 
-    getLeaderboard: (id: string, limit: number = 20, offset: number = 0) =>
+    getLeaderboard: (
+        id: string,
+        limit: number = 20,
+        offset: number = 0,
+        includeUnscored: boolean = false,
+    ) =>
         createApiCall<GetLeaderboardResponse>(
             'GET',
-            `/beats/${id}/leaderboard?limit=${limit}&offset=${offset}`,
+            `/beats/${id}/leaderboard?limit=${limit}&offset=${offset}&include_unscored=${includeUnscored}`,
         )(),
 
     updateBeat: (id: string, body: Partial<Beat>) =>
@@ -84,12 +89,13 @@ export const useGetLeaderboard = (
     id: string | undefined,
     limit: number = 20,
     offset: number = 0,
+    includeUnscored: boolean = false,
 ) => {
     return useQuery({
-        queryKey: ['beat-leaderboard', id, limit, offset],
+        queryKey: ['beat-leaderboard', id, limit, offset, includeUnscored],
         queryFn: () => {
             if (!id) throw new Error('Beat ID is required');
-            return challengeApi.getLeaderboard(id, limit, offset);
+            return challengeApi.getLeaderboard(id, limit, offset, includeUnscored);
         },
         enabled: !!id,
         staleTime: 30000,

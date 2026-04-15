@@ -1,28 +1,10 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { MoreVertical } from 'lucide-react-native';
+import React, { useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { Play, Square, Clock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useGetLeaderboard } from '@/hooks/useChallengeApi';
+import { useAudioStore } from '@/stores/audioStore';
 import { type BeatEntry } from '@/types/challenge.type';
-
-const TOP_ENTRIES = [
-    {
-        rank: 1,
-        name: 'CYBER_GHOST',
-        score: '98.4 ĐIỂM',
-        votes: '1.2K BÌNH CHỌN',
-        avatar: 'https://images.unsplash.com/photo-1544642899-f0d6e5f6ed6f?w=150&q=80',
-        rankBg: 'bg-primary',
-    },
-    {
-        rank: 2,
-        name: 'LYRICIST_X',
-        score: '94.2 ĐIỂM',
-        votes: '856 BÌNH CHỌN',
-        avatar: 'https://images.unsplash.com/photo-1531384441138-2736e62e0919?w=150&q=80',
-        rankBg: 'bg-gray-400',
-    },
-];
 
 interface TopEntriesProps {
     beatId: string;
@@ -30,8 +12,21 @@ interface TopEntriesProps {
 
 export function TopEntries({ beatId }: TopEntriesProps) {
     const router = useRouter();
-    const { data } = useGetLeaderboard(beatId, 2);
-    const apiEntries = data?.entries || [];
+    // Fetch top 5 including unscored entries
+    const { data } = useGetLeaderboard(beatId, 5, 0, true);
+    const entries = data?.entries || [];
+
+    const playEntry = useAudioStore((s) => s.playEntry);
+    const stopEntry = useAudioStore((s) => s.stopEntry);
+    const currentEntry = useAudioStore((s) => s.currentEntry);
+    const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
+    const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
+
+    useEffect(() => {
+        return () => {
+            stopEntry();
+        };
+    }, [stopEntry]);
 
     return (
         <View className="px-6 pb-6">
@@ -60,56 +55,86 @@ export function TopEntries({ beatId }: TopEntriesProps) {
             </View>
 
             <View className="gap-3">
-                {(apiEntries.length > 0 ? apiEntries : TOP_ENTRIES).map(
-                    (entry: BeatEntry | (typeof TOP_ENTRIES)[number], index: number) => {
-                        const isMock = !('vote_count' in entry);
+                {entries.length === 0 ? (
+                    <View className="bg-gray-50 rounded-2xl p-6 items-center">
+                        <Text className="text-gray-400 font-body text-sm text-center">
+                            Chưa có bài dự thi nào. Hãy là người đầu tiên!
+                        </Text>
+                    </View>
+                ) : (
+                    (entries as BeatEntry[]).map((entry, index) => {
+                        const isPending = entry.scoring_status === 'pending';
+                        const isThisPlaying = currentEntry?.id === entry.id && isEntryPlaying;
+                        const isThisLoading = currentEntry?.id === entry.id && isEntryLoading;
+
                         return (
                             <TouchableOpacity
-                                key={isMock ? entry.rank : entry.id}
+                                key={entry.id}
                                 activeOpacity={0.7}
-                                className="bg-white p-4 rounded-2xl flex-row items-center gap-4 border border-gray-100"
+                                className="bg-white p-4 rounded-2xl flex-row items-center gap-3 border border-gray-100"
                                 style={styles.cardShadow}
+                                onPress={() => playEntry(entry)}
                             >
+                                {/* Rank badge */}
                                 <View className="relative">
-                                    <View className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100">
+                                    <View className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100">
                                         <Image
                                             source={{
-                                                uri: isMock
-                                                    ? entry.avatar
-                                                    : 'https://api.dicebear.com/7.x/avataaars/png?seed=' +
-                                                      entry.username,
+                                                uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.username}`,
                                             }}
                                             className="w-full h-full"
                                         />
                                     </View>
                                     <View
-                                        className={`absolute -top-2 -left-2 ${index === 0 ? 'bg-primary' : 'bg-gray-400'} w-6 h-6 rounded-full flex items-center justify-center border-2 border-white`}
+                                        className={`absolute -top-2 -left-2 ${index === 0 ? 'bg-primary' : index === 1 ? 'bg-gray-400' : 'bg-orange-400'} w-5 h-5 rounded-full flex items-center justify-center border-2 border-white`}
                                     >
-                                        <Text className="text-[10px] text-white font-black font-heading">
+                                        <Text className="text-[9px] text-white font-black font-heading">
                                             {index + 1}
                                         </Text>
                                     </View>
                                 </View>
 
+                                {/* Info */}
                                 <View className="flex-1">
-                                    <Text className="font-heading font-bold text-sm text-gray-900 mb-1">
-                                        {isMock ? entry.name : entry.display_name || entry.username}
+                                    <Text
+                                        className="font-heading font-bold text-sm text-gray-900 mb-0.5"
+                                        numberOfLines={1}
+                                    >
+                                        {entry.display_name || entry.username}
                                     </Text>
-                                    <Text className="text-gray-500 text-[10px] uppercase font-bold tracking-tighter">
-                                        {isMock ? entry.score : `${entry.total_score} ĐIỂM`} •{' '}
-                                        <Text className="text-[#f471b7]">
-                                            🔥{' '}
-                                            {isMock ? entry.votes : `${entry.vote_count} BÌNH CHỌN`}
+                                    {isPending ? (
+                                        <View className="flex-row items-center gap-1">
+                                            <Clock size={9} color="#f59e0b" />
+                                            <Text className="text-[9px] text-amber-500 font-body font-bold uppercase tracking-widest">
+                                                Đang chờ chấm
+                                            </Text>
+                                        </View>
+                                    ) : (
+                                        <Text className="text-gray-400 text-[9px] uppercase font-bold tracking-tighter font-body">
+                                            {Number(entry.total_score).toFixed(1)} điểm • 🔥{' '}
+                                            {entry.vote_count} bình chọn
                                         </Text>
-                                    </Text>
+                                    )}
                                 </View>
 
-                                <TouchableOpacity className="p-2">
-                                    <MoreVertical size={20} color="#9ca3af" />
-                                </TouchableOpacity>
+                                {/* Play indicator */}
+                                <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
+                                    {isThisLoading ? (
+                                        <ActivityIndicator size="small" color="#7d3bed" />
+                                    ) : isThisPlaying ? (
+                                        <Square size={13} color="#7d3bed" fill="#7d3bed" />
+                                    ) : (
+                                        <Play
+                                            size={13}
+                                            color="#7d3bed"
+                                            fill="#7d3bed"
+                                            style={{ marginLeft: 1 }}
+                                        />
+                                    )}
+                                </View>
                             </TouchableOpacity>
                         );
-                    },
+                    })
                 )}
             </View>
         </View>
