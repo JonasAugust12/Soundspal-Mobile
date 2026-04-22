@@ -94,10 +94,8 @@ export const MediaUploadSection = () => {
     const mediaList = mediaData?.media || [];
 
     const handlePickMedia = async (type: 'image' | 'video') => {
-        const mediaType = type === 'image' ? ['images'] : ['videos'];
-
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: mediaType as unknown as ImagePicker.MediaTypeOptions,
+            mediaTypes: type === 'image' ? 'images' : 'videos',
             allowsEditing: false,
             quality: 0.8,
         });

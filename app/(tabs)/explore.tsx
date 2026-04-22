@@ -22,6 +22,7 @@ import {
     Users,
     MapPin,
     BadgeCheck,
+    BookOpen,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSearchUsers } from '@/hooks/useSearchApi';
@@ -316,6 +317,15 @@ export default function ExploreScreen() {
                                 </TouchableOpacity>
                             );
                         })}
+                        {/* Blog Button */}
+                        <TouchableOpacity
+                            onPress={() => router.push('/(blog)')}
+                            style={{ minWidth: 80, height: 44 }}
+                            className="flex-row items-center justify-center gap-2 px-4 rounded-xl bg-gray-100"
+                        >
+                            <BookOpen size={18} color="#7C3AED" />
+                            <Text className="text-sm font-semibold text-gray-700">Blog</Text>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </View>

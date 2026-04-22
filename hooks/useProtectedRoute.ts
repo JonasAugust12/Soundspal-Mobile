@@ -1,13 +1,17 @@
 import { useEffect } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthHydration } from '@/hooks/useAuthHydration';
 
 export function useProtectedRoute() {
     const segments = useSegments();
     const router = useRouter();
     const { isAuthenticated, user } = useAuthStore();
+    const authHydrated = useAuthHydration();
 
     useEffect(() => {
+        if (!authHydrated) return;
+
         const inAuthGroup = segments[0] === '(auth)';
         const inProtectedGroup =
             segments[0] === '(tabs)' ||
@@ -41,5 +45,5 @@ export function useProtectedRoute() {
             router.replace('/(tabs)');
             return;
         }
-    }, [isAuthenticated, user, segments, router]);
+    }, [authHydrated, isAuthenticated, user, segments, router]);
 }
