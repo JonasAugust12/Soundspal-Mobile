@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { BeatCard } from './BeatCard';
 import { BeatCardSkeleton } from './BeatCardSkeleton';
 import { useGetBeats } from '@/hooks/useChallengeApi';
+import { useAudioStore } from '@/stores/audioStore';
+import { type Beat } from '@/types/challenge.type';
 
 const DUMMY_DATA = [
     {
@@ -62,6 +64,7 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
     // construct params block
     const fetchParams = selectedGenre ? { genre: selectedGenre } : {};
     const { data: beatsData, isLoading, isError } = useGetBeats(fetchParams);
+    const playBeat = useAudioStore((state) => state.playBeat);
 
     const formatDuration = (seconds: number) => {
         const m = Math.floor(seconds / 60);
@@ -132,6 +135,7 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
                             params: { id: beat.id },
                         })
                     }
+                    onPlayAudio={() => playBeat(beat as Beat)}
                 />
             ))}
         </View>

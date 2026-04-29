@@ -8,9 +8,10 @@ import { type BeatEntry } from '@/types/challenge.type';
 
 interface TopEntriesProps {
     beatId: string;
+    onEntryPress?: (entry: BeatEntry) => void;
 }
 
-export function TopEntries({ beatId }: TopEntriesProps) {
+export function TopEntries({ beatId, onEntryPress }: TopEntriesProps) {
     const router = useRouter();
     // Fetch top 5 including unscored entries
     const { data } = useGetLeaderboard(beatId, 5, 0, true);
@@ -64,23 +65,34 @@ export function TopEntries({ beatId }: TopEntriesProps) {
                 ) : (
                     (entries as BeatEntry[]).map((entry, index) => {
                         const isPending = entry.scoring_status === 'pending';
+                        const isScored =
+                            entry.scoring_status === 'scored' ||
+                            entry.scoring_status === 'completed';
                         const isThisPlaying = currentEntry?.id === entry.id && isEntryPlaying;
                         const isThisLoading = currentEntry?.id === entry.id && isEntryLoading;
 
                         return (
                             <TouchableOpacity
                                 key={entry.id}
-                                activeOpacity={0.7}
+                                activeOpacity={isScored ? 0.7 : 0.9}
                                 className="bg-white p-4 rounded-2xl flex-row items-center gap-3 border border-gray-100"
                                 style={styles.cardShadow}
-                                onPress={() => playEntry(entry)}
+                                onPress={() => {
+                                    if (isScored && onEntryPress) {
+                                        onEntryPress(entry);
+                                    } else {
+                                        playEntry(entry);
+                                    }
+                                }}
                             >
                                 {/* Rank badge */}
                                 <View className="relative">
                                     <View className="w-11 h-11 rounded-xl overflow-hidden bg-gray-100">
                                         <Image
                                             source={{
-                                                uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.username}`,
+                                                uri:
+                                                    entry.avatar_url ||
+                                                    `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.username}`,
                                             }}
                                             className="w-full h-full"
                                         />
@@ -109,6 +121,13 @@ export function TopEntries({ beatId }: TopEntriesProps) {
                                                 Đang chờ chấm
                                             </Text>
                                         </View>
+                                    ) : entry.scoring_status === 'failed' ? (
+                                        <View className="flex-row items-center gap-1">
+                                            <View className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                                            <Text className="text-[9px] text-red-500 font-body font-bold uppercase tracking-widest">
+                                                Chấm điểm lỗi
+                                            </Text>
+                                        </View>
                                     ) : (
                                         <Text className="text-gray-400 text-[9px] uppercase font-bold tracking-tighter font-body">
                                             {Number(entry.total_score).toFixed(1)} điểm • 🔥{' '}
@@ -118,7 +137,10 @@ export function TopEntries({ beatId }: TopEntriesProps) {
                                 </View>
 
                                 {/* Play indicator */}
-                                <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
+                                <TouchableOpacity
+                                    onPress={() => playEntry(entry)}
+                                    className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center"
+                                >
                                     {isThisLoading ? (
                                         <ActivityIndicator size="small" color="#7d3bed" />
                                     ) : isThisPlaying ? (
@@ -131,7 +153,7 @@ export function TopEntries({ beatId }: TopEntriesProps) {
                                             style={{ marginLeft: 1 }}
                                         />
                                     )}
-                                </View>
+                                </TouchableOpacity>
                             </TouchableOpacity>
                         );
                     })

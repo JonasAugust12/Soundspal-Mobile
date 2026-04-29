@@ -41,7 +41,7 @@ export interface BeatEntry {
     created_at: string;
     display_name: string;
     explanation: string;
-    scoring_status?: 'pending' | 'completed' | 'failed';
+    scoring_status?: 'pending' | 'completed' | 'failed' | 'scored';
     expression_score: number;
     normalized_score: number;
     pitch_score: number;
@@ -52,6 +52,7 @@ export interface BeatEntry {
     total_score: number;
     user_id: string;
     username: string;
+    avatar_url?: string;
     vote_count: number;
 }
 

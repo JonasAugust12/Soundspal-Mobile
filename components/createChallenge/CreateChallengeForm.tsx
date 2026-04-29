@@ -205,12 +205,14 @@ export function CreateChallengeForm() {
                 disabled={isSubmitting}
                 onPress={handleSubmit}
                 className="w-full relative shadow-md shadow-primary/30 rounded-full"
+                style={{ borderRadius: 100 }}
             >
                 <LinearGradient
                     colors={['#7d3bed', '#f471b7']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     className="w-full py-4 rounded-full flex-row items-center justify-center gap-3"
+                    style={{ borderRadius: 100, overflow: 'hidden' }}
                 >
                     {isSubmitting ? (
                         <ActivityIndicator color="white" />

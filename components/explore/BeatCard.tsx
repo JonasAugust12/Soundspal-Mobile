@@ -13,6 +13,7 @@ export type BeatCardProps = {
     isHot?: boolean;
     tagColorType?: 'primary' | 'secondary' | 'tertiary';
     onPress?: () => void;
+    onPlayAudio?: () => void;
 };
 
 export function BeatCard({
@@ -26,6 +27,7 @@ export function BeatCard({
     isHot,
     tagColorType = 'primary',
     onPress,
+    onPlayAudio,
 }: BeatCardProps) {
     const getTagColorInfo = () => {
         switch (tagColorType) {
@@ -55,7 +57,11 @@ export function BeatCard({
         >
             <View className="flex-row gap-5">
                 {/* Artwork */}
-                <View className="w-32 h-32 rounded-xl overflow-hidden relative">
+                <TouchableOpacity
+                    className="w-32 h-32 rounded-xl overflow-hidden relative"
+                    activeOpacity={0.9}
+                    onPress={onPlayAudio}
+                >
                     <Image
                         source={{ uri: imageUrl }}
                         className="w-full h-full"
@@ -65,7 +71,7 @@ export function BeatCard({
                     <View className="absolute inset-0 bg-black/20 items-center justify-center">
                         <PlayCircle size={40} color="#ffffff" fill="transparent" opacity={0.9} />
                     </View>
-                </View>
+                </TouchableOpacity>
 
                 {/* Info Container */}
                 <View className="flex-1 justify-between py-1">

@@ -217,7 +217,7 @@ export const StudioDashboard = memo(function StudioDashboard({
                         (status) => {
                             if (status.isLoaded && status.didJustFinish) {
                                 setIsPlayingPreview(false);
-                                sound.setPositionAsync(0);
+                                sound.stopAsync();
                             }
                         },
                     );
@@ -327,7 +327,7 @@ export const StudioDashboard = memo(function StudioDashboard({
                 </View>
 
                 {/* Main Action Hub */}
-                <View className="flex-row items-baseline justify-between px-2 mb-10 mt-4">
+                <View className="flex-row items-center justify-between px-2 mb-6 mt-4">
                     <View className="items-center gap-2">
                         <TouchableOpacity
                             activeOpacity={0.7}
@@ -355,37 +355,41 @@ export const StudioDashboard = memo(function StudioDashboard({
                         </Text>
                     </View>
 
-                    <View className="relative flex items-center justify-center">
-                        <View
-                            className={`absolute w-24 h-24 rounded-full ${isRecording ? 'bg-red-500/30' : 'bg-primary/20'}`}
-                        />
-                        <TouchableOpacity
-                            activeOpacity={0.9}
-                            style={[styles.recordShadow, { borderRadius: 9999 }]}
-                            onPress={isRecording ? stopRecording : startRecording}
-                            disabled={isPreparingRecord}
-                        >
-                            <LinearGradient
-                                colors={
-                                    isRecording ? ['#ef4444', '#dc2626'] : ['#7d3bed', '#f471b7']
-                                }
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={{ borderRadius: 9999 }}
-                                className="w-20 h-20 rounded-full flex items-center justify-center z-10"
+                    <View className="flex items-center justify-center gap-2">
+                        <View className="relative flex items-center justify-center">
+                            <View
+                                className={`absolute w-24 h-24 rounded-full ${isRecording ? 'bg-red-500/30' : 'bg-primary/20'}`}
+                            />
+                            <TouchableOpacity
+                                activeOpacity={0.9}
+                                style={[styles.recordShadow, { borderRadius: 9999 }]}
+                                onPress={isRecording ? stopRecording : startRecording}
+                                disabled={isPreparingRecord}
                             >
-                                {isPreparingRecord ? (
-                                    <ActivityIndicator size={'large'} color="#ffffff" />
-                                ) : isRecording ? (
-                                    <View className="w-8 h-8 bg-white rounded-[4px]" />
-                                ) : recordURI ? (
-                                    <RotateCcw size={32} color="#ffffff" />
-                                ) : (
-                                    <Mic size={32} color="white" />
-                                )}
-                            </LinearGradient>
-                        </TouchableOpacity>
-                        <Text className="text-[10px] font-bold font-body uppercase text-gray-500 tracking-wider absolute -bottom-7">
+                                <LinearGradient
+                                    colors={
+                                        isRecording
+                                            ? ['#ef4444', '#dc2626']
+                                            : ['#7d3bed', '#f471b7']
+                                    }
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={{ borderRadius: 9999 }}
+                                    className="w-20 h-20 rounded-full flex items-center justify-center z-10"
+                                >
+                                    {isPreparingRecord ? (
+                                        <ActivityIndicator size={'large'} color="#ffffff" />
+                                    ) : isRecording ? (
+                                        <View className="w-8 h-8 bg-white rounded-[4px]" />
+                                    ) : recordURI ? (
+                                        <RotateCcw size={32} color="#ffffff" />
+                                    ) : (
+                                        <Mic size={32} color="white" />
+                                    )}
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
+                        <Text className="text-[10px] font-bold font-body uppercase text-gray-500 tracking-wider">
                             {isPreparingRecord
                                 ? 'Đang Tải'
                                 : isRecording

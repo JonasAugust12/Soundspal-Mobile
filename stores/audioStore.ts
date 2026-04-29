@@ -83,8 +83,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
                         });
 
                         if (status.didJustFinish) {
+                            sound.stopAsync();
                             set({ isPlaying: false, progress: 0 });
-                            sound.setPositionAsync(0);
                         }
                     }
                 },
@@ -181,8 +181,8 @@ export const useAudioStore = create<AudioState>((set, get) => ({
                 { shouldPlay: true },
                 (status) => {
                     if (status.isLoaded && status.didJustFinish) {
+                        sound.stopAsync();
                         set({ isEntryPlaying: false });
-                        sound.setPositionAsync(0);
                     }
                 },
             );

@@ -17,9 +17,10 @@ import Toast from 'react-native-toast-message';
 
 interface PodiumProps {
     topEntries: BeatEntry[];
+    onEntryPress: (entry: BeatEntry) => void;
 }
 
-export function Podium({ topEntries }: PodiumProps) {
+export function Podium({ topEntries, onEntryPress }: PodiumProps) {
     const rank1 = topEntries[0];
     const rank2 = topEntries[1];
     const rank3 = topEntries[2];
@@ -67,9 +68,10 @@ export function Podium({ topEntries }: PodiumProps) {
     };
 
     const getAvatar = (entry?: BeatEntry) =>
-        entry?.id
+        entry?.avatar_url ||
+        (entry?.username
             ? `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.username}`
-            : 'https://i.pravatar.cc/150';
+            : 'https://i.pravatar.cc/150');
 
     const PlayButton = ({ entry, size = 18 }: { entry: BeatEntry; size?: number }) => {
         const isThis = currentEntry?.id === entry.id;
@@ -126,7 +128,17 @@ export function Podium({ topEntries }: PodiumProps) {
         <View className="flex-row items-end justify-center gap-3 mb-10 h-[360px]">
             {/* Rank 2 (Silver) */}
             {rank2 ? (
-                <View
+                <TouchableOpacity
+                    activeOpacity={
+                        rank2.scoring_status === 'scored' || rank2.scoring_status === 'completed'
+                            ? 0.7
+                            : 1
+                    }
+                    onPress={() =>
+                        (rank2.scoring_status === 'scored' ||
+                            rank2.scoring_status === 'completed') &&
+                        onEntryPress(rank2)
+                    }
                     style={[styles.cardShadow]}
                     className="flex-1 bg-white p-4 rounded-3xl border border-gray-100 items-center justify-end h-[270px] relative overflow-hidden"
                 >
@@ -151,20 +163,32 @@ export function Podium({ topEntries }: PodiumProps) {
                     >
                         {rank2.display_name || rank2.username}
                     </Text>
-                    <Text className="font-heading text-2xl font-black text-gray-600">
-                        {rank2.scoring_status === 'pending'
+                    <Text
+                        className={`font-heading text-2xl font-black ${rank2.scoring_status === 'failed' ? 'text-red-400' : 'text-gray-600'}`}
+                    >
+                        {rank2.scoring_status === 'pending' || rank2.scoring_status === 'failed'
                             ? '—'
                             : Number(rank2.total_score).toFixed(1)}
                     </Text>
                     <VoteChip entry={rank2} light />
-                </View>
+                </TouchableOpacity>
             ) : (
                 <EmptyRank flex={1} />
             )}
 
             {/* Rank 1 (Gold/Primary) */}
             {rank1 ? (
-                <View
+                <TouchableOpacity
+                    activeOpacity={
+                        rank1.scoring_status === 'scored' || rank1.scoring_status === 'completed'
+                            ? 0.7
+                            : 1
+                    }
+                    onPress={() =>
+                        (rank1.scoring_status === 'scored' ||
+                            rank1.scoring_status === 'completed') &&
+                        onEntryPress(rank1)
+                    }
                     style={[styles.primaryShadow]}
                     className="flex-[1.2] bg-white p-5 rounded-3xl border border-primary/20 items-center justify-end h-[330px] relative overflow-hidden z-10"
                 >
@@ -198,20 +222,32 @@ export function Podium({ topEntries }: PodiumProps) {
                     >
                         {rank1.display_name || rank1.username}
                     </Text>
-                    <Text className="font-heading text-4xl font-black text-gray-900 mb-2">
-                        {rank1.scoring_status === 'pending'
+                    <Text
+                        className={`font-heading text-4xl font-black mb-2 ${rank1.scoring_status === 'failed' ? 'text-red-400' : 'text-gray-900'}`}
+                    >
+                        {rank1.scoring_status === 'pending' || rank1.scoring_status === 'failed'
                             ? '—'
                             : Number(rank1.total_score).toFixed(1)}
                     </Text>
                     <VoteChip entry={rank1} />
-                </View>
+                </TouchableOpacity>
             ) : (
                 <EmptyRank flex={1.2} />
             )}
 
             {/* Rank 3 (Bronze) */}
             {rank3 ? (
-                <View
+                <TouchableOpacity
+                    activeOpacity={
+                        rank3.scoring_status === 'scored' || rank3.scoring_status === 'completed'
+                            ? 0.7
+                            : 1
+                    }
+                    onPress={() =>
+                        (rank3.scoring_status === 'scored' ||
+                            rank3.scoring_status === 'completed') &&
+                        onEntryPress(rank3)
+                    }
                     style={[styles.cardShadow]}
                     className="flex-1 bg-white p-4 rounded-3xl border border-gray-100 items-center justify-end h-[250px] relative overflow-hidden"
                 >
@@ -236,13 +272,15 @@ export function Podium({ topEntries }: PodiumProps) {
                     >
                         {rank3.display_name || rank3.username}
                     </Text>
-                    <Text className="font-heading text-2xl font-black text-orange-500">
-                        {rank3.scoring_status === 'pending'
+                    <Text
+                        className={`font-heading text-2xl font-black ${rank3.scoring_status === 'failed' ? 'text-red-400' : 'text-orange-500'}`}
+                    >
+                        {rank3.scoring_status === 'pending' || rank3.scoring_status === 'failed'
                             ? '—'
                             : Number(rank3.total_score).toFixed(1)}
                     </Text>
                     <VoteChip entry={rank3} light />
-                </View>
+                </TouchableOpacity>
             ) : (
                 <EmptyRank flex={1} />
             )}

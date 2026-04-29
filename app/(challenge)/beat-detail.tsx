@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StatusBar } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { HeroSection, InfoCard, TopEntries } from '@/components/beatDetail';
 import { CommonHeader } from '@/components/common';
+import { ScoreDetailModal } from '@/components/leaderboard';
 import { useGetBeatById } from '@/hooks/useChallengeApi';
+import { type BeatEntry } from '@/types/challenge.type';
 
 export default function BeatDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { data: beatData, isLoading } = useGetBeatById(id);
+    const [selectedEntry, setSelectedEntry] = useState<BeatEntry | null>(null);
     const beat = beatData;
 
     return (
@@ -23,8 +26,14 @@ export default function BeatDetailScreen() {
             >
                 <HeroSection beat={beat} />
                 <InfoCard beat={beat} isLoading={isLoading} />
-                <TopEntries beatId={id || ''} />
+                <TopEntries beatId={id || ''} onEntryPress={setSelectedEntry} />
             </ScrollView>
+
+            <ScoreDetailModal
+                visible={!!selectedEntry}
+                entry={selectedEntry}
+                onClose={() => setSelectedEntry(null)}
+            />
         </View>
     );
 }

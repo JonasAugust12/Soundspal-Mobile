@@ -17,9 +17,10 @@ import { useState } from 'react';
 
 interface RankListProps {
     remainingEntries: BeatEntry[];
+    onEntryPress: (entry: BeatEntry) => void;
 }
 
-export function RankList({ remainingEntries }: RankListProps) {
+export function RankList({ remainingEntries, onEntryPress }: RankListProps) {
     const playEntry = useAudioStore((s) => s.playEntry);
     const stopEntry = useAudioStore((s) => s.stopEntry);
     const currentEntry = useAudioStore((s) => s.currentEntry);
@@ -66,23 +67,28 @@ export function RankList({ remainingEntries }: RankListProps) {
     if (!remainingEntries || remainingEntries.length === 0) return null;
 
     const getAvatar = (item: BeatEntry) =>
-        `https://api.dicebear.com/7.x/avataaars/png?seed=${item.username}`;
+        item.avatar_url || `https://api.dicebear.com/7.x/avataaars/png?seed=${item.username}`;
 
     return (
         <View className="gap-3">
             {remainingEntries.map((item, index) => {
                 const rank = index + 4;
                 const isPending = item.scoring_status === 'pending';
+                const isFailed = item.scoring_status === 'failed';
+                const isScored =
+                    item.scoring_status === 'scored' || item.scoring_status === 'completed';
                 const isVoted = votedIds.has(item.id);
                 const voteCount = voteCounts[item.id] ?? item.vote_count;
                 const isThisPlaying = currentEntry?.id === item.id && isEntryPlaying;
                 const isThisLoading = currentEntry?.id === item.id && isEntryLoading;
 
                 return (
-                    <View
+                    <TouchableOpacity
                         key={item.id}
+                        activeOpacity={isScored ? 0.7 : 1}
+                        onPress={() => isScored && onEntryPress(item)}
                         style={styles.card}
-                        className={`p-4 rounded-2xl border-l-[3px] bg-white ${isPending ? 'border-l-amber-400' : 'border-l-primary/40'}`}
+                        className={`p-4 rounded-2xl border-l-[3px] bg-white ${isPending ? 'border-l-amber-400' : isFailed ? 'border-l-red-400' : 'border-l-primary/40'}`}
                     >
                         <View className="flex-row items-center justify-between">
                             <View className="flex-row items-center gap-3 flex-1">
@@ -109,6 +115,13 @@ export function RankList({ remainingEntries }: RankListProps) {
                                                 Đang chờ chấm
                                             </Text>
                                         </View>
+                                    ) : isFailed ? (
+                                        <View className="flex-row items-center gap-1 mt-0.5">
+                                            <View className="w-2 h-2 rounded-full bg-red-500" />
+                                            <Text className="text-[9px] text-red-500 font-body font-bold uppercase tracking-widest">
+                                                Chấm điểm lỗi
+                                            </Text>
+                                        </View>
                                     ) : (
                                         <Text className="text-[9px] text-gray-400 font-body uppercase tracking-widest">
                                             KHỚP {Number(item.rhythm_score).toFixed(0)}%
@@ -119,8 +132,10 @@ export function RankList({ remainingEntries }: RankListProps) {
 
                             <View className="flex-row items-center gap-2">
                                 <View className="items-end min-w-[40px]">
-                                    {isPending ? (
-                                        <Text className="font-heading font-black text-lg text-amber-300">
+                                    {isPending || isFailed ? (
+                                        <Text
+                                            className={`font-heading font-black text-lg ${isPending ? 'text-amber-300' : 'text-red-300'}`}
+                                        >
                                             —
                                         </Text>
                                     ) : (
@@ -174,7 +189,7 @@ export function RankList({ remainingEntries }: RankListProps) {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                    </View>
+                    </TouchableOpacity>
                 );
             })}
         </View>
