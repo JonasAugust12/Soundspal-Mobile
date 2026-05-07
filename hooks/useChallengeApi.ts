@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createApiCall } from '@/lib/apiClient';
 import type {
     GetBeatsResponse,
@@ -7,6 +7,10 @@ import type {
     BeatEntry,
     GetLeaderboardResponse,
     UserStats,
+    GetMyBeatsResponse,
+    GetMyBeatsParams,
+    GetMyEntriesResponse,
+    GetMyEntriesParams,
 } from '@/types/challenge.type';
 
 // API Calls
@@ -61,6 +65,27 @@ export const challengeApi = {
     getUserStats: (userId: string) => createApiCall<UserStats>('GET', `/beats/stats/${userId}`)(),
 
     createBeat: (formData: FormData) => createApiCall<Beat, FormData>('POST', '/beats')(formData),
+
+    getMyBeats: (params: GetMyBeatsParams = {}) => {
+        const queryParts: string[] = [];
+        if (params.page !== undefined) queryParts.push(`page=${params.page}`);
+        if (params.page_size !== undefined) queryParts.push(`page_size=${params.page_size}`);
+        if (params.genre) queryParts.push(`genre=${encodeURIComponent(params.genre)}`);
+        const qs = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
+        return createApiCall<GetMyBeatsResponse>('GET', `/beats/my${qs}`)();
+    },
+
+    getMyEntries: (params: GetMyEntriesParams = {}) => {
+        const queryParts: string[] = [];
+        if (params.page !== undefined) queryParts.push(`page=${params.page}`);
+        if (params.page_size !== undefined) queryParts.push(`page_size=${params.page_size}`);
+        if (params.beat_id) queryParts.push(`beat_id=${params.beat_id}`);
+        if (params.scoring_status) queryParts.push(`scoring_status=${params.scoring_status}`);
+        const qs = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
+        return createApiCall<GetMyEntriesResponse>('GET', `/beats/entries/my${qs}`)();
+    },
+
+    deleteEntry: (entryId: string) => createApiCall<void>('DELETE', `/beats/entries/${entryId}`)(),
 };
 
 // Custom Hooks
@@ -99,6 +124,43 @@ export const useGetLeaderboard = (
         },
         enabled: !!id,
         staleTime: 30000,
+    });
+};
+
+export const useGetMyBeats = (params: GetMyBeatsParams = {}) => {
+    return useQuery({
+        queryKey: ['my-beats', params],
+        queryFn: () => challengeApi.getMyBeats(params),
+        staleTime: 30000,
+    });
+};
+
+export const useGetMyEntries = (params: GetMyEntriesParams = {}) => {
+    return useQuery({
+        queryKey: ['my-entries', params],
+        queryFn: () => challengeApi.getMyEntries(params),
+        staleTime: 30000,
+    });
+};
+
+export const useDeleteBeat = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => challengeApi.deleteBeat(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['my-beats'] });
+            queryClient.invalidateQueries({ queryKey: ['beats'] });
+        },
+    });
+};
+
+export const useDeleteEntry = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (entryId: string) => challengeApi.deleteEntry(entryId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['my-entries'] });
+        },
     });
 };
 

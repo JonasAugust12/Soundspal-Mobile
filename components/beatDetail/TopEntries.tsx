@@ -1,17 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { Play, Square, Clock } from 'lucide-react-native';
+import { Play, Square, Clock, Trash2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useGetLeaderboard } from '@/hooks/useChallengeApi';
+import { useGetLeaderboard, useDeleteEntry } from '@/hooks/useChallengeApi';
 import { useAudioStore } from '@/stores/audioStore';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { type BeatEntry } from '@/types/challenge.type';
 
 interface TopEntriesProps {
     beatId: string;
+    currentUserId?: string;
     onEntryPress?: (entry: BeatEntry) => void;
 }
 
-export function TopEntries({ beatId, onEntryPress }: TopEntriesProps) {
+export function TopEntries({ beatId, currentUserId, onEntryPress }: TopEntriesProps) {
     const router = useRouter();
     // Fetch top 5 including unscored entries
     const { data } = useGetLeaderboard(beatId, 5, 0, true);
@@ -23,11 +25,23 @@ export function TopEntries({ beatId, onEntryPress }: TopEntriesProps) {
     const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
     const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
 
+    const deleteEntryMutation = useDeleteEntry();
+    const [confirmTarget, setConfirmTarget] = useState<BeatEntry | null>(null);
+
     useEffect(() => {
         return () => {
             stopEntry();
         };
     }, [stopEntry]);
+
+    const handleDeleteConfirm = async () => {
+        if (!confirmTarget) return;
+        try {
+            await deleteEntryMutation.mutateAsync(confirmTarget.id);
+        } finally {
+            setConfirmTarget(null);
+        }
+    };
 
     return (
         <View className="px-6 pb-6">
@@ -70,6 +84,7 @@ export function TopEntries({ beatId, onEntryPress }: TopEntriesProps) {
                             entry.scoring_status === 'completed';
                         const isThisPlaying = currentEntry?.id === entry.id && isEntryPlaying;
                         const isThisLoading = currentEntry?.id === entry.id && isEntryLoading;
+                        const isOwner = !!currentUserId && entry.user_id === currentUserId;
 
                         return (
                             <TouchableOpacity
@@ -136,29 +151,69 @@ export function TopEntries({ beatId, onEntryPress }: TopEntriesProps) {
                                     )}
                                 </View>
 
-                                {/* Play indicator */}
-                                <TouchableOpacity
-                                    onPress={() => playEntry(entry)}
-                                    className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center"
-                                >
-                                    {isThisLoading ? (
-                                        <ActivityIndicator size="small" color="#7d3bed" />
-                                    ) : isThisPlaying ? (
-                                        <Square size={13} color="#7d3bed" fill="#7d3bed" />
-                                    ) : (
-                                        <Play
-                                            size={13}
-                                            color="#7d3bed"
-                                            fill="#7d3bed"
-                                            style={{ marginLeft: 1 }}
-                                        />
+                                {/* Action buttons */}
+                                <View className="flex-row items-center gap-2">
+                                    {isOwner && (
+                                        <TouchableOpacity
+                                            onPress={(e) => {
+                                                e.stopPropagation?.();
+                                                setConfirmTarget(entry);
+                                            }}
+                                            style={{
+                                                width: 32,
+                                                height: 32,
+                                                borderRadius: 10,
+                                                backgroundColor: '#fff',
+                                                borderWidth: 1,
+                                                borderColor: '#fee2e2',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                shadowColor: '#000',
+                                                shadowOffset: { width: 0, height: 1 },
+                                                shadowOpacity: 0.05,
+                                                shadowRadius: 2,
+                                                elevation: 1,
+                                            }}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Trash2 size={14} color="#F43F5E" />
+                                        </TouchableOpacity>
                                     )}
-                                </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => playEntry(entry)}
+                                        className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center"
+                                    >
+                                        {isThisLoading ? (
+                                            <ActivityIndicator size="small" color="#7d3bed" />
+                                        ) : isThisPlaying ? (
+                                            <Square size={13} color="#7d3bed" fill="#7d3bed" />
+                                        ) : (
+                                            <Play
+                                                size={13}
+                                                color="#7d3bed"
+                                                fill="#7d3bed"
+                                                style={{ marginLeft: 1 }}
+                                            />
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
                             </TouchableOpacity>
                         );
                     })
                 )}
             </View>
+
+            <ConfirmModal
+                visible={!!confirmTarget}
+                title="Xóa entry"
+                message="Bạn có chắc muốn xóa entry này không? Hành động này không thể hoàn tác."
+                confirmText="Xóa"
+                cancelText="Hủy"
+                isDestructive
+                isLoading={deleteEntryMutation.isPending}
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setConfirmTarget(null)}
+            />
         </View>
     );
 }

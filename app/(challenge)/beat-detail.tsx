@@ -5,12 +5,14 @@ import { HeroSection, InfoCard, TopEntries } from '@/components/beatDetail';
 import { CommonHeader } from '@/components/common';
 import { ScoreDetailModal } from '@/components/leaderboard';
 import { useGetBeatById } from '@/hooks/useChallengeApi';
+import { useAuthStore } from '@/stores/authStore';
 import { type BeatEntry } from '@/types/challenge.type';
 
 export default function BeatDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { data: beatData, isLoading } = useGetBeatById(id);
     const [selectedEntry, setSelectedEntry] = useState<BeatEntry | null>(null);
+    const { user } = useAuthStore();
     const beat = beatData;
 
     return (
@@ -26,7 +28,11 @@ export default function BeatDetailScreen() {
             >
                 <HeroSection beat={beat} />
                 <InfoCard beat={beat} isLoading={isLoading} />
-                <TopEntries beatId={id || ''} onEntryPress={setSelectedEntry} />
+                <TopEntries
+                    beatId={id || ''}
+                    currentUserId={user?.id}
+                    onEntryPress={setSelectedEntry}
+                />
             </ScrollView>
 
             <ScoreDetailModal

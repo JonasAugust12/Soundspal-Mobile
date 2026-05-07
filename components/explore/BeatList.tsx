@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { BeatCard } from './BeatCard';
 import { BeatCardSkeleton } from './BeatCardSkeleton';
-import { useGetBeats } from '@/hooks/useChallengeApi';
+import { useGetBeats, useDeleteBeat } from '@/hooks/useChallengeApi';
 import { useAudioStore } from '@/stores/audioStore';
+import { useAuthStore } from '@/stores/authStore';
+import { ConfirmModal } from '@/components/common/ConfirmModal';
 import { type Beat } from '@/types/challenge.type';
 
 const DUMMY_DATA = [
@@ -60,16 +62,28 @@ const DUMMY_DATA = [
 
 export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
     const router = useRouter();
+    const { user } = useAuthStore();
 
-    // construct params block
     const fetchParams = selectedGenre ? { genre: selectedGenre } : {};
     const { data: beatsData, isLoading, isError } = useGetBeats(fetchParams);
     const playBeat = useAudioStore((state) => state.playBeat);
+    const deleteBeatMutation = useDeleteBeat();
+
+    const [confirmTarget, setConfirmTarget] = useState<Beat | null>(null);
 
     const formatDuration = (seconds: number) => {
         const m = Math.floor(seconds / 60);
         const s = Math.floor(seconds % 60);
         return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!confirmTarget) return;
+        try {
+            await deleteBeatMutation.mutateAsync(confirmTarget.id);
+        } finally {
+            setConfirmTarget(null);
+        }
     };
 
     if (isLoading) {
@@ -106,6 +120,12 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
                                 params: { id: beat.id },
                             })
                         }
+                        onRecord={() =>
+                            router.push({
+                                pathname: '/(challenge)/record',
+                                params: { id: beat.id },
+                            })
+                        }
                     />
                 ))}
             </View>
@@ -113,31 +133,56 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
     }
 
     return (
-        <View className="mb-24">
-            {beats.map((beat) => (
-                <BeatCard
-                    key={beat.id}
-                    title={beat.title}
-                    producer={beat.creator_username || 'Unknown'}
-                    bpm={beat.bpm || 120}
-                    duration={formatDuration(beat.duration_seconds || 0)}
-                    genre={beat.genre || 'Beat'}
-                    entries={beat.entry_count?.toString() || '0'}
-                    imageUrl={
-                        beat.cover_image_url ||
-                        'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80'
-                    }
-                    isHot={(beat.entry_count || 0) > 50}
-                    tagColorType="primary"
-                    onPress={() =>
-                        router.push({
-                            pathname: '/(challenge)/beat-detail',
-                            params: { id: beat.id },
-                        })
-                    }
-                    onPlayAudio={() => playBeat(beat as Beat)}
-                />
-            ))}
-        </View>
+        <>
+            <View className="mb-24">
+                {beats.map((beat) => {
+                    const isOwner = !!user?.id && beat.creator_id === user.id;
+                    return (
+                        <BeatCard
+                            key={beat.id}
+                            title={beat.title}
+                            producer={beat.creator_username || 'Unknown'}
+                            bpm={beat.bpm || 120}
+                            duration={formatDuration(beat.duration_seconds || 0)}
+                            genre={beat.genre || 'Beat'}
+                            entries={beat.entry_count?.toString() || '0'}
+                            imageUrl={
+                                beat.cover_image_url ||
+                                'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=400&q=80'
+                            }
+                            isHot={(beat.entry_count || 0) > 50}
+                            tagColorType="primary"
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/(challenge)/beat-detail',
+                                    params: { id: beat.id },
+                                })
+                            }
+                            onPlayAudio={() => playBeat(beat as Beat)}
+                            onRecord={() =>
+                                router.push({
+                                    pathname: '/(challenge)/record',
+                                    params: { id: beat.id },
+                                })
+                            }
+                            showDelete={isOwner}
+                            onDelete={() => setConfirmTarget(beat)}
+                        />
+                    );
+                })}
+            </View>
+
+            <ConfirmModal
+                visible={!!confirmTarget}
+                title="Xóa beat"
+                message={`Bạn có chắc muốn xóa beat "${confirmTarget?.title}"? Hành động này không thể hoàn tác.`}
+                confirmText="Xóa"
+                cancelText="Hủy"
+                isDestructive
+                isLoading={deleteBeatMutation.isPending}
+                onConfirm={handleDeleteConfirm}
+                onCancel={() => setConfirmTarget(null)}
+            />
+        </>
     );
 }

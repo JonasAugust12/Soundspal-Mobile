@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { PlayCircle, User, Activity, Clock, PlusCircle } from 'lucide-react-native';
+import { PlayCircle, User, Activity, Clock, Plus, Trash2 } from 'lucide-react-native';
 
 export type BeatCardProps = {
     title: string;
@@ -14,6 +14,9 @@ export type BeatCardProps = {
     tagColorType?: 'primary' | 'secondary' | 'tertiary';
     onPress?: () => void;
     onPlayAudio?: () => void;
+    onRecord?: () => void;
+    onDelete?: () => void;
+    showDelete?: boolean;
 };
 
 export function BeatCard({
@@ -28,6 +31,9 @@ export function BeatCard({
     tagColorType = 'primary',
     onPress,
     onPlayAudio,
+    onRecord,
+    onDelete,
+    showDelete = false,
 }: BeatCardProps) {
     const getTagColorInfo = () => {
         switch (tagColorType) {
@@ -129,13 +135,62 @@ export function BeatCard({
                         </Text>
                     </View>
                     <Text className="text-gray-500 text-xs font-body">
-                        <Text className="text-gray-900 font-bold">{entries}</Text> Lượt nghe
+                        <Text className="text-gray-900 font-bold">{entries}</Text> Lượt tham gia
                     </Text>
                 </View>
 
-                <TouchableOpacity>
-                    <PlusCircle size={32} color="#7d3bed" />
-                </TouchableOpacity>
+                <View className="flex-row items-center gap-3">
+                    {showDelete && onDelete && (
+                        <TouchableOpacity
+                            onPress={(e) => {
+                                e.stopPropagation?.();
+                                onDelete();
+                            }}
+                            activeOpacity={0.7}
+                            style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 10,
+                                backgroundColor: '#fff',
+                                borderWidth: 1,
+                                borderColor: '#fee2e2',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.05,
+                                shadowRadius: 2,
+                                elevation: 1,
+                            }}
+                        >
+                            <Trash2 size={16} color="#F43F5E" />
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                        onPress={(e) => {
+                            e.stopPropagation?.();
+                            onRecord?.();
+                        }}
+                        activeOpacity={0.7}
+                        style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 10,
+                            backgroundColor: '#fff',
+                            borderWidth: 1,
+                            borderColor: '#ede9fe',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 1 },
+                            shadowOpacity: 0.05,
+                            shadowRadius: 2,
+                            elevation: 1,
+                        }}
+                    >
+                        <Plus size={16} color="#7d3bed" />
+                    </TouchableOpacity>
+                </View>
             </View>
         </TouchableOpacity>
     );

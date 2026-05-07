@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -7,8 +7,9 @@ import {
     StyleSheet,
     Platform,
     ActivityIndicator,
+    Animated,
 } from 'react-native';
-import { PlayCircle, PauseCircle } from 'lucide-react-native';
+import { Play, Pause } from 'lucide-react-native';
 import { useAudioStore } from '@/stores/audioStore';
 
 export function MiniPlayer() {
@@ -16,6 +17,50 @@ export function MiniPlayer() {
     const isPlaying = useAudioStore((state) => state.isPlaying);
     const isLoading = useAudioStore((state) => state.isLoading);
     const togglePlay = useAudioStore((state) => state.togglePlay);
+
+    // Create animated values for 6 bars
+    const animations = useRef([...Array(6)].map(() => new Animated.Value(0.2))).current;
+
+    useEffect(() => {
+        if (isPlaying) {
+            // Start bouncing animation for each bar
+            const loops = animations.map((anim, i) => {
+                const peak = [1, 0.6, 0.8, 0.5, 0.9, 0.6][i]; // Different heights
+                const duration = 250 + (i % 3) * 50; // Different speeds so they desync naturally
+
+                return Animated.loop(
+                    Animated.sequence([
+                        Animated.timing(anim, {
+                            toValue: peak,
+                            duration: duration,
+                            useNativeDriver: false,
+                        }),
+                        Animated.timing(anim, {
+                            toValue: 0.2,
+                            duration: duration,
+                            useNativeDriver: false,
+                        }),
+                    ]),
+                );
+            });
+
+            Animated.parallel(loops).start();
+
+            return () => {
+                loops.forEach((loop) => loop.stop());
+            };
+        } else {
+            // Smoothly reset to baseline when paused
+            animations.forEach((anim) => {
+                anim.stopAnimation();
+                Animated.timing(anim, {
+                    toValue: 0.2,
+                    duration: 200,
+                    useNativeDriver: false,
+                }).start();
+            });
+        }
+    }, [isPlaying, animations]);
 
     if (!currentBeat) return null;
 
@@ -43,14 +88,17 @@ export function MiniPlayer() {
                     {currentBeat.title}
                 </Text>
 
-                {/* Audio Visualizer */}
+                {/* Animated Audio Visualizer */}
                 <View className="flex-row items-end gap-[3px] h-3 mt-1">
-                    {[1, 0.6, 0.8, 0.4, 0.9, 0.5].map((h, i) => (
-                        <View
+                    {animations.map((anim, i) => (
+                        <Animated.View
                             key={i}
-                            className={`w-[3px] bg-primary rounded-full transition-all`}
+                            className="w-[3px] bg-primary rounded-full"
                             style={{
-                                height: isPlaying ? `${h * 100}%` : '20%',
+                                height: anim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: ['0%', '100%'],
+                                }),
                                 opacity: isPlaying ? 1 : 0.5,
                             }}
                         />
@@ -59,25 +107,15 @@ export function MiniPlayer() {
             </View>
 
             <TouchableOpacity activeOpacity={0.7} className="ml-2" onPress={togglePlay}>
-                {isLoading ? (
-                    <ActivityIndicator size="small" color="#7d3bed" />
-                ) : isPlaying ? (
-                    <PauseCircle
-                        size={32}
-                        color="#7d3bed"
-                        fill="#ffffff"
-                        strokeWidth={1}
-                        opacity={0.9}
-                    />
-                ) : (
-                    <PlayCircle
-                        size={32}
-                        color="#7d3bed"
-                        fill="#ffffff"
-                        strokeWidth={1}
-                        opacity={0.9}
-                    />
-                )}
+                <View className="w-10 h-10 rounded-full bg-primary items-center justify-center shadow-sm">
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                    ) : isPlaying ? (
+                        <Pause size={18} color="#ffffff" fill="#ffffff" />
+                    ) : (
+                        <Play size={18} color="#ffffff" fill="#ffffff" style={{ marginLeft: 2 }} />
+                    )}
+                </View>
             </TouchableOpacity>
         </View>
     );

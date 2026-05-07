@@ -109,8 +109,9 @@ export function InfoCard({ beat, isLoading }: InfoCardProps) {
                             <Image
                                 source={{
                                     uri:
-                                        beat?.cover_image_url ||
-                                        'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&q=80',
+                                        beat?.creator_avatar_url ||
+                                        'https://api.dicebear.com/7.x/avataaars/png?seed=' +
+                                            (beat?.creator_username || 'creator'),
                                 }}
                                 className="w-full h-full"
                             />

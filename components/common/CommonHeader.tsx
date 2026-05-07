@@ -1,21 +1,26 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Search, Plus } from 'lucide-react-native';
+import { ChevronLeft, Plus, User } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/stores/authStore';
 
 interface CommonHeaderProps {
-    showSearch?: boolean;
     showAvatar?: boolean;
     showCreate?: boolean;
 }
 
-export function CommonHeader({
-    showSearch = true,
-    showAvatar = true,
-    showCreate = false,
-}: CommonHeaderProps) {
+export function CommonHeader({ showAvatar = true, showCreate = false }: CommonHeaderProps) {
     const router = useRouter();
+    const { user } = useAuthStore();
+
+    const avatarUrl = user?.avatar_url;
+    const initials = (user?.display_name || user?.username || '?')
+        .split(' ')
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join('')
+        .toUpperCase();
 
     return (
         <SafeAreaView edges={['top']} style={styles.container}>
@@ -31,11 +36,6 @@ export function CommonHeader({
                     />
                 </View>
                 <View className="flex-row items-center gap-4">
-                    {showSearch && (
-                        <TouchableOpacity activeOpacity={0.7}>
-                            <Search size={24} color="#374151" />
-                        </TouchableOpacity>
-                    )}
                     {showCreate && (
                         <TouchableOpacity
                             activeOpacity={0.7}
@@ -48,12 +48,20 @@ export function CommonHeader({
                     {showAvatar && (
                         <TouchableOpacity
                             activeOpacity={0.7}
-                            className="w-8 h-8 rounded-full border border-gray-200 overflow-hidden shadow-sm"
+                            onPress={() => router.push('/(challenge)/myContent')}
+                            style={styles.avatarButton}
                         >
-                            <Image
-                                source={{ uri: 'https://i.pravatar.cc/150?img=11' }}
-                                className="w-full h-full"
-                            />
+                            {avatarUrl ? (
+                                <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                            ) : (
+                                <View style={styles.avatarFallback}>
+                                    {initials ? (
+                                        <Text style={styles.avatarInitials}>{initials}</Text>
+                                    ) : (
+                                        <User size={16} color="#7C3AED" />
+                                    )}
+                                </View>
+                            )}
                         </TouchableOpacity>
                     )}
                 </View>
@@ -81,5 +89,35 @@ const styles = StyleSheet.create({
                 elevation: 4,
             },
         }),
+    },
+    avatarButton: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+    },
+    avatarFallback: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#EDE9FE',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarInitials: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#7C3AED',
+        letterSpacing: 0.5,
     },
 });

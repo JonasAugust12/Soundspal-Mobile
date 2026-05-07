@@ -11,6 +11,7 @@ import {
 import { CommonHeader } from '@/components/common';
 import { useGetBeatById, useGetLeaderboard } from '@/hooks/useChallengeApi';
 import { useAudioStore } from '@/stores/audioStore';
+import { useAuthStore } from '@/stores/authStore';
 import { type BeatEntry } from '@/types/challenge.type';
 
 export default function LeaderboardScreen() {
@@ -18,6 +19,7 @@ export default function LeaderboardScreen() {
     const { data: beatData } = useGetBeatById(id);
     const { data: leaderboardData, isLoading } = useGetLeaderboard(id, 50, 0, true);
     const [selectedEntry, setSelectedEntry] = useState<BeatEntry | null>(null);
+    const { user } = useAuthStore();
 
     const stopEntry = useAudioStore((s) => s.stopEntry);
     useEffect(() => {
@@ -33,7 +35,7 @@ export default function LeaderboardScreen() {
         <View className="flex-1 bg-white">
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-            <CommonHeader showSearch={false} />
+            <CommonHeader />
 
             <ScrollView
                 contentContainerStyle={{
@@ -52,6 +54,7 @@ export default function LeaderboardScreen() {
                         <RankList
                             remainingEntries={entries.slice(3)}
                             onEntryPress={setSelectedEntry}
+                            currentUserId={user?.id}
                         />
                     </>
                 )}

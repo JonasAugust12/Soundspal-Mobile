@@ -4,6 +4,7 @@ export interface Beat {
     bpm: number;
     cover_image_url: string;
     created_at: string;
+    creator_avatar_url?: string;
     creator_id: string;
     creator_username: string;
     description: string;
@@ -14,6 +15,7 @@ export interface Beat {
     key_signature: string;
     title: string;
     updated_at: string;
+    waveform_json?: string;
 }
 
 export interface BeatPagination {
@@ -68,4 +70,27 @@ export interface UserStats {
     total_entries: number;
     total_votes_received: number;
     user_id: string;
+}
+
+export interface GetMyBeatsResponse {
+    beats: Beat[];
+    pagination: BeatPagination;
+}
+
+export interface GetMyBeatsParams {
+    page?: number;
+    page_size?: number;
+    genre?: string;
+}
+
+export interface GetMyEntriesResponse {
+    entries: BeatEntry[];
+    pagination: BeatPagination;
+}
+
+export interface GetMyEntriesParams {
+    page?: number;
+    page_size?: number;
+    beat_id?: string;
+    scoring_status?: string;
 }
