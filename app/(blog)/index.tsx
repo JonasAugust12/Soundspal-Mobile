@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, FlatList, RefreshControl, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
@@ -28,8 +28,6 @@ import type { BlogPost } from '@/types/blog.type';
 
 type BlogNoticeState = BlogNoticePayload & { key: string };
 
-const SEARCH_DEBOUNCE_MS = 400;
-
 export default function BlogScreen() {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
@@ -38,16 +36,21 @@ export default function BlogScreen() {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingArticle, setEditingArticle] = useState<BlogPost | null>(null);
     const [blogNotice, setBlogNotice] = useState<BlogNoticeState | null>(null);
-    const [searchInput, setSearchInput] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+    /** Draft in the text field; API query uses `committedSearch` only after submit. */
+    const [searchDraft, setSearchDraft] = useState('');
+    const [committedSearch, setCommittedSearch] = useState('');
     const [bookmarkPendingId, setBookmarkPendingId] = useState<string | null>(null);
 
-    useEffect(() => {
-        const t = setTimeout(() => setDebouncedSearch(searchInput), SEARCH_DEBOUNCE_MS);
-        return () => clearTimeout(t);
-    }, [searchInput]);
+    const commitSearch = useCallback(() => {
+        setCommittedSearch(searchDraft.trim());
+    }, [searchDraft]);
 
-    const isSearchMode = debouncedSearch.trim().length > 0;
+    const clearSearch = useCallback(() => {
+        setSearchDraft('');
+        setCommittedSearch('');
+    }, []);
+
+    const isSearchMode = committedSearch.trim().length > 0;
     const isMyPostsTab = activeTab === 'my-posts';
     const isBookmarksTab = activeTab === 'bookmarks';
     const myPostsNeedsAuth = isMyPostsTab && !user?.id;
@@ -85,7 +88,7 @@ export default function BlogScreen() {
         error: searchError,
         refetch: refetchSearch,
         isFetching: searchFetching,
-    } = useBlogSearch({ q: debouncedSearch }, { enabled: searchQueryEnabled });
+    } = useBlogSearch({ q: committedSearch }, { enabled: searchQueryEnabled });
 
     const posts: BlogPost[] = isSearchMode
         ? tabAuthBlockedForSearch
@@ -106,6 +109,9 @@ export default function BlogScreen() {
         : isBookmarksTab && user
           ? bookmarksFetching
           : listRefetching;
+
+    /** Full-screen spinner: initial feed/bookmarks only — search keeps list + header visible. */
+    const blockingInitialLoad = !isSearchMode && isLoading && posts.length === 0;
 
     const onRefresh = useCallback(() => {
         if (isSearchMode) void refetchSearch();
@@ -177,20 +183,24 @@ export default function BlogScreen() {
         setBlogNotice({ ...payload, key: `${Date.now()}-${Math.random()}` });
     }, []);
 
-    const renderHeader = () => (
+    /** Hero scrolls with the list; search + tabs stay fixed so TextInput is not inside FlatList (avoids keyboard closing on each keystroke). */
+    const listFeaturedHeader =
+        showFeaturedHero && featuredArticle?.title ? (
+            <FeaturedArticle article={featuredArticle} />
+        ) : null;
+
+    const fixedBlogChrome = (
         <View>
             <BlogHeader />
             <BlogSearchBar
-                value={searchInput}
-                onChangeText={setSearchInput}
-                isSearching={isSearchMode && searchFetching}
+                value={searchDraft}
+                onChangeText={setSearchDraft}
+                onSubmitSearch={commitSearch}
+                onClear={clearSearch}
+                isSearching={isSearchMode && (searchFetching || searchLoading)}
             />
             <BlogLibraryRow activeTab={activeTab} onTabChange={setActiveTab} />
             <BlogTabBar tabs={BLOG_FEED_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-
-            {showFeaturedHero && featuredArticle?.title ? (
-                <FeaturedArticle article={featuredArticle} />
-            ) : null}
         </View>
     );
 
@@ -200,10 +210,13 @@ export default function BlogScreen() {
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
                 edges={['right', 'bottom', 'left']}
             >
+                {fixedBlogChrome}
                 <FlatList
+                    style={{ flex: 1 }}
                     data={[]}
                     renderItem={() => null}
-                    ListHeaderComponent={renderHeader}
+                    keyboardDismissMode="on-drag"
+                    keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={
                         <View className="flex-1 justify-center items-center py-16 px-4">
                             <Text
@@ -234,10 +247,13 @@ export default function BlogScreen() {
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
                 edges={['right', 'bottom', 'left']}
             >
+                {fixedBlogChrome}
                 <FlatList
+                    style={{ flex: 1 }}
                     data={[]}
                     renderItem={() => null}
-                    ListHeaderComponent={renderHeader}
+                    keyboardDismissMode="on-drag"
+                    keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={
                         <View className="flex-1 justify-center items-center py-16 px-4">
                             <Text
@@ -261,7 +277,7 @@ export default function BlogScreen() {
         );
     }
 
-    if (isLoading && posts.length === 0) {
+    if (blockingInitialLoad) {
         return (
             <SafeAreaView
                 className={`flex-1 justify-center items-center ${isDark ? 'bg-slate-900' : 'bg-white'}`}
@@ -269,7 +285,7 @@ export default function BlogScreen() {
             >
                 <ActivityIndicator size="large" color={isDark ? '#E2E8F0' : '#1F2937'} />
                 <Text className={`mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                    {isSearchMode ? 'Searching...' : 'Loading posts...'}
+                    Loading posts...
                 </Text>
             </SafeAreaView>
         );
@@ -307,10 +323,13 @@ export default function BlogScreen() {
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
                 edges={['right', 'bottom', 'left']}
             >
+                {fixedBlogChrome}
                 <FlatList
+                    style={{ flex: 1 }}
                     data={[]}
                     renderItem={() => null}
-                    ListHeaderComponent={renderHeader}
+                    keyboardDismissMode="on-drag"
+                    keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={
                         <View className="flex-1 justify-center items-center py-16 px-4">
                             <Text
@@ -342,9 +361,13 @@ export default function BlogScreen() {
             className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
             edges={['right', 'bottom', 'left']}
         >
+            {fixedBlogChrome}
             <FlatList
+                style={{ flex: 1 }}
                 data={listArticles}
                 keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 renderItem={({ item }) => (
                     <BlogCard
                         article={item}
@@ -356,7 +379,26 @@ export default function BlogScreen() {
                         onBookmarkPress={handleToggleBookmark}
                     />
                 )}
-                ListHeaderComponent={renderHeader}
+                ListHeaderComponent={listFeaturedHeader}
+                ListEmptyComponent={
+                    isSearchMode &&
+                    (searchLoading || searchFetching) &&
+                    listArticles.length === 0 ? (
+                        <View className="py-16 items-center px-6">
+                            <ActivityIndicator
+                                size="small"
+                                color={isDark ? '#A78BFA' : '#7C3AED'}
+                            />
+                            <Text
+                                className={`mt-3 text-center text-sm ${
+                                    isDark ? 'text-slate-400' : 'text-gray-500'
+                                }`}
+                            >
+                                Searching…
+                            </Text>
+                        </View>
+                    ) : null
+                }
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
                 refreshControl={

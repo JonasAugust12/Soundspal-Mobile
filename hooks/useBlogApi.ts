@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import axios from 'axios';
 import { BLOG_FEED_TABS } from '@/constants/blog';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthStore } from '@/stores/authStore';
 import type {
     BlogPost,
     BlogPostFilters,
@@ -9,9 +11,9 @@ import type {
     BlogPostMedia,
     CreatePostRequest,
     UpdatePostRequest,
+    AddMediaRequest,
     BlogApiSuccessEnvelope,
     BlogSearchParams,
-    BlogSearchResponse,
     BlogApiComment,
     CreateCommentRequest,
     UpdateCommentRequest,
@@ -19,6 +21,44 @@ import type {
     BookmarkPostRequest,
     ApiBookmarkedPost,
 } from '@/types/blog.type';
+
+const BLOG_UPLOAD_LOG_PREFIX = '[BlogMediaUpload]';
+
+/** Safe to paste into bug reports (filter Metro logs by `[BlogMediaUpload]`). */
+function serializeUploadError(err: unknown): Record<string, unknown> {
+    if (axios.isAxiosError(err)) {
+        return {
+            kind: 'AxiosError',
+            message: err.message,
+            code: err.code,
+            httpStatus: err.response?.status,
+            statusText: err.response?.statusText,
+            responseBody: err.response?.data,
+            requestMethod: err.config?.method,
+            requestUrl: err.config?.url,
+            baseURL: err.config?.baseURL,
+        };
+    }
+    if (err instanceof Error) {
+        return { kind: 'Error', name: err.name, message: err.message };
+    }
+    return { kind: 'unknown', value: String(err) };
+}
+
+function previewUri(uri: string): string {
+    if (uri.length <= 96) return uri;
+    return `${uri.slice(0, 96)}…`;
+}
+
+/**
+ * Call from UI catch blocks so logs include screen context. Same detail as inside `addBlogPostMedia`.
+ */
+export function logBlogUploadFailure(context: string, error: unknown): void {
+    console.warn(
+        `${BLOG_UPLOAD_LOG_PREFIX}[FAIL:${context}]`,
+        JSON.stringify(serializeUploadError(error), null, 2),
+    );
+}
 
 function formatPublishedLabel(publishedAt?: string): string {
     if (!publishedAt) return 'Recently';
@@ -133,21 +173,181 @@ export interface LocalImageAsset {
     mimeType?: string | null;
 }
 
+function extensionForImageMime(mime: string): string {
+    const m = mime.toLowerCase();
+    if (m.includes('png')) return 'png';
+    if (m.includes('webp')) return 'webp';
+    if (m.includes('gif')) return 'gif';
+    if (m.includes('heic')) return 'heic';
+    return 'jpg';
+}
+
+/** Stable filename + mime for RN multipart (Android content:// URIs often lack a usable basename). */
+function resolveBlogMediaFileMeta(asset: LocalImageAsset): { name: string; mime: string } {
+    const mime = asset.mimeType?.trim() || 'image/jpeg';
+    const raw = asset.name?.trim();
+    const hasExtension = raw ? /\.[a-z0-9]{2,8}$/i.test(raw) : false;
+    const name = raw && hasExtension ? raw : `cover_${Date.now()}.${extensionForImageMime(mime)}`;
+    return { name, mime };
+}
+
+function apiMediaKindFromMime(mime: string): string {
+    const m = mime.toLowerCase();
+    if (m.startsWith('video/')) return 'video';
+    if (m.startsWith('audio/')) return 'audio';
+    return 'image';
+}
+
+/** Parse POST /storage/upload body (flat or dto.SuccessResponse wrapper). */
+function extractStorageUploadUrl(payload: unknown): string {
+    if (!payload || typeof payload !== 'object') {
+        throw new Error('Invalid upload response');
+    }
+    const root = payload as Record<string, unknown>;
+    if (typeof root.url === 'string' && root.url.length > 0) {
+        return root.url;
+    }
+    const nested = root.data;
+    if (nested && typeof nested === 'object') {
+        const d = nested as Record<string, unknown>;
+        if (typeof d.url === 'string' && d.url.length > 0) {
+            return d.url;
+        }
+        if (typeof d.file_url === 'string' && d.file_url.length > 0) {
+            return d.file_url;
+        }
+    }
+    throw new Error('Invalid upload response: missing URL');
+}
+
 /**
- * POST /api/v1/blogs/{id}/media — đính kèm ảnh (multipart; nếu backend chỉ nhận JSON, sửa payload theo dto.AddMediaRequest)
+ * RN Android often surfaces multipart uploads as Axios ERR_NETWORK (XHR adapter).
+ * Native `fetch` uses a different stack and usually completes TLS + multipart reliably.
+ */
+async function postStorageUploadWithFetch(form: FormData): Promise<unknown> {
+    const base = apiClient.defaults.baseURL?.replace(/\/$/, '') ?? '';
+    const url = `${base}/storage/upload`;
+    const token = useAuthStore.getState().accessToken;
+    const headers: Record<string, string> = {
+        Accept: 'application/json',
+    };
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    console.warn(`${BLOG_UPLOAD_LOG_PREFIX}[step:storage:transport] fetch →`, url);
+
+    const controller = new AbortController();
+    const timeoutMs = 120_000;
+    const tid = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: form,
+            signal: controller.signal,
+        });
+        clearTimeout(tid);
+
+        const text = await res.text();
+        console.warn(
+            `${BLOG_UPLOAD_LOG_PREFIX}[step:storage:fetch_status]`,
+            `${res.status} ${res.statusText}`,
+            text.length > 1000 ? `${text.slice(0, 1000)}… (truncated)` : text,
+        );
+
+        if (!res.ok) {
+            throw new Error(`Storage upload failed: HTTP ${res.status} — ${text.slice(0, 400)}`);
+        }
+
+        try {
+            return JSON.parse(text) as unknown;
+        } catch {
+            throw new Error(`Storage upload: expected JSON body, got: ${text.slice(0, 240)}`);
+        }
+    } catch (err) {
+        clearTimeout(tid);
+        throw err;
+    }
+}
+
+/**
+ * 1) POST /storage/upload — multipart file
+ * 2) POST /blogs/{id}/media — JSON dto.AddMediaRequest (Swagger consumes application/json)
  */
 export async function addBlogPostMedia(postId: string, asset: LocalImageAsset): Promise<BlogItem> {
+    const { name, mime } = resolveBlogMediaFileMeta(asset);
+
+    console.warn(
+        `${BLOG_UPLOAD_LOG_PREFIX}[start]`,
+        JSON.stringify(
+            {
+                postId,
+                fileName: name,
+                mime,
+                uriPreview: previewUri(asset.uri),
+            },
+            null,
+            2,
+        ),
+    );
+
     const form = new FormData();
-    const name = asset.name?.trim() || asset.uri.split('/').pop() || 'upload.jpg';
-    const mime = asset.mimeType?.trim() || 'image/jpeg';
-    // React Native: object có uri; axios tự gắn boundary (không set Content-Type tay)
     form.append('file', { uri: asset.uri, name, type: mime } as never);
 
-    const { data: body } = await apiClient.post<BlogApiSuccessEnvelope<BlogItem>>(
-        `/blogs/${postId}/media`,
-        form,
-    );
-    return unwrapBlogData<BlogItem>(body, 'addBlogPostMedia');
+    try {
+        console.warn(`${BLOG_UPLOAD_LOG_PREFIX}[step:storage] POST /storage/upload (fetch) …`);
+        const uploadPayload = await postStorageUploadWithFetch(form);
+
+        const payloadStr = JSON.stringify(uploadPayload);
+        console.warn(
+            `${BLOG_UPLOAD_LOG_PREFIX}[step:storage:response]`,
+            payloadStr.length > 1200 ? `${payloadStr.slice(0, 1200)}… (truncated)` : payloadStr,
+        );
+
+        let publicUrl: string;
+        try {
+            publicUrl = extractStorageUploadUrl(uploadPayload);
+        } catch (parseErr) {
+            console.warn(
+                `${BLOG_UPLOAD_LOG_PREFIX}[step:storage:parse_url_failed]`,
+                JSON.stringify(serializeUploadError(parseErr), null, 2),
+            );
+            throw parseErr;
+        }
+
+        console.warn(
+            `${BLOG_UPLOAD_LOG_PREFIX}[step:storage:publicUrl]`,
+            publicUrl.length > 200 ? `${publicUrl.slice(0, 200)}…` : publicUrl,
+        );
+
+        const requestBody: AddMediaRequest = {
+            url: publicUrl,
+            media_type: apiMediaKindFromMime(mime),
+        };
+
+        const attachPath = `/blogs/${postId}/media`;
+        console.warn(
+            `${BLOG_UPLOAD_LOG_PREFIX}[step:attach]`,
+            JSON.stringify({ path: attachPath, body: requestBody }, null, 2),
+        );
+
+        const { data: body } = await apiClient.post<BlogApiSuccessEnvelope<BlogItem>>(
+            attachPath,
+            requestBody,
+            { timeout: 60_000 },
+        );
+
+        console.warn(`${BLOG_UPLOAD_LOG_PREFIX}[done] attach OK for postId=${postId}`);
+        return unwrapBlogData<BlogItem>(body, 'addBlogPostMedia');
+    } catch (error) {
+        console.warn(
+            `${BLOG_UPLOAD_LOG_PREFIX}[ERROR]`,
+            JSON.stringify(serializeUploadError(error), null, 2),
+        );
+        throw error;
+    }
 }
 
 /**
@@ -195,7 +395,7 @@ export function useBlogPosts(filters?: BlogPostFilters, options?: { enabled?: bo
 }
 
 /**
- * GET /api/v1/search — search posts
+ * GET /api/v1/blogs/search — query + paginated `data.items` (dto.PaginatedPostListResponse)
  */
 export async function searchBlogsFromApi(params: BlogSearchParams): Promise<BlogPost[]> {
     const parts: string[] = [];
@@ -205,13 +405,16 @@ export async function searchBlogsFromApi(params: BlogSearchParams): Promise<Blog
     params.tag_ids?.forEach((t) => parts.push(`tag_ids[]=${encodeURIComponent(t)}`));
     const qs = parts.length ? `?${parts.join('&')}` : '';
 
-    const { data: body } = await apiClient.get<
-        BlogSearchResponse | BlogApiSuccessEnvelope<BlogItem[]>
-    >(`/search${qs}`);
+    const { data: body } = await apiClient.get<BlogApiSuccessEnvelope<BlogsResponse['data']>>(
+        `/blogs/search${qs}`,
+    );
 
-    const payload = body as { data?: unknown };
-    const raw = payload?.data;
-    const items: BlogItem[] = Array.isArray(raw) ? (raw as BlogItem[]) : [];
+    const payload = body as BlogApiSuccessEnvelope<BlogsResponse['data']> | undefined;
+    const items = payload?.data?.items;
+    if (!Array.isArray(items)) {
+        throw new Error('Invalid blog search response');
+    }
+
     return items.map(mapBlogItemToBlogPost);
 }
 
@@ -223,6 +426,8 @@ export function useBlogSearch(params: BlogSearchParams, options?: { enabled?: bo
         enabled: options?.enabled !== false && q.length > 0,
         staleTime: 0,
         gcTime: 1000 * 60 * 5,
+        /** Avoid empty flash while a new search query is loading */
+        placeholderData: (previousData) => previousData,
     });
 }
 

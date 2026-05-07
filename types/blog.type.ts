@@ -177,6 +177,9 @@ export interface BlogsResponse {
     };
 }
 
+/** Same nested shape as `BlogsResponse.data` — used by GET /blogs/search (dto.PaginatedPostListResponse). */
+export type PaginatedPostListResponse = BlogsResponse['data'];
+
 /**
  * Envelope thường gặp từ API (dto.SuccessResponse)
  */
@@ -205,7 +208,17 @@ export interface UpdatePostRequest {
     tags: string[];
 }
 
-/** GET /search query params */
+/**
+ * POST /blogs/:id/media — dto.AddMediaRequest (Swagger: consumes application/json).
+ * Upload binary via POST /storage/upload first, then send the resulting URL here.
+ */
+export interface AddMediaRequest {
+    url: string;
+    media_type: string;
+    embed_id?: string;
+}
+
+/** GET /blogs/search query params */
 export interface BlogSearchParams {
     q?: string;
     topic_id?: string;
@@ -214,11 +227,11 @@ export interface BlogSearchParams {
 }
 
 /**
- * Search response: `data` is an array of posts (per swagger).
+ * GET /blogs/search — dto.SuccessResponse with `data`: dto.PaginatedPostListResponse
  */
 export interface BlogSearchResponse {
     message?: string;
-    data: BlogItem[];
+    data: PaginatedPostListResponse;
 }
 
 /** GET /blogs/:id/comments — raw row (tolerant field names) */

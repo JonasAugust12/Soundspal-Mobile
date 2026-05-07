@@ -13,7 +13,13 @@ import {
 import { useColorScheme } from 'nativewind';
 import { X, Image as ImageIcon, Plus } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { createBlogPost, publishBlogPost, addBlogPostMedia } from '@/hooks/useBlogApi';
+import axios from 'axios';
+import {
+    createBlogPost,
+    publishBlogPost,
+    addBlogPostMedia,
+    logBlogUploadFailure,
+} from '@/hooks/useBlogApi';
 import { BLOG_CREATE_TOPIC_OPTIONS } from '@/constants/blog';
 import type { CreatePostRequest } from '@/types/blog.type';
 import type { BlogNoticePayload } from './BlogSlidingNotice';
@@ -21,6 +27,23 @@ import type { BlogNoticePayload } from './BlogSlidingNotice';
 const TITLE_MIN_LEN = 3;
 const CONTENT_MIN_LEN = 20;
 const SHORT_DESC_MAX = 200;
+
+function formatBlogFlowError(error: unknown, fallback: string): string {
+    if (axios.isAxiosError(error)) {
+        if (error.code === 'ERR_UPLOAD_AUTH_REFRESH') {
+            return error.message;
+        }
+        if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+            return 'Cannot reach the server. Check your connection and try again.';
+        }
+        const data = error.response?.data as { message?: string; error?: string } | undefined;
+        const serverMsg = data?.message ?? data?.error;
+        if (typeof serverMsg === 'string' && serverMsg.trim()) {
+            return serverMsg.trim();
+        }
+    }
+    return error instanceof Error ? error.message : fallback;
+}
 
 interface CreateBlogModalProps {
     visible: boolean;
@@ -167,7 +190,8 @@ export function CreateBlogModal({
             });
             setSelectedImage(asset.uri);
         } catch (error) {
-            const msg = error instanceof Error ? error.message : 'Could not add the image';
+            logBlogUploadFailure('CreateBlogModal.handlePickImage', error);
+            const msg = formatBlogFlowError(error, 'Could not add the image');
             notify({ variant: 'error', title: "Couldn't add image", message: msg });
         } finally {
             setIsMediaWorking(false);
@@ -210,7 +234,8 @@ export function CreateBlogModal({
                 message: 'Your blog post is live. Thanks for sharing!',
             });
         } catch (error) {
-            const msg = error instanceof Error ? error.message : 'Could not publish your post';
+            logBlogUploadFailure('CreateBlogModal.handleSubmit', error);
+            const msg = formatBlogFlowError(error, 'Could not publish your post');
             notify({ variant: 'error', title: 'Publish failed', message: msg });
         } finally {
             setIsSubmitting(false);

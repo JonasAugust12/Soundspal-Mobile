@@ -1,4 +1,9 @@
-import axios, { AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from 'axios';
+import axios, {
+    AxiosError,
+    InternalAxiosRequestConfig,
+    AxiosRequestConfig,
+    AxiosResponse,
+} from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 import { getUserFromToken } from '@/utils/jwt';
 import type { RefreshTokenResponse } from '@/types/auth.type';
@@ -19,6 +24,29 @@ let failedQueue: Array<{
     resolve: (value?: unknown) => void;
     reject: (reason?: unknown) => void;
 }> = [];
+
+function isFormDataBody(config: InternalAxiosRequestConfig | undefined): boolean {
+    return config?.data instanceof FormData;
+}
+
+/**
+ * Axios cannot safely replay multipart bodies: FormData is consumed on the first send.
+ * Retrying after a 401 refresh often produces an empty body and surfaces as ERR_NETWORK.
+ */
+function rejectMultipartReplay(
+    originalRequest: InternalAxiosRequestConfig,
+    firstResponse: AxiosResponse | undefined,
+): Promise<never> {
+    return Promise.reject(
+        new AxiosError(
+            'Upload interrupted while refreshing your session. Please try again.',
+            'ERR_UPLOAD_AUTH_REFRESH',
+            originalRequest,
+            undefined,
+            firstResponse,
+        ),
+    );
+}
 
 const processQueue = (error: unknown, token: string | null = null) => {
     failedQueue.forEach((prom) => {
@@ -66,6 +94,9 @@ apiClient.interceptors.response.use(
                     .then((token) => {
                         if (originalRequest.headers) {
                             originalRequest.headers.Authorization = `Bearer ${token}`;
+                        }
+                        if (isFormDataBody(originalRequest)) {
+                            return rejectMultipartReplay(originalRequest, error.response);
                         }
                         return apiClient(originalRequest);
                     })
@@ -116,11 +147,14 @@ apiClient.interceptors.response.use(
                         // Process queue with new token
                         processQueue(null, access_token);
 
-                        // Retry original request
+                        // Retry original request (multipart cannot be replayed — see isFormDataBody)
                         if (originalRequest.headers) {
                             originalRequest.headers.Authorization = `Bearer ${access_token}`;
                         }
                         isRefreshing = false;
+                        if (isFormDataBody(originalRequest)) {
+                            return rejectMultipartReplay(originalRequest, error.response);
+                        }
                         return apiClient(originalRequest);
                     } else {
                         throw new Error('Cannot decode token');
@@ -160,12 +194,8 @@ export const createApiCall = <TResponse, TRequest = unknown>(
             params: method === 'GET' ? data : undefined,
         };
 
-        // Nếu là FormData, để axios tự động set Content-Type
-        if (isFormData) {
-            config.headers = {
-                'Content-Type': 'multipart/form-data',
-            };
-        } else if (method !== 'GET') {
+        // FormData: never set multipart/form-data without boundary — axios adds boundary automatically.
+        if (!isFormData && method !== 'GET') {
             config.headers = {
                 'Content-Type': 'application/json',
             };
