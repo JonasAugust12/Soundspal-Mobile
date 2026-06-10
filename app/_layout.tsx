@@ -32,6 +32,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="(profiles)" />
                 <Stack.Screen name="(messages)" />
                 <Stack.Screen name="(jobs)" />
+                <Stack.Screen name="(payments)" />
             </Stack>
             <Toast />
         </>

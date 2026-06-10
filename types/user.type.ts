@@ -36,6 +36,10 @@ export interface BaseUser {
     is_verified: boolean;
     created_at: string;
     updated_at: string;
+    tier?: 'free' | 'premium' | string;
+    subscription_status?: 'active' | 'expired' | 'cancelled' | string;
+    subscription_expires_at?: string | null;
+    expires_at?: string | null;
     // Social links
     facebook_url?: string;
     instagram_url?: string;

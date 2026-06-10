@@ -18,7 +18,8 @@ export function useProtectedRoute() {
             segments[0] === '(profiles)' ||
             segments[0] === '(jobs)' ||
             segments[0] === '(messages)' ||
-            segments[0] === '(editprofile)';
+            segments[0] === '(editprofile)' ||
+            segments[0] === '(payments)';
 
         const segmentsArray = segments as string[];
         const isOnEmailVerificationRequired =

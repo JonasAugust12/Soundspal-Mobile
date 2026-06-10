@@ -21,8 +21,10 @@ import {
     ChevronRight,
     Settings,
     BadgeCheck,
+    Crown,
 } from 'lucide-react-native';
 import { useLogout } from '@/hooks/useAuthApi';
+import { useGetCurrentUser } from '@/hooks/useUserApi';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/useToast';
 import { useRouter } from 'expo-router';
@@ -31,8 +33,11 @@ import { MenuItem } from '@/components/profile';
 export default function PersonalScreen() {
     const { mutateAsync: logoutApi, isPending: isLoggingOut } = useLogout();
     const { user, logout: clearAuthState } = useAuthStore();
+    const { data: currentUser } = useGetCurrentUser();
     const { showSuccess, showError } = useToast();
     const router = useRouter();
+    const currentTier = String(currentUser?.tier || user?.tier || 'free').toLowerCase();
+    const isPremium = currentTier === 'premium';
 
     const handleLogout = async () => {
         try {
@@ -71,6 +76,10 @@ export default function PersonalScreen() {
 
     const handleManageCollaborations = () => {
         router.push('/(profiles)/collaboration');
+    };
+
+    const handlePremiumPayment = () => {
+        router.push('/(payments)/premium' as `${string}`);
     };
 
     // Get role display text
@@ -215,6 +224,28 @@ export default function PersonalScreen() {
                         </View>
                         <Text className="text-sm font-semibold text-gray-800">QR Code</Text>
                     </TouchableOpacity>
+                </View>
+
+                {/* Menu Section - Premium */}
+                <View className="mx-5 mt-6">
+                    <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-1">
+                        Premium
+                    </Text>
+                    <View
+                        className="bg-white rounded-2xl overflow-hidden"
+                        style={styles.menuSection}
+                    >
+                        <MenuItem
+                            icon={<Crown size={20} color="#D97706" />}
+                            title={isPremium ? 'Premium đang hoạt động' : 'Nâng cấp Premium'}
+                            subtitle={
+                                isPremium
+                                    ? 'Gia hạn gói để tiếp tục dùng đầy đủ quyền lợi'
+                                    : 'Mở khóa ứng tuyển không giới hạn và ưu tiên hiển thị'
+                            }
+                            onPress={handlePremiumPayment}
+                        />
+                    </View>
                 </View>
 
                 {/* Menu Section - Collaboration */}

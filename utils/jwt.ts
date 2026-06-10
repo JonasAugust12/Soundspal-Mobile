@@ -47,6 +47,7 @@ export const getUserFromToken = (
     username: string;
     avatar_url: string;
     display_name: string;
+    tier?: string;
 } | null => {
     const decoded = decodeJWT(token);
     if (!decoded) {
@@ -61,5 +62,6 @@ export const getUserFromToken = (
         username: (decoded.username as string) || '',
         avatar_url: (decoded.avatar_url as string) || '',
         display_name: (decoded.display_name as string) || '',
+        tier: (decoded.tier as string) || undefined,
     };
 };
