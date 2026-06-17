@@ -2,16 +2,28 @@ export type PaymentPurpose = 'ACCOUNT_UPGRADE';
 
 export type NormalizedPaymentStatus = 'pending' | 'success' | 'failed' | 'cancelled' | 'unknown';
 
+export interface PayOSReturnInfo {
+    orderCode: string | null;
+    rawStatus: string | null;
+    normalizedStatus: NormalizedPaymentStatus;
+}
+
 export interface CheckoutRequest {
     amount: number;
+    cancel_url: string;
     description: string;
     purpose: PaymentPurpose;
+    redirect_url: string;
     reference_id: string;
 }
 
 export interface CheckoutResponse {
     checkout_url: string;
-    order_code?: number | string;
+}
+
+export interface PaymentHistoryParams {
+    limit?: number;
+    offset?: number;
 }
 
 export interface PaymentCheckoutResult {

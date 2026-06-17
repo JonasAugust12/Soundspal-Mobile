@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     ActivityIndicator,
     AppState,
+    Linking,
     Platform,
     RefreshControl,
     ScrollView,
@@ -9,11 +10,11 @@ import {
     Text,
     TouchableOpacity,
     View,
-    Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import * as ExpoLinking from 'expo-linking';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
     AlertCircle,
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react-native';
 import {
     buildPremiumUpgradeCheckoutRequest,
+    resolvePaymentOrderCodeFromHistory,
     useCreatePaymentCheckout,
     useGetPaymentStatus,
 } from '@/hooks/usePaymentApi';
@@ -47,6 +49,8 @@ import {
     getPaymentStatusDescription,
     getPaymentStatusLabel,
     isPaymentTerminal,
+    normalizePayOSOrderCode,
+    parsePayOSReturnUrl,
 } from '@/utils/payment';
 import type { NormalizedPaymentStatus, PaymentCheckoutResult } from '@/types/payment.type';
 
@@ -126,8 +130,20 @@ function getStatusTone(status: NormalizedPaymentStatus | undefined) {
     }
 }
 
+function resolveSearchParam(value?: string | string[]): string | null {
+    if (!value) return null;
+
+    const raw = Array.isArray(value) ? value[0] : value;
+    return normalizePayOSOrderCode(raw);
+}
+
 export default function PremiumPaymentScreen() {
     const router = useRouter();
+    const searchParams = useLocalSearchParams<{
+        orderCode?: string | string[];
+        order_code?: string | string[];
+        status?: string | string[];
+    }>();
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
     const { showSuccess, showError, showInfo } = useToast();
@@ -140,15 +156,19 @@ export default function PremiumPaymentScreen() {
         useCreatePaymentCheckout();
 
     const [checkout, setCheckout] = useState<PaymentCheckoutResult | null>(null);
+    const [payosReturnStatus, setPayosReturnStatus] = useState<NormalizedPaymentStatus | null>(
+        null,
+    );
     const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
     const handledTerminalStatus = useRef<NormalizedPaymentStatus | null>(null);
     const appState = useRef(AppState.currentState);
 
     const orderCode = checkout?.orderCode || null;
+    const shouldSyncPaymentStatus = !!orderCode && !isPaymentTerminal(payosReturnStatus);
     const statusQuery = useGetPaymentStatus(orderCode, {
-        enabled: !!orderCode,
+        enabled: shouldSyncPaymentStatus,
     });
-    const paymentStatus = statusQuery.data?.status;
+    const paymentStatus = payosReturnStatus || statusQuery.data?.status;
     const refetchPaymentStatus = statusQuery.refetch;
     const statusTone = useMemo(() => getStatusTone(paymentStatus), [paymentStatus]);
     const isTerminalStatus = isPaymentTerminal(paymentStatus);
@@ -158,6 +178,7 @@ export default function PremiumPaymentScreen() {
     const expiresAt = formatDate(
         currentUser?.subscription_expires_at || currentUser?.expires_at || null,
     );
+    const paymentReturnUrl = useMemo(() => ExpoLinking.createURL('/(payments)/premium'), []);
     const ctaLabel = isPremium ? 'Gia hạn Premium' : 'Nâng cấp Premium';
 
     const canCreateCheckout =
@@ -195,16 +216,15 @@ export default function PremiumPaymentScreen() {
         }
 
         try {
-            const result = await createCheckout(buildPremiumUpgradeCheckoutRequest(user.id));
+            const result = await createCheckout(
+                buildPremiumUpgradeCheckoutRequest(user.id, {
+                    redirect_url: paymentReturnUrl,
+                    cancel_url: paymentReturnUrl,
+                }),
+            );
             handledTerminalStatus.current = null;
+            setPayosReturnStatus(null);
             setCheckout(result);
-
-            if (!result.orderCode) {
-                showInfo(
-                    'Đã tạo thanh toán',
-                    'Không đọc được mã đơn PayOS từ checkout_url nên ứng dụng chưa thể tự kiểm tra trạng thái.',
-                );
-            }
 
             await openCheckoutUrl(result.checkoutUrl);
         } catch (error) {
@@ -217,16 +237,99 @@ export default function PremiumPaymentScreen() {
         await openCheckoutUrl(checkout.checkoutUrl);
     };
 
-    const handleRefresh = async () => {
+    const handleRefresh = useCallback(async () => {
         await refetchCurrentUser();
-        if (orderCode) {
-            await statusQuery.refetch();
+        if (shouldSyncPaymentStatus) {
+            await refetchPaymentStatus();
         }
-    };
+    }, [refetchCurrentUser, refetchPaymentStatus, shouldSyncPaymentStatus]);
+
+    const applyPayOSReturn = useCallback(
+        async (url?: string | null) => {
+            if (!url) return;
+
+            const payosReturn = parsePayOSReturnUrl(url);
+            if (payosReturn.normalizedStatus !== 'unknown') {
+                setPayosReturnStatus(payosReturn.normalizedStatus);
+            }
+
+            let resolvedOrderCode = payosReturn.orderCode;
+            if (!resolvedOrderCode) {
+                resolvedOrderCode = await resolvePaymentOrderCodeFromHistory(orderCode);
+            }
+
+            if (resolvedOrderCode) {
+                setCheckout((previousCheckout) => ({
+                    checkoutUrl: previousCheckout?.checkoutUrl || '',
+                    orderCode: resolvedOrderCode,
+                    message: previousCheckout?.message,
+                }));
+            }
+
+            void refetchCurrentUser();
+
+            if (!resolvedOrderCode && orderCode) {
+                void refetchPaymentStatus();
+            }
+        },
+        [orderCode, refetchCurrentUser, refetchPaymentStatus],
+    );
+
+    const handlePaymentReturnUrl = useCallback(
+        (url?: string | null) => {
+            void applyPayOSReturn(url);
+        },
+        [applyPayOSReturn],
+    );
+
+    useEffect(() => {
+        const orderCodeFromParams =
+            resolveSearchParam(searchParams.orderCode) ||
+            resolveSearchParam(searchParams.order_code);
+
+        if (!orderCodeFromParams && !searchParams.status) return;
+
+        const statusFromParams = Array.isArray(searchParams.status)
+            ? searchParams.status[0]
+            : searchParams.status;
+        const syntheticReturnUrl = statusFromParams
+            ? `${paymentReturnUrl}?orderCode=${orderCodeFromParams || ''}&status=${encodeURIComponent(statusFromParams)}`
+            : orderCodeFromParams
+              ? `${paymentReturnUrl}?orderCode=${orderCodeFromParams}`
+              : null;
+
+        void applyPayOSReturn(syntheticReturnUrl);
+    }, [
+        applyPayOSReturn,
+        paymentReturnUrl,
+        searchParams.orderCode,
+        searchParams.order_code,
+        searchParams.status,
+    ]);
+
+    useEffect(() => {
+        void Linking.getInitialURL().then(handlePaymentReturnUrl);
+
+        const subscription = Linking.addEventListener('url', ({ url }) => {
+            handlePaymentReturnUrl(url);
+        });
+
+        return () => subscription.remove();
+    }, [handlePaymentReturnUrl]);
 
     useEffect(() => {
         handledTerminalStatus.current = null;
     }, [orderCode]);
+
+    useEffect(() => {
+        if (payosReturnStatus !== 'success' || isPremium) return;
+
+        const intervalId = setInterval(() => {
+            void refetchCurrentUser();
+        }, PAYMENT_STATUS_POLL_INTERVAL_MS);
+
+        return () => clearInterval(intervalId);
+    }, [isPremium, payosReturnStatus, refetchCurrentUser]);
 
     useEffect(() => {
         const subscription = AppState.addEventListener('change', (nextState) => {
@@ -412,7 +515,7 @@ export default function PremiumPaymentScreen() {
                                         Trạng thái API: {statusQuery.data.rawStatus}
                                     </Text>
                                 )}
-                                {statusQuery.error && (
+                                {statusQuery.error && payosReturnStatus !== 'success' && (
                                     <Text className="text-xs text-red-600 mt-3">
                                         {getPaymentErrorMessage(statusQuery.error)}
                                     </Text>
@@ -421,34 +524,35 @@ export default function PremiumPaymentScreen() {
                         </View>
 
                         <View className="flex-row gap-3 mt-5">
-                            <TouchableOpacity
-                                onPress={handleOpenExistingCheckout}
-                                disabled={isOpeningCheckout}
-                                className="flex-1 bg-gray-900 rounded-xl py-3 items-center justify-center flex-row gap-2"
-                            >
-                                {isOpeningCheckout ? (
-                                    <ActivityIndicator color="white" size="small" />
-                                ) : (
-                                    <>
-                                        <ExternalLink size={17} color="white" />
-                                        <Text className="text-white font-bold">Mở PayOS</Text>
-                                    </>
-                                )}
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => statusQuery.refetch()}
-                                disabled={!orderCode || statusQuery.isFetching}
-                                className="w-14 bg-white rounded-xl items-center justify-center border border-gray-200"
-                            >
-                                {statusQuery.isFetching ? (
-                                    <ActivityIndicator color="#7C3BED" size="small" />
-                                ) : (
-                                    <RefreshCw
-                                        size={18}
-                                        color={orderCode ? '#7C3BED' : '#9CA3AF'}
-                                    />
-                                )}
-                            </TouchableOpacity>
+                            {!isTerminalStatus && (
+                                <TouchableOpacity
+                                    onPress={handleOpenExistingCheckout}
+                                    disabled={isOpeningCheckout}
+                                    className="flex-1 bg-gray-900 rounded-xl py-3 items-center justify-center flex-row gap-2"
+                                >
+                                    {isOpeningCheckout ? (
+                                        <ActivityIndicator color="white" size="small" />
+                                    ) : (
+                                        <>
+                                            <ExternalLink size={17} color="white" />
+                                            <Text className="text-white font-bold">Mở PayOS</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                            {shouldSyncPaymentStatus && (
+                                <TouchableOpacity
+                                    onPress={() => statusQuery.refetch()}
+                                    disabled={statusQuery.isFetching}
+                                    className={`${isTerminalStatus ? 'flex-1' : 'w-14'} bg-white rounded-xl items-center justify-center border border-gray-200 py-3`}
+                                >
+                                    {statusQuery.isFetching ? (
+                                        <ActivityIndicator color="#7C3BED" size="small" />
+                                    ) : (
+                                        <RefreshCw size={18} color="#7C3BED" />
+                                    )}
+                                </TouchableOpacity>
+                            )}
                         </View>
 
                         {isTerminalStatus && paymentStatus !== 'success' && (

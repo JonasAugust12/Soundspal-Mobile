@@ -1,5 +1,6 @@
 import type {
     NormalizedPaymentStatus,
+    PayOSReturnInfo,
     PaymentStatusData,
     PaymentStatusResult,
 } from '@/types/payment.type';
@@ -121,7 +122,7 @@ export function getPaymentErrorMessage(error: unknown): string {
     }
 
     if (err?.response?.status === 404) {
-        return 'Không tìm thấy giao dịch thanh toán.';
+        return 'Giao dịch đang được xác nhận. Vui lòng đợi vài giây rồi thử lại.';
     }
 
     if (err?.response?.status && err.response.status >= 500) {
@@ -135,36 +136,100 @@ export function getPaymentErrorMessage(error: unknown): string {
     return err?.response?.data?.message || err?.message || 'Không thể xử lý thanh toán lúc này.';
 }
 
-export function extractPayOSOrderCode(checkoutUrl: string): string | null {
-    if (!checkoutUrl) return null;
+export function normalizePayOSOrderCode(value?: string | null): string | null {
+    if (!value) return null;
+
+    const trimmed = value.trim();
+    return /^\d+$/.test(trimmed) ? trimmed : null;
+}
+
+export function extractPayOSOrderCode(url: string): string | null {
+    if (!url) return null;
 
     try {
-        const parsedUrl = new URL(checkoutUrl);
-        const queryOrderCode =
-            parsedUrl.searchParams.get('orderCode') ||
-            parsedUrl.searchParams.get('order_code') ||
-            parsedUrl.searchParams.get('order');
+        const parsedUrl = new URL(url);
+        return (
+            normalizePayOSOrderCode(parsedUrl.searchParams.get('orderCode')) ||
+            normalizePayOSOrderCode(parsedUrl.searchParams.get('order_code')) ||
+            normalizePayOSOrderCode(parsedUrl.searchParams.get('order'))
+        );
+    } catch {
+        const fallbackOrderCode = url.match(/(?:orderCode|order_code|order)=([0-9]+)/i)?.[1];
+        return normalizePayOSOrderCode(fallbackOrderCode);
+    }
+}
 
-        if (queryOrderCode && /^\d+$/.test(queryOrderCode)) {
-            return queryOrderCode;
+const PAYOS_PAID_STATUSES = new Set(['paid', 'success', 'succeeded', 'completed', 'complete']);
+const PAYOS_CANCELLED_STATUSES = new Set(['cancelled', 'canceled', 'cancel']);
+
+export function parsePayOSReturnUrl(url: string): PayOSReturnInfo {
+    const orderCode = extractPayOSOrderCode(url);
+    let rawStatus: string | null = null;
+
+    try {
+        const parsedUrl = new URL(url);
+        rawStatus =
+            parsedUrl.searchParams.get('status') ||
+            parsedUrl.searchParams.get('payment_status') ||
+            parsedUrl.searchParams.get('paymentStatus');
+
+        if (!rawStatus && parsedUrl.searchParams.get('code') === '00') {
+            rawStatus = 'PAID';
         }
 
-        const pathOrderCode = parsedUrl.pathname
-            .split('/')
-            .reverse()
-            .find((segment) => /^\d+$/.test(segment));
-
-        if (pathOrderCode) {
-            return pathOrderCode;
+        if (!rawStatus && parsedUrl.searchParams.get('cancel') === 'true') {
+            rawStatus = 'CANCELLED';
         }
     } catch {
-        const fallbackOrderCode = checkoutUrl.match(
-            /(?:orderCode|order_code|order)=([0-9]+)/i,
-        )?.[1];
-        if (fallbackOrderCode) return fallbackOrderCode;
+        const statusMatch = url.match(/(?:^|[?&])status=([^&]+)/i);
+        rawStatus = statusMatch?.[1] ? decodeURIComponent(statusMatch[1]) : null;
+    }
 
-        const numericSegments = checkoutUrl.match(/\d{6,}/g);
-        if (numericSegments?.length) return numericSegments[numericSegments.length - 1];
+    let normalizedStatus: NormalizedPaymentStatus = 'unknown';
+    if (rawStatus) {
+        const compact = rawStatus.trim().toLowerCase();
+        if (PAYOS_PAID_STATUSES.has(compact)) {
+            normalizedStatus = 'success';
+        } else if (PAYOS_CANCELLED_STATUSES.has(compact)) {
+            normalizedStatus = 'cancelled';
+        } else {
+            normalizedStatus = normalizePaymentStatus(rawStatus);
+        }
+    }
+
+    return { orderCode, rawStatus, normalizedStatus };
+}
+
+export function extractLatestOrderCodeFromHistory(data: unknown): string | null {
+    if (!data) return null;
+
+    const items: unknown[] = [];
+
+    if (Array.isArray(data)) {
+        items.push(...data);
+    } else if (typeof data === 'object') {
+        const record = data as Record<string, unknown>;
+        const nested = ['items', 'transactions', 'payments', 'records'].find((key) =>
+            Array.isArray(record[key]),
+        );
+
+        if (nested) {
+            items.push(...(record[nested] as unknown[]));
+        } else {
+            items.push(data);
+        }
+    }
+
+    for (const item of items) {
+        if (!item || typeof item !== 'object') continue;
+
+        const record = item as Record<string, unknown>;
+        const code = record.order_code ?? record.orderCode ?? record.payos_order_code;
+        const normalized = normalizePayOSOrderCode(
+            code !== undefined && code !== null ? String(code) : null,
+        );
+
+        if (normalized) return normalized;
     }
 
     return null;

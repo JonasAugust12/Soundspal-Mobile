@@ -1,8 +1,11 @@
 import type { CheckoutRequest } from '@/types/payment.type';
 
-export const PREMIUM_UPGRADE_PAYMENT: Omit<CheckoutRequest, 'reference_id'> = {
+export const PREMIUM_UPGRADE_PAYMENT: Omit<
+    CheckoutRequest,
+    'reference_id' | 'redirect_url' | 'cancel_url'
+> = {
     purpose: 'ACCOUNT_UPGRADE',
-    amount: 99000,
+    amount: 2000,
     description: 'Soundspal Premium 30 days',
 };
 
