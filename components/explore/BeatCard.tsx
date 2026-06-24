@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { PlayCircle, User, Activity, Clock, Plus, Trash2 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Play, User, Activity, Clock, Plus, Trash2 } from 'lucide-react-native';
 
 export type BeatCardProps = {
     title: string;
@@ -75,7 +76,14 @@ export function BeatCard({
                     />
                     {/* Play Icon Overlay */}
                     <View className="absolute inset-0 bg-black/20 items-center justify-center">
-                        <PlayCircle size={40} color="#ffffff" fill="transparent" opacity={0.9} />
+                        <View className="w-10 h-10 rounded-full bg-white/20 items-center justify-center backdrop-blur-md">
+                            <Play
+                                size={20}
+                                color="#ffffff"
+                                fill="#ffffff"
+                                style={{ marginLeft: 2 }}
+                            />
+                        </View>
                     </View>
                 </TouchableOpacity>
 
@@ -90,11 +98,16 @@ export function BeatCard({
                                 {title}
                             </Text>
                             {isHot && (
-                                <View className="bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
-                                    <Text className="text-orange-500 text-[10px] font-bold">
+                                <LinearGradient
+                                    colors={['#f471b7', '#f43f5e']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    className="px-2 py-0.5 rounded-full"
+                                >
+                                    <Text className="text-white text-[10px] font-bold tracking-wider">
                                         HOT
                                     </Text>
-                                </View>
+                                </LinearGradient>
                             )}
                         </View>
 

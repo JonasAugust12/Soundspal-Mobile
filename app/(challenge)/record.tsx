@@ -41,7 +41,7 @@ export default function RecordStudioScreen() {
                             durationMillis={durationMillis}
                             isRecording={isRecording}
                         />
-                        <WaveformCanvas />
+                        <WaveformCanvas isRecording={isRecording} />
                         <StudioDashboard
                             beat={beat}
                             onDurationUpdate={setDurationMillis}
