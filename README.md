@@ -52,6 +52,10 @@ shared/
 - TanStack React Query + Zustand
 - Axios + Socket.IO
 
-## Architecture
+## Documentation
 
-See [docs/architecture.md](./docs/architecture.md) for folder structure, feature map, and Mermaid diagrams.
+| Doc                                                  | Description                                |
+| ---------------------------------------------------- | ------------------------------------------ |
+| [docs/features/README.md](./docs/features/README.md) | Tài liệu từng feature (business + code)    |
+| [docs/architecture.md](./docs/architecture.md)       | Sơ đồ Clean Architecture, Mermaid diagrams |
+| [docs/onboarding.md](./docs/onboarding.md)           | Hướng dẫn nắm source tổng quan             |
