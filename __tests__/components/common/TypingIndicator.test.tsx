@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { TypingIndicator } from '@/components/common/TypingIndicator';
+import { TypingIndicator } from '@/shared/presentation/ui/TypingIndicator';
 
 describe('TypingIndicator', () => {
     it('should render typing indicator', () => {

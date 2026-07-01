@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { SearchBar } from '@/components/common/SearchBar';
+import { SearchBar } from '@/shared/presentation/ui/SearchBar';
 
 describe('SearchBar', () => {
     it('should render with default placeholder', () => {

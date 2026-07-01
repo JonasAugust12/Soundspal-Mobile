@@ -8,9 +8,9 @@ module.exports = {
         '^@/(.*)$': '<rootDir>/$1',
     },
     collectCoverageFrom: [
-        'utils/**/*.{ts,tsx}',
-        'hooks/**/*.{ts,tsx}',
-        'components/**/*.{ts,tsx}',
+        'shared/**/*.{ts,tsx}',
+        'features/**/presentation/**/*.{ts,tsx}',
+        'features/**/domain/**/*.{ts,tsx}',
         '!**/*.d.ts',
         '!**/node_modules/**',
     ],

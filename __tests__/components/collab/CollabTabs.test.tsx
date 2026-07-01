@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { CollabTabs } from '@/components/collab/CollabTabs';
+import { CollabTabs } from '@/features/collab/presentation/components/CollabTabs';
 
 describe('CollabTabs', () => {
     const mockOnTabChange = jest.fn();

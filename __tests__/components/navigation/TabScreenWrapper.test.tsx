@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
-import { TabScreenWrapper } from '@/components/navigation/TabScreenWrapper';
+import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
 
 describe('TabScreenWrapper', () => {
     it('should render children', () => {

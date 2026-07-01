@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { BeatCard } from '@/components/explore/BeatCard';
+import { BeatCard } from '@/features/explore/presentation/components/BeatCard';
 
 describe('BeatCard', () => {
     const defaultProps = {

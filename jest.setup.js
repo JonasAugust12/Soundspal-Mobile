@@ -14,7 +14,7 @@ jest.mock('react-native-mmkv', () => ({
 }));
 
 // Mock mmkvStorage module
-jest.mock('@/lib/mmkvStorage', () => ({
+jest.mock('@/shared/infrastructure/storage/mmkvStorage', () => ({
     mmkvStorage: {
         getItem: jest.fn((key) => null),
         setItem: jest.fn((key, value) => {}),

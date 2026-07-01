@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { JobCard } from '@/components/home/JobCard';
+import { JobCard } from '@/features/home/presentation/components/JobCard';
 
 describe('JobCard', () => {
     const mockItem = {

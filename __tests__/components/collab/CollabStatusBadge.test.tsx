@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { CollabStatusBadge } from '@/components/collab/CollabStatusBadge';
+import { CollabStatusBadge } from '@/features/collab/presentation/components/CollabStatusBadge';
 
 describe('CollabStatusBadge', () => {
     it('should render pending_review status', () => {

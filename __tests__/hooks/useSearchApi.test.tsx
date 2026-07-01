@@ -6,10 +6,10 @@ import {
     useGetGenres,
     useFeaturedUsers,
     useFeaturedJobs,
-} from '@/hooks/useSearchApi';
-import { createApiCall } from '@/lib/apiClient';
+} from '@/features/explore/presentation/hooks/useSearchApi';
+import { createApiCall } from '@/shared/infrastructure/api/apiClient';
 
-jest.mock('@/lib/apiClient');
+jest.mock('@/shared/infrastructure/api/apiClient');
 
 const mockCreateApiCall = createApiCall as jest.MockedFunction<typeof createApiCall>;
 

@@ -2,11 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { OnlineIndicator } from '@/components/common/OnlineIndicator';
-import { useMessagingStore } from '@/stores/messagingStore';
+import { OnlineIndicator } from '@/shared/presentation/ui/OnlineIndicator';
+import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
 
 // Mock the messaging store
-jest.mock('@/stores/messagingStore');
+jest.mock('@/features/messaging/presentation/store/messagingStore');
 
 const mockUseMessagingStore = useMessagingStore as jest.MockedFunction<typeof useMessagingStore>;
 

@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { JobApplyModal } from '@/components/jobs/JobApplyModal';
+import { JobApplyModal } from '@/features/jobs/presentation/components/JobApplyModal';
 import { Alert } from 'react-native';
 
 // Mock the API hook
-jest.mock('@/hooks/useJobApi', () => ({
+jest.mock('@/features/jobs/presentation/hooks/useJobApi', () => ({
     useSubmitJobApplication: () => ({
         mutate: jest.fn((data, options) => {
             if (options?.onSuccess) {
@@ -16,7 +16,7 @@ jest.mock('@/hooks/useJobApi', () => ({
 }));
 
 // Mock MediaPicker component
-jest.mock('@/components/jobs/MediaPicker', () => ({
+jest.mock('@/features/jobs/presentation/components/MediaPicker', () => ({
     MediaPicker: 'MediaPicker',
 }));
 

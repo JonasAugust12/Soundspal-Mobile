@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { FormInput } from '@/components/auth/FormInput';
+import { FormInput } from '@/features/auth/presentation/components/FormInput';
 
 describe('FormInput', () => {
     it('should render with label', () => {

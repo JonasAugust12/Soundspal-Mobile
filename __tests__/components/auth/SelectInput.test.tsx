@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { SelectInput } from '@/components/auth/SelectInput';
+import { SelectInput } from '@/features/auth/presentation/components/SelectInput';
 import { User, Briefcase } from 'lucide-react-native';
 
 describe('SelectInput', () => {

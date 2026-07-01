@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Home, Compass, Briefcase, MessageCircle, User } from 'lucide-react-native';
-import { CustomTabBar } from '@/components/navigation/CustomTabBar';
+import { CustomTabBar } from '@/shared/presentation/navigation/CustomTabBar';
 
 export default function TabsLayout() {
     return (

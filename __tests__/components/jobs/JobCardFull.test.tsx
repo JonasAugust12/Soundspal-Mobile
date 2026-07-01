@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { JobCardFull } from '@/components/jobs/JobCardFull';
+import { JobCardFull } from '@/features/jobs/presentation/components/JobCardFull';
 
 // Mock expo-router
 jest.mock('expo-router', () => ({
@@ -11,7 +11,7 @@ jest.mock('expo-router', () => ({
 }));
 
 // Mock JobApplyModal to avoid complex child component rendering
-jest.mock('@/components/jobs/JobApplyModal', () => ({
+jest.mock('@/features/jobs/presentation/components/JobApplyModal', () => ({
     JobApplyModal: 'JobApplyModal',
 }));
 
