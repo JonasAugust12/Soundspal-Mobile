@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { messagingRepository } from '@/features/messaging/data/repositories/MessagingRepositoryImpl';
-import type {
-    Conversation,
-    Message,
-    SendMessageRequest,
-    EditMessageRequest,
-    CreateConversationRequest,
-} from '@/features/messaging/domain/entities/messaging.type';
+import type { EditMessageRequest } from '@/features/messaging/domain/entities/messaging.type';
 
 // API Calls
 // Query Keys

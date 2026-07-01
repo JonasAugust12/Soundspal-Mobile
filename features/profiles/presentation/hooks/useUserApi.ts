@@ -1,13 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-    User,
-    MediaItem,
-    MediaResponse,
-    VideoItem,
-    VideoResponse,
-    GenresResponse,
-} from '@/features/profiles/domain/entities/user.type';
-import { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
 import { userRepository } from '@/features/profiles/data/repositories/UserRepositoryImpl';
 
 // Query Keys

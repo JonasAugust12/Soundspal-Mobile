@@ -4,19 +4,11 @@ import {
     PREMIUM_UPGRADE_PAYMENT,
     PAYMENT_STATUS_STALE_TIME_MS,
 } from '@/features/payments/domain/constants/payment';
-import type { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
 import type {
     CheckoutRequest,
-    CheckoutResponse,
-    PaymentCheckoutResult,
     PaymentHistoryParams,
-    PaymentStatusData,
-    PaymentStatusResult,
 } from '@/features/payments/domain/entities/payment.type';
-import {
-    extractLatestOrderCodeFromHistory,
-    mapPaymentStatusResult,
-} from '@/features/payments/domain/utils/payment';
+import { extractLatestOrderCodeFromHistory } from '@/features/payments/domain/utils/payment';
 import { paymentRepository } from '@/features/payments/data/repositories/PaymentRepositoryImpl';
 
 function isPaymentStatusNotFoundError(error: unknown): boolean {

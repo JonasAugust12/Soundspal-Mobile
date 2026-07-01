@@ -1,12 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { searchRepository } from '@/features/explore/data/repositories/SearchRepositoryImpl';
-import type {
-    FeaturedUsersData,
-    FeaturedJobsData,
-    SearchUsersRequest,
-    SearchUsersData,
-    GetGenresData,
-} from '@/features/explore/domain/entities/search.type';
+import type { SearchUsersRequest } from '@/features/explore/domain/entities/search.type';
 
 // API Calls
 // Search Users Hook
