@@ -6,3 +6,4 @@ export { TypingIndicator } from './TypingIndicator';
 export { ChatItem } from './ChatItem';
 export { FilterSheet } from './FilterSheet';
 export { ConfirmModal } from './ConfirmModal';
+export { CommonHeader } from './CommonHeader';

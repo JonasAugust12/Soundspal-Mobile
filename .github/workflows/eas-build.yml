@@ -1,9 +1,7 @@
 name: CD - EAS Build Production & Deploy Play Store
 
 on:
-    push:
-        tags:
-            - 'release-v*'
+    workflow_dispatch:
 
 jobs:
     eas-build-and-deploy:
@@ -26,15 +24,20 @@ jobs:
             - name: Setup EAS CLI
               run: npm install -g eas-cli
 
-            # Step 1: Trigger the build on Expo servers and wait for completion
+            # JSON is written to stdout (--json redirects normal logs to stderr)
             - name: Build Android Production on EAS
-              run: eas build --platform android --profile production --non-interactive --wait
+              run: eas build --platform android --profile production --non-interactive --wait --json > eas-build.json
               env:
                   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-            # Step 2: Download the generated .aab file to the GitHub runner
-            - name: Download AAB file from EAS
-              run: eas build:download --platform android --latest --output ./app-release.aab
+            # eas build:download does not support store AABs with --latest/--output; use archive URL from build JSON
+            - name: Download AAB from EAS artifact
+              run: |
+                  set -euo pipefail
+                  URL=$(jq -er '.[0].artifacts.applicationArchiveUrl' eas-build.json)
+                  curl -fSL -o ./app-release.aab \
+                    -H "Authorization: Bearer ${EXPO_TOKEN}" \
+                    "$URL"
               env:
                   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 

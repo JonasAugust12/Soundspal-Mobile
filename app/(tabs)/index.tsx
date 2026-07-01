@@ -165,26 +165,26 @@ export default function HomeScreen() {
                         <View className="flex-row items-center gap-2">
                             <View className="bg-white/20 px-3 py-1 rounded-full flex-row items-center gap-1.5">
                                 <TrendingUp size={14} color="#FFFFFF" />
-                                <Text className="text-white text-xs font-bold">Hot</Text>
+                                <Text className="text-white text-xs font-bold">Thử thách mới</Text>
                             </View>
                         </View>
 
-                        <Text className="text-2xl font-black text-white leading-tight">
-                            Kết nối với{'\n'}tài năng âm nhạc
+                        <Text className="text-2xl font-black text-white leading-tight font-heading">
+                            SONIC PULSE{'\n'}CYBERPUNK
                         </Text>
 
-                        <Text className="text-white/80 text-sm max-w-[85%]">
-                            Khám phá hàng nghìn nghệ sĩ tài năng cho dự án của bạn
+                        <Text className="text-white/80 text-sm max-w-[85%] font-body">
+                            Trổ tài thu âm trên beat Cyberpunk, leo rank và tỏa sáng ngay hôm nay!
                         </Text>
 
                         <TouchableOpacity
-                            onPress={() => router.push('/(tabs)/explore')}
+                            onPress={() => router.push('/(challenge)/explore')}
                             activeOpacity={0.9}
                             className="self-start mt-2"
                         >
-                            <View className="bg-white px-6 py-3 rounded-2xl flex-row items-center gap-2">
-                                <Text className="text-purple-600 font-bold text-sm">
-                                    Khám phá ngay
+                            <View className="bg-white px-6 py-3 rounded-2xl flex-row items-center gap-2 shadow-sm">
+                                <Text className="text-[#7d3bed] font-bold font-body text-sm">
+                                    Tham gia ngay
                                 </Text>
                                 <ChevronRight size={18} color="#7C3BED" />
                             </View>
