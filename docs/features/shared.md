@@ -124,38 +124,235 @@ createMMKV({ id: 'soundspal-storage', encryptionKey: '...' });
 
 ---
 
-## 6. `socketService`
+## 6. `socketService` — Setup socket chi tiết
 
-**File:** `shared/infrastructure/socket/socketService.ts`
+**File:** `shared/infrastructure/socket/socketService.ts`  
+**Thư viện:** `socket.io-client` (trong `package.json`)  
+**Provider (tùy chọn):** `shared/presentation/providers/SocketProvider.tsx`
 
-| Config        | Giá trị                                         |
-| ------------- | ----------------------------------------------- |
-| URL           | `https://talentlink.io.vn`                      |
-| Path          | `/socket.io`                                    |
-| Auth          | token trong `auth.token`, `query.token`, header |
-| Max reconnect | 5 lần                                           |
+---
 
-### Events nhận → `useMessagingStore`
+### 6.1 Kiến trúc tổng quan
 
-| Event                 | Hành động                                             |
-| --------------------- | ----------------------------------------------------- |
-| `message:new`         | `addMessage`, tăng unread nếu không ở conversation đó |
-| `message:edited`      | `updateMessage`                                       |
-| `message:deleted`     | `removeMessage`                                       |
-| `typing:start/stop`   | typing indicator                                      |
-| `user:online/offline` | online status                                         |
+```
+┌─────────────────────────────────────────────────────────────┐
+│  app/_layout.tsx                                             │
+│    QueryClientProvider                                       │
+│      (SocketProvider)  ← CÓ CODE nhưng CHƯA BỌC vào layout │
+│                                                             │
+│  NotificationsScreen / DetailMessageScreen                   │
+│    socketService.connect()  ← CÁCH ĐANG DÙNG (lazy)         │
+└─────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+              socketService (singleton)
+                          │
+          io('https://talentlink.io.vn', { ... })
+                          │
+                          ▼
+              Server Socket.IO (backend)
+```
 
-### Events gửi
+**Singleton** = cả app chỉ có **một** instance `socketService` — mọi màn dùng chung, không tạo socket mới mỗi lần.
 
-`conversation:join`, `conversation:leave`, `typing:start`, `typing:stop`
+---
 
-### `SocketProvider`
+### 6.2 Bước setup trong code (từng dòng `connect()`)
 
-**File:** `shared/presentation/providers/SocketProvider.tsx`
+Khi gọi `socketService.connect()`:
 
-Connect khi `user && accessToken`. Export `useSocket()`.
+```typescript
+// 1. Guard — tránh connect trùng
+if (isConnecting) return; // Đang connect dở
+if (hasReachedMaxAttempts) return; // Fail 5 lần → dừng hẳn
+if (socket?.connected) return; // Đã connect rồi
 
-**Lưu ý:** Provider **chưa mount** trong `app/_layout.tsx` — socket connect lazy từ màn messaging. Có thể mount global sau nếu cần unread realtime trên tab bar.
+// 2. Bắt buộc đã login
+const { user, accessToken } = useAuthStore.getState();
+if (!user || !accessToken) return null;
+
+// 3. Tạo kết nối Socket.IO
+this.socket = io('https://talentlink.io.vn', { ...options });
+
+// 4. Đăng ký listeners
+this.setupListeners();
+```
+
+#### Giải thích từng option `io(...)`
+
+| Option                       | Giá trị                    | Ý nghĩa                                               |
+| ---------------------------- | -------------------------- | ----------------------------------------------------- |
+| `path`                       | `/socket.io`               | Endpoint Socket.IO trên server (không phải `/api/v1`) |
+| `auth.token`                 | JWT access                 | Cách 1 gửi token — chuẩn Socket.IO v4                 |
+| `query.token`                | JWT access                 | Cách 2 — một số server đọc từ query string            |
+| `extraHeaders.Authorization` | `Bearer ...`               | Cách 3 — giống REST API                               |
+| `extraHeaders['x-user-id']`  | user.id                    | Server biết user nào connect                          |
+| `transports`                 | `['websocket', 'polling']` | Thử WebSocket trước; fail thì fallback long-polling   |
+| `reconnection`               | `true`                     | Socket.IO tự reconnect khi mất mạng                   |
+| `reconnectionAttempts`       | `5`                        | Tối đa 5 lần (built-in của thư viện)                  |
+
+**Tại sao gửi token 3 chỗ?** Backend có thể đọc token từ nhiều nơi tùy middleware — gửi đủ để không bị reject auth.
+
+**URL khác `apiClient`:** REST dùng `https://talentlink.io.vn/api/v1`; socket dùng **root** `https://talentlink.io.vn` + path `/socket.io`.
+
+---
+
+### 6.3 Hai cách “bật” socket trong project
+
+#### Cách A — Lazy (đang dùng)
+
+`NotificationsScreen.tsx`:
+
+```typescript
+useEffect(() => {
+    if (!socketService.isConnected()) {
+        socketService.connect();
+    }
+}, []);
+```
+
+- Socket chỉ connect khi user **vào tab Tin nhắn**
+- Tiết kiệm pin/băng thông nếu user không chat
+- Nhược: đang ở tab Home/Jobs **không** nhận tin realtime trên inbox
+
+#### Cách B — Global qua Provider (có sẵn, chưa bật)
+
+`SocketProvider.tsx` — khi `user && accessToken` thì `connect()`, logout thì `disconnect()`.
+
+Để bật, bọc trong `app/_layout.tsx`:
+
+```tsx
+<QueryClientProvider client={queryClient}>
+    <SocketProvider>
+        <SafeAreaProvider>...</SafeAreaProvider>
+    </SocketProvider>
+</QueryClientProvider>
+```
+
+`SocketProvider` phải **bên trong** `QueryClientProvider` (vì gọi `useQueryClient()`).
+
+Sau khi bật có thể xóa `connect()` thừa ở `NotificationsScreen` (giữ `isConnected` check vẫn an toàn).
+
+---
+
+### 6.4 `setupListeners()` — sau khi connect
+
+Mỗi lần `connect()` gọi `removeAllListeners()` trước — **tránh đăng ký trùng** (connect 2 lần → 1 tin hiện 2 lần).
+
+**Nhóm listener:**
+
+| Nhóm     | Events                                             | Cập nhật                             |
+| -------- | -------------------------------------------------- | ------------------------------------ |
+| Kết nối  | `connect`, `disconnect`, `connect_error`, `error`  | Log + reconnect logic                |
+| Tin nhắn | `message:new`, `message:edited`, `message:deleted` | `messagingStore`                     |
+| Typing   | `typing:start`, `typing:stop`                      | `messagingStore` (bỏ qua chính mình) |
+| Online   | `user:online`, `user:offline`                      | `messagingStore`                     |
+
+Listeners gọi `useMessagingStore.getState()` — **không cần React hook**, chạy được ngoài component.
+
+---
+
+### 6.5 Reconnect — hai lớp
+
+| Lớp                    | Ai xử lý                          | Khi nào                                                       |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------- |
+| **Socket.IO built-in** | `reconnection: true` trong `io()` | Mất mạng tạm, server restart                                  |
+| **Custom**             | `handleConnectionError()`         | `connect_error` — backoff 1s, 2s, 4s... max 10s, tối đa 5 lần |
+
+Sau 5 lần custom fail → `hasReachedMaxAttempts = true` → `connect()` trả `null` cho đến khi gọi `resetReconnectAttempts()`.
+
+`disconnect` với reason `io server disconnect` → server **chủ động ngắt** (thường auth sai) → `handleDisconnect()` thử disconnect + connect lại sau 1s.
+
+**Lưu ý:** Token hết hạn — socket **không** tự refresh JWT như `apiClient`. Server disconnect → cần login lại hoặc reconnect sau khi token mới (chưa có logic refresh token trong socketService).
+
+---
+
+### 6.6 “Phòng chat” — join / leave conversation
+
+Connect socket ≠ vào được mọi thread. Phải **join phòng**:
+
+```typescript
+// Vào DetailMessageScreen
+socketService.joinConversation(conversationId);
+// emit: conversation:join { conversationId }
+
+// Rời màn
+socketService.leaveConversation(conversationId);
+// emit: conversation:leave { conversationId }
+```
+
+Server thường chỉ push `message:new` cho user **đã join** phòng đó (hoặc push global + client filter — tùy backend).
+
+**Typing** cũng emit riêng:
+
+```typescript
+socketService.startTyping(conversationId); // typing:start
+socketService.stopTyping(conversationId); // typing:stop
+```
+
+`joinConversation` / `startTyping` **không làm gì** nếu `!socket.connected` — nên luôn `connect()` trước.
+
+---
+
+### 6.7 Timeline một phiên socket (debug mental model)
+
+```
+T0  User login → authStore có accessToken
+T1  Vào tab Tin nhắn → connect()
+T2  Event 'connect' → socket.id được cấp
+T3  User mở chat với B → joinConversation(conv-123)
+T4  B gửi tin → server emit message:new → addMessage store
+T5  User gõ → startTyping → B thấy TypingIndicator
+T6  User back → leaveConversation(conv-123)
+T7  App background lâu → có thể disconnect
+T8  App foreground → Socket.IO tự reconnect (nếu chưa max attempts)
+T9  Logout → nên disconnect() (Provider hoặc manual)
+```
+
+---
+
+### 6.8 API public của `socketService`
+
+| Method                               | Mục đích                                         |
+| ------------------------------------ | ------------------------------------------------ |
+| `connect()`                          | Mở kết nối (cần auth)                            |
+| `disconnect()`                       | Đóng hẳn, xóa listeners                          |
+| `isConnected()`                      | Check `socket.connected`                         |
+| `joinConversation(id)`               | Vào phòng chat                                   |
+| `leaveConversation(id)`              | Rời phòng                                        |
+| `startTyping(id)` / `stopTyping(id)` | Báo đang gõ                                      |
+| `resetReconnectAttempts()`           | Reset sau khi fix mạng / auth                    |
+| `setQueryClient(client)`             | Provider gọi — **hiện chưa dùng** trong handlers |
+
+---
+
+### 6.9 Checklist debug socket
+
+| Triệu chứng                  | Kiểm tra                                            |
+| ---------------------------- | --------------------------------------------------- |
+| Không connect                | Đã login? `accessToken` trong authStore?            |
+| `connect_error`              | Token hết hạn? Server `talentlink.io.vn` reachable? |
+| Connect nhưng không nhận tin | Đã `joinConversation`? Đúng `conversationId`?       |
+| Tin nhận 2 lần               | `connect()` gọi nhiều lần không qua guard?          |
+| Max retry reached            | Gọi `resetReconnectAttempts()` hoặc restart app     |
+| Typing không hiện            | Socket connected? `startTyping` có emit?            |
+
+**Log trong dev:** tìm console `🔌`, `✅ Connected`, `📨 New message`, `📥 Joining conversation`.
+
+---
+
+### 6.10 File liên quan
+
+| File                                                              | Vai trò                         |
+| ----------------------------------------------------------------- | ------------------------------- |
+| `shared/infrastructure/socket/socketService.ts`                   | Core — connect, listeners, emit |
+| `shared/presentation/providers/SocketProvider.tsx`                | React wrapper (optional global) |
+| `features/messaging/presentation/store/messagingStore.ts`         | State nhận từ socket            |
+| `features/messaging/presentation/screens/NotificationsScreen.tsx` | `connect()` lazy                |
+| `features/messaging/presentation/screens/DetailMessageScreen.tsx` | join/leave/typing               |
+| `app/_layout.tsx`                                                 | Chưa bọc SocketProvider         |
+
+**Legacy (tránh import nhầm):** `services/socketService.ts`, `providers/SocketProvider.tsx` — bản cũ trước refactor; dùng path trong `shared/`.
 
 ---
 
