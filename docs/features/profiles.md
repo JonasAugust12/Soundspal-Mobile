@@ -71,6 +71,48 @@ Các tab khác: Save → PUT mutation + invalidate cache
 
 ---
 
+## 2.5 User lưu ở đâu? — authStore, userStore, useGetCurrentUser
+
+Dev mới hay thấy **2 file store** và hỏi: _"Thông tin user nằm chỗ nào?"_
+
+### Tại sao lại có câu hỏi này?
+
+Trong folder `profiles/` có file `store/userStore.ts`.  
+Trong folder `auth/` lại có `store/authStore.ts` — cũng có field tên `user`.
+
+Đọc sơ qua dễ tưởng: **2 nơi cùng lưu user** → dễ sửa nhầm file.
+
+### Thực tế trong app hiện tại
+
+| Nơi                                       | Lưu gì                                                                    | Có đang dùng không?               |
+| ----------------------------------------- | ------------------------------------------------------------------------- | --------------------------------- |
+| **`authStore`** (`features/auth/...`)     | Token login + thông tin user **cơ bản** (id, email, tên, avatar, role...) | **Có** — toàn app dùng            |
+| **`userStore`** (`features/profiles/...`) | Chỉ `name` + `email` — file cũ / placeholder                              | **Không** — không file nào import |
+| **`useGetCurrentUser`** (React Query)     | Gọi API `GET /users/me` — profile **đầy đủ** (bio, genres, venue...)      | **Có** — màn profile dùng         |
+
+**Grep codebase:** `useUserStore` chỉ xuất hiện trong `userStore.ts`, không screen/hook nào gọi.
+
+### Ví dụ dễ hiểu
+
+- **`authStore`** = thẻ căn cước trong ví: đủ để **vào cửa** (login, gắn token API, hiện avatar trên header).
+- **`useGetCurrentUser`** = hồ sơ chi tiết trong tủ: bio, genres, portfolio — **mở màn profile** mới cần, lấy từ server.
+- **`userStore`** = ngăn kéo cũ dán nhãn "user" nhưng **không ai mở** — có thể xóa hoặc dùng lại sau, hiện bỏ qua khi đọc code.
+
+### Khi sửa code thì nhớ
+
+| Muốn làm                               | Mở file / hook                             |
+| -------------------------------------- | ------------------------------------------ |
+| Đổi token, logout, user sau login      | `authStore`                                |
+| Cập nhật avatar trên header sau upload | `authStore.updateAvatarUrl`                |
+| Hiển thị / sửa profile đầy đủ          | `useGetCurrentUser`, `useUpdateBasic`, ... |
+| **Đừng** dùng                          | `userStore` (chưa wired)                   |
+
+### JWT / claims là gì (trong câu trả lời cũ)?
+
+Sau login, `authStore` lưu JWT. Bên trong JWT có vài field decode ra được (id, email, role...) — gọi là **claims**. Đủ cho việc "ai đang đăng nhập", **không** đủ cho toàn bộ trang profile.
+
+---
+
 ## 3. Cấu trúc code
 
 ```
@@ -198,8 +240,17 @@ features/profiles/
 
 ## 9. Câu hỏi thường gặp
 
-**H: userStore vs authStore?**  
-T: `authStore` giữ JWT + claims cơ bản. `userStore` gần như không dùng — profile đầy đủ fetch qua `useGetCurrentUser`.
+**H: `userStore` vs `authStore` — khác gì, dùng cái nào?**
+
+Trong project có 2 file tên giống nhau nhưng **chỉ 1 cái đang hoạt động**:
+
+- **`authStore`** (feature auth): lưu token + user cơ bản sau login; persist trên máy (MMKV). Mọi API và màn cần biết "đã login chưa" đều dùng cái này.
+- **`userStore`** (feature profiles): file tồn tại nhưng **không được gọi** ở đâu — coi như code thừa / chỗ dự phòng.
+- Profile chi tiết (bio, genres, venue...): không nằm trong store lâu dài — fetch qua **`useGetCurrentUser`** (`GET /users/me`) mỗi khi cần.
+
+→ Sửa login/token → `authStore`. Sửa hiển thị profile → hooks trong `useUserApi.ts`. **Không** sửa `userStore` trừ khi team quyết định dùng lại.
+
+Chi tiết: mục [2.5 User lưu ở đâu?](#25-user-lưu-ở-đâu--authstore-userstore-usegetcurrentuser).
 
 **H: Portfolio vs submission media?**  
 T: Portfolio = showcase trên profile (`/users/*`). Submission media = file đính kèm đơn ứng tuyển (`submissions/*`).
