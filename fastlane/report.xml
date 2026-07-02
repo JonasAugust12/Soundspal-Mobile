@@ -5,57 +5,57 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.0672485">
+      <testcase classname="fastlane.lanes" name="00: default_platform" time="0.0293312">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="01: Switch to android bump_version lane" time="0.0066562">
+      <testcase classname="fastlane.lanes" name="01: Switch to android bump_version lane" time="0.001149">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="02: npm version patch --no-git-tag-version" time="2.6898599">
+      <testcase classname="fastlane.lanes" name="02: npm version patch --no-git-tag-version" time="1.6192862">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="03: node D:/TL-Mobile/scripts/sync-version.js" time="0.1595739">
+      <testcase classname="fastlane.lanes" name="03: node D:/TL-Mobile/scripts/sync-version.js" time="0.0835771">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="04: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.1760485">
+      <testcase classname="fastlane.lanes" name="04: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.0892065">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="05: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.1660015">
+      <testcase classname="fastlane.lanes" name="05: node -p &quot;require(&apos;D:/TL-Mobile/package.json&apos;).version&quot;" time="0.0977542">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="06: git add ../package.json ../app.json" time="0.1379892">
+      <testcase classname="fastlane.lanes" name="06: git add ../package.json ../app.json" time="0.0895762">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="07: git commit -m &quot;chore(release): bump version to v1.0.17&quot;" time="13.4976459">
+      <testcase classname="fastlane.lanes" name="07: git commit -m &quot;chore(release): bump version to v1.0.22&quot;" time="6.0973757">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="08: git tag release-v1.0.17" time="0.1353976">
+      <testcase classname="fastlane.lanes" name="08: git tag release-v1.0.22" time="0.0759653">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="09: git push origin HEAD" time="15.4310978">
+      <testcase classname="fastlane.lanes" name="09: git push origin HEAD" time="11.549359">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="10: git push origin release-v1.0.17" time="15.120088">
+      <testcase classname="fastlane.lanes" name="10: git push origin release-v1.0.22" time="11.875201">
         
       </testcase>
     

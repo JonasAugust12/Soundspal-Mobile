@@ -72,7 +72,7 @@ export function normalizePaymentStatus(status?: string | null): NormalizedPaymen
     return 'unknown';
 }
 
-export function isPaymentTerminal(status: NormalizedPaymentStatus | undefined): boolean {
+export function isPaymentTerminal(status: NormalizedPaymentStatus | null | undefined): boolean {
     return status === 'success' || status === 'failed' || status === 'cancelled';
 }
 
