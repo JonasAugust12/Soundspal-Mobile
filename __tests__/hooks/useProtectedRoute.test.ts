@@ -3,9 +3,11 @@ import { renderHook } from '@testing-library/react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { useAuthStore } from '@/stores/authStore';
+import { useAuthHydration } from '@/hooks/useAuthHydration';
 
 jest.mock('expo-router');
 jest.mock('@/stores/authStore');
+jest.mock('@/hooks/useAuthHydration');
 
 const mockRouter = {
     replace: jest.fn(),
@@ -14,11 +16,13 @@ const mockRouter = {
 const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 const mockUseSegments = useSegments as jest.MockedFunction<typeof useSegments>;
 const mockUseAuthStore = useAuthStore as jest.MockedFunction<typeof useAuthStore>;
+const mockUseAuthHydration = useAuthHydration as jest.MockedFunction<typeof useAuthHydration>;
 
 describe('useProtectedRoute', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockUseRouter.mockReturnValue(mockRouter as any);
+        mockUseAuthHydration.mockReturnValue(true);
     });
 
     describe('Unauthenticated user', () => {
