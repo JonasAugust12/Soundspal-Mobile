@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
@@ -23,7 +22,7 @@ export default function CollaborationScreen() {
 
     return (
         <TabScreenWrapper>
-            <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+            <View className="flex-1 bg-gray-50 dark:bg-gray-900">
                 {/* Header */}
                 <View className="flex-row items-center gap-3 bg-white dark:bg-gray-800 px-4 py-4 border-b border-gray-200 dark:border-gray-700">
                     <ChevronLeft size={24} color="#7C3BED" onPress={() => router.back()} />
@@ -43,7 +42,7 @@ export default function CollaborationScreen() {
                     onViewJobDetail={handleViewJobDetail}
                     onViewJobSubmissions={handleViewJobSubmissions}
                 />
-            </SafeAreaView>
+            </View>
         </TabScreenWrapper>
     );
 }

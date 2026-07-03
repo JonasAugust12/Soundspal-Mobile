@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { accentFabShadow } from '@/shared/presentation/ui/shadows';
 
 export const JobHeader = () => {
     const router = useRouter();
@@ -40,17 +41,7 @@ export const JobHeader = () => {
 
 const styles = StyleSheet.create({
     shadow: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#7C3BED',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-            },
-            android: {
-                elevation: 8,
-            },
-        }),
+        ...accentFabShadow,
         borderRadius: 12,
     },
     gradientButton: {

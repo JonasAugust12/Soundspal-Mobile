@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
     Search,
@@ -246,7 +247,7 @@ export default function ExploreScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+        <SafeAreaView className="flex-1 bg-gray-50" edges={SCREEN_SAFE_AREA_EDGES}>
             {/* Header */}
             <View className="bg-white px-4 pt-2 pb-4">
                 <View className="flex-row items-center gap-2 mb-4">

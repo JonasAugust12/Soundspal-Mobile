@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Image, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft } from 'lucide-react-native';
@@ -10,6 +11,15 @@ import { useGoogleSignIn } from '@/features/auth/presentation/hooks/useGoogleSig
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import type { RegisterFormData } from '@/features/auth/presentation/components/RegisterForm';
+import {
+    AUTH_COMMON,
+    AUTH_REGISTER_UI,
+    AuthLoadingLabel,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function RegisterScreen() {
     const { mutateAsync: signup, isPending: isLoading } = useSignup();
@@ -23,19 +33,17 @@ export default function RegisterScreen() {
         try {
             await signup(formData);
 
-            showSuccess('Đăng ký thành công! 🎉', 'Vui lòng kiểm tra email để xác thực tài khoản.');
+            showSuccess(AuthSuccessToast.RegisterTitle, AuthSuccessToast.RegisterBody);
 
             router.push({
                 pathname: '/(auth)/verify-email',
                 params: { email: formData.email },
             });
-            //eslint-disable-next-line
-        } catch (error: any) {
-            const errorMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                'Đã xảy ra lỗi. Vui lòng thử lại.';
-            showError('Lỗi đăng ký', errorMessage);
+        } catch (error: unknown) {
+            showError(
+                AuthToastTitle.RegisterFailed,
+                resolveAuthErrorMessage(error, AuthErrorContext.Register),
+            );
         }
     };
 
@@ -58,14 +66,14 @@ export default function RegisterScreen() {
                 <View style={styles.circle3} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 {/* Back Button */}
                 <TouchableOpacity
                     onPress={() => router.back()}
                     className="flex-row items-center gap-1 px-4 pt-2"
                 >
                     <ChevronLeft size={24} color="#FFFFFF" />
-                    <Text className="text-white font-medium">Quay lại</Text>
+                    <Text className="text-white font-medium">{AUTH_COMMON.back}</Text>
                 </TouchableOpacity>
 
                 <KeyboardAwareScrollView
@@ -82,9 +90,11 @@ export default function RegisterScreen() {
                                 resizeMode="contain"
                             />
                         </View>
-                        <Text className="text-white text-lg font-bold mt-3">Tạo tài khoản mới</Text>
+                        <Text className="text-white text-lg font-bold mt-3">
+                            {AUTH_REGISTER_UI.header}
+                        </Text>
                         <Text className="text-white/70 text-sm mt-1">
-                            Bắt đầu hành trình của bạn
+                            {AUTH_REGISTER_UI.subtitle}
                         </Text>
                     </View>
 
@@ -96,10 +106,10 @@ export default function RegisterScreen() {
                         {/* Welcome Text */}
                         <View className="items-center mb-4">
                             <Text className="text-xl font-black text-gray-900 text-center">
-                                Đăng ký Soundspal ✨
+                                {AUTH_REGISTER_UI.title}
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center">
-                                Nhập thông tin để tạo tài khoản
+                                {AUTH_REGISTER_UI.formSubtitle}
                             </Text>
                         </View>
 
@@ -110,7 +120,9 @@ export default function RegisterScreen() {
                         <View className="flex-row items-center my-5">
                             <View className="flex-1 h-px bg-gray-200" />
                             <View className="bg-gray-100 px-4 py-1 rounded-full mx-3">
-                                <Text className="text-xs text-gray-400 font-medium">HOẶC</Text>
+                                <Text className="text-xs text-gray-400 font-medium">
+                                    {AUTH_COMMON.or}
+                                </Text>
                             </View>
                             <View className="flex-1 h-px bg-gray-200" />
                         </View>
@@ -128,25 +140,30 @@ export default function RegisterScreen() {
                                 resizeMode="contain"
                             />
                             <Text className="text-base font-semibold text-gray-700">
-                                {isGoogleLoading ? 'Đang xử lý...' : 'Tiếp tục với Google'}
+                                {isGoogleLoading
+                                    ? AuthLoadingLabel.Processing
+                                    : AUTH_COMMON.continueWithGoogle}
                             </Text>
                         </TouchableOpacity>
 
                         {/* Login Link */}
                         <View className="flex-row items-center justify-center gap-1 mt-6 mb-4">
-                            <Text className="text-sm text-gray-500">Đã có tài khoản?</Text>
+                            <Text className="text-sm text-gray-500">{AUTH_COMMON.hasAccount}</Text>
                             <TouchableOpacity onPress={handleLogin}>
-                                <Text className="text-sm font-bold text-blue-600">Đăng nhập</Text>
+                                <Text className="text-sm font-bold text-blue-600">
+                                    {AUTH_COMMON.login}
+                                </Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Terms */}
                         <View className="items-center pb-6">
                             <Text className="text-[10px] text-gray-400 text-center max-w-[280px]">
-                                Bằng việc đăng ký, bạn đồng ý với{' '}
-                                <Text className="text-blue-600">Điều khoản dịch vụ</Text> và{' '}
-                                <Text className="text-blue-600">Chính sách bảo mật</Text> của chúng
-                                tôi.
+                                {AUTH_REGISTER_UI.termsPrefix}{' '}
+                                <Text className="text-blue-600">{AUTH_COMMON.termsOfService}</Text>{' '}
+                                và{' '}
+                                <Text className="text-blue-600">{AUTH_COMMON.privacyPolicy}</Text>{' '}
+                                {AUTH_REGISTER_UI.termsSuffix}
                             </Text>
                         </View>
                     </View>

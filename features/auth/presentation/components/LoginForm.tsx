@@ -6,20 +6,26 @@ import { z } from 'zod';
 import { Mail, Lock, LogIn } from 'lucide-react-native';
 import { FormInput } from './FormInput';
 import { AuthButton } from './AuthButton';
+import {
+    AUTH_COMMON,
+    AUTH_LOGIN_UI,
+    AuthLoadingLabel,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthValidationMessage } from '@/features/auth/domain/constants/authValidation';
 
 const loginSchema = z.object({
     identifier: z
         .string()
-        .min(1, 'Email hoặc username là bắt buộc')
+        .min(1, AuthValidationMessage.IdentifierRequired)
         .refine(
             (val) => {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
                 return emailRegex.test(val) || usernameRegex.test(val);
             },
-            { message: 'Email hoặc username không hợp lệ' },
+            { message: AuthValidationMessage.IdentifierInvalid },
         ),
-    password: z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự'),
+    password: z.string().min(6, AuthValidationMessage.PasswordMin),
 });
 
 export type LoginFormData = z.infer<typeof loginSchema>;
@@ -49,8 +55,8 @@ export function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 name="identifier"
                 render={({ field: { onChange, value } }) => (
                     <FormInput
-                        label="Email hoặc Username"
-                        placeholder="user@example.com"
+                        label={AUTH_LOGIN_UI.identifierLabel}
+                        placeholder={AUTH_LOGIN_UI.identifierPlaceholder}
                         autoCapitalize="none"
                         keyboardType="email-address"
                         value={value}
@@ -66,8 +72,8 @@ export function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 name="password"
                 render={({ field: { onChange, value } }) => (
                     <FormInput
-                        label="Mật khẩu"
-                        placeholder="••••••••"
+                        label={AUTH_LOGIN_UI.passwordLabel}
+                        placeholder={AUTH_LOGIN_UI.passwordPlaceholder}
                         secureTextEntry
                         value={value}
                         onChangeText={onChange}
@@ -78,7 +84,7 @@ export function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
             />
 
             <AuthButton onPress={handleSubmit(onSubmit)} isLoading={isLoading} leftIcon={LogIn}>
-                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                {isLoading ? AuthLoadingLabel.LoggingIn : AUTH_COMMON.login}
             </AuthButton>
         </View>
     );

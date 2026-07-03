@@ -8,20 +8,27 @@ import { FormInput } from './FormInput';
 import { SelectInput } from './SelectInput';
 import { AuthButton } from './AuthButton';
 import type { UserRole } from '@/features/auth/domain/entities/auth.type';
+import {
+    AUTH_OAUTH_UI,
+    AUTH_REGISTER_UI,
+    AUTH_USER_ROLES,
+    AuthLoadingLabel,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthValidationMessage } from '@/features/auth/domain/constants/authValidation';
 
 const USER_ROLES = [
-    { label: 'Producer', value: 'producer', icon: Disc2 },
-    { label: 'Singer', value: 'singer', icon: MicVocal },
-    { label: 'Venue', value: 'venue', icon: Building2 },
+    { label: AUTH_USER_ROLES[0].label, value: AUTH_USER_ROLES[0].value, icon: Disc2 },
+    { label: AUTH_USER_ROLES[1].label, value: AUTH_USER_ROLES[1].value, icon: MicVocal },
+    { label: AUTH_USER_ROLES[2].label, value: AUTH_USER_ROLES[2].value, icon: Building2 },
 ];
 
 const completeOAuthSchema = z.object({
     username: z
         .string()
-        .min(1, 'Vui lòng nhập username')
-        .min(3, 'Username phải có ít nhất 3 ký tự')
-        .max(20, 'Username không được quá 20 ký tự')
-        .regex(/^[a-zA-Z0-9_]+$/, 'Username chỉ chứa chữ cái, số và dấu gạch dưới'),
+        .min(1, AuthValidationMessage.UsernameRequired)
+        .min(3, AuthValidationMessage.UsernameMin)
+        .max(20, AuthValidationMessage.UsernameMax)
+        .regex(/^[a-zA-Z0-9_]+$/, AuthValidationMessage.UsernameFormat),
     role: z.enum(['producer', 'singer', 'venue'] as const),
 });
 
@@ -52,8 +59,8 @@ export function CompleteOAuthForm({ onSubmit, isLoading }: CompleteOAuthFormProp
                 name="username"
                 render={({ field: { onChange, value } }) => (
                     <FormInput
-                        label="Username"
-                        placeholder="vd: nguyenvana_music"
+                        label={AUTH_REGISTER_UI.usernameLabel}
+                        placeholder={AUTH_OAUTH_UI.usernamePlaceholder}
                         autoCapitalize="none"
                         value={value}
                         onChangeText={onChange}
@@ -68,7 +75,7 @@ export function CompleteOAuthForm({ onSubmit, isLoading }: CompleteOAuthFormProp
                 name="role"
                 render={({ field: { onChange, value } }) => (
                     <SelectInput
-                        label="Bạn là"
+                        label={AUTH_OAUTH_UI.roleLabel}
                         options={USER_ROLES}
                         onValueChange={(val) => onChange(val as UserRole)}
                         value={value}
@@ -83,7 +90,7 @@ export function CompleteOAuthForm({ onSubmit, isLoading }: CompleteOAuthFormProp
                     isLoading={isLoading}
                     leftIcon={CheckCircle2}
                 >
-                    {isLoading ? 'Đang hoàn tất...' : 'Hoàn tất đăng ký'}
+                    {isLoading ? AuthLoadingLabel.CompletingOAuth : AUTH_OAUTH_UI.completeButton}
                 </AuthButton>
             </View>
         </View>

@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Phone, Video } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -340,7 +341,7 @@ export default function DetailMessageScreen() {
 
     if (isLoadingMessages && messages.length === 0) {
         return (
-            <SafeAreaView className="flex-1 bg-white">
+            <SafeAreaView className="flex-1 bg-white" edges={SCREEN_SAFE_AREA_EDGES}>
                 <View className="flex-1 items-center justify-center">
                     <View className="w-16 h-16 rounded-full bg-purple-100 items-center justify-center mb-4">
                         <ActivityIndicator size="large" color="#7C3BED" />
@@ -353,7 +354,7 @@ export default function DetailMessageScreen() {
 
     if (!conversationId) {
         return (
-            <SafeAreaView className="flex-1 bg-white">
+            <SafeAreaView className="flex-1 bg-white" edges={SCREEN_SAFE_AREA_EDGES}>
                 <View className="flex-1 items-center justify-center">
                     <Text className="text-red-500">Không thể tải tin nhắn</Text>
                 </View>
@@ -362,7 +363,7 @@ export default function DetailMessageScreen() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50" edges={SCREEN_SAFE_AREA_EDGES}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior="padding"

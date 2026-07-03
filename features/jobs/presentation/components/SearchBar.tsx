@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TextInput, Platform, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
 import { Search } from 'lucide-react-native';
+import { cardShadow } from '@/shared/presentation/ui/shadows';
 
 interface SearchBarProps {
     value: string;
@@ -33,17 +34,5 @@ export const SearchBar = ({
 };
 
 const styles = StyleSheet.create({
-    searchContainer: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#7C3BED',
-                shadowOffset: { width: 0, height: 3 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-            },
-            android: {
-                elevation: 3,
-            },
-        }),
-    },
+    searchContainer: cardShadow,
 });

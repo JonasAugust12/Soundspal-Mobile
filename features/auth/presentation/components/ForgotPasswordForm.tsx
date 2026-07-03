@@ -6,9 +6,19 @@ import { z } from 'zod';
 import { Mail, Send } from 'lucide-react-native';
 import { FormInput } from './FormInput';
 import { AuthButton } from './AuthButton';
+import {
+    AUTH_FORGOT_PASSWORD_UI,
+    AUTH_LOGIN_UI,
+    AUTH_REGISTER_UI,
+    AuthLoadingLabel,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthValidationMessage } from '@/features/auth/domain/constants/authValidation';
 
 const forgotPasswordSchema = z.object({
-    email: z.string().email('Email không hợp lệ').min(1, 'Email là bắt buộc'),
+    email: z
+        .string()
+        .min(1, AuthValidationMessage.EmailRequired)
+        .email(AuthValidationMessage.EmailInvalid),
 });
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
@@ -37,8 +47,8 @@ export function ForgotPasswordForm({ onSubmit, isLoading }: ForgotPasswordFormPr
                 name="email"
                 render={({ field: { onChange, value } }) => (
                     <FormInput
-                        label="Email"
-                        placeholder="user@example.com"
+                        label={AUTH_REGISTER_UI.emailLabel}
+                        placeholder={AUTH_LOGIN_UI.identifierPlaceholder}
                         autoCapitalize="none"
                         keyboardType="email-address"
                         value={value}
@@ -50,7 +60,7 @@ export function ForgotPasswordForm({ onSubmit, isLoading }: ForgotPasswordFormPr
             />
 
             <AuthButton onPress={handleSubmit(onSubmit)} isLoading={isLoading} leftIcon={Send}>
-                {isLoading ? 'Đang gửi...' : 'Gửi mã xác thực'}
+                {isLoading ? AuthLoadingLabel.Sending : AUTH_FORGOT_PASSWORD_UI.sendCode}
             </AuthButton>
         </View>
     );

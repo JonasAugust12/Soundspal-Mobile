@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, Mail, KeyRound } from 'lucide-react-native';
@@ -9,6 +10,14 @@ import { useRequestPasswordReset } from '@/features/auth/presentation/hooks/useA
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import type { ForgotPasswordFormData } from '@/features/auth/presentation/components/ForgotPasswordForm';
+import {
+    AUTH_COMMON,
+    AUTH_FORGOT_PASSWORD_UI,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function ForgotPasswordScreen() {
     const { mutateAsync: requestPasswordReset, isPending: isLoading } = useRequestPasswordReset();
@@ -22,20 +31,21 @@ export default function ForgotPasswordScreen() {
             const response = await requestPasswordReset(data);
 
             if (response.data || response.message) {
-                showSuccess('Đã gửi mã! 📧', 'Vui lòng kiểm tra email để nhận mã xác thực.');
+                showSuccess(
+                    AuthSuccessToast.ForgotPasswordTitle,
+                    AuthSuccessToast.ForgotPasswordBody,
+                );
 
                 router.push({
                     pathname: '/(auth)/verify-reset-code',
                     params: { email: data.email },
                 });
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            const errorMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                'Không thể gửi mã. Vui lòng thử lại.';
-            showError('Lỗi', errorMessage);
+        } catch (error: unknown) {
+            showError(
+                AuthToastTitle.Error,
+                resolveAuthErrorMessage(error, AuthErrorContext.ForgotPassword),
+            );
         }
     };
 
@@ -53,14 +63,14 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.circle2} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 {/* Back Button */}
                 <TouchableOpacity
                     onPress={() => router.back()}
                     className="flex-row items-center gap-1 px-4 pt-2"
                 >
                     <ChevronLeft size={24} color="#FFFFFF" />
-                    <Text className="text-white font-medium">Quay lại</Text>
+                    <Text className="text-white font-medium">{AUTH_COMMON.back}</Text>
                 </TouchableOpacity>
 
                 <KeyboardAwareScrollView
@@ -73,9 +83,11 @@ export default function ForgotPasswordScreen() {
                         <View style={styles.iconContainer}>
                             <KeyRound size={40} color="#F59E0B" />
                         </View>
-                        <Text className="text-white text-xl font-bold mt-4">Quên mật khẩu?</Text>
+                        <Text className="text-white text-xl font-bold mt-4">
+                            {AUTH_FORGOT_PASSWORD_UI.title}
+                        </Text>
                         <Text className="text-white/70 text-sm mt-1 text-center px-8">
-                            Đừng lo, chúng tôi sẽ gửi mã xác thực qua email
+                            {AUTH_FORGOT_PASSWORD_UI.subtitle}
                         </Text>
                     </View>
 
@@ -90,10 +102,10 @@ export default function ForgotPasswordScreen() {
                                 <Mail size={32} color="#F59E0B" />
                             </View>
                             <Text className="text-lg font-bold text-gray-900 text-center">
-                                Nhập email của bạn
+                                {AUTH_FORGOT_PASSWORD_UI.emailPrompt}
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center max-w-[280px]">
-                                Chúng tôi sẽ gửi mã 6 số để xác thực tài khoản
+                                {AUTH_FORGOT_PASSWORD_UI.emailHint}
                             </Text>
                         </View>
 
@@ -102,9 +114,13 @@ export default function ForgotPasswordScreen() {
 
                         {/* Back to Login */}
                         <View className="flex-row items-center justify-center gap-1 mt-8">
-                            <Text className="text-sm text-gray-500">Nhớ mật khẩu rồi?</Text>
+                            <Text className="text-sm text-gray-500">
+                                {AUTH_COMMON.rememberPassword}
+                            </Text>
                             <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-                                <Text className="text-sm font-bold text-orange-600">Đăng nhập</Text>
+                                <Text className="text-sm font-bold text-orange-600">
+                                    {AUTH_COMMON.login}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>

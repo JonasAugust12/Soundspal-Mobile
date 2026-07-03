@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, Mail, CheckCircle2, RefreshCw } from 'lucide-react-native';
@@ -13,6 +14,16 @@ import {
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import {
+    AUTH_COMMON,
+    AUTH_VERIFY_EMAIL_UI,
+    AuthLoadingLabel,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { AuthValidationMessage } from '@/features/auth/domain/constants/authValidation';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function VerifyEmailScreen() {
     const { email, fromLogin } = useLocalSearchParams<{ email: string; fromLogin?: string }>();
@@ -39,12 +50,12 @@ export default function VerifyEmailScreen() {
         setError('');
 
         if (!code || code.trim() === '') {
-            setError('Mã xác thực là bắt buộc');
+            setError(AuthValidationMessage.OtpRequired);
             return;
         }
 
         if (code.length !== 6) {
-            setError('Mã xác thực phải có 6 ký tự');
+            setError(AuthValidationMessage.OtpLength);
             return;
         }
 
@@ -52,7 +63,7 @@ export default function VerifyEmailScreen() {
             const response = await verifyEmail({ code, email: email || '' });
 
             if (response.data || response.message) {
-                showSuccess('Xác thực thành công! ✅', 'Tài khoản của bạn đã được xác thực.');
+                showSuccess(AuthSuccessToast.VerifyEmailTitle, AuthSuccessToast.VerifyEmailBody);
 
                 if (isFromLogin && user) {
                     useAuthStore.setState((state) => ({
@@ -63,13 +74,8 @@ export default function VerifyEmailScreen() {
                     router.replace('/(auth)/login');
                 }
             }
-            //eslint-disable-next-line
-        } catch (err: any) {
-            const errorMessage =
-                err?.response?.data?.message ||
-                err?.message ||
-                'Mã xác thực không đúng. Vui lòng thử lại.';
-            setError(errorMessage);
+        } catch (err: unknown) {
+            setError(resolveAuthErrorMessage(err, AuthErrorContext.VerifyEmail));
         }
     };
 
@@ -78,17 +84,15 @@ export default function VerifyEmailScreen() {
 
         try {
             await resendCode({ email: email || '' });
-            showSuccess('Đã gửi lại mã', 'Vui lòng kiểm tra email của bạn.');
+            showSuccess(AuthSuccessToast.ResendCodeTitle, AuthSuccessToast.ResendCodeBody);
             setCountdown(30);
             setCode('');
             setError('');
-            //eslint-disable-next-line
-        } catch (err: any) {
-            const errorMessage =
-                err?.response?.data?.message ||
-                err?.message ||
-                'Không thể gửi lại mã. Vui lòng thử lại.';
-            showError('Lỗi', errorMessage);
+        } catch (err: unknown) {
+            showError(
+                AuthToastTitle.Error,
+                resolveAuthErrorMessage(err, AuthErrorContext.ResendVerification),
+            );
         }
     };
 
@@ -112,7 +116,7 @@ export default function VerifyEmailScreen() {
                 <View style={styles.circle2} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 {/* Back Button */}
                 {!isFromLogin && (
                     <TouchableOpacity
@@ -120,7 +124,7 @@ export default function VerifyEmailScreen() {
                         className="flex-row items-center gap-1 px-4 pt-2"
                     >
                         <ChevronLeft size={24} color="#FFFFFF" />
-                        <Text className="text-white font-medium">Quay lại</Text>
+                        <Text className="text-white font-medium">{AUTH_COMMON.back}</Text>
                     </TouchableOpacity>
                 )}
 
@@ -134,9 +138,11 @@ export default function VerifyEmailScreen() {
                         <View style={styles.iconContainer}>
                             <Mail size={40} color="#0891B2" />
                         </View>
-                        <Text className="text-white text-xl font-bold mt-4">Xác thực email</Text>
+                        <Text className="text-white text-xl font-bold mt-4">
+                            {AUTH_VERIFY_EMAIL_UI.title}
+                        </Text>
                         <Text className="text-white/70 text-sm mt-1 text-center px-8">
-                            Kiểm tra hộp thư đến của bạn
+                            {AUTH_VERIFY_EMAIL_UI.subtitle}
                         </Text>
                     </View>
 
@@ -151,10 +157,10 @@ export default function VerifyEmailScreen() {
                                 <Text className="text-cyan-700 font-semibold text-sm">{email}</Text>
                             </View>
                             <Text className="text-lg font-bold text-gray-900 text-center">
-                                Nhập mã 6 số
+                                {AUTH_VERIFY_EMAIL_UI.otpTitle}
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center max-w-[280px]">
-                                Chúng tôi đã gửi mã xác thực đến email của bạn
+                                {AUTH_VERIFY_EMAIL_UI.otpHint}
                             </Text>
                         </View>
 
@@ -183,12 +189,14 @@ export default function VerifyEmailScreen() {
                             disabled={code.length !== 6}
                             leftIcon={CheckCircle2}
                         >
-                            {isVerifying ? 'Đang xác thực...' : 'Xác thực'}
+                            {isVerifying ? AuthLoadingLabel.Verifying : AUTH_COMMON.verify}
                         </AuthButton>
 
                         {/* Resend Section */}
                         <View className="items-center mt-6">
-                            <Text className="text-sm text-gray-500 mb-2">Không nhận được mã?</Text>
+                            <Text className="text-sm text-gray-500 mb-2">
+                                {AUTH_COMMON.noCodeReceived}
+                            </Text>
                             <TouchableOpacity
                                 onPress={handleResend}
                                 disabled={countdown > 0 || isResending}
@@ -201,7 +209,9 @@ export default function VerifyEmailScreen() {
                                 <Text
                                     className={`font-semibold ${countdown > 0 ? 'text-gray-400' : 'text-cyan-600'}`}
                                 >
-                                    {countdown > 0 ? `Gửi lại sau ${countdown}s` : 'Gửi lại mã'}
+                                    {countdown > 0
+                                        ? AUTH_COMMON.resendAfter(countdown)
+                                        : AUTH_COMMON.resendCode}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -209,7 +219,7 @@ export default function VerifyEmailScreen() {
                         {/* Skip/Logout */}
                         <TouchableOpacity onPress={handleSkip} className="mt-6">
                             <Text className="text-sm font-medium text-center text-gray-400 underline">
-                                {isFromLogin ? 'Đăng xuất' : 'Bỏ qua, tôi sẽ xác thực sau'}
+                                {isFromLogin ? AUTH_COMMON.logout : AUTH_COMMON.skipVerifyLater}
                             </Text>
                         </TouchableOpacity>
                     </View>

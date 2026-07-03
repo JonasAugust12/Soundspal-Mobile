@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MailWarning, RefreshCcw, LogOut, AlertTriangle } from 'lucide-react-native';
 import { AuthButton } from '@/features/auth/presentation/components';
@@ -8,6 +9,15 @@ import { useResendVerificationCode } from '@/features/auth/presentation/hooks/us
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import {
+    AUTH_COMMON,
+    AUTH_EMAIL_REQUIRED_UI,
+    AuthLoadingLabel,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function EmailVerificationRequiredScreen() {
     const { mutateAsync: resendCode, isPending: isResending } = useResendVerificationCode();
@@ -18,19 +28,17 @@ export default function EmailVerificationRequiredScreen() {
     const handleResend = async () => {
         try {
             await resendCode({ email: user?.email || '' });
-            showSuccess('Đã gửi lại mã', 'Vui lòng kiểm tra email của bạn.');
+            showSuccess(AuthSuccessToast.ResendCodeTitle, AuthSuccessToast.ResendCodeBody);
 
             router.push({
                 pathname: '/(auth)/verify-email',
                 params: { email: user?.email || '', fromLogin: 'true' },
             });
-            //eslint-disable-next-line
-        } catch (error: any) {
-            const errorMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                'Không thể gửi mã. Vui lòng thử lại.';
-            showError('Lỗi', errorMessage);
+        } catch (error: unknown) {
+            showError(
+                AuthToastTitle.Error,
+                resolveAuthErrorMessage(error, AuthErrorContext.ResendVerification),
+            );
         }
     };
 
@@ -52,15 +60,17 @@ export default function EmailVerificationRequiredScreen() {
                 <View style={styles.circle2} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 {/* Top Section */}
                 <View className="items-center pt-12 pb-10">
                     <View style={styles.iconContainer}>
                         <AlertTriangle size={44} color="#F59E0B" />
                     </View>
-                    <Text className="text-white text-xl font-bold mt-4">Cần xác thực</Text>
+                    <Text className="text-white text-xl font-bold mt-4">
+                        {AUTH_EMAIL_REQUIRED_UI.header}
+                    </Text>
                     <Text className="text-white/70 text-sm mt-1">
-                        Tài khoản chưa được kích hoạt
+                        {AUTH_EMAIL_REQUIRED_UI.subtitle}
                     </Text>
                 </View>
 
@@ -75,17 +85,17 @@ export default function EmailVerificationRequiredScreen() {
                             <MailWarning size={40} color="#F59E0B" />
                         </View>
                         <Text className="text-xl font-black text-gray-900 text-center">
-                            Xác thực email 📧
+                            {AUTH_EMAIL_REQUIRED_UI.title}
                         </Text>
                         <Text className="text-sm text-gray-500 mt-2 text-center max-w-[300px]">
-                            Để sử dụng đầy đủ tính năng, vui lòng xác thực email của bạn
+                            {AUTH_EMAIL_REQUIRED_UI.body}
                         </Text>
                     </View>
 
                     {/* Email Display */}
                     <View className="bg-amber-50 rounded-2xl p-4 mb-6">
                         <Text className="text-xs text-amber-600 font-medium mb-1">
-                            Email đăng ký:
+                            {AUTH_EMAIL_REQUIRED_UI.registeredEmail}
                         </Text>
                         <Text className="text-base font-bold text-gray-900">{user?.email}</Text>
                     </View>
@@ -97,7 +107,9 @@ export default function EmailVerificationRequiredScreen() {
                             isLoading={isResending}
                             leftIcon={RefreshCcw}
                         >
-                            {isResending ? 'Đang gửi...' : 'Gửi mã xác thực'}
+                            {isResending
+                                ? AuthLoadingLabel.Sending
+                                : AUTH_EMAIL_REQUIRED_UI.sendCode}
                         </AuthButton>
 
                         <TouchableOpacity
@@ -105,24 +117,26 @@ export default function EmailVerificationRequiredScreen() {
                             className="flex-row items-center justify-center gap-2 py-4"
                         >
                             <LogOut size={18} color="#6B7280" />
-                            <Text className="text-gray-500 font-semibold">Đăng xuất</Text>
+                            <Text className="text-gray-500 font-semibold">
+                                {AUTH_COMMON.logout}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Info Box */}
                     <View className="mt-8 bg-gray-50 rounded-2xl p-4">
                         <Text className="text-xs font-bold text-gray-700 mb-2">
-                            💡 Tại sao cần xác thực?
+                            {AUTH_EMAIL_REQUIRED_UI.whyTitle}
                         </Text>
                         <View className="gap-1">
                             <Text className="text-xs text-gray-500">
-                                • Bảo mật tài khoản của bạn
+                                {AUTH_EMAIL_REQUIRED_UI.whySecure}
                             </Text>
                             <Text className="text-xs text-gray-500">
-                                • Nhận thông báo quan trọng qua email
+                                {AUTH_EMAIL_REQUIRED_UI.whyNotify}
                             </Text>
                             <Text className="text-xs text-gray-500">
-                                • Khôi phục mật khẩu khi cần thiết
+                                {AUTH_EMAIL_REQUIRED_UI.whyRecover}
                             </Text>
                         </View>
                     </View>
@@ -130,7 +144,7 @@ export default function EmailVerificationRequiredScreen() {
                     {/* Footer */}
                     <View className="items-center mt-auto pb-6">
                         <Text className="text-[10px] text-gray-400 text-center">
-                            Không nhận được email? Kiểm tra thư mục spam hoặc liên hệ hỗ trợ
+                            {AUTH_EMAIL_REQUIRED_UI.footer}
                         </Text>
                     </View>
                 </View>

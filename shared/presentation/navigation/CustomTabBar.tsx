@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { accentFabShadow, floatingShadow } from '@/shared/presentation/ui/shadows';
 
 const ACTIVE_COLOR = '#7C3BED';
 const INACTIVE_COLOR = '#9CA3AF';
@@ -125,17 +126,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 12,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 4 },
-            },
-            android: {
-                elevation: 10,
-            },
-        }),
+        borderWidth: 1,
+        borderColor: 'rgba(0, 0, 0, 0.04)',
+        ...floatingShadow,
     },
     item: {
         flex: 1,
@@ -160,20 +153,10 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        marginTop: -28, // Float above the tab bar
+        marginTop: -28,
         alignItems: 'center',
         justifyContent: 'center',
-        ...Platform.select({
-            ios: {
-                shadowColor: '#7A3EFF',
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                shadowOffset: { width: 0, height: 4 },
-            },
-            android: {
-                elevation: 8,
-            },
-        }),
+        ...accentFabShadow,
     },
 });
 

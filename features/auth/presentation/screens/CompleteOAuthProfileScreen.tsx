@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Keyboard, Platform, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles } from 'lucide-react-native';
@@ -11,6 +12,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { getUserFromToken } from '@/shared/utils/jwt';
 import type { UserRole } from '@/features/auth/domain/entities/auth.type';
+import {
+    AUTH_OAUTH_UI,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function CompleteOAuthProfileScreen() {
     const { registration_token } = useLocalSearchParams<{ registration_token: string }>();
@@ -47,17 +55,15 @@ export default function CompleteOAuthProfileScreen() {
                         },
                     });
 
-                    showSuccess('Đăng ký thành công! 🎉', 'Chào mừng bạn đến với Soundspal.');
+                    showSuccess(AuthSuccessToast.RegisterTitle, AuthSuccessToast.OAuthCompleteBody);
                     router.replace('/(tabs)');
                 }
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            const errorMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                'Đã xảy ra lỗi. Vui lòng thử lại.';
-            showError('Lỗi', errorMessage);
+        } catch (error: unknown) {
+            showError(
+                AuthToastTitle.Error,
+                resolveAuthErrorMessage(error, AuthErrorContext.CompleteOAuth),
+            );
         }
     };
 
@@ -75,7 +81,7 @@ export default function CompleteOAuthProfileScreen() {
                 <View style={styles.circle3} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 <KeyboardAwareScrollView
                     contentContainerStyle={{ flexGrow: 1 }}
                     bottomOffset={20}
@@ -91,11 +97,9 @@ export default function CompleteOAuthProfileScreen() {
                             />
                         </View>
                         <Text className="text-white text-xl font-bold mt-4">
-                            Một bước nữa thôi!
+                            {AUTH_OAUTH_UI.header}
                         </Text>
-                        <Text className="text-white/70 text-sm mt-1">
-                            Hoàn tất thông tin để bắt đầu
-                        </Text>
+                        <Text className="text-white/70 text-sm mt-1">{AUTH_OAUTH_UI.subtitle}</Text>
                     </View>
 
                     {/* Main Content Card */}
@@ -108,14 +112,14 @@ export default function CompleteOAuthProfileScreen() {
                             <View className="flex-row items-center gap-2 bg-pink-50 px-4 py-2 rounded-full mb-4">
                                 <Sparkles size={16} color="#EC4899" />
                                 <Text className="text-pink-600 font-semibold text-sm">
-                                    Google Sign-In
+                                    {AUTH_OAUTH_UI.providerBadge}
                                 </Text>
                             </View>
                             <Text className="text-xl font-black text-gray-900 text-center">
-                                Hoàn tất đăng ký ✨
+                                {AUTH_OAUTH_UI.title}
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center max-w-[280px]">
-                                Chọn username và vai trò của bạn trên Soundspal
+                                {AUTH_OAUTH_UI.formSubtitle}
                             </Text>
                         </View>
 
@@ -125,28 +129,28 @@ export default function CompleteOAuthProfileScreen() {
                         {/* Info Box */}
                         <View className="mt-8 bg-gradient-to-r from-pink-50 to-purple-50 rounded-2xl p-4">
                             <Text className="text-xs font-bold text-gray-700 mb-2">
-                                🎵 Về vai trò của bạn
+                                {AUTH_OAUTH_UI.rolesTitle}
                             </Text>
                             <View className="gap-1.5">
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-pink-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Producer:</Text> Sáng tác,
-                                        hòa âm, phối khí
+                                        <Text className="font-semibold">Producer:</Text>{' '}
+                                        {AUTH_OAUTH_UI.producerDesc}
                                     </Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Singer:</Text> Ca sĩ, nghệ
-                                        sĩ biểu diễn
+                                        <Text className="font-semibold">Singer:</Text>{' '}
+                                        {AUTH_OAUTH_UI.singerDesc}
                                     </Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-violet-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Venue:</Text> Địa điểm tổ
-                                        chức sự kiện
+                                        <Text className="font-semibold">Venue:</Text>{' '}
+                                        {AUTH_OAUTH_UI.venueDesc}
                                     </Text>
                                 </View>
                             </View>
@@ -155,7 +159,7 @@ export default function CompleteOAuthProfileScreen() {
                         {/* Footer */}
                         <View className="items-center mt-auto pb-6">
                             <Text className="text-[10px] text-gray-400 text-center max-w-[260px]">
-                                Bạn có thể thay đổi thông tin này sau trong phần cài đặt
+                                {AUTH_OAUTH_UI.footer}
                             </Text>
                         </View>
                     </View>

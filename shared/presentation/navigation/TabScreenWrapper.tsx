@@ -14,7 +14,7 @@ export const TabScreenWrapper = ({
     children,
     scrollable = true,
     scrollViewProps,
-    safeAreaEdges = ['left', 'right'],
+    safeAreaEdges = ['top', 'left', 'right'],
     className = 'flex-1 bg-white dark:bg-gray-900',
 }: TabScreenWrapperProps) => {
     return (

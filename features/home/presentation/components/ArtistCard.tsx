@@ -1,15 +1,8 @@
 import React from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    Image,
-    ImageSourcePropType,
-    StyleSheet,
-    Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Image, ImageSourcePropType, StyleSheet } from 'react-native';
 import { MapPin, Mic2, Disc2, Building2 } from 'lucide-react-native';
 import type { UserRole } from '@/features/explore/domain/entities/search.type';
+import { cardShadow } from '@/shared/presentation/ui/shadows';
 
 export type ArtistItem = {
     id: string;
@@ -63,99 +56,81 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
     const roleBadge = getRoleBadge();
 
     return (
-        <TouchableOpacity
-            onPress={onPress}
-            activeOpacity={0.92}
-            style={[styles.shadow, { width }]}
-            className="rounded-[20px] bg-white border border-gray-200 overflow-hidden"
-        >
-            {/* Artist Image */}
-            <View className="w-full h-[140px] relative">
-                <Image source={item.image} className="w-full h-full" resizeMode="cover" />
+        <View style={[styles.cardWrapper, { width }]}>
+            <TouchableOpacity
+                onPress={onPress}
+                activeOpacity={0.92}
+                className="rounded-[20px] bg-white border border-gray-200 overflow-hidden"
+            >
+                {/* Artist Image */}
+                <View className="w-full h-[140px] relative">
+                    <Image source={item.image} className="w-full h-full" resizeMode="cover" />
 
-                {/* Role Badge on Image */}
-                {roleBadge && (
-                    <View
-                        style={styles.roleBadgeShadow}
-                        className={`absolute top-2 right-2 flex-row items-center gap-1 px-2 py-1 rounded-xl ${roleBadge.className}`}
+                    {/* Role Badge on Image */}
+                    {roleBadge && (
+                        <View
+                            className={`absolute top-2 right-2 flex-row items-center gap-1 px-2 py-1 rounded-xl ${roleBadge.className}`}
+                        >
+                            <roleBadge.icon size={12} color={roleBadge.iconColor} />
+                            <Text className={`text-[10px] font-bold ${roleBadge.textColor}`}>
+                                {roleBadge.text}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* Artist Info */}
+                <View className="p-3 gap-1.5">
+                    <Text
+                        className="text-base font-bold text-gray-900 text-center"
+                        numberOfLines={1}
                     >
-                        <roleBadge.icon size={12} color={roleBadge.iconColor} />
-                        <Text className={`text-[10px] font-bold ${roleBadge.textColor}`}>
-                            {roleBadge.text}
-                        </Text>
-                    </View>
-                )}
-            </View>
+                        {item.name}
+                    </Text>
 
-            {/* Artist Info */}
-            <View className="p-3 gap-1.5">
-                <Text className="text-base font-bold text-gray-900 text-center" numberOfLines={1}>
-                    {item.name}
-                </Text>
+                    <Text className="text-xs text-gray-600 text-center mb-1" numberOfLines={1}>
+                        {item.description}
+                    </Text>
 
-                <Text className="text-xs text-gray-600 text-center mb-1" numberOfLines={1}>
-                    {item.description}
-                </Text>
+                    <View className="gap-2 items-center">
+                        {/* Location */}
+                        <View className="flex-row items-center gap-1.5">
+                            <MapPin size={12} color="#7C3BED" />
+                            <Text className="text-xs text-gray-600 font-medium" numberOfLines={1}>
+                                {item.location}
+                            </Text>
+                        </View>
 
-                <View className="gap-2 items-center">
-                    {/* Location */}
-                    <View className="flex-row items-center gap-1.5">
-                        <MapPin size={12} color="#7C3BED" />
-                        <Text className="text-xs text-gray-600 font-medium" numberOfLines={1}>
-                            {item.location}
-                        </Text>
-                    </View>
+                        {/* Skills Badges - Professional style */}
+                        <View className="flex-row flex-wrap justify-center gap-1">
+                            {item.skills.split('/').map((skill, index) => {
+                                const trimmedSkill = skill.trim();
+                                if (!trimmedSkill) return null;
 
-                    {/* Skills Badges - Professional style */}
-                    <View className="flex-row flex-wrap justify-center gap-1">
-                        {item.skills.split('/').map((skill, index) => {
-                            const trimmedSkill = skill.trim();
-                            if (!trimmedSkill) return null;
-
-                            return (
-                                <View
-                                    key={index}
-                                    className="bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"
-                                >
-                                    <Text className="text-[10px] font-semibold text-purple-700">
-                                        {trimmedSkill}
-                                    </Text>
-                                </View>
-                            );
-                        })}
+                                return (
+                                    <View
+                                        key={index}
+                                        className="bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"
+                                    >
+                                        <Text className="text-[10px] font-semibold text-purple-700">
+                                            {trimmedSkill}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
                     </View>
                 </View>
-            </View>
-        </TouchableOpacity>
+            </TouchableOpacity>
+        </View>
     );
 });
 
 // Keep only shadow styles that NativeWind doesn't handle well
 const styles = StyleSheet.create({
-    shadow: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
-    },
-    roleBadgeShadow: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 3,
-            },
-        }),
+    cardWrapper: {
+        ...cardShadow,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
     },
 });

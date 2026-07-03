@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, KeyRound, CheckCircle2, RefreshCw } from 'lucide-react-native';
@@ -12,6 +13,16 @@ import {
 } from '@/features/auth/presentation/hooks/useAuthApi';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import {
+    AUTH_COMMON,
+    AUTH_VERIFY_RESET_UI,
+    AuthLoadingLabel,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { AuthValidationMessage } from '@/features/auth/domain/constants/authValidation';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function VerifyResetCodeScreen() {
     const { email } = useLocalSearchParams<{ email: string }>();
@@ -36,12 +47,12 @@ export default function VerifyResetCodeScreen() {
         setError('');
 
         if (!code || code.trim() === '') {
-            setError('Mã xác thực là bắt buộc');
+            setError(AuthValidationMessage.OtpRequired);
             return;
         }
 
         if (code.length !== 6) {
-            setError('Mã xác thực phải có 6 ký tự');
+            setError(AuthValidationMessage.OtpLength);
             return;
         }
 
@@ -52,7 +63,10 @@ export default function VerifyResetCodeScreen() {
             });
 
             if (response.data?.reset_token) {
-                showSuccess('Xác thực thành công! ✅', 'Bạn có thể đặt lại mật khẩu mới.');
+                showSuccess(
+                    AuthSuccessToast.VerifyEmailTitle,
+                    AuthSuccessToast.VerifyResetCodeBody,
+                );
 
                 router.push({
                     pathname: '/(auth)/reset-password',
@@ -62,13 +76,8 @@ export default function VerifyResetCodeScreen() {
                     },
                 });
             }
-            //eslint-disable-next-line
-        } catch (err: any) {
-            const errorMessage =
-                err?.response?.data?.message ||
-                err?.message ||
-                'Mã xác thực không đúng. Vui lòng thử lại.';
-            setError(errorMessage);
+        } catch (err: unknown) {
+            setError(resolveAuthErrorMessage(err, AuthErrorContext.VerifyResetCode));
         }
     };
 
@@ -77,17 +86,15 @@ export default function VerifyResetCodeScreen() {
 
         try {
             await resendCode({ email: email || '' });
-            showSuccess('Đã gửi lại mã', 'Vui lòng kiểm tra email của bạn.');
+            showSuccess(AuthSuccessToast.ResendCodeTitle, AuthSuccessToast.ResendCodeBody);
             setCountdown(30);
             setCode('');
             setError('');
-            //eslint-disable-next-line
-        } catch (err: any) {
-            const errorMessage =
-                err?.response?.data?.message ||
-                err?.message ||
-                'Không thể gửi lại mã. Vui lòng thử lại.';
-            showError('Lỗi', errorMessage);
+        } catch (err: unknown) {
+            showError(
+                AuthToastTitle.Error,
+                resolveAuthErrorMessage(err, AuthErrorContext.ResendResetCode),
+            );
         }
     };
 
@@ -104,14 +111,14 @@ export default function VerifyResetCodeScreen() {
                 <View style={styles.circle2} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 {/* Back Button */}
                 <TouchableOpacity
                     onPress={() => router.back()}
                     className="flex-row items-center gap-1 px-4 pt-2"
                 >
                     <ChevronLeft size={24} color="#FFFFFF" />
-                    <Text className="text-white font-medium">Quay lại</Text>
+                    <Text className="text-white font-medium">{AUTH_COMMON.back}</Text>
                 </TouchableOpacity>
 
                 <KeyboardAwareScrollView
@@ -124,9 +131,11 @@ export default function VerifyResetCodeScreen() {
                         <View style={styles.iconContainer}>
                             <KeyRound size={40} color="#F59E0B" />
                         </View>
-                        <Text className="text-white text-xl font-bold mt-4">Xác thực mã</Text>
+                        <Text className="text-white text-xl font-bold mt-4">
+                            {AUTH_VERIFY_RESET_UI.title}
+                        </Text>
                         <Text className="text-white/70 text-sm mt-1 text-center px-8">
-                            Nhập mã để đặt lại mật khẩu
+                            {AUTH_VERIFY_RESET_UI.subtitle}
                         </Text>
                     </View>
 
@@ -143,10 +152,10 @@ export default function VerifyResetCodeScreen() {
                                 </Text>
                             </View>
                             <Text className="text-lg font-bold text-gray-900 text-center">
-                                Nhập mã 6 số
+                                {AUTH_VERIFY_RESET_UI.otpTitle}
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center max-w-[280px]">
-                                Mã đã được gửi đến email của bạn
+                                {AUTH_VERIFY_RESET_UI.otpHint}
                             </Text>
                         </View>
 
@@ -175,12 +184,14 @@ export default function VerifyResetCodeScreen() {
                             disabled={code.length !== 6}
                             leftIcon={CheckCircle2}
                         >
-                            {isVerifying ? 'Đang xác thực...' : 'Xác thực'}
+                            {isVerifying ? AuthLoadingLabel.Verifying : AUTH_COMMON.verify}
                         </AuthButton>
 
                         {/* Resend Section */}
                         <View className="items-center mt-6">
-                            <Text className="text-sm text-gray-500 mb-2">Không nhận được mã?</Text>
+                            <Text className="text-sm text-gray-500 mb-2">
+                                {AUTH_COMMON.noCodeReceived}
+                            </Text>
                             <TouchableOpacity
                                 onPress={handleResend}
                                 disabled={countdown > 0 || isResending}
@@ -193,7 +204,9 @@ export default function VerifyResetCodeScreen() {
                                 <Text
                                     className={`font-semibold ${countdown > 0 ? 'text-gray-400' : 'text-orange-600'}`}
                                 >
-                                    {countdown > 0 ? `Gửi lại sau ${countdown}s` : 'Gửi lại mã'}
+                                    {countdown > 0
+                                        ? AUTH_COMMON.resendAfter(countdown)
+                                        : AUTH_COMMON.resendCode}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -201,8 +214,7 @@ export default function VerifyResetCodeScreen() {
                         {/* Security Note */}
                         <View className="mt-8 bg-gray-50 rounded-2xl p-4">
                             <Text className="text-xs text-gray-500 text-center">
-                                💡 Mã xác thực sẽ hết hạn sau 15 phút. Nếu không nhận được email,
-                                hãy kiểm tra thư mục spam.
+                                {AUTH_VERIFY_RESET_UI.securityNote}
                             </Text>
                         </View>
                     </View>

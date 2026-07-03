@@ -6,18 +6,25 @@ import { z } from 'zod';
 import { Lock, ShieldCheck, RotateCcw } from 'lucide-react-native';
 import { FormInput } from './FormInput';
 import { AuthButton } from './AuthButton';
+import {
+    AUTH_LOGIN_UI,
+    AUTH_REGISTER_UI,
+    AUTH_RESET_PASSWORD_UI,
+    AuthLoadingLabel,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthValidationMessage } from '@/features/auth/domain/constants/authValidation';
 
 const resetPasswordSchema = z
     .object({
         newPassword: z
             .string()
-            .min(6, 'M ật khẩu phải có ít nhất 6 ký tự')
-            .regex(/[A-Z]/, 'Mật khẩu phải có ít nhất 1 chữ hoa')
-            .regex(/[0-9]/, 'Mật khẩu phải có ít nhất 1 chữ số'),
-        confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu'),
+            .min(6, AuthValidationMessage.PasswordMin)
+            .regex(/[A-Z]/, AuthValidationMessage.PasswordUppercase)
+            .regex(/[0-9]/, AuthValidationMessage.PasswordDigit),
+        confirmPassword: z.string().min(1, AuthValidationMessage.PasswordConfirmRequired),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
-        message: 'Mật khẩu xác nhận không khớp',
+        message: AuthValidationMessage.PasswordConfirmMismatch,
         path: ['confirmPassword'],
     });
 
@@ -48,8 +55,8 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
                 name="newPassword"
                 render={({ field: { onChange, value } }) => (
                     <FormInput
-                        label="Mật khẩu mới"
-                        placeholder="••••••••"
+                        label={AUTH_RESET_PASSWORD_UI.newPasswordLabel}
+                        placeholder={AUTH_LOGIN_UI.passwordPlaceholder}
                         secureTextEntry
                         value={value}
                         onChangeText={onChange}
@@ -64,8 +71,8 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
                 name="confirmPassword"
                 render={({ field: { onChange, value } }) => (
                     <FormInput
-                        label="Xác nhận mật khẩu"
-                        placeholder="••••••••"
+                        label={AUTH_REGISTER_UI.confirmPasswordLabel}
+                        placeholder={AUTH_LOGIN_UI.passwordPlaceholder}
                         secureTextEntry
                         value={value}
                         onChangeText={onChange}
@@ -76,7 +83,9 @@ export function ResetPasswordForm({ onSubmit, isLoading }: ResetPasswordFormProp
             />
 
             <AuthButton onPress={handleSubmit(onSubmit)} isLoading={isLoading} leftIcon={RotateCcw}>
-                {isLoading ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
+                {isLoading
+                    ? AuthLoadingLabel.ResettingPassword
+                    : AUTH_RESET_PASSWORD_UI.resetButton}
             </AuthButton>
         </View>
     );

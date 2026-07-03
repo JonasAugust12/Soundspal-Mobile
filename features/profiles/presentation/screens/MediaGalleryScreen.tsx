@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { MediaUploadSection } from '@/features/profiles/presentation/components/profile/MediaUploadSection';
@@ -9,7 +10,7 @@ export default function MediaGalleryScreen() {
     const router = useRouter();
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+        <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900" edges={SCREEN_SAFE_AREA_EDGES}>
             {/* Header */}
             <View className="flex-row items-center px-4 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Platform, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Bookmark, Briefcase, Calendar, DollarSign, MapPin, Crown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,7 @@ import {
     formatDate,
     formatJobType,
 } from '@/features/jobs/domain/utils/jobFormatters';
+import { cardShadow } from '@/shared/presentation/ui/shadows';
 
 import { JobApplyModal } from './JobApplyModal';
 
@@ -208,33 +209,10 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
 };
 
 const styles = StyleSheet.create({
-    card: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.1,
-                shadowRadius: 12,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
-    },
+    card: cardShadow,
     imageContainer: {
         width: 80,
         height: 80,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#7C3BED',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-            },
-            android: {
-                elevation: 3,
-            },
-        }),
     },
     gradientButtonFix: {
         paddingVertical: 14,

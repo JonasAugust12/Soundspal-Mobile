@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { cardShadow } from '@/shared/presentation/ui/shadows';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
@@ -28,36 +29,38 @@ export const ArtistCardSkeleton = React.memo(function ArtistCardSkeleton({ width
     }));
 
     return (
-        <View
-            style={[styles.shadow, { width }]}
-            className="rounded-[20px] bg-white border border-gray-200 overflow-hidden"
-        >
-            {/* Image Skeleton */}
-            <Animated.View style={animatedStyle} className="w-full h-[140px] bg-gray-200" />
+        <View style={[styles.cardWrapper, { width }]}>
+            <View className="rounded-[20px] bg-white border border-gray-200 overflow-hidden">
+                {/* Image Skeleton */}
+                <Animated.View style={animatedStyle} className="w-full h-[140px] bg-gray-200" />
 
-            {/* Content Skeleton */}
-            <View className="p-3 gap-1.5">
-                {/* Name */}
-                <Animated.View
-                    style={animatedStyle}
-                    className="h-4 w-[70%] rounded bg-gray-200 self-center"
-                />
-
-                {/* Description */}
-                <Animated.View
-                    style={animatedStyle}
-                    className="h-3 w-[50%] rounded bg-gray-200 self-center mb-1"
-                />
-
-                <View className="gap-2 items-center">
-                    {/* Location */}
-                    <Animated.View style={animatedStyle} className="h-3 w-20 rounded bg-gray-200" />
-
-                    {/* Skills Badge */}
+                {/* Content Skeleton */}
+                <View className="p-3 gap-1.5">
+                    {/* Name */}
                     <Animated.View
                         style={animatedStyle}
-                        className="h-6 w-15 rounded-lg bg-gray-200"
+                        className="h-4 w-[70%] rounded bg-gray-200 self-center"
                     />
+
+                    {/* Description */}
+                    <Animated.View
+                        style={animatedStyle}
+                        className="h-3 w-[50%] rounded bg-gray-200 self-center mb-1"
+                    />
+
+                    <View className="gap-2 items-center">
+                        {/* Location */}
+                        <Animated.View
+                            style={animatedStyle}
+                            className="h-3 w-20 rounded bg-gray-200"
+                        />
+
+                        {/* Skills Badge */}
+                        <Animated.View
+                            style={animatedStyle}
+                            className="h-6 w-15 rounded-lg bg-gray-200"
+                        />
+                    </View>
                 </View>
             </View>
         </View>
@@ -65,17 +68,9 @@ export const ArtistCardSkeleton = React.memo(function ArtistCardSkeleton({ width
 });
 
 const styles = StyleSheet.create({
-    shadow: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 8,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
+    cardWrapper: {
+        ...cardShadow,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
     },
 });

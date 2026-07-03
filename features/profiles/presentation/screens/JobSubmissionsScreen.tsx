@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
@@ -31,14 +30,14 @@ export default function JobSubmissionsScreen() {
     if (isLoading) {
         return (
             <TabScreenWrapper>
-                <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+                <View className="flex-1 bg-gray-50 dark:bg-gray-900">
                     <View className="flex-1 items-center justify-center">
                         <ActivityIndicator size="large" color="#7C3BED" />
                         <Text className="text-gray-600 dark:text-gray-400 mt-2">
                             Đang tải ứng tuyển...
                         </Text>
                     </View>
-                </SafeAreaView>
+                </View>
             </TabScreenWrapper>
         );
     }
@@ -46,13 +45,13 @@ export default function JobSubmissionsScreen() {
     if (error) {
         return (
             <TabScreenWrapper>
-                <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+                <View className="flex-1 bg-gray-50 dark:bg-gray-900">
                     <View className="flex-1 items-center justify-center">
                         <Text className="text-red-600 dark:text-red-400 text-center px-4">
                             Không thể tải danh sách ứng tuyển
                         </Text>
                     </View>
-                </SafeAreaView>
+                </View>
             </TabScreenWrapper>
         );
     }
@@ -61,7 +60,7 @@ export default function JobSubmissionsScreen() {
 
     return (
         <TabScreenWrapper>
-            <SafeAreaView className="flex-1 bg-gray-50 dark:bg-gray-900">
+            <View className="flex-1 bg-gray-50 dark:bg-gray-900">
                 {/* Header */}
                 <View className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <View className="flex-row items-center gap-3 px-4 py-4">
@@ -126,7 +125,7 @@ export default function JobSubmissionsScreen() {
                         </View>
                     </ScrollView>
                 )}
-            </SafeAreaView>
+            </View>
         </TabScreenWrapper>
     );
 }

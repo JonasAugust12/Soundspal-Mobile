@@ -5,6 +5,13 @@ import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import { getUserFromToken } from '@/shared/utils/jwt';
+import {
+    AuthGoogleError,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export const useGoogleSignIn = () => {
     const { showSuccess, showError } = useToast();
@@ -30,7 +37,6 @@ export const useGoogleSignIn = () => {
             });
             console.warn('Google Play Services are available.');
 
-            // Sign out first to ensure fresh login
             await GoogleSignin.signOut();
             console.warn('Google Sign out successful.');
 
@@ -41,7 +47,7 @@ export const useGoogleSignIn = () => {
             console.warn('Authorization Code:', authCode);
 
             if (!authCode) {
-                showError('Lỗi', 'Không thể lấy authorization code từ Google');
+                showError(AuthToastTitle.Error, AuthGoogleError.MissingAuthCode);
                 return;
             }
 
@@ -69,11 +75,10 @@ export const useGoogleSignIn = () => {
                         },
                     });
 
-                    showSuccess('Đăng nhập thành công! 🎉', 'Chào mừng bạn trở lại.');
+                    showSuccess(AuthSuccessToast.LoginTitle, AuthSuccessToast.LoginBody);
                     router.replace('/(tabs)');
                 }
             } else {
-                // Profile incomplete, need to complete
                 setRegistrationToken(response.data.registration_token!);
                 router.push({
                     pathname: '/(auth)/complete-oauth-profile',
@@ -92,14 +97,13 @@ export const useGoogleSignIn = () => {
             };
 
             if (err.code === 'SIGN_IN_CANCELLED') {
-                // User cancelled, do nothing
                 return;
             }
 
-            const errorMessage =
-                err?.response?.data?.message || err?.message || 'Đăng nhập Google thất bại';
-
-            showError('Lỗi đăng nhập', errorMessage);
+            showError(
+                AuthToastTitle.LoginError,
+                resolveAuthErrorMessage(error, AuthErrorContext.GoogleSignIn),
+            );
         }
     };
 

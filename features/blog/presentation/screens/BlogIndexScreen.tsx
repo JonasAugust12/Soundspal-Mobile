@@ -208,7 +208,7 @@ export default function BlogScreen() {
         return (
             <SafeAreaView
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-                edges={['right', 'bottom', 'left']}
+                edges={['top', 'right', 'bottom', 'left']}
             >
                 {fixedBlogChrome}
                 <FlatList
@@ -245,7 +245,7 @@ export default function BlogScreen() {
         return (
             <SafeAreaView
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-                edges={['right', 'bottom', 'left']}
+                edges={['top', 'right', 'bottom', 'left']}
             >
                 {fixedBlogChrome}
                 <FlatList
@@ -281,7 +281,7 @@ export default function BlogScreen() {
         return (
             <SafeAreaView
                 className={`flex-1 justify-center items-center ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-                edges={['right', 'bottom', 'left']}
+                edges={['top', 'right', 'bottom', 'left']}
             >
                 <ActivityIndicator size="large" color={isDark ? '#E2E8F0' : '#1F2937'} />
                 <Text className={`mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
@@ -295,7 +295,7 @@ export default function BlogScreen() {
         return (
             <SafeAreaView
                 className={`flex-1 justify-center items-center px-4 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-                edges={['right', 'bottom', 'left']}
+                edges={['top', 'right', 'bottom', 'left']}
             >
                 <Text
                     className={`text-lg font-semibold ${isDark ? 'text-red-400' : 'text-red-600'}`}
@@ -321,7 +321,7 @@ export default function BlogScreen() {
         return (
             <SafeAreaView
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-                edges={['right', 'bottom', 'left']}
+                edges={['top', 'right', 'bottom', 'left']}
             >
                 {fixedBlogChrome}
                 <FlatList
@@ -359,7 +359,7 @@ export default function BlogScreen() {
     return (
         <SafeAreaView
             className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-            edges={['right', 'bottom', 'left']}
+            edges={['top', 'right', 'bottom', 'left']}
         >
             {fixedBlogChrome}
             <FlatList

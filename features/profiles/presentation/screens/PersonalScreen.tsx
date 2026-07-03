@@ -9,6 +9,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
     UserSquare,
@@ -29,6 +30,16 @@ import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import { MenuItem } from '@/features/profiles/presentation/components/profile';
+import {
+    AUTH_ERROR_CONTEXT_FALLBACKS,
+    AuthErrorContext,
+} from '@/features/auth/domain/constants/authApiErrorCode';
+import {
+    AUTH_COMMON,
+    AuthLoadingLabel,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
 
 export default function PersonalScreen() {
     const { mutateAsync: logoutApi, isPending: isLoggingOut } = useLogout();
@@ -42,11 +53,11 @@ export default function PersonalScreen() {
     const handleLogout = async () => {
         try {
             await logoutApi();
-            showSuccess('Đăng xuất thành công! 👋', 'Hẹn gặp lại bạn.');
+            showSuccess(AuthSuccessToast.LogoutTitle, AuthSuccessToast.LogoutBody);
             clearAuthState();
             router.replace('/(auth)/login');
         } catch {
-            showError('Lỗi', 'Không thể đăng xuất từ server, nhưng đã xóa session local.');
+            showError(AuthToastTitle.Error, AUTH_ERROR_CONTEXT_FALLBACKS[AuthErrorContext.Logout]);
             clearAuthState();
             router.replace('/(auth)/login');
         }
@@ -111,7 +122,7 @@ export default function PersonalScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50" edges={SCREEN_SAFE_AREA_EDGES}>
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
                 {/* Header */}
                 <View className="px-5 pt-2 pb-4 flex-row items-center justify-between">
@@ -299,7 +310,7 @@ export default function PersonalScreen() {
                     >
                         <LogOut size={20} color="#DC2626" />
                         <Text className="text-red-600 font-bold text-base">
-                            {isLoggingOut ? 'Đang đăng xuất...' : 'Đăng xuất'}
+                            {isLoggingOut ? AuthLoadingLabel.LoggingOut : AUTH_COMMON.logout}
                         </Text>
                     </TouchableOpacity>
                 </View>

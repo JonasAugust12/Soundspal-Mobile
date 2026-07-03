@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, ShieldCheck, Lock } from 'lucide-react-native';
@@ -9,6 +10,14 @@ import { useResetPassword } from '@/features/auth/presentation/hooks/useAuthApi'
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import type { ResetPasswordFormData } from '@/features/auth/presentation/components/ResetPasswordForm';
+import {
+    AUTH_COMMON,
+    AUTH_RESET_PASSWORD_UI,
+    AuthSuccessToast,
+    AuthToastTitle,
+} from '@/features/auth/domain/constants/authMessages';
+import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
+import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function ResetPasswordScreen() {
     const { email, reset_token } = useLocalSearchParams<{ email: string; reset_token: string }>();
@@ -28,18 +37,16 @@ export default function ResetPasswordScreen() {
 
             if (response.data || response.message) {
                 showSuccess(
-                    'Đặt lại mật khẩu thành công! 🎉',
-                    'Bạn có thể đăng nhập bằng mật khẩu mới.',
+                    AuthSuccessToast.ResetPasswordTitle,
+                    AuthSuccessToast.ResetPasswordBody,
                 );
                 router.replace('/(auth)/login');
             }
-            //eslint-disable-next-line
-        } catch (error: any) {
-            const errorMessage =
-                error?.response?.data?.message ||
-                error?.message ||
-                'Không thể đặt lại mật khẩu. Vui lòng thử lại.';
-            showError('Lỗi', errorMessage);
+        } catch (error: unknown) {
+            showError(
+                AuthToastTitle.Error,
+                resolveAuthErrorMessage(error, AuthErrorContext.ResetPassword),
+            );
         }
     };
 
@@ -57,14 +64,14 @@ export default function ResetPasswordScreen() {
                 <View style={styles.circle2} />
             </LinearGradient>
 
-            <SafeAreaView className="flex-1">
+            <SafeAreaView className="flex-1" edges={SCREEN_SAFE_AREA_EDGES}>
                 {/* Back Button */}
                 <TouchableOpacity
                     onPress={() => router.back()}
                     className="flex-row items-center gap-1 px-4 pt-2"
                 >
                     <ChevronLeft size={24} color="#FFFFFF" />
-                    <Text className="text-white font-medium">Quay lại</Text>
+                    <Text className="text-white font-medium">{AUTH_COMMON.back}</Text>
                 </TouchableOpacity>
 
                 <KeyboardAwareScrollView
@@ -77,9 +84,11 @@ export default function ResetPasswordScreen() {
                         <View style={styles.iconContainer}>
                             <ShieldCheck size={40} color="#10B981" />
                         </View>
-                        <Text className="text-white text-xl font-bold mt-4">Đặt mật khẩu mới</Text>
+                        <Text className="text-white text-xl font-bold mt-4">
+                            {AUTH_RESET_PASSWORD_UI.title}
+                        </Text>
                         <Text className="text-white/70 text-sm mt-1 text-center px-8">
-                            Tạo mật khẩu mạnh để bảo vệ tài khoản
+                            {AUTH_RESET_PASSWORD_UI.subtitle}
                         </Text>
                     </View>
 
@@ -94,10 +103,10 @@ export default function ResetPasswordScreen() {
                                 <Lock size={32} color="#10B981" />
                             </View>
                             <Text className="text-lg font-bold text-gray-900 text-center">
-                                Nhập mật khẩu mới
+                                {AUTH_RESET_PASSWORD_UI.formTitle}
                             </Text>
                             <Text className="text-sm text-gray-500 mt-1 text-center max-w-[280px]">
-                                Mật khẩu cần có ít nhất 8 ký tự
+                                {AUTH_RESET_PASSWORD_UI.formHint}
                             </Text>
                         </View>
 
@@ -107,17 +116,17 @@ export default function ResetPasswordScreen() {
                         {/* Security Tips */}
                         <View className="mt-8 bg-gray-50 rounded-2xl p-4">
                             <Text className="text-xs font-bold text-gray-700 mb-2">
-                                💡 Mẹo tạo mật khẩu mạnh:
+                                {AUTH_RESET_PASSWORD_UI.tipsTitle}
                             </Text>
                             <View className="gap-1">
                                 <Text className="text-xs text-gray-500">
-                                    • Kết hợp chữ hoa, chữ thường và số
+                                    {AUTH_RESET_PASSWORD_UI.tipUpperLower}
                                 </Text>
                                 <Text className="text-xs text-gray-500">
-                                    • Sử dụng ký tự đặc biệt (@, #, $...)
+                                    {AUTH_RESET_PASSWORD_UI.tipSpecial}
                                 </Text>
                                 <Text className="text-xs text-gray-500">
-                                    • Tránh dùng thông tin cá nhân
+                                    {AUTH_RESET_PASSWORD_UI.tipPersonal}
                                 </Text>
                             </View>
                         </View>

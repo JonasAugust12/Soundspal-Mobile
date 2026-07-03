@@ -158,7 +158,7 @@ export default function BlogDetailScreen() {
     return (
         <SafeAreaView
             className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
-            edges={['right', 'bottom', 'left']}
+            edges={['top', 'right', 'bottom', 'left']}
             style={{ position: 'relative' }}
         >
             <BlogDetailHeader

@@ -4,15 +4,16 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { CreateChallengeForm } from '@/features/challenge/presentation/components/createChallenge';
+import { ScreenSafeArea } from '@/shared/presentation/ui';
 
 export default function CreateChallengeScreen() {
     const router = useRouter();
 
     return (
-        <View className="flex-1 bg-white">
+        <ScreenSafeArea className="flex-1 bg-white">
             <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
-            <View className="h-[90px] pt-[40px] px-4 flex-row items-center border-b border-gray-100 bg-white z-50">
+            <View className="h-16 px-4 flex-row items-center border-b border-gray-100 bg-white z-50">
                 <TouchableOpacity
                     onPress={() => router.back()}
                     className="w-10 h-10 items-center justify-center rounded-full active:bg-gray-100"
@@ -41,6 +42,6 @@ export default function CreateChallengeScreen() {
 
                 <CreateChallengeForm />
             </KeyboardAwareScrollView>
-        </View>
+        </ScreenSafeArea>
     );
 }

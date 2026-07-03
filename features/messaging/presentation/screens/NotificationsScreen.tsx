@@ -10,6 +10,7 @@ import {
     TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Search } from 'lucide-react-native';
 import { ChatItem } from '@/shared/presentation/ui';
@@ -115,7 +116,7 @@ export default function MessagesScreen() {
 
     if (isLoadingConversations && conversationOrder.length === 0) {
         return (
-            <SafeAreaView className="flex-1 bg-white">
+            <SafeAreaView className="flex-1 bg-white" edges={SCREEN_SAFE_AREA_EDGES}>
                 <View className="flex-1 items-center justify-center">
                     <View className="w-16 h-16 rounded-full bg-purple-100 items-center justify-center mb-4">
                         <ActivityIndicator size="large" color="#7C3BED" />
@@ -127,7 +128,7 @@ export default function MessagesScreen() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={SCREEN_SAFE_AREA_EDGES}>
             <View className="flex-1">
                 {/* Modern Header */}
                 <View className="px-5 pt-2 pb-4">

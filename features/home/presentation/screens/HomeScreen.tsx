@@ -1,13 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    Image,
-    Platform,
-    StyleSheet,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Search, ChevronRight, Sparkles, TrendingUp } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -24,6 +16,14 @@ import {
     useFeaturedJobs,
 } from '@/features/explore/presentation/hooks/useSearchApi';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
+import { raisedShadow } from '@/shared/presentation/ui/shadows';
+
+const CAROUSEL_CONTENT_STYLE = {
+    paddingHorizontal: 20,
+    gap: 12,
+    paddingTop: 4,
+    paddingBottom: 10,
+} as const;
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -241,7 +241,7 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
                     >
                         {[1, 2, 3].map((i) => (
                             <ArtistCardSkeleton key={i} width={170} />
@@ -251,7 +251,7 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
                     >
                         {artists.map((artist, index) => {
                             const user = featuredUsersData?.data?.users?.users?.[index];
@@ -310,7 +310,7 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
                     >
                         {[1, 2, 3].map((i) => (
                             <JobCardSkeleton key={i} width={260} />
@@ -320,7 +320,7 @@ export default function HomeScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
                     >
                         {jobs.map((job) => (
                             <JobCard
@@ -347,19 +347,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-    searchShadow: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#7C3BED',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
-    },
+    searchShadow: raisedShadow,
     heroCard: {
         borderRadius: 24,
         padding: 24,
