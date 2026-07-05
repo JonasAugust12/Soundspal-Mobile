@@ -6,9 +6,11 @@ import { ChevronLeft } from 'lucide-react-native';
 import {
     useGetJobById,
     usePublishJob,
+    useReopenJob,
     useCloseJob,
 } from '@/features/jobs/presentation/hooks/useJobApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { useToast } from '@/shared/presentation/hooks/useToast';
 import {
     JobDetailHeader,
     JobDetailTags,
@@ -18,12 +20,13 @@ import {
     JobRequiredSkills,
     JobBenefits,
 } from '@/features/jobs/presentation/components';
-import { formatDate } from '@/features/jobs/domain/utils/jobFormatters';
+import { formatDate, getJobPublishBlockReason } from '@/features/jobs/domain/utils/jobFormatters';
 
 export default function JobDetailScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { user } = useAuthStore();
+    const { showSuccess, showError } = useToast();
     const params = useLocalSearchParams<{ id: string }>();
     const [showApplyModal, setShowApplyModal] = useState(false);
 
@@ -38,19 +41,43 @@ export default function JobDetailScreen() {
     });
 
     const { mutate: publishJob, isPending: isPublishing } = usePublishJob();
+    const { mutate: reopenJob, isPending: isReopening } = useReopenJob();
     const { mutate: closeJob, isPending: isClosing } = useCloseJob();
 
     const handlePublish = () => {
         if (!jobId) return;
         publishJob(jobId, {
-            onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được xuất bản'),
+            onSuccess: () => showSuccess('Thành công', 'Bài đăng đã được xuất bản'),
             onError: (err: unknown) => {
                 const message =
                     (err as { response?: { data?: { message?: string } }; message?: string })
                         ?.response?.data?.message ||
                     (err as { message?: string })?.message ||
                     'Không thể xuất bản bài đăng';
-                Alert.alert('Lỗi', message);
+                showError('Lỗi', message);
+            },
+        });
+    };
+
+    const handleReopen = () => {
+        if (!jobId || !job) return;
+        const blockReason = getJobPublishBlockReason(job);
+        if (blockReason) {
+            showError(
+                'Chưa thể mở lại tuyển dụng',
+                `${blockReason}. Vui lòng chỉnh sửa bài đăng trước.`,
+            );
+            return;
+        }
+        reopenJob(jobId, {
+            onSuccess: () => showSuccess('Thành công', 'Bài đăng đã được mở lại tuyển dụng'),
+            onError: (err: unknown) => {
+                const message =
+                    (err as { response?: { data?: { message?: string } }; message?: string })
+                        ?.response?.data?.message ||
+                    (err as { message?: string })?.message ||
+                    'Không thể mở lại bài đăng';
+                showError('Lỗi', message);
             },
         });
     };
@@ -67,7 +94,7 @@ export default function JobDetailScreen() {
                     style: 'destructive',
                     onPress: () =>
                         closeJob(jobId, {
-                            onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được đóng'),
+                            onSuccess: () => showSuccess('Thành công', 'Bài đăng đã được đóng'),
                             onError: (err: unknown) => {
                                 const message =
                                     (
@@ -78,7 +105,7 @@ export default function JobDetailScreen() {
                                     )?.response?.data?.message ||
                                     (err as { message?: string })?.message ||
                                     'Không thể đóng bài đăng';
-                                Alert.alert('Lỗi', message);
+                                showError('Lỗi', message);
                             },
                         }),
                 },
@@ -231,8 +258,10 @@ export default function JobDetailScreen() {
                     status={job.status}
                     onApply={() => setShowApplyModal(true)}
                     onPublish={isOwned ? handlePublish : undefined}
+                    onReopen={isOwned ? handleReopen : undefined}
                     onClose={isOwned ? handleClose : undefined}
                     isPublishing={isPublishing}
+                    isReopening={isReopening}
                     isClosing={isClosing}
                 />
             </View>

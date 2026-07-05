@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
     View,
     Text,
@@ -9,7 +9,7 @@ import {
     TextInput,
     Switch,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Save, Trash2 } from 'lucide-react-native';
 import {
@@ -17,12 +17,20 @@ import {
     useUpdateJob,
     useDeleteJob,
     usePublishJob,
+    useReopenJob,
     useCloseJob,
 } from '@/features/jobs/presentation/hooks/useJobApi';
-import { formatPostStatus, formatPostVisibility } from '@/features/jobs/domain/utils/jobFormatters';
+import {
+    formatPostStatus,
+    formatPostVisibility,
+    getJobPublishBlockReason,
+} from '@/features/jobs/domain/utils/jobFormatters';
+import { isApiNotFound } from '@/shared/utils/apiError';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { useToast } from '@/shared/presentation/hooks/useToast';
 import { JobEditCard } from '@/features/jobs/presentation/components/JobEditCard';
 import type { UpdateJobRequest } from '@/features/jobs/domain/entities/job.type';
+import { buildUpdatePayloadFromJob } from '@/features/jobs/data/repositories/jobRepositoryHelpers';
 
 const JOB_TYPES = [
     { label: 'Venue', value: 'venue' },
@@ -57,9 +65,14 @@ const EXPERIENCE_LEVELS = [
     { label: 'Không yêu cầu', value: 'any' },
 ];
 
+const getOptionLabel = (options: Array<{ label: string; value: string }>, value?: string) =>
+    options.find((option) => option.value === value)?.label ?? value ?? 'Chưa điền';
+
 export default function EditJobScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { user } = useAuthStore();
+    const { showSuccess, showError } = useToast();
     const params = useLocalSearchParams<{ id: string }>();
 
     const jobId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
@@ -75,42 +88,42 @@ export default function EditJobScreen() {
     const { mutate: updateJob, isPending: isUpdating } = useUpdateJob();
     const { mutate: deleteJob, isPending: isDeleting } = useDeleteJob();
     const { mutate: publishJob, isPending: isPublishing } = usePublishJob();
+    const { mutate: reopenJob, isPending: isReopening } = useReopenJob();
     const { mutate: closeJob, isPending: isClosing } = useCloseJob();
 
     const [formData, setFormData] = useState<Partial<UpdateJobRequest>>({});
     const [hasChanges, setHasChanges] = useState(false);
 
-    // Initialize form data when job loads
+    // Initialize form data when job loads (only when job id changes)
     React.useEffect(() => {
-        if (job) {
-            setFormData({
-                title: job.title,
-                brief_description: job.brief_description,
-                description: job.description,
-                //eslint-disable-next-line
-                type: job.type as any,
-                //eslint-disable-next-line
-                recruitment_type: job.recruitment_type as any,
-                //eslint-disable-next-line
-                location_type: job.location_type as any,
-                location: job.location,
-                budget_min: job.budget_min,
-                budget_max: job.budget_max,
-                //eslint-disable-next-line
-                budget_currency: (job.budget_currency || 'VND') as any,
-                //eslint-disable-next-line
-                payment_type: (job.payment_type || 'bySession') as any,
-                is_negotiable: job.is_negotiable,
-                deadline: job.deadline || undefined,
-                work_time: job.work_time,
-                //eslint-disable-next-line
-                experience_level: (job.experience_level || 'intermediate') as any,
-                genres: job.genres,
-                required_skills: job.required_skills,
-                benefits: job.benefits,
-            });
+        if (!job) {
+            return;
         }
-    }, [job]);
+        setFormData({
+            post_type: job.post_type as UpdateJobRequest['post_type'],
+            title: job.title,
+            brief_description: job.brief_description,
+            description: job.description,
+            type: job.type as UpdateJobRequest['type'],
+            recruitment_type: job.recruitment_type as UpdateJobRequest['recruitment_type'],
+            location_type: job.location_type as UpdateJobRequest['location_type'],
+            location: job.location,
+            budget_min: job.budget_min,
+            budget_max: job.budget_max,
+            budget_currency: (job.budget_currency || 'VND') as UpdateJobRequest['budget_currency'],
+            payment_type: (job.payment_type || 'bySession') as UpdateJobRequest['payment_type'],
+            is_negotiable: job.is_negotiable,
+            deadline: job.deadline || undefined,
+            work_time: job.work_time,
+            experience_level: (job.experience_level ||
+                'intermediate') as UpdateJobRequest['experience_level'],
+            genres: job.genres ?? [],
+            required_skills: job.required_skills ?? [],
+            benefits: job.benefits ?? [],
+            visibility: job.visibility as UpdateJobRequest['visibility'],
+        });
+        setHasChanges(false);
+    }, [job?.id]);
 
     const isOwned = useMemo(
         () => !!(job && user && String(job.creator_id).trim() === String(user.id).trim()),
@@ -123,56 +136,157 @@ export default function EditJobScreen() {
         setHasChanges(true);
     };
 
+    const buildPayload = useCallback((): UpdateJobRequest | null => {
+        if (!job) {
+            return null;
+        }
+        return buildUpdatePayloadFromJob(job, formData);
+    }, [job, formData]);
+
     const handleSave = () => {
-        if (!formData.title?.trim()) {
-            Alert.alert('Lỗi', 'Tiêu đề công việc không được để trống');
+        const payload = buildPayload();
+        if (!payload || !jobId) {
             return;
         }
 
-        if (!formData.brief_description?.trim()) {
-            Alert.alert('Lỗi', 'Mô tả ngắn không được để trống');
+        if (!payload.title?.trim()) {
+            showError('Lỗi', 'Tiêu đề công việc không được để trống');
             return;
         }
 
-        if (!formData.description?.trim()) {
-            Alert.alert('Lỗi', 'Mô tả chi tiết không được để trống');
+        if (!payload.brief_description?.trim()) {
+            showError('Lỗi', 'Mô tả ngắn không được để trống');
+            return;
+        }
+
+        if (!payload.description?.trim()) {
+            showError('Lỗi', 'Mô tả chi tiết không được để trống');
             return;
         }
 
         updateJob(
-            { id: jobId!, body: formData as UpdateJobRequest },
+            { id: jobId, body: payload },
             {
                 onSuccess: () => {
                     setHasChanges(false);
-                    Alert.alert('Thành công', 'Bài đăng đã được cập nhật', [
-                        { text: 'OK', onPress: () => router.back() },
-                    ]);
+                    showSuccess('Thành công', 'Bài đăng đã được cập nhật');
+                    router.back();
                 },
                 //eslint-disable-next-line
                 onError: (error: any) => {
+                    const details = error?.response?.data?.details;
+                    const detailMessage =
+                        details && typeof details === 'object'
+                            ? Object.values(details).join('\n')
+                            : undefined;
                     const errorMessage =
+                        detailMessage ||
                         error?.response?.data?.message ||
                         error?.message ||
                         'Không thể cập nhật bài đăng';
-                    Alert.alert('Lỗi', errorMessage);
+                    showError('Lỗi', errorMessage);
                 },
             },
         );
     };
 
     const handlePublish = () => {
-        if (!jobId) return;
-        publishJob(jobId, {
-            onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được xuất bản'),
-            //eslint-disable-next-line
-            onError: (error: any) => {
-                const errorMessage =
-                    error?.response?.data?.message ||
-                    error?.message ||
-                    'Không thể xuất bản bài đăng';
-                Alert.alert('Lỗi', errorMessage);
-            },
-        });
+        if (!jobId || !job) return;
+        const payload = buildPayload();
+        if (!payload) return;
+
+        const blockReason = getJobPublishBlockReason(payload);
+        if (blockReason) {
+            showError('Lỗi', blockReason);
+            return;
+        }
+
+        const publish = () =>
+            publishJob(jobId, {
+                onSuccess: () => showSuccess('Thành công', 'Bài đăng đã được xuất bản'),
+                //eslint-disable-next-line
+                onError: (error: any) => {
+                    const errorMessage =
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        'Không thể xuất bản bài đăng';
+                    showError('Lỗi', errorMessage);
+                },
+            });
+
+        if (hasChanges) {
+            updateJob(
+                { id: jobId, body: payload },
+                {
+                    onSuccess: () => {
+                        setHasChanges(false);
+                        publish();
+                    },
+                    //eslint-disable-next-line
+                    onError: (error: any) => {
+                        const errorMessage =
+                            error?.response?.data?.message ||
+                            error?.message ||
+                            'Không thể lưu thay đổi trước khi xuất bản';
+                        showError('Lỗi', errorMessage);
+                    },
+                },
+            );
+            return;
+        }
+
+        publish();
+    };
+
+    const handleReopen = () => {
+        if (!jobId || !job) return;
+        const payload = buildPayload();
+        if (!payload) return;
+
+        const blockReason = getJobPublishBlockReason(payload);
+        if (blockReason) {
+            showError(
+                'Chưa thể mở lại tuyển dụng',
+                `${blockReason}. Vui lòng hoàn thiện thông tin bài đăng.`,
+            );
+            return;
+        }
+
+        const reopen = () =>
+            reopenJob(jobId, {
+                onSuccess: () => showSuccess('Thành công', 'Bài đăng đã được mở lại tuyển dụng'),
+                //eslint-disable-next-line
+                onError: (error: any) => {
+                    const errorMessage =
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        'Không thể mở lại bài đăng';
+                    showError('Lỗi', errorMessage);
+                },
+            });
+
+        if (hasChanges) {
+            updateJob(
+                { id: jobId, body: payload },
+                {
+                    onSuccess: () => {
+                        setHasChanges(false);
+                        reopen();
+                    },
+                    //eslint-disable-next-line
+                    onError: (error: any) => {
+                        const errorMessage =
+                            error?.response?.data?.message ||
+                            error?.message ||
+                            'Không thể lưu thay đổi trước khi mở lại';
+                        showError('Lỗi', errorMessage);
+                    },
+                },
+            );
+            return;
+        }
+
+        reopen();
     };
 
     const handleCloseJob = () => {
@@ -184,14 +298,14 @@ export default function EditJobScreen() {
                 style: 'destructive',
                 onPress: () =>
                     closeJob(jobId, {
-                        onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được đóng'),
+                        onSuccess: () => showSuccess('Thành công', 'Bài đăng đã được đóng'),
                         //eslint-disable-next-line
                         onError: (error: any) => {
                             const errorMessage =
                                 error?.response?.data?.message ||
                                 error?.message ||
                                 'Không thể đóng bài đăng';
-                            Alert.alert('Lỗi', errorMessage);
+                            showError('Lỗi', errorMessage);
                         },
                     }),
             },
@@ -209,9 +323,8 @@ export default function EditJobScreen() {
                     onPress: () => {
                         deleteJob(jobId!, {
                             onSuccess: () => {
-                                Alert.alert('Thành công', 'Bài đăng đã được xóa', [
-                                    { text: 'OK', onPress: () => router.back() },
-                                ]);
+                                showSuccess('Thành công', 'Bài đăng đã được xóa');
+                                router.back();
                             },
                             //eslint-disable-next-line
                             onError: (error: any) => {
@@ -219,7 +332,7 @@ export default function EditJobScreen() {
                                     error?.response?.data?.message ||
                                     error?.message ||
                                     'Không thể xóa bài đăng';
-                                Alert.alert('Lỗi', errorMessage);
+                                showError('Lỗi', errorMessage);
                             },
                         });
                     },
@@ -244,6 +357,8 @@ export default function EditJobScreen() {
         );
     }
 
+    const isNotFound = isApiNotFound(error);
+
     // Error or not owned
     if (error || !job || !isOwned) {
         return (
@@ -264,10 +379,18 @@ export default function EditJobScreen() {
 
                 <View className="flex-1 items-center justify-center px-4">
                     <Text className="text-lg font-bold text-red-600 dark:text-red-400 text-center">
-                        {!isOwned
+                        {!isOwned && job
                             ? 'Bạn không có quyền chỉnh sửa bài đăng này'
-                            : 'Không thể tải thông tin công việc'}
+                            : isNotFound
+                              ? 'Bài đăng không còn tồn tại hoặc đã bị xóa'
+                              : 'Không thể tải thông tin công việc'}
                     </Text>
+                    {isNotFound && (
+                        <Text className="text-sm text-gray-500 dark:text-gray-400 text-center mt-2 px-6">
+                            Danh sách &quot;Job của tôi&quot; sẽ được làm mới. Nếu bài vẫn hiện, kéo
+                            xuống để tải lại.
+                        </Text>
+                    )}
                 </View>
             </SafeAreaView>
         );
@@ -347,6 +470,7 @@ export default function EditJobScreen() {
                         title="Loại nghệ sĩ"
                         value={formData.type}
                         onSave={(value) => handleFieldChange('type', value)}
+                        formatDisplay={(value) => getOptionLabel(JOB_TYPES, String(value ?? ''))}
                     >
                         <View className="gap-2">
                             {JOB_TYPES.map((type) => (
@@ -379,6 +503,9 @@ export default function EditJobScreen() {
                         title="Hình thức tuyển dụng"
                         value={formData.recruitment_type}
                         onSave={(value) => handleFieldChange('recruitment_type', value)}
+                        formatDisplay={(value) =>
+                            getOptionLabel(RECRUITMENT_TYPES, String(value ?? ''))
+                        }
                     >
                         <View className="flex-row flex-wrap gap-2">
                             {RECRUITMENT_TYPES.map((type) => (
@@ -411,6 +538,9 @@ export default function EditJobScreen() {
                         title="Loại địa điểm"
                         value={formData.location_type}
                         onSave={(value) => handleFieldChange('location_type', value)}
+                        formatDisplay={(value) =>
+                            getOptionLabel(LOCATION_TYPES, String(value ?? ''))
+                        }
                     >
                         <View className="flex-row gap-2">
                             {LOCATION_TYPES.map((type) => (
@@ -453,6 +583,9 @@ export default function EditJobScreen() {
                         title="Hình thức thanh toán"
                         value={formData.payment_type || undefined}
                         onSave={(value) => handleFieldChange('payment_type', value)}
+                        formatDisplay={(value) =>
+                            getOptionLabel(PAYMENT_TYPES, String(value ?? ''))
+                        }
                     >
                         <View className="flex-row flex-wrap gap-2">
                             {PAYMENT_TYPES.map((type) => (
@@ -596,6 +729,9 @@ export default function EditJobScreen() {
                         title="Cấp độ kinh nghiệm"
                         value={formData.experience_level || undefined}
                         onSave={(value) => handleFieldChange('experience_level', value)}
+                        formatDisplay={(value) =>
+                            getOptionLabel(EXPERIENCE_LEVELS, String(value ?? ''))
+                        }
                     >
                         <View className="flex-row flex-wrap gap-2">
                             {EXPERIENCE_LEVELS.map((level) => (
@@ -627,7 +763,10 @@ export default function EditJobScreen() {
             </ScrollView>
 
             {/* Footer Actions */}
-            <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-800 gap-2">
+            <View
+                className="px-4 pt-4 border-t border-gray-200 dark:border-gray-800 gap-2 bg-white dark:bg-gray-900"
+                style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            >
                 {job.status === 'draft' && (
                     <TouchableOpacity
                         onPress={handlePublish}
@@ -638,6 +777,20 @@ export default function EditJobScreen() {
                             <ActivityIndicator color="white" />
                         ) : (
                             <Text className="text-white font-bold">Xuất bản bài đăng</Text>
+                        )}
+                    </TouchableOpacity>
+                )}
+
+                {job.status === 'closed' && (
+                    <TouchableOpacity
+                        onPress={handleReopen}
+                        disabled={isReopening}
+                        className="flex-row items-center justify-center gap-2 py-3 rounded-lg bg-green-600"
+                    >
+                        {isReopening ? (
+                            <ActivityIndicator color="white" />
+                        ) : (
+                            <Text className="text-white font-bold">Mở lại tuyển dụng</Text>
                         )}
                     </TouchableOpacity>
                 )}

@@ -22,7 +22,11 @@ interface JobCardFullProps {
     onEdit?: () => void;
 }
 
-export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
+export const JobCardFull = React.memo(function JobCardFull({
+    job,
+    isOwned,
+    onEdit,
+}: JobCardFullProps) {
     const router = useRouter();
     const [showApplyModal, setShowApplyModal] = useState(false);
     const isBookmarked = useJobBookmarkStore((s) => s.isBookmarked(job.id));
@@ -242,7 +246,7 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
             />
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
     card: cardShadow,

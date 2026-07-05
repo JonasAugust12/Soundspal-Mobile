@@ -27,6 +27,7 @@ export interface IJobRepository {
     updateJob(id: string, body: UpdateJobRequest): Promise<Job>;
     deleteJob(id: string): Promise<void>;
     publishJob(id: string): Promise<Job>;
+    reopenJob(id: string): Promise<Job>;
     closeJob(id: string): Promise<Job>;
     submitJobApplication(jobId: string, body: SubmitApplicationRequest): Promise<Application>;
     getMySubmissions(params: { page?: number; pageSize?: number }): Promise<MySubmissionsResponse>;

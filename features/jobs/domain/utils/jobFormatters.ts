@@ -74,6 +74,29 @@ export const formatPostVisibility = (visibility: string): string => {
 
 export const isJobAcceptingApplications = (status: string): boolean => status === 'published';
 
+export const canReopenJob = (status: string): boolean => status === 'closed';
+
+export function getJobPublishBlockReason(job: {
+    title?: string;
+    description?: string;
+    post_type?: string;
+    brief_description?: string;
+}): string | null {
+    if (!job.title?.trim() || job.title.trim().length < 5) {
+        return 'Tiêu đề phải có ít nhất 5 ký tự';
+    }
+    if (!job.description?.trim() || job.description.trim().length < 20) {
+        return 'Mô tả chi tiết phải có ít nhất 20 ký tự';
+    }
+    if (!job.brief_description?.trim()) {
+        return 'Mô tả ngắn không được để trống';
+    }
+    if (!['job_offer', 'gig', 'availability'].includes(job.post_type ?? '')) {
+        return 'Loại bài đăng không hợp lệ';
+    }
+    return null;
+}
+
 /**
  * Format job type to Vietnamese display name
  */

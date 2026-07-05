@@ -7,7 +7,7 @@ interface JobTabsProps {
     onTabChange: (tab: 'others' | 'mine') => void;
 }
 
-export const JobTabs = ({ activeTab, onTabChange }: JobTabsProps) => {
+export const JobTabs = React.memo(function JobTabs({ activeTab, onTabChange }: JobTabsProps) {
     return (
         <View className="w-full px-4">
             <View className="flex-row bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl">
@@ -49,7 +49,7 @@ export const JobTabs = ({ activeTab, onTabChange }: JobTabsProps) => {
             </View>
         </View>
     );
-};
+});
 
 const styles = StyleSheet.create({
     activeTab: cardShadow,

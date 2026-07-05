@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="8" failures="0" errors="0" time="26.323">
-  <testsuite name="__tests__\components\jobs\JobCardFull.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-05T07:15:10" time="24.394" tests="8">
-    <testcase classname="JobCardFull" name="should render job title correctly" time="7.447">
+<testsuites name="jest tests" tests="4" failures="0" errors="0" time="6.514">
+  <testsuite name="__tests__\features\jobs\jobRepositoryHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-05T07:45:29" time="4.447" tests="4">
+    <testcase classname="jobRepositoryHelpers" name="returns public job from GET /posts/:id when available" time="0.006">
     </testcase>
-    <testcase classname="JobCardFull" name="should render basic job information" time="0.048">
+    <testcase classname="jobRepositoryHelpers" name="falls back to /posts/me when public GET returns 404" time="0.003">
     </testcase>
-    <testcase classname="JobCardFull" name="should show &quot;Toán quốc&quot; if no location is provided" time="0.032">
+    <testcase classname="jobRepositoryHelpers" name="returns null when owned job is not found in /posts/me" time="0.001">
     </testcase>
-    <testcase classname="JobCardFull" name="should show ownership badge when isOwned is true" time="0.033">
-    </testcase>
-    <testcase classname="JobCardFull" name="should show &quot;Chỉnh sửa&quot; button when isOwned is true" time="0.034">
-    </testcase>
-    <testcase classname="JobCardFull" name="should show &quot;Ứng tuyển ngay&quot; button when isOwned is false" time="0.04">
-    </testcase>
-    <testcase classname="JobCardFull" name="should call onEdit when Chỉnh sửa button is clicked and onEdit is provided" time="0.032">
-    </testcase>
-    <testcase classname="JobCardFull" name="should render &quot;Chi tiết&quot; button" time="0.032">
+    <testcase classname="jobRepositoryHelpers" name="reopens closed job via PUT with full post body" time="0.003">
     </testcase>
   </testsuite>
 </testsuites>

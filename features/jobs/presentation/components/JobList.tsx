@@ -9,9 +9,8 @@ import {
     RefreshControl,
 } from 'react-native';
 import { Job } from '@/features/jobs/domain/entities/job.type';
-import { SearchBar } from './SearchBar';
-import { JobCardFull } from './JobCardFull';
 import { JobCardSkeleton } from './JobCardSkeleton';
+import { JobListItem } from './JobListItem';
 
 const JOB_PAGE_SIZE = 10;
 
@@ -25,9 +24,6 @@ interface JobListProps {
     isRefreshing?: boolean;
     error?: unknown;
     onRetry?: () => void;
-    search: string;
-    onSearchChange: (text: string) => void;
-    listHeader?: React.ReactElement;
 }
 
 export const JobList = ({
@@ -40,16 +36,9 @@ export const JobList = ({
     isRefreshing = false,
     error,
     onRetry,
-    search,
-    onSearchChange,
-    listHeader,
 }: JobListProps) => {
     const renderItem: ListRenderItem<Job & { isOwned?: boolean }> = useCallback(
-        ({ item }) => (
-            <View className="w-[90%] self-center">
-                <JobCardFull job={item} isOwned={item.isOwned} />
-            </View>
-        ),
+        ({ item }) => <JobListItem item={item} />,
         [],
     );
 
@@ -60,22 +49,6 @@ export const JobList = ({
             onLoadMore();
         }
     }, [hasNextPage, isFetchingNextPage, onLoadMore]);
-
-    const renderListHeader = useCallback(
-        () => (
-            <View className="gap-5">
-                {listHeader}
-                <View className="w-full px-4">
-                    <SearchBar
-                        value={search}
-                        onChangeText={onSearchChange}
-                        placeholder="Tìm kiếm công việc..."
-                    />
-                </View>
-            </View>
-        ),
-        [listHeader, search, onSearchChange],
-    );
 
     const renderListFooter = useCallback(() => {
         if (!isFetchingNextPage) {
@@ -88,8 +61,11 @@ export const JobList = ({
         );
     }, [isFetchingNextPage]);
 
+    const showInitialLoading = isLoading && jobs.length === 0;
+    const showEmpty = !showInitialLoading && jobs.length === 0;
+
     const renderEmpty = useCallback(() => {
-        if (isLoading) {
+        if (showInitialLoading) {
             return (
                 <View className="w-full gap-4 px-4">
                     <JobCardSkeleton />
@@ -117,14 +93,18 @@ export const JobList = ({
             );
         }
 
-        return (
-            <View className="flex-1 justify-center items-center py-20">
-                <Text className="text-lg text-gray-500 dark:text-gray-400">
-                    Không tìm thấy việc làm nào
-                </Text>
-            </View>
-        );
-    }, [isLoading, error, onRetry]);
+        if (showEmpty) {
+            return (
+                <View className="flex-1 justify-center items-center py-20">
+                    <Text className="text-lg text-gray-500 dark:text-gray-400">
+                        Không tìm thấy việc làm nào
+                    </Text>
+                </View>
+            );
+        }
+
+        return null;
+    }, [showInitialLoading, showEmpty, error, onRetry]);
 
     const itemSeparator = useCallback(() => <View className="h-4" />, []);
 
@@ -133,14 +113,13 @@ export const JobList = ({
             data={jobs}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
-            ListHeaderComponent={renderListHeader}
             ListFooterComponent={renderListFooter}
             ListEmptyComponent={renderEmpty}
             ItemSeparatorComponent={itemSeparator}
             onEndReached={handleEndReached}
             onEndReachedThreshold={0.35}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 120, flexGrow: 1 }}
+            contentContainerStyle={{ paddingBottom: 120, flexGrow: 1, paddingTop: 12 }}
             refreshControl={
                 onRefresh ? (
                     <RefreshControl
@@ -151,9 +130,10 @@ export const JobList = ({
                     />
                 ) : undefined
             }
-            initialNumToRender={6}
-            maxToRenderPerBatch={8}
-            windowSize={7}
+            initialNumToRender={5}
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            updateCellsBatchingPeriod={50}
             removeClippedSubviews
         />
     );

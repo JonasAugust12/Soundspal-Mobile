@@ -10,8 +10,10 @@ interface JobDetailActionsProps {
     status: string;
     onApply: () => void;
     onPublish?: () => void;
+    onReopen?: () => void;
     onClose?: () => void;
     isPublishing?: boolean;
+    isReopening?: boolean;
     isClosing?: boolean;
 }
 
@@ -21,8 +23,10 @@ export const JobDetailActions = ({
     status,
     onApply,
     onPublish,
+    onReopen,
     onClose,
     isPublishing,
+    isReopening,
     isClosing,
 }: JobDetailActionsProps) => {
     const router = useRouter();
@@ -49,6 +53,30 @@ export const JobDetailActions = ({
                             ) : (
                                 <Text className="text-white font-bold text-base">
                                     Xuất bản bài đăng
+                                </Text>
+                            )}
+                        </LinearGradient>
+                    </TouchableOpacity>
+                )}
+
+                {status === 'closed' && onReopen && (
+                    <TouchableOpacity
+                        onPress={onReopen}
+                        disabled={isReopening}
+                        activeOpacity={0.8}
+                        style={styles.primaryButton}
+                    >
+                        <LinearGradient
+                            colors={['#10B981', '#059669']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.gradientButton}
+                        >
+                            {isReopening ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text className="text-white font-bold text-base">
+                                    Mở lại tuyển dụng
                                 </Text>
                             )}
                         </LinearGradient>

@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InfiniteData } from '@tanstack/react-query';
 import type {
     UpdateJobRequest,
     SubmitApplicationRequest,
@@ -8,6 +9,7 @@ import type { GetJobsParams } from '@/features/jobs/domain/repositories/IJobRepo
 import { jobRepository } from '@/features/jobs/data/repositories/JobRepositoryImpl';
 import { GetJobsUseCase } from '@/features/jobs/domain/usecases/GetJobsUseCase';
 import { SubmitJobApplicationUseCase } from '@/features/jobs/domain/usecases/SubmitJobApplicationUseCase';
+import { isApiNotFound } from '@/shared/utils/apiError';
 
 const getJobsUseCase = new GetJobsUseCase(jobRepository);
 const submitJobApplicationUseCase = new SubmitJobApplicationUseCase(jobRepository);
@@ -36,6 +38,29 @@ const getJobListNextPageParam = (
 type JobsInfiniteParams = Omit<GetJobsParams, 'page'>;
 type MyPostsInfiniteParams = { pageSize?: number };
 
+function findJobInMyPostsQueryCache(
+    queryClient: ReturnType<typeof useQueryClient>,
+    jobId: string,
+): JobListResponse['posts'][number] | undefined {
+    const entries = queryClient.getQueriesData<InfiniteData<JobListResponse>>({
+        queryKey: jobKeys.myPosts(),
+    });
+
+    for (const [, data] of entries) {
+        if (!data?.pages) {
+            continue;
+        }
+        const found = data.pages
+            .flatMap((page) => page.posts ?? [])
+            .find((post) => post.id === jobId);
+        if (found) {
+            return found;
+        }
+    }
+
+    return undefined;
+}
+
 export const jobKeys = {
     all: ['jobs'] as const,
     lists: () => [...jobKeys.all, 'list'] as const,
@@ -59,7 +84,7 @@ export const useGetJobs = (params: GetJobsParams) => {
 };
 
 /** Paginated public job list — loads more as the user scrolls. */
-export const useGetJobsInfinite = (params: JobsInfiniteParams, options?: { enabled?: boolean }) => {
+export const useGetJobsInfinite = (params: JobsInfiniteParams) => {
     const pageSize = params.pageSize ?? DEFAULT_JOB_PAGE_SIZE;
 
     return useInfiniteQuery({
@@ -74,16 +99,30 @@ export const useGetJobsInfinite = (params: JobsInfiniteParams, options?: { enabl
         getNextPageParam: (lastPage, allPages) =>
             getJobListNextPageParam(lastPage, pageSize, allPages.length),
         staleTime: 60000,
-        enabled: options?.enabled !== false,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
     });
 };
 
 export const useGetJobById = (id: string, options?: { enabled?: boolean }) => {
+    const queryClient = useQueryClient();
+    const cachedOwnedJob = id ? findJobInMyPostsQueryCache(queryClient, id) : undefined;
+
     return useQuery({
         queryKey: jobKeys.detail(id),
-        queryFn: () => jobRepository.getJobById(id),
+        queryFn: async () => {
+            try {
+                return await jobRepository.getJobById(id);
+            } catch (err) {
+                if (isApiNotFound(err)) {
+                    await queryClient.invalidateQueries({ queryKey: jobKeys.myPosts() });
+                }
+                throw err;
+            }
+        },
         enabled: options?.enabled !== false && !!id,
         staleTime: 300000,
+        placeholderData: cachedOwnedJob,
     });
 };
 
@@ -96,10 +135,7 @@ export const useGetMyPosts = (params: { page?: number; pageSize?: number } = {})
 };
 
 /** Paginated my-posts list — loads more as the user scrolls. */
-export const useGetMyPostsInfinite = (
-    params: MyPostsInfiniteParams = {},
-    options?: { enabled?: boolean },
-) => {
+export const useGetMyPostsInfinite = (params: MyPostsInfiniteParams = {}) => {
     const pageSize = params.pageSize ?? DEFAULT_JOB_PAGE_SIZE;
 
     return useInfiniteQuery({
@@ -113,7 +149,8 @@ export const useGetMyPostsInfinite = (
         getNextPageParam: (lastPage, allPages) =>
             getJobListNextPageParam(lastPage, pageSize, allPages.length),
         staleTime: 60000,
-        enabled: options?.enabled !== false,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
     });
 };
 
@@ -160,6 +197,19 @@ export const usePublishJob = () => {
 
     return useMutation({
         mutationFn: jobRepository.publishJob,
+        onSuccess: (_, id) => {
+            queryClient.invalidateQueries({ queryKey: jobKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: jobKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: jobKeys.myPosts() });
+        },
+    });
+};
+
+export const useReopenJob = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: jobRepository.reopenJob,
         onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: jobKeys.detail(id) });
             queryClient.invalidateQueries({ queryKey: jobKeys.lists() });
