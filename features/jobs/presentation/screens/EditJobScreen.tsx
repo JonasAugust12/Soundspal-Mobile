@@ -16,7 +16,10 @@ import {
     useGetJobById,
     useUpdateJob,
     useDeleteJob,
+    usePublishJob,
+    useCloseJob,
 } from '@/features/jobs/presentation/hooks/useJobApi';
+import { formatPostStatus, formatPostVisibility } from '@/features/jobs/domain/utils/jobFormatters';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { JobEditCard } from '@/features/jobs/presentation/components/JobEditCard';
 import type { UpdateJobRequest } from '@/features/jobs/domain/entities/job.type';
@@ -71,6 +74,8 @@ export default function EditJobScreen() {
 
     const { mutate: updateJob, isPending: isUpdating } = useUpdateJob();
     const { mutate: deleteJob, isPending: isDeleting } = useDeleteJob();
+    const { mutate: publishJob, isPending: isPublishing } = usePublishJob();
+    const { mutate: closeJob, isPending: isClosing } = useCloseJob();
 
     const [formData, setFormData] = useState<Partial<UpdateJobRequest>>({});
     const [hasChanges, setHasChanges] = useState(false);
@@ -153,6 +158,44 @@ export default function EditJobScreen() {
                 },
             },
         );
+    };
+
+    const handlePublish = () => {
+        if (!jobId) return;
+        publishJob(jobId, {
+            onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được xuất bản'),
+            //eslint-disable-next-line
+            onError: (error: any) => {
+                const errorMessage =
+                    error?.response?.data?.message ||
+                    error?.message ||
+                    'Không thể xuất bản bài đăng';
+                Alert.alert('Lỗi', errorMessage);
+            },
+        });
+    };
+
+    const handleCloseJob = () => {
+        if (!jobId) return;
+        Alert.alert('Đóng bài đăng', 'Bạn có chắc muốn đóng bài đăng này?', [
+            { text: 'Hủy', style: 'cancel' },
+            {
+                text: 'Đóng',
+                style: 'destructive',
+                onPress: () =>
+                    closeJob(jobId, {
+                        onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được đóng'),
+                        //eslint-disable-next-line
+                        onError: (error: any) => {
+                            const errorMessage =
+                                error?.response?.data?.message ||
+                                error?.message ||
+                                'Không thể đóng bài đăng';
+                            Alert.alert('Lỗi', errorMessage);
+                        },
+                    }),
+            },
+        ]);
     };
 
     const handleDelete = () => {
@@ -239,6 +282,18 @@ export default function EditJobScreen() {
                 </TouchableOpacity>
                 <Text className="text-lg font-bold text-gray-900 dark:text-white flex-1 ml-3">
                     Chỉnh sửa bài đăng
+                </Text>
+            </View>
+
+            <View className="mx-4 mt-3 px-4 py-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex-row justify-between items-center">
+                <Text className="text-sm text-gray-600 dark:text-gray-300">
+                    Trạng thái:{' '}
+                    <Text className="font-bold text-gray-900 dark:text-white">
+                        {formatPostStatus(job.status)}
+                    </Text>
+                </Text>
+                <Text className="text-sm text-gray-600 dark:text-gray-300">
+                    {formatPostVisibility(job.visibility)}
                 </Text>
             </View>
 
@@ -573,6 +628,34 @@ export default function EditJobScreen() {
 
             {/* Footer Actions */}
             <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-800 gap-2">
+                {job.status === 'draft' && (
+                    <TouchableOpacity
+                        onPress={handlePublish}
+                        disabled={isPublishing}
+                        className="flex-row items-center justify-center gap-2 py-3 rounded-lg bg-green-600"
+                    >
+                        {isPublishing ? (
+                            <ActivityIndicator color="white" />
+                        ) : (
+                            <Text className="text-white font-bold">Xuất bản bài đăng</Text>
+                        )}
+                    </TouchableOpacity>
+                )}
+
+                {job.status === 'published' && (
+                    <TouchableOpacity
+                        onPress={handleCloseJob}
+                        disabled={isClosing}
+                        className="flex-row items-center justify-center gap-2 py-3 rounded-lg border-2 border-red-500"
+                    >
+                        {isClosing ? (
+                            <ActivityIndicator color="#EF4444" />
+                        ) : (
+                            <Text className="text-red-500 font-bold">Đóng bài đăng</Text>
+                        )}
+                    </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                     onPress={handleSave}
                     disabled={isUpdating || !hasChanges}

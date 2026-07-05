@@ -8,7 +8,7 @@ export { JobBenefits } from './JobBenefits';
 export { JobHeader } from './JobHeader';
 export { JobTabs } from './JobTabs';
 export { SearchBar } from './SearchBar';
-export { JobList } from './JobList';
+export { JobList, JOB_PAGE_SIZE } from './JobList';
 export { JobCardFull } from './JobCardFull';
 export { JobCardSkeleton } from './JobCardSkeleton';
 export { Info } from './Info';

@@ -19,6 +19,7 @@ import {
     SlidersHorizontal,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSearchStore, UserRole } from '@/features/explore/presentation/store/searchStore';
 import { useGetGenres } from '@/features/explore/presentation/hooks/useSearchApi';
 import { businessTypes } from '@/shared/domain/constants/businessTypes';
@@ -30,6 +31,7 @@ export interface FilterSheetProps {
 }
 
 export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps) {
+    const insets = useSafeAreaInsets();
     const { filters, toggleGenre, toggleBusinessType, resetFilters, applyFilters } =
         useSearchStore();
 
@@ -245,8 +247,8 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
 
                     {/* Actions */}
                     <View
-                        style={styles.footer}
-                        className="flex-row gap-3 px-5 py-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
+                        style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}
+                        className="flex-row gap-3 px-5 pt-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
                     >
                         <TouchableOpacity
                             onPress={handleReset}

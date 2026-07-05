@@ -47,6 +47,34 @@ export const formatDaysAgo = (dateStr: string): string => {
 };
 
 /**
+ * Format post status to Vietnamese display name
+ */
+export const formatPostStatus = (status: string): string => {
+    const statusMap: Record<string, string> = {
+        draft: 'Bản nháp',
+        published: 'Đang tuyển',
+        closed: 'Đã đóng',
+        completed: 'Hoàn thành',
+        cancelled: 'Đã hủy',
+    };
+    return statusMap[status?.toLowerCase()] || status || 'N/A';
+};
+
+/**
+ * Format post visibility to Vietnamese display name
+ */
+export const formatPostVisibility = (visibility: string): string => {
+    const visibilityMap: Record<string, string> = {
+        public: 'Công khai',
+        private: 'Riêng tư',
+        invite_only: 'Chỉ mời',
+    };
+    return visibilityMap[visibility?.toLowerCase()] || visibility || 'N/A';
+};
+
+export const isJobAcceptingApplications = (status: string): boolean => status === 'published';
+
+/**
  * Format job type to Vietnamese display name
  */
 export const formatJobType = (type: string): string => {

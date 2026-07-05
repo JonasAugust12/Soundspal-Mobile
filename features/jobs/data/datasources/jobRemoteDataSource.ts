@@ -8,16 +8,41 @@ import type {
     SubmitApplicationRequest,
     Application,
     MySubmissionsResponse,
+    PostStatus,
+    PostVisibility,
 } from '@/features/jobs/domain/entities/job.type';
 
+export interface GetJobsParams {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    status?: PostStatus;
+    visibility?: PostVisibility;
+}
+
+const buildListQuery = (params: GetJobsParams) => {
+    const searchParams = new URLSearchParams({
+        page: (params.page ?? 1).toString(),
+        page_size: (params.pageSize ?? 10).toString(),
+    });
+    if (params.status) {
+        searchParams.append('status', params.status);
+    }
+    if (params.visibility) {
+        searchParams.append('visibility', params.visibility);
+    }
+    return searchParams;
+};
+
 export const jobRemoteDataSource = {
-    getJobs: (params: { page?: number; pageSize?: number; search?: string }) => {
-        const searchParams = new URLSearchParams({
-            page: (params.page || 0).toString(),
-            page_size: (params.pageSize || 10).toString(),
-        });
-        if (params.search) {
-            searchParams.append('search', params.search);
+    getJobs: (params: GetJobsParams) => {
+        const searchParams = buildListQuery(params);
+        if (params.search?.trim()) {
+            searchParams.append('q', params.search.trim());
+            return createApiCall<JobListResponse>(
+                'GET',
+                `/posts/search?${searchParams.toString()}`,
+            )();
         }
         return createApiCall<JobListResponse>('GET', `/posts?${searchParams.toString()}`)();
     },
@@ -29,7 +54,7 @@ export const jobRemoteDataSource = {
     getMyPosts: (params: { page?: number; pageSize?: number }) => {
         const searchParams = new URLSearchParams({
             page: (params.page || 1).toString(),
-            page_size: (params.pageSize || 20).toString(),
+            page_size: (params.pageSize || 10).toString(),
         });
         return createApiCall<JobListResponse>('GET', `/posts/me?${searchParams.toString()}`)();
     },
@@ -42,6 +67,14 @@ export const jobRemoteDataSource = {
 
     deleteJob: (id: string) => {
         return createApiCall<void>('DELETE', `/posts/${id}`)();
+    },
+
+    publishJob: (id: string) => {
+        return createApiCall<Job>('POST', `/posts/${id}/publish`)();
+    },
+
+    closeJob: (id: string) => {
+        return createApiCall<Job>('POST', `/posts/${id}/close`)();
     },
 
     submitJobApplication: (jobId: string, body: SubmitApplicationRequest) => {

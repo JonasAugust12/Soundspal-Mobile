@@ -1,9 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import { useGetJobById } from '@/features/jobs/presentation/hooks/useJobApi';
+import {
+    useGetJobById,
+    usePublishJob,
+    useCloseJob,
+} from '@/features/jobs/presentation/hooks/useJobApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import {
     JobDetailHeader,
@@ -18,6 +22,7 @@ import { formatDate } from '@/features/jobs/domain/utils/jobFormatters';
 
 export default function JobDetailScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { user } = useAuthStore();
     const params = useLocalSearchParams<{ id: string }>();
     const [showApplyModal, setShowApplyModal] = useState(false);
@@ -31,6 +36,55 @@ export default function JobDetailScreen() {
     } = useGetJobById(jobId ?? '', {
         enabled: !!jobId,
     });
+
+    const { mutate: publishJob, isPending: isPublishing } = usePublishJob();
+    const { mutate: closeJob, isPending: isClosing } = useCloseJob();
+
+    const handlePublish = () => {
+        if (!jobId) return;
+        publishJob(jobId, {
+            onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được xuất bản'),
+            onError: (err: unknown) => {
+                const message =
+                    (err as { response?: { data?: { message?: string } }; message?: string })
+                        ?.response?.data?.message ||
+                    (err as { message?: string })?.message ||
+                    'Không thể xuất bản bài đăng';
+                Alert.alert('Lỗi', message);
+            },
+        });
+    };
+
+    const handleClose = () => {
+        if (!jobId) return;
+        Alert.alert(
+            'Đóng bài đăng',
+            'Bạn có chắc muốn đóng bài đăng này? Hành động này không thể hoàn tác.',
+            [
+                { text: 'Hủy', style: 'cancel' },
+                {
+                    text: 'Đóng',
+                    style: 'destructive',
+                    onPress: () =>
+                        closeJob(jobId, {
+                            onSuccess: () => Alert.alert('Thành công', 'Bài đăng đã được đóng'),
+                            onError: (err: unknown) => {
+                                const message =
+                                    (
+                                        err as {
+                                            response?: { data?: { message?: string } };
+                                            message?: string;
+                                        }
+                                    )?.response?.data?.message ||
+                                    (err as { message?: string })?.message ||
+                                    'Không thể đóng bài đăng';
+                                Alert.alert('Lỗi', message);
+                            },
+                        }),
+                },
+            ],
+        );
+    };
 
     const isOwned = useMemo(
         () => !!(job && user && String(job.creator_id).trim() === String(user.id).trim()),
@@ -109,7 +163,7 @@ export default function JobDetailScreen() {
                 className="flex-1"
                 contentContainerStyle={{
                     paddingHorizontal: 16,
-                    paddingBottom: 32,
+                    paddingBottom: 24,
                     gap: 24,
                 }}
                 showsVerticalScrollIndicator={false}
@@ -165,14 +219,23 @@ export default function JobDetailScreen() {
 
                 {/* Benefits */}
                 {job.benefits && job.benefits.length > 0 && <JobBenefits benefits={job.benefits} />}
+            </ScrollView>
 
-                {/* Action Buttons */}
+            <View
+                className="px-4 pt-3 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
+                style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+            >
                 <JobDetailActions
                     jobId={job.id}
                     isOwned={isOwned}
+                    status={job.status}
                     onApply={() => setShowApplyModal(true)}
+                    onPublish={isOwned ? handlePublish : undefined}
+                    onClose={isOwned ? handleClose : undefined}
+                    isPublishing={isPublishing}
+                    isClosing={isClosing}
                 />
-            </ScrollView>
+            </View>
 
             {/* Apply Modal */}
             <JobApplyModal

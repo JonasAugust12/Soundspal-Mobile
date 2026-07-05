@@ -1,31 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="13" failures="0" errors="0" time="16.179">
-  <testsuite name="__tests__\components\home\JobCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-03T14:59:48" time="15.264" tests="13">
-    <testcase classname="JobCard" name="should render job title" time="2.474">
+<testsuites name="jest tests" tests="8" failures="0" errors="0" time="26.323">
+  <testsuite name="__tests__\components\jobs\JobCardFull.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-05T07:15:10" time="24.394" tests="8">
+    <testcase classname="JobCardFull" name="should render job title correctly" time="7.447">
     </testcase>
-    <testcase classname="JobCard" name="should render brief description" time="0.061">
+    <testcase classname="JobCardFull" name="should render basic job information" time="0.048">
     </testcase>
-    <testcase classname="JobCard" name="should render creator name" time="0.087">
+    <testcase classname="JobCardFull" name="should show &quot;Toán quốc&quot; if no location is provided" time="0.032">
     </testcase>
-    <testcase classname="JobCard" name="should render location" time="0.054">
+    <testcase classname="JobCardFull" name="should show ownership badge when isOwned is true" time="0.033">
     </testcase>
-    <testcase classname="JobCard" name="should render budget range" time="0.053">
+    <testcase classname="JobCardFull" name="should show &quot;Chỉnh sửa&quot; button when isOwned is true" time="0.034">
     </testcase>
-    <testcase classname="JobCard" name="should render &quot;Thỏa thuận&quot; when no budget" time="0.049">
+    <testcase classname="JobCardFull" name="should show &quot;Ứng tuyển ngay&quot; button when isOwned is false" time="0.04">
     </testcase>
-    <testcase classname="JobCard" name="should render genres (max 3)" time="0.04">
+    <testcase classname="JobCardFull" name="should call onEdit when Chỉnh sửa button is clicked and onEdit is provided" time="0.032">
     </testcase>
-    <testcase classname="JobCard" name="should render recruitment type label" time="0.042">
-    </testcase>
-    <testcase classname="JobCard" name="should render work time when provided" time="0.048">
-    </testcase>
-    <testcase classname="JobCard" name="should render job_offer post type badge" time="0.038">
-    </testcase>
-    <testcase classname="JobCard" name="should render gig post type badge" time="0.054">
-    </testcase>
-    <testcase classname="JobCard" name="should render availability post type badge" time="0.041">
-    </testcase>
-    <testcase classname="JobCard" name="should not render work time when not provided" time="0.035">
+    <testcase classname="JobCardFull" name="should render &quot;Chi tiết&quot; button" time="0.032">
     </testcase>
   </testsuite>
 </testsuites>

@@ -13,7 +13,12 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCreateJob } from '@/features/jobs/presentation/hooks/useJobApi';
-import type { CreateJobRequest, Job } from '@/features/jobs/domain/entities/job.type';
+import type {
+    CreateJobRequest,
+    Job,
+    PostStatus,
+    PostVisibility,
+} from '@/features/jobs/domain/entities/job.type';
 
 type FormStep = 'basic' | 'details' | 'requirements' | 'review';
 
@@ -24,6 +29,11 @@ const LOCATION_TYPES = ['remote', 'onsite', 'hybrid'];
 const CURRENCIES = ['VND', 'USD', 'EUR'];
 const PAYMENT_TYPES = ['bySession', 'byHour', 'byProject', 'byMonth'];
 const EXPERIENCE_LEVELS = ['beginner', 'intermediate', 'expert', 'any'];
+const VISIBILITY_OPTIONS: { label: string; value: PostVisibility }[] = [
+    { label: 'Công khai', value: 'public' },
+    { label: 'Riêng tư', value: 'private' },
+    { label: 'Chỉ mời', value: 'invite_only' },
+];
 
 export default function RecruitmentFormScreen() {
     const router = useRouter();
@@ -54,7 +64,7 @@ export default function RecruitmentFormScreen() {
         genres: [],
         required_skills: [],
         benefits: [],
-        status: 'published',
+        status: 'draft',
         visibility: 'public',
     });
 
@@ -121,30 +131,36 @@ export default function RecruitmentFormScreen() {
         formData.brief_description?.trim() &&
         formData.description?.trim();
 
-    const handleSubmit = () => {
+    const submitJob = (status: PostStatus) => {
         if (!isBasicValid) {
             Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin cơ bản');
             return;
         }
 
-        createJob(formData, {
-            onSuccess: (data: Job) => {
-                const successMessage =
-                    (data as { message?: string })?.message || 'Bài đăng đã được tạo thành công';
-                Alert.alert('Thành công', successMessage, [
-                    { text: 'OK', onPress: () => router.back() },
-                ]);
+        createJob(
+            { ...formData, status },
+            {
+                onSuccess: (data: Job) => {
+                    const successMessage =
+                        status === 'draft'
+                            ? 'Bài đăng đã được lưu nháp'
+                            : (data as { message?: string })?.message ||
+                              'Bài đăng đã được đăng thành công';
+                    Alert.alert('Thành công', successMessage, [
+                        { text: 'OK', onPress: () => router.back() },
+                    ]);
+                },
+                onError: (error: unknown) => {
+                    const err = error as {
+                        response?: { data?: { message?: string } };
+                        message?: string;
+                    };
+                    const errorMessage =
+                        err?.response?.data?.message || err?.message || 'Không thể tạo bài đăng';
+                    Alert.alert('Lỗi', errorMessage);
+                },
             },
-            onError: (error: unknown) => {
-                const err = error as {
-                    response?: { data?: { message?: string } };
-                    message?: string;
-                };
-                const errorMessage =
-                    err?.response?.data?.message || err?.message || 'Không thể tạo bài đăng';
-                Alert.alert('Lỗi', errorMessage);
-            },
-        });
+        );
     };
 
     const renderBasicStep = () => (
@@ -708,9 +724,39 @@ export default function RecruitmentFormScreen() {
                 )}
             </View>
 
+            <View className="gap-2">
+                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Quyền riêng tư
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                    {VISIBILITY_OPTIONS.map((option) => (
+                        <TouchableOpacity
+                            key={option.value}
+                            onPress={() => handleInputChange('visibility', option.value)}
+                            className={`px-3 py-2 rounded-lg border-2 ${
+                                formData.visibility === option.value
+                                    ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/30'
+                                    : 'border-gray-200 dark:border-gray-700'
+                            }`}
+                        >
+                            <Text
+                                className={`text-sm font-semibold ${
+                                    formData.visibility === option.value
+                                        ? 'text-purple-700 dark:text-purple-300'
+                                        : 'text-gray-700 dark:text-gray-300'
+                                }`}
+                            >
+                                {option.label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </View>
+
             <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
                 <Text className="text-xs text-blue-700 dark:text-blue-300">
-                    💡 Bài đăng sẽ được công bố ngay khi bạn xác nhận. Bạn có thể chỉnh sửa sau.
+                    Bạn có thể lưu nháp để chỉnh sửa sau, hoặc đăng ngay để mọi người thấy bài tuyển
+                    dụng.
                 </Text>
             </View>
         </View>
@@ -803,32 +849,45 @@ export default function RecruitmentFormScreen() {
                         </LinearGradient>
                     </TouchableOpacity>
                 ) : (
-                    <TouchableOpacity
-                        onPress={handleSubmit}
-                        disabled={isPending}
-                        className="flex-1"
-                    >
-                        <LinearGradient
-                            colors={['#7C3BED', '#F471B7']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 8,
-                                paddingHorizontal: 20,
-                                paddingVertical: 14,
-                                borderRadius: 12,
-                            }}
+                    <>
+                        <TouchableOpacity
+                            onPress={() => submitJob('draft')}
+                            disabled={isPending}
+                            className="flex-1 px-4 py-3 border-2 border-purple-600 rounded-lg items-center justify-center"
                         >
                             {isPending ? (
-                                <ActivityIndicator color="white" />
+                                <ActivityIndicator color="#7C3BED" />
                             ) : (
-                                <Text className="text-white font-bold">Đăng bài</Text>
+                                <Text className="text-purple-600 font-bold">Lưu nháp</Text>
                             )}
-                        </LinearGradient>
-                    </TouchableOpacity>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => submitJob('published')}
+                            disabled={isPending}
+                            className="flex-1"
+                        >
+                            <LinearGradient
+                                colors={['#7C3BED', '#F471B7']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 8,
+                                    paddingHorizontal: 20,
+                                    paddingVertical: 14,
+                                    borderRadius: 12,
+                                }}
+                            >
+                                {isPending ? (
+                                    <ActivityIndicator color="white" />
+                                ) : (
+                                    <Text className="text-white font-bold">Đăng bài</Text>
+                                )}
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </>
                 )}
             </View>
         </SafeAreaView>

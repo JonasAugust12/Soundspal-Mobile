@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -10,6 +10,7 @@ import {
     StyleSheet,
     Platform,
     TouchableOpacity,
+    ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
@@ -21,15 +22,15 @@ import {
     MicVocal,
     Building2,
     Users,
-    MapPin,
-    BadgeCheck,
     BookOpen,
 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSearchUsers } from '@/features/explore/presentation/hooks/useSearchApi';
+import { useSearchUsersInfinite } from '@/features/explore/presentation/hooks/useSearchApi';
 import { useSearchStore, UserRole } from '@/features/explore/presentation/store/searchStore';
 import { FilterSheet } from '@/shared/presentation/ui';
+import { ExploreUserCard } from '@/features/explore/presentation/components/ExploreUserCard';
 import type { UserProfile } from '@/features/explore/domain/entities/search.type';
+
+const SEARCH_PAGE_SIZE = 20;
 
 const ROLE_TABS: {
     label: string;
@@ -62,21 +63,42 @@ export default function ExploreScreen() {
         }
     }, [params.query, setQuery]);
 
-    // Build search params
-    const searchParams = {
-        query: filters.query || undefined,
-        role: filters.role,
-        location: filters.location,
-        genres: filters.genres.length > 0 ? filters.genres : undefined,
-        businessTypes: filters.businessTypes.length > 0 ? filters.businessTypes : undefined,
-        capacity: filters.capacity,
-    };
+    // Build search params (page handled by infinite query)
+    const searchParams = useMemo(
+        () => ({
+            query: filters.query || undefined,
+            role: filters.role,
+            location: filters.location,
+            genres: filters.genres.length > 0 ? filters.genres : undefined,
+            businessTypes: filters.businessTypes.length > 0 ? filters.businessTypes : undefined,
+            capacity: filters.capacity,
+            pageSize: SEARCH_PAGE_SIZE,
+        }),
+        [
+            filters.query,
+            filters.role,
+            filters.location,
+            filters.genres,
+            filters.businessTypes,
+            filters.capacity,
+        ],
+    );
 
-    const { data, isLoading, refetch } = useSearchUsers(searchParams);
+    const {
+        data,
+        isLoading,
+        isRefetching,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+        refetch,
+    } = useSearchUsersInfinite(searchParams);
 
-    // API now returns ApiResponse<SearchUsersData> so access data.data.users
-    const userProfiles = data?.data?.users || [];
-    const totalResults = data?.data?.total || 0;
+    const userProfiles = useMemo(
+        () => data?.pages.flatMap((page) => page.data?.users ?? []) ?? [],
+        [data],
+    );
+    const totalResults = data?.pages[0]?.data?.total ?? 0;
 
     // Handle search text change with debounce
     useEffect(() => {
@@ -99,129 +121,48 @@ export default function ExploreScreen() {
         refetch();
     }, [refetch]);
 
-    const handleUserPress = (user: UserProfile) => {
-        if (user.role === 'venue') {
-            router.push({
-                pathname: '/(profiles)/venueProfile',
-                params: { username: user.username },
-            });
-        } else {
-            router.push({
-                pathname: '/(profiles)/artistProfile',
-                params: { username: user.username },
-            });
+    const handleUserPress = useCallback(
+        (user: UserProfile) => {
+            if (user.role === 'venue') {
+                router.push({
+                    pathname: '/(profiles)/venueProfile',
+                    params: { username: user.username },
+                });
+            } else {
+                router.push({
+                    pathname: '/(profiles)/artistProfile',
+                    params: { username: user.username },
+                });
+            }
+        },
+        [router],
+    );
+
+    const handleLoadMore = useCallback(() => {
+        if (hasNextPage && !isFetchingNextPage) {
+            void fetchNextPage();
         }
-    };
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-    const getRoleColor = (role: string) => {
-        switch (role) {
-            case 'singer':
-                return '#EC4899';
-            case 'producer':
-                return '#3B82F6';
-            case 'venue':
-                return '#F59E0B';
-            default:
-                return '#7C3AED';
-        }
-    };
+    const keyExtractor = useCallback((item: UserProfile) => item.id, []);
 
-    const getRoleLabel = (role: string) => {
-        switch (role) {
-            case 'singer':
-                return 'Ca sĩ';
-            case 'producer':
-                return 'Producer';
-            case 'venue':
-                return 'Địa điểm';
-            default:
-                return role;
-        }
-    };
+    const renderItem = useCallback(
+        ({ item }: { item: UserProfile }) => (
+            <ExploreUserCard item={item} onPress={handleUserPress} />
+        ),
+        [handleUserPress],
+    );
 
-    const renderItem = ({ item }: { item: UserProfile }) => {
-        const location = [item.city, item.country].filter(Boolean).join(', ') || 'Chưa cập nhật';
-        const roleColor = getRoleColor(item.role);
-
+    const renderListFooter = useCallback(() => {
+        if (!isFetchingNextPage) return null;
         return (
-            <TouchableOpacity
-                onPress={() => handleUserPress(item)}
-                style={styles.card}
-                className="bg-white rounded-2xl overflow-hidden"
-                activeOpacity={0.9}
-            >
-                {/* Cover Image */}
-                <View className="h-24 bg-gray-200">
-                    {item.cover_url ? (
-                        <Image
-                            source={{ uri: item.cover_url }}
-                            className="w-full h-full"
-                            resizeMode="cover"
-                        />
-                    ) : (
-                        <LinearGradient
-                            colors={[roleColor, `${roleColor}99`]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            className="w-full h-full"
-                        />
-                    )}
-                </View>
-
-                {/* Avatar */}
-                <View className="absolute top-16 left-4">
-                    <View style={styles.avatarContainer}>
-                        <Image
-                            source={
-                                item.avatar_url
-                                    ? { uri: item.avatar_url }
-                                    : require('@/assets/images/user-default.jpg')
-                            }
-                            className="w-16 h-16 rounded-full"
-                        />
-                        {item.is_verified && (
-                            <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
-                                <BadgeCheck size={16} color="white" fill="#7C3AED" />
-                            </View>
-                        )}
-                    </View>
-                </View>
-
-                {/* Content */}
-                <View className="pt-10 px-4 pb-4">
-                    <View className="flex-row items-center justify-between">
-                        <View className="flex-1">
-                            <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
-                                {item.display_name}
-                            </Text>
-                            <Text className="text-xs text-gray-500">@{item.username}</Text>
-                        </View>
-                        <View
-                            className="px-2 py-1 rounded-full"
-                            style={{ backgroundColor: `${roleColor}15` }}
-                        >
-                            <Text className="text-xs font-semibold" style={{ color: roleColor }}>
-                                {getRoleLabel(item.role)}
-                            </Text>
-                        </View>
-                    </View>
-
-                    {item.brief_bio && (
-                        <Text className="text-sm text-gray-600 mt-2" numberOfLines={2}>
-                            {item.brief_bio}
-                        </Text>
-                    )}
-
-                    <View className="flex-row items-center gap-1 mt-2">
-                        <MapPin size={12} color="#9CA3AF" />
-                        <Text className="text-xs text-gray-400">{location}</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
+            <View className="py-4 items-center">
+                <ActivityIndicator color="#7C3AED" />
+            </View>
         );
-    };
+    }, [isFetchingNextPage]);
 
-    const renderEmpty = () => {
+    const renderEmpty = useCallback(() => {
         if (isLoading) {
             return (
                 <View className="flex-1 items-center justify-center py-20">
@@ -244,7 +185,7 @@ export default function ExploreScreen() {
                 </Text>
             </View>
         );
-    };
+    }, [isLoading]);
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50" edges={SCREEN_SAFE_AREA_EDGES}>
@@ -349,16 +290,24 @@ export default function ExploreScreen() {
             <FlatList
                 data={userProfiles}
                 renderItem={renderItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={keyExtractor}
                 contentContainerStyle={{
                     paddingHorizontal: 16,
                     paddingBottom: 100,
                     gap: 12,
+                    flexGrow: userProfiles.length === 0 ? 1 : undefined,
                 }}
                 ListEmptyComponent={renderEmpty}
+                ListFooterComponent={renderListFooter}
+                onEndReached={handleLoadMore}
+                onEndReachedThreshold={0.35}
+                initialNumToRender={8}
+                maxToRenderPerBatch={6}
+                windowSize={7}
+                removeClippedSubviews={Platform.OS === 'android'}
                 refreshControl={
                     <RefreshControl
-                        refreshing={isLoading}
+                        refreshing={isRefetching && !isFetchingNextPage}
                         onRefresh={handleRefresh}
                         colors={['#7C3AED']}
                         tintColor="#7C3AED"
@@ -386,35 +335,6 @@ const styles = StyleSheet.create({
             },
             android: {
                 elevation: 2,
-            },
-        }),
-    },
-    card: {
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.08,
-                shadowRadius: 12,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
-    },
-    avatarContainer: {
-        borderWidth: 3,
-        borderColor: '#FFFFFF',
-        borderRadius: 999,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 3,
             },
         }),
     },

@@ -15,6 +15,16 @@ jest.mock('@/features/jobs/presentation/components/JobApplyModal', () => ({
     JobApplyModal: 'JobApplyModal',
 }));
 
+jest.mock('@/features/jobs/presentation/store/jobBookmarkStore', () => ({
+    useJobBookmarkStore: (
+        selector: (state: { isBookmarked: () => boolean; toggleBookmark: () => void }) => unknown,
+    ) =>
+        selector({
+            isBookmarked: () => false,
+            toggleBookmark: jest.fn(),
+        }),
+}));
+
 describe('JobCardFull', () => {
     const mockJob = {
         id: 'job-123',
@@ -27,7 +37,7 @@ describe('JobCardFull', () => {
         recruitment_type: 'Toàn thời gian',
         location: 'Hà Nội',
         assets: [{ thumbnail_url: 'https://example.com/thumb.jpg', storage_url: '' }],
-        status: 'OPEN',
+        status: 'published',
         user_id: 'user-123',
     } as any;
 

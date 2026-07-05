@@ -90,13 +90,23 @@ export default function BlogScreen() {
         isFetching: searchFetching,
     } = useBlogSearch({ q: committedSearch }, { enabled: searchQueryEnabled });
 
-    const posts: BlogPost[] = isSearchMode
-        ? tabAuthBlockedForSearch
-            ? []
-            : searchPosts
-        : isBookmarksTab && user
-          ? bookmarkPosts
-          : listPosts;
+    const posts = useMemo((): BlogPost[] => {
+        if (isSearchMode) {
+            return tabAuthBlockedForSearch ? [] : searchPosts;
+        }
+        if (isBookmarksTab && user?.id) {
+            return bookmarkPosts;
+        }
+        return listPosts;
+    }, [
+        isSearchMode,
+        tabAuthBlockedForSearch,
+        searchPosts,
+        isBookmarksTab,
+        user?.id,
+        bookmarkPosts,
+        listPosts,
+    ]);
 
     const isLoading = isSearchMode
         ? searchLoading

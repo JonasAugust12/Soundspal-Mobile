@@ -8,8 +8,11 @@ import {
     formatBudget,
     formatDate,
     formatJobType,
+    formatPostStatus,
+    isJobAcceptingApplications,
 } from '@/features/jobs/domain/utils/jobFormatters';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
+import { useJobBookmarkStore } from '@/features/jobs/presentation/store/jobBookmarkStore';
 
 import { JobApplyModal } from './JobApplyModal';
 
@@ -22,11 +25,16 @@ interface JobCardFullProps {
 export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
     const router = useRouter();
     const [showApplyModal, setShowApplyModal] = useState(false);
+    const isBookmarked = useJobBookmarkStore((s) => s.isBookmarked(job.id));
+    const toggleBookmark = useJobBookmarkStore((s) => s.toggleBookmark);
 
     const imgUri = job.assets?.[0]?.thumbnail_url || job.assets?.[0]?.storage_url;
     const formattedBudget = formatBudget(job.budget_min, job.budget_max, job.budget_currency);
     const datePosted = formatDate(job.created_at);
     const jobTypeDisplay = formatJobType(job.type);
+    const canApply = !isOwned && isJobAcceptingApplications(job.status);
+    const statusLabel = formatPostStatus(job.status);
+    const showStatusBadge = isOwned || job.status !== 'published';
 
     const handleViewDetails = () => {
         router.push(`/(jobs)/detail?id=${job.id}` as `${string}`);
@@ -73,8 +81,19 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
                             >
                                 {job.title}
                             </Text>
-                            <TouchableOpacity className="p-1">
-                                <Bookmark size={20} color="#7C3BED" />
+                            <TouchableOpacity
+                                className="p-1"
+                                onPress={() => toggleBookmark(job.id)}
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                    isBookmarked ? 'Bỏ lưu công việc' : 'Lưu công việc'
+                                }
+                            >
+                                <Bookmark
+                                    size={20}
+                                    color="#7C3BED"
+                                    fill={isBookmarked ? '#7C3BED' : 'transparent'}
+                                />
                             </TouchableOpacity>
                         </View>
 
@@ -84,6 +103,13 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
                                     {jobTypeDisplay}
                                 </Text>
                             </View>
+                            {showStatusBadge && (
+                                <View className="bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-md">
+                                    <Text className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-tighter">
+                                        {statusLabel}
+                                    </Text>
+                                </View>
+                            )}
                             {isOwned && (
                                 <View className="flex-row items-center gap-1 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/50">
                                     <Crown size={10} color="#F59E0B" />
@@ -170,7 +196,13 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
                 {/* Action Buttons */}
                 <View className="flex-row gap-3 mt-2">
                     <TouchableOpacity
-                        onPress={isOwned ? handleEdit : () => setShowApplyModal(true)}
+                        onPress={
+                            isOwned
+                                ? handleEdit
+                                : canApply
+                                  ? () => setShowApplyModal(true)
+                                  : handleViewDetails
+                        }
                         activeOpacity={0.8}
                         className="flex-1"
                     >
@@ -181,7 +213,11 @@ export const JobCardFull = ({ job, isOwned, onEdit }: JobCardFullProps) => {
                             style={[styles.gradientButtonFix, { flex: 1 }]}
                         >
                             <Text className="text-white font-bold text-sm">
-                                {isOwned ? 'Chỉnh sửa' : 'Ứng tuyển ngay'}
+                                {isOwned
+                                    ? 'Chỉnh sửa'
+                                    : canApply
+                                      ? 'Ứng tuyển ngay'
+                                      : 'Không nhận ứng tuyển'}
                             </Text>
                         </LinearGradient>
                     </TouchableOpacity>

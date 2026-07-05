@@ -1,3 +1,4 @@
+export { ExploreUserCard } from './ExploreUserCard';
 export { BeatCard } from './BeatCard';
 export { BeatCardSkeleton } from './BeatCardSkeleton';
 export { FilterChips } from './FilterChips';

@@ -8,6 +8,8 @@ export class JobRepositoryImpl implements IJobRepository {
     createJob = jobRemoteDataSource.createJob;
     updateJob = jobRemoteDataSource.updateJob;
     deleteJob = jobRemoteDataSource.deleteJob;
+    publishJob = jobRemoteDataSource.publishJob;
+    closeJob = jobRemoteDataSource.closeJob;
     submitJobApplication = jobRemoteDataSource.submitJobApplication;
     getMySubmissions = jobRemoteDataSource.getMySubmissions;
 }

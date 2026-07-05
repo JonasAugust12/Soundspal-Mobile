@@ -10,10 +10,8 @@ import type {
 
 export const searchRemoteDataSource = {
     searchUsers: (params: SearchUsersRequest) => {
-        // Remove undefined values and pagination params
-        const { page: _page, pageSize: _pageSize, ...restParams } = params;
         const cleanParams = Object.fromEntries(
-            Object.entries(restParams).filter(([_, v]) => v !== undefined),
+            Object.entries(params).filter(([_, v]) => v !== undefined && v !== ''),
         );
 
         return createApiCall<ApiResponse<SearchUsersData>, typeof cleanParams>(
