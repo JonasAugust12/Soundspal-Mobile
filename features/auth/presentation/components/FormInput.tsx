@@ -1,5 +1,7 @@
-import React from 'react';
-import { View, Text, TextInput, TextInputProps, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TextInputProps, StyleSheet, TouchableOpacity } from 'react-native';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { AUTH_COMMON } from '@/features/auth/domain/constants/authMessages';
 
 interface FormInputProps extends TextInputProps {
     label: string;
@@ -7,7 +9,17 @@ interface FormInputProps extends TextInputProps {
     icon?: React.ComponentType<{ size?: number; color?: string }>;
 }
 
-export function FormInput({ label, error, icon: Icon, style, ...props }: FormInputProps) {
+export function FormInput({
+    label,
+    error,
+    icon: Icon,
+    style,
+    secureTextEntry,
+    ...props
+}: FormInputProps) {
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const isSecure = secureTextEntry === true;
+
     return (
         <View style={styles.wrapper}>
             <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -26,9 +38,27 @@ export function FormInput({ label, error, icon: Icon, style, ...props }: FormInp
                 ) : null}
                 <TextInput
                     {...props}
+                    secureTextEntry={isSecure && !isPasswordVisible}
                     style={[styles.input, style]}
                     placeholderTextColor="#9ca3af"
                 />
+                {isSecure ? (
+                    <TouchableOpacity
+                        onPress={() => setIsPasswordVisible((prev) => !prev)}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                            isPasswordVisible ? AUTH_COMMON.hidePassword : AUTH_COMMON.showPassword
+                        }
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        style={styles.toggleButton}
+                    >
+                        {isPasswordVisible ? (
+                            <EyeOff size={20} color="#9ca3af" />
+                        ) : (
+                            <Eye size={20} color="#9ca3af" />
+                        )}
+                    </TouchableOpacity>
+                ) : null}
             </View>
             {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
@@ -66,6 +96,11 @@ const styles = StyleSheet.create({
         color: '#111827',
         paddingVertical: 12,
         paddingHorizontal: 0,
+    },
+    toggleButton: {
+        marginLeft: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     error: {
         color: '#ef4444',

@@ -63,6 +63,8 @@ export const AUTH_COMMON = {
     resendAfter: (seconds: number) => `Gửi lại sau ${seconds}s`,
     logout: 'Đăng xuất',
     skipVerifyLater: 'Bỏ qua, tôi sẽ xác thực sau',
+    showPassword: 'Hiện mật khẩu',
+    hidePassword: 'Ẩn mật khẩu',
 } as const;
 
 export const AUTH_LOGIN_UI = {
