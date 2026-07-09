@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
     View,
     Text,
-    ScrollView,
     TouchableOpacity,
     ActivityIndicator,
     Alert,
@@ -10,6 +9,7 @@ import {
     Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Save, Trash2 } from 'lucide-react-native';
 import {
@@ -298,12 +298,13 @@ export default function EditJobScreen() {
             </View>
 
             {/* Content */}
-            <ScrollView
+            <KeyboardAwareScrollView
                 className="flex-1"
                 contentContainerStyle={{
                     paddingHorizontal: 16,
                     paddingVertical: 20,
                 }}
+                bottomOffset={24}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Basic Info Section */}
@@ -624,7 +625,7 @@ export default function EditJobScreen() {
                         </View>
                     </JobEditCard>
                 </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Footer Actions */}
             <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-800 gap-2">

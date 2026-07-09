@@ -12,6 +12,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { X, Play } from 'lucide-react-native';
+import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
 import { useSubmitJobApplication } from '@/features/jobs/presentation/hooks/useJobApi';
 import { MediaPicker } from './MediaPicker';
 import type { Media } from '@/features/profiles/domain/entities/media.type';
@@ -128,180 +129,189 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
 
     return (
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-            <View className="flex-1 bg-black/50 justify-end">
-                <View
-                    className="bg-white dark:bg-gray-900 rounded-t-3xl h-[95%]"
-                    style={styles.modalContent}
-                >
-                    {/* Header */}
-                    <View className="flex-row items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
-                        <Text className="text-2xl font-extrabold text-gray-900 dark:text-white">
-                            Ứng tuyển công việc
-                        </Text>
-                        <TouchableOpacity
-                            onPress={onClose}
-                            disabled={isLoading}
-                            className="p-2 -mr-2"
-                        >
-                            <X size={28} color="#6B7280" />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Form */}
-                    <ScrollView className="flex-1 px-5 py-6" showsVerticalScrollIndicator={false}>
-                        <View className="gap-5">
-                            {/* Full Name */}
-                            <View className="gap-2">
-                                <Text className="text-base font-bold text-gray-900 dark:text-white">
-                                    Họ và tên <Text className="text-red-500">*</Text>
-                                </Text>
-                                <TextInput
-                                    value={fullName}
-                                    onChangeText={setFullName}
-                                    placeholder="Nhập họ và tên"
-                                    placeholderTextColor="#9CA3AF"
-                                    className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
-                                />
-                            </View>
-
-                            {/* Email */}
-                            <View className="gap-2">
-                                <Text className="text-base font-bold text-gray-900 dark:text-white">
-                                    Email <Text className="text-red-500">*</Text>
-                                </Text>
-                                <TextInput
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    placeholder="email@example.com"
-                                    placeholderTextColor="#9CA3AF"
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
-                                />
-                            </View>
-
-                            {/* Phone */}
-                            <View className="gap-2">
-                                <Text className="text-base font-bold text-gray-900 dark:text-white">
-                                    Số điện thoại <Text className="text-red-500">*</Text>
-                                </Text>
-                                <TextInput
-                                    value={phoneNumber}
-                                    onChangeText={setPhoneNumber}
-                                    placeholder="0912345678"
-                                    placeholderTextColor="#9CA3AF"
-                                    keyboardType="phone-pad"
-                                    className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
-                                />
-                            </View>
-
-                            {/* Portfolio Links */}
-                            <View className="gap-2">
-                                <Text className="text-base font-bold text-gray-900 dark:text-white">
-                                    Link portfolio/video (Youtube, SoundCloud...)
-                                </Text>
-                                <TextInput
-                                    value={portfolioLinks}
-                                    onChangeText={setPortfolioLinks}
-                                    placeholder="Nhập các link, cách nhau bởi dấu phẩy hoặc xuống dòng"
-                                    placeholderTextColor="#9CA3AF"
-                                    multiline
-                                    numberOfLines={4}
-                                    textAlignVertical="top"
-                                    className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white min-h-[100px]"
-                                />
-                            </View>
-
-                            {/* Demo File / Media */}
-                            <View className="gap-2">
-                                <Text className="text-base font-bold text-gray-900 dark:text-white">
-                                    File demo (ảnh, video, âm thanh)
-                                </Text>
-                                {selectedMedia ? (
-                                    <View className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 flex-row items-center justify-between">
-                                        <View className="flex-1 gap-1">
-                                            <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                {selectedMedia.file_name}
-                                            </Text>
-                                            <Text className="text-xs text-gray-600 dark:text-gray-400">
-                                                {(selectedMedia.file_size / 1024 / 1024).toFixed(2)}{' '}
-                                                MB
-                                            </Text>
-                                        </View>
-                                        <TouchableOpacity
-                                            onPress={() => setSelectedMedia(null)}
-                                            className="p-2"
-                                        >
-                                            <X size={20} color="#EF4444" />
-                                        </TouchableOpacity>
-                                    </View>
-                                ) : (
-                                    <TouchableOpacity
-                                        onPress={() => setShowMediaPicker(true)}
-                                        className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-xl py-6 items-center gap-2"
-                                    >
-                                        <Play size={24} color="#7C3BED" />
-                                        <Text className="text-gray-700 dark:text-gray-300 font-semibold">
-                                            Chọn từ phương tiện của tôi
-                                        </Text>
-                                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                                            Hoặc upload từ profile
-                                        </Text>
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-
-                            {/* Cover Letter */}
-                            <View className="gap-2">
-                                <Text className="text-base font-bold text-gray-900 dark:text-white">
-                                    Giới thiệu bản thân <Text className="text-red-500">*</Text>
-                                </Text>
-                                <TextInput
-                                    value={coverLetter}
-                                    onChangeText={setCoverLetter}
-                                    placeholder="Chia sẻ về kinh nghiệm, kỹ năng và lý do phù hợp với công việc này... (tối thiểu 50 ký tự)"
-                                    placeholderTextColor="#9CA3AF"
-                                    multiline
-                                    numberOfLines={8}
-                                    textAlignVertical="top"
-                                    className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white min-h-[160px]"
-                                />
-                                <Text className="text-sm text-gray-500 dark:text-gray-400">
-                                    {coverLetter.length}/50 ký tự tối thiểu
-                                </Text>
-                            </View>
-                        </View>
-                    </ScrollView>
-
-                    {/* Footer Buttons */}
-                    <View className="p-5 border-t border-gray-200 dark:border-gray-700 gap-3">
-                        <TouchableOpacity
-                            onPress={handleSubmit}
-                            disabled={isLoading}
-                            className="bg-purple-600 rounded-xl py-4 items-center"
-                            activeOpacity={0.8}
-                        >
-                            {isLoading ? (
-                                <ActivityIndicator color="white" size="small" />
-                            ) : (
-                                <Text className="text-white font-bold text-lg">
-                                    Gửi đơn ứng tuyển
-                                </Text>
-                            )}
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={onClose}
-                            disabled={isLoading}
-                            className="bg-gray-200 dark:bg-gray-700 rounded-xl py-4 items-center"
-                            activeOpacity={0.8}
-                        >
-                            <Text className="text-gray-900 dark:text-white font-semibold text-base">
-                                Huỷ
+            <KeyboardAwareModalOverlay>
+                <View className="flex-1 bg-black/50 justify-end">
+                    <View
+                        className="bg-white dark:bg-gray-900 rounded-t-3xl h-[95%]"
+                        style={styles.modalContent}
+                    >
+                        {/* Header */}
+                        <View className="flex-row items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+                            <Text className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                                Ứng tuyển công việc
                             </Text>
-                        </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                disabled={isLoading}
+                                className="p-2 -mr-2"
+                            >
+                                <X size={28} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Form */}
+                        <ScrollView
+                            className="flex-1 px-5 py-6"
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <View className="gap-5">
+                                {/* Full Name */}
+                                <View className="gap-2">
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        Họ và tên <Text className="text-red-500">*</Text>
+                                    </Text>
+                                    <TextInput
+                                        value={fullName}
+                                        onChangeText={setFullName}
+                                        placeholder="Nhập họ và tên"
+                                        placeholderTextColor="#9CA3AF"
+                                        className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
+                                    />
+                                </View>
+
+                                {/* Email */}
+                                <View className="gap-2">
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        Email <Text className="text-red-500">*</Text>
+                                    </Text>
+                                    <TextInput
+                                        value={email}
+                                        onChangeText={setEmail}
+                                        placeholder="email@example.com"
+                                        placeholderTextColor="#9CA3AF"
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                        className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
+                                    />
+                                </View>
+
+                                {/* Phone */}
+                                <View className="gap-2">
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        Số điện thoại <Text className="text-red-500">*</Text>
+                                    </Text>
+                                    <TextInput
+                                        value={phoneNumber}
+                                        onChangeText={setPhoneNumber}
+                                        placeholder="0912345678"
+                                        placeholderTextColor="#9CA3AF"
+                                        keyboardType="phone-pad"
+                                        className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white"
+                                    />
+                                </View>
+
+                                {/* Portfolio Links */}
+                                <View className="gap-2">
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        Link portfolio/video (Youtube, SoundCloud...)
+                                    </Text>
+                                    <TextInput
+                                        value={portfolioLinks}
+                                        onChangeText={setPortfolioLinks}
+                                        placeholder="Nhập các link, cách nhau bởi dấu phẩy hoặc xuống dòng"
+                                        placeholderTextColor="#9CA3AF"
+                                        multiline
+                                        numberOfLines={4}
+                                        textAlignVertical="top"
+                                        className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white min-h-[100px]"
+                                    />
+                                </View>
+
+                                {/* Demo File / Media */}
+                                <View className="gap-2">
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        File demo (ảnh, video, âm thanh)
+                                    </Text>
+                                    {selectedMedia ? (
+                                        <View className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 flex-row items-center justify-between">
+                                            <View className="flex-1 gap-1">
+                                                <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    {selectedMedia.file_name}
+                                                </Text>
+                                                <Text className="text-xs text-gray-600 dark:text-gray-400">
+                                                    {(
+                                                        selectedMedia.file_size /
+                                                        1024 /
+                                                        1024
+                                                    ).toFixed(2)}{' '}
+                                                    MB
+                                                </Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={() => setSelectedMedia(null)}
+                                                className="p-2"
+                                            >
+                                                <X size={20} color="#EF4444" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    ) : (
+                                        <TouchableOpacity
+                                            onPress={() => setShowMediaPicker(true)}
+                                            className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-xl py-6 items-center gap-2"
+                                        >
+                                            <Play size={24} color="#7C3BED" />
+                                            <Text className="text-gray-700 dark:text-gray-300 font-semibold">
+                                                Chọn từ phương tiện của tôi
+                                            </Text>
+                                            <Text className="text-xs text-gray-500 dark:text-gray-400">
+                                                Hoặc upload từ profile
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+
+                                {/* Cover Letter */}
+                                <View className="gap-2">
+                                    <Text className="text-base font-bold text-gray-900 dark:text-white">
+                                        Giới thiệu bản thân <Text className="text-red-500">*</Text>
+                                    </Text>
+                                    <TextInput
+                                        value={coverLetter}
+                                        onChangeText={setCoverLetter}
+                                        placeholder="Chia sẻ về kinh nghiệm, kỹ năng và lý do phù hợp với công việc này... (tối thiểu 50 ký tự)"
+                                        placeholderTextColor="#9CA3AF"
+                                        multiline
+                                        numberOfLines={8}
+                                        textAlignVertical="top"
+                                        className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-white min-h-[160px]"
+                                    />
+                                    <Text className="text-sm text-gray-500 dark:text-gray-400">
+                                        {coverLetter.length}/50 ký tự tối thiểu
+                                    </Text>
+                                </View>
+                            </View>
+                        </ScrollView>
+
+                        {/* Footer Buttons */}
+                        <View className="p-5 border-t border-gray-200 dark:border-gray-700 gap-3">
+                            <TouchableOpacity
+                                onPress={handleSubmit}
+                                disabled={isLoading}
+                                className="bg-purple-600 rounded-xl py-4 items-center"
+                                activeOpacity={0.8}
+                            >
+                                {isLoading ? (
+                                    <ActivityIndicator color="white" size="small" />
+                                ) : (
+                                    <Text className="text-white font-bold text-lg">
+                                        Gửi đơn ứng tuyển
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                disabled={isLoading}
+                                className="bg-gray-200 dark:bg-gray-700 rounded-xl py-4 items-center"
+                                activeOpacity={0.8}
+                            >
+                                <Text className="text-gray-900 dark:text-white font-semibold text-base">
+                                    Huỷ
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
-            </View>
+            </KeyboardAwareModalOverlay>
 
             {/* Media Picker Modal */}
             <MediaPicker

@@ -1,13 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { defaultCommentAvatarPng } from './CommentItem';
-import {
-    View,
-    TextInput,
-    TouchableOpacity,
-    Image,
-    KeyboardAvoidingView,
-    Platform,
-} from 'react-native';
+import { View, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { Mic, Play } from 'lucide-react-native';
 
@@ -48,8 +41,7 @@ export function CommentInput({ userAvatar, onSendText, onSendVoice, disabled }: 
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <View
             className={`flex-row items-center gap-3 p-4 border-t ${
                 isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
             }`}
@@ -99,6 +91,6 @@ export function CommentInput({ userAvatar, onSendText, onSendVoice, disabled }: 
                     <Play size={20} color="white" fill="white" />
                 </TouchableOpacity>
             )}
-        </KeyboardAvoidingView>
+        </View>
     );
 }

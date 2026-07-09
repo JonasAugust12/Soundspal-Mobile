@@ -14,6 +14,7 @@ import { useColorScheme } from 'nativewind';
 import { X } from 'lucide-react-native';
 import { CommentItem } from './CommentItem';
 import { CommentInput } from './CommentInput';
+import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
 import type { BlogComment } from '@/features/blog/domain/entities/blog.type';
 
 interface CommentsModalProps {
@@ -97,136 +98,147 @@ function CommentModalContent({
 
     return (
         <Modal visible={visible} animationType="none" transparent={true} onRequestClose={onClose}>
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                }}
-            >
-                {/* Overlay pressable */}
-                <Pressable
-                    onPress={onClose}
+            <KeyboardAwareModalOverlay>
+                <View
                     style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                    }}
-                />
-
-                {/* Animated centered modal container */}
-                <Animated.View
-                    style={{
-                        width: modalWidth,
-                        height: modalHeight,
-                        backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
-                        borderRadius: 24,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.25,
-                        shadowRadius: 12,
-                        elevation: 15,
-                        zIndex: 1000,
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        transform: [
-                            {
-                                scale: scaleAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0.5, 1],
-                                }),
-                            },
-                        ],
-                        opacity: opacityAnim,
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     }}
                 >
-                    {/* Header */}
-                    <View
-                        className={`flex-row items-center justify-between px-4 py-4 border-b ${
-                            isDark ? 'border-slate-800' : 'border-gray-200'
-                        }`}
-                    >
-                        <View className="flex-1">
-                            <Text
-                                className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}
-                            >
-                                Comments
-                            </Text>
-                            <Text
-                                className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
-                                numberOfLines={1}
-                            >
-                                Discussion on {articleTitle}
-                            </Text>
-                        </View>
-                        <TouchableOpacity onPress={onClose} className="p-2" style={{ zIndex: 2 }}>
-                            <X size={20} color={isDark ? '#E2E8F0' : '#1F2937'} strokeWidth={2} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Comments list */}
-                    {isLoading ? (
-                        <View className="flex-1 items-center justify-center py-12">
-                            <ActivityIndicator
-                                size="large"
-                                color={isDark ? '#A78BFA' : '#7C3AED'}
-                            />
-                        </View>
-                    ) : (
-                        <FlatList
-                            data={comments}
-                            extraData={comments.length + (currentUserId ?? '')}
-                            renderItem={({ item }) => (
-                                <CommentItem
-                                    comment={item}
-                                    isOwn={Boolean(
-                                        currentUserId && item.author.id === String(currentUserId),
-                                    )}
-                                    onReplyPress={() => {
-                                        // Reply flow can be added later
-                                    }}
-                                    onLikePress={() => {
-                                        // Like API not provided
-                                    }}
-                                    onDelete={onDeleteComment}
-                                    onUpdate={onUpdateComment}
-                                />
-                            )}
-                            keyExtractor={(item) => item.id}
-                            contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
-                            scrollEnabled={true}
-                            removeClippedSubviews={true}
-                            maxToRenderPerBatch={8}
-                            updateCellsBatchingPeriod={30}
-                            initialNumToRender={3}
-                            scrollEventThrottle={32}
-                            decelerationRate="fast"
-                            ListEmptyComponent={
-                                <View className="flex-1 items-center justify-center py-8">
-                                    <Text
-                                        className={`text-sm ${
-                                            isDark ? 'text-gray-400' : 'text-gray-600'
-                                        }`}
-                                    >
-                                        No comments yet. Be the first to share your thoughts.
-                                    </Text>
-                                </View>
-                            }
-                        />
-                    )}
-
-                    <CommentInput
-                        userAvatar={userAvatar}
-                        onSendText={onSendComment}
-                        onSendVoice={allowVoice ? onSendVoiceComment : undefined}
-                        disabled={isSending}
+                    {/* Overlay pressable */}
+                    <Pressable
+                        onPress={onClose}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                        }}
                     />
-                </Animated.View>
-            </View>
+
+                    {/* Animated centered modal container */}
+                    <Animated.View
+                        style={{
+                            width: modalWidth,
+                            height: modalHeight,
+                            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                            borderRadius: 24,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 12,
+                            elevation: 15,
+                            zIndex: 1000,
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transform: [
+                                {
+                                    scale: scaleAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [0.5, 1],
+                                    }),
+                                },
+                            ],
+                            opacity: opacityAnim,
+                        }}
+                    >
+                        {/* Header */}
+                        <View
+                            className={`flex-row items-center justify-between px-4 py-4 border-b ${
+                                isDark ? 'border-slate-800' : 'border-gray-200'
+                            }`}
+                        >
+                            <View className="flex-1">
+                                <Text
+                                    className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}
+                                >
+                                    Comments
+                                </Text>
+                                <Text
+                                    className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+                                    numberOfLines={1}
+                                >
+                                    Discussion on {articleTitle}
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                className="p-2"
+                                style={{ zIndex: 2 }}
+                            >
+                                <X
+                                    size={20}
+                                    color={isDark ? '#E2E8F0' : '#1F2937'}
+                                    strokeWidth={2}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Comments list */}
+                        {isLoading ? (
+                            <View className="flex-1 items-center justify-center py-12">
+                                <ActivityIndicator
+                                    size="large"
+                                    color={isDark ? '#A78BFA' : '#7C3AED'}
+                                />
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={comments}
+                                extraData={comments.length + (currentUserId ?? '')}
+                                renderItem={({ item }) => (
+                                    <CommentItem
+                                        comment={item}
+                                        isOwn={Boolean(
+                                            currentUserId &&
+                                            item.author.id === String(currentUserId),
+                                        )}
+                                        onReplyPress={() => {
+                                            // Reply flow can be added later
+                                        }}
+                                        onLikePress={() => {
+                                            // Like API not provided
+                                        }}
+                                        onDelete={onDeleteComment}
+                                        onUpdate={onUpdateComment}
+                                    />
+                                )}
+                                keyExtractor={(item) => item.id}
+                                contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
+                                scrollEnabled={true}
+                                removeClippedSubviews={true}
+                                maxToRenderPerBatch={8}
+                                updateCellsBatchingPeriod={30}
+                                initialNumToRender={3}
+                                scrollEventThrottle={32}
+                                decelerationRate="fast"
+                                ListEmptyComponent={
+                                    <View className="flex-1 items-center justify-center py-8">
+                                        <Text
+                                            className={`text-sm ${
+                                                isDark ? 'text-gray-400' : 'text-gray-600'
+                                            }`}
+                                        >
+                                            No comments yet. Be the first to share your thoughts.
+                                        </Text>
+                                    </View>
+                                }
+                            />
+                        )}
+
+                        <CommentInput
+                            userAvatar={userAvatar}
+                            onSendText={onSendComment}
+                            onSendVoice={allowVoice ? onSendVoiceComment : undefined}
+                            disabled={isSending}
+                        />
+                    </Animated.View>
+                </View>
+            </KeyboardAwareModalOverlay>
         </Modal>
     );
 }
