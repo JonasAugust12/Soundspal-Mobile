@@ -10,7 +10,7 @@ import type { RefreshTokenResponse } from '@/features/auth/domain/entities/auth.
 
 // Tạo axios instance
 export const apiClient = axios.create({
-    baseURL: 'https://talentlink.io.vn/api/v1',
+    baseURL: 'https://api.soundspal.com/api/v1',
     // headers: {
     //   accept: "application/json",
     //   "User-Agent":
