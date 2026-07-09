@@ -1,43 +1,38 @@
 import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    ScrollView,
-    TouchableOpacity,
-    TextInput,
-    ActivityIndicator,
-    Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCreateJob } from '@/features/jobs/presentation/hooks/useJobApi';
-import type {
-    CreateJobRequest,
-    Job,
-    PostStatus,
-    PostVisibility,
-} from '@/features/jobs/domain/entities/job.type';
+import {
+    AddItemRow,
+    ArtistTypePicker,
+    BudgetSection,
+    DeadlinePickerField,
+    EXPERIENCE_LEVEL_OPTIONS,
+    FormSectionCard,
+    FormTextField,
+    GenreTagSection,
+    LOCATION_TYPE_OPTIONS,
+    LocationInput,
+    PAYMENT_TYPE_OPTIONS,
+    PRIMARY_GRADIENT,
+    RECRUITMENT_FORM_COLORS,
+    RECRUITMENT_FORM_SPACING,
+    RECRUITMENT_TYPE_OPTIONS,
+    TagChipPicker,
+    VISIBILITY_OPTIONS,
+    WorkTimePickerField,
+} from '@/features/jobs/presentation/components/recruitmentForm';
+import type { CreateJobRequest, Job, PostStatus } from '@/features/jobs/domain/entities/job.type';
 
 type FormStep = 'basic' | 'details' | 'requirements' | 'review';
 
-const JOB_TYPES = ['venue', 'producer', 'singer'];
-const RECRUITMENT_TYPES = ['full_time', 'part_time', 'contract', 'one_time'];
-const LOCATION_TYPES = ['remote', 'onsite', 'hybrid'];
-//eslint-disable-next-line
-const CURRENCIES = ['VND', 'USD', 'EUR'];
-const PAYMENT_TYPES = ['bySession', 'byHour', 'byProject', 'byMonth'];
-const EXPERIENCE_LEVELS = ['beginner', 'intermediate', 'expert', 'any'];
-const VISIBILITY_OPTIONS: { label: string; value: PostVisibility }[] = [
-    { label: 'Công khai', value: 'public' },
-    { label: 'Riêng tư', value: 'private' },
-    { label: 'Chỉ mời', value: 'invite_only' },
-];
-
 export default function RecruitmentFormScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { mutate: createJob, isPending } = useCreateJob();
 
     const [step, setStep] = useState<FormStep>('basic');
@@ -111,13 +106,22 @@ export default function RecruitmentFormScreen() {
     };
 
     const addGenre = () => {
-        if (genreInput.trim()) {
-            setFormData((prev) => ({
-                ...prev,
-                genres: [...(prev.genres || []), genreInput.trim()],
-            }));
-            setGenreInput('');
+        const trimmed = genreInput.trim();
+        if (!trimmed) {
+            return;
         }
+
+        setFormData((prev) => {
+            const existing = prev.genres || [];
+            if (existing.includes(trimmed)) {
+                return prev;
+            }
+            return {
+                ...prev,
+                genres: [...existing, trimmed],
+            };
+        });
+        setGenreInput('');
     };
 
     const removeGenre = (index: number) => {
@@ -165,597 +169,255 @@ export default function RecruitmentFormScreen() {
     };
 
     const renderBasicStep = () => (
-        <View className="gap-4">
-            <Text className="text-xl font-extrabold text-gray-900 dark:text-white mb-2">
-                Thông tin cơ bản
-            </Text>
+        <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Thông tin cơ bản</Text>
 
-            {/* Title */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Tiêu đề công việc *
-                </Text>
-                <TextInput
+            <FormSectionCard>
+                <FormTextField
+                    label="Tiêu đề công việc"
+                    required
                     placeholder="Ví dụ: Tuyển Nữ Vocal..."
                     value={formData.title}
                     onChangeText={(val) => handleInputChange('title', val)}
-                    className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                    placeholderTextColor="#999"
                 />
-            </View>
-
-            {/* Brief Description */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Mô tả ngắn *
-                </Text>
-                <TextInput
+                <FormTextField
+                    label="Mô tả ngắn"
+                    required
                     placeholder="Tóm tắt vị trí tuyển dụng..."
                     value={formData.brief_description}
                     onChangeText={(val) => handleInputChange('brief_description', val)}
-                    className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                    placeholderTextColor="#999"
-                    numberOfLines={3}
                     multiline
+                    numberOfLines={3}
+                    style={styles.multilineInput}
                 />
-            </View>
-
-            {/* Description */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Mô tả chi tiết *
-                </Text>
-                <TextInput
+                <FormTextField
+                    label="Mô tả chi tiết"
+                    required
                     placeholder="Mô tả đầy đủ về công việc, yêu cầu..."
                     value={formData.description}
                     onChangeText={(val) => handleInputChange('description', val)}
-                    className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white min-h-24"
-                    placeholderTextColor="#999"
-                    numberOfLines={6}
                     multiline
+                    numberOfLines={6}
                     textAlignVertical="top"
+                    style={styles.multilineInputLarge}
                 />
-            </View>
+            </FormSectionCard>
         </View>
     );
 
     const renderDetailsStep = () => (
-        <View className="gap-4">
-            <Text className="text-xl font-extrabold text-gray-900 dark:text-white mb-2">
-                Chi tiết công việc
-            </Text>
+        <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Chi tiết công việc</Text>
 
-            {/* Job Type */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Tuyển cho loại nghệ sĩ
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-2">
-                    {JOB_TYPES.map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            onPress={() => handleInputChange('type', type)}
-                            className={`px-4 py-2 rounded-lg ${
-                                formData.type === type
-                                    ? 'bg-purple-600'
-                                    : 'bg-gray-100 dark:bg-gray-800'
-                            }`}
-                        >
-                            <Text
-                                className={`text-sm font-semibold ${
-                                    formData.type === type
-                                        ? 'text-white'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
-                                {type === 'venue'
-                                    ? 'Venue'
-                                    : type === 'producer'
-                                      ? 'Nhà sản xuất'
-                                      : type === 'singer'
-                                        ? 'Ca sĩ'
-                                        : 'Ban nhạc'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
+            <FormSectionCard title="Tuyển cho loại nghệ sĩ">
+                <ArtistTypePicker
+                    value={formData.type}
+                    onChange={(type) => handleInputChange('type', type)}
+                />
+            </FormSectionCard>
 
-            {/* Recruitment Type */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Hình thức tuyển dụng
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {RECRUITMENT_TYPES.map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            onPress={() => handleInputChange('recruitment_type', type)}
-                            className={`flex-1 min-w-[45%] px-3 py-2 rounded-lg border-2 ${
-                                formData.recruitment_type === type
-                                    ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
-                                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                            }`}
-                        >
-                            <Text
-                                className={`text-xs font-semibold text-center ${
-                                    formData.recruitment_type === type
-                                        ? 'text-purple-700 dark:text-purple-300'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
-                                {type === 'full_time'
-                                    ? 'Toàn thời gian'
-                                    : type === 'part_time'
-                                      ? 'Bán thời gian'
-                                      : type === 'contract'
-                                        ? 'Hợp đồng'
-                                        : 'Một lần'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <FormSectionCard title="Hình thức tuyển dụng">
+                <TagChipPicker
+                    options={RECRUITMENT_TYPE_OPTIONS}
+                    value={formData.recruitment_type ?? 'part_time'}
+                    onChange={(type) => handleInputChange('recruitment_type', type)}
+                />
+            </FormSectionCard>
 
-            {/* Location Type */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Loại địa điểm
-                </Text>
-                <View className="flex-row gap-2">
-                    {LOCATION_TYPES.map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            onPress={() => handleInputChange('location_type', type)}
-                            className={`flex-1 px-3 py-2 rounded-lg border-2 ${
-                                formData.location_type === type
-                                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                            }`}
-                        >
-                            <Text
-                                className={`text-xs font-semibold text-center ${
-                                    formData.location_type === type
-                                        ? 'text-blue-700 dark:text-blue-300'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
-                                {type === 'remote'
-                                    ? 'Từ xa'
-                                    : type === 'onsite'
-                                      ? 'Tại địa điểm'
-                                      : 'Kết hợp'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <FormSectionCard title="Loại địa điểm">
+                <TagChipPicker
+                    options={LOCATION_TYPE_OPTIONS}
+                    value={formData.location_type ?? 'onsite'}
+                    onChange={(type) => handleInputChange('location_type', type)}
+                />
+            </FormSectionCard>
 
-            {/* Location */}
             {formData.location_type !== 'remote' && (
-                <View className="gap-2">
-                    <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        Địa điểm
-                    </Text>
-                    <TextInput
-                        placeholder="Ví dụ: Quận 3, TP. Hồ Chí Minh"
-                        value={formData.location}
+                <FormSectionCard title="Địa điểm">
+                    <LocationInput
+                        value={formData.location ?? ''}
                         onChangeText={(val) => handleInputChange('location', val)}
-                        className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                        placeholderTextColor="#999"
                     />
-                </View>
+                </FormSectionCard>
             )}
 
-            {/* Budget */}
-            <View className="gap-3">
-                <View className="flex-row gap-2 items-center">
-                    <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex-1">
-                        Ngân sách (VND)
-                    </Text>
-                    <TouchableOpacity
-                        onPress={() => handleInputChange('is_negotiable', !formData.is_negotiable)}
-                        className={`px-3 py-1 rounded-lg ${
-                            formData.is_negotiable
-                                ? 'bg-green-100 dark:bg-green-900/30'
-                                : 'bg-gray-100 dark:bg-gray-800'
-                        }`}
-                    >
-                        <Text
-                            className={`text-xs font-semibold ${
-                                formData.is_negotiable
-                                    ? 'text-green-700 dark:text-green-300'
-                                    : 'text-gray-700 dark:text-gray-300'
-                            }`}
-                        >
-                            {formData.is_negotiable ? 'Thỏa thuận' : 'Cố định'}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+            <FormSectionCard>
+                <BudgetSection
+                    isFixed={!formData.is_negotiable}
+                    onToggleFixed={(fixed) => handleInputChange('is_negotiable', !fixed)}
+                    budgetMin={formData.budget_min ?? undefined}
+                    budgetMax={formData.budget_max ?? undefined}
+                    onBudgetMinChange={(val) => handleInputChange('budget_min', val)}
+                    onBudgetMaxChange={(val) => handleInputChange('budget_max', val)}
+                />
+            </FormSectionCard>
 
-                {!formData.is_negotiable && (
-                    <View className="flex-row gap-2">
-                        <TextInput
-                            placeholder="Min"
-                            value={formData.budget_min?.toString() || ''}
-                            onChangeText={(val) =>
-                                handleInputChange('budget_min', val ? parseInt(val) : undefined)
-                            }
-                            className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                            placeholderTextColor="#999"
-                            keyboardType="numeric"
-                        />
-                        <TextInput
-                            placeholder="Max"
-                            value={formData.budget_max?.toString() || ''}
-                            onChangeText={(val) =>
-                                handleInputChange('budget_max', val ? parseInt(val) : undefined)
-                            }
-                            className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                            placeholderTextColor="#999"
-                            keyboardType="numeric"
-                        />
-                    </View>
-                )}
-            </View>
+            <FormSectionCard title="Hình thức thanh toán">
+                <TagChipPicker
+                    options={PAYMENT_TYPE_OPTIONS}
+                    value={formData.payment_type ?? 'bySession'}
+                    onChange={(type) => handleInputChange('payment_type', type)}
+                />
+            </FormSectionCard>
 
-            {/* Payment Type */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Hình thức thanh toán
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {PAYMENT_TYPES.map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            onPress={() => handleInputChange('payment_type', type)}
-                            className={`flex-1 min-w-[45%] px-3 py-2 rounded-lg border-2 ${
-                                formData.payment_type === type
-                                    ? 'border-green-600 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                            }`}
-                        >
-                            <Text
-                                className={`text-xs font-semibold text-center ${
-                                    formData.payment_type === type
-                                        ? 'text-green-700 dark:text-green-300'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
-                                {type === 'bySession'
-                                    ? 'Theo buổi'
-                                    : type === 'byHour'
-                                      ? 'Theo giờ'
-                                      : type === 'byProject'
-                                        ? 'Theo dự án'
-                                        : 'Theo tháng'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
-
-            {/* Work Time */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Thời gian làm việc
-                </Text>
-                <TextInput
-                    placeholder="Ví dụ: Tối T6, T7, CN (19:30 - 21:30)"
+            <FormSectionCard title="Thời gian làm việc">
+                <WorkTimePickerField
+                    hideLabel
                     value={formData.work_time}
-                    onChangeText={(val) => handleInputChange('work_time', val)}
-                    className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                    placeholderTextColor="#999"
+                    onChange={(val) => handleInputChange('work_time', val)}
                 />
-            </View>
+            </FormSectionCard>
 
-            {/* Deadline */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Hạn nộp (dd-MM-yyyy)
-                </Text>
-                <TextInput
-                    placeholder="Ví dụ: 01-12-2026"
-                    value={formData.deadline || ''}
-                    onChangeText={(val) => handleInputChange('deadline', val || undefined)}
-                    className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                    placeholderTextColor="#999"
+            <FormSectionCard title="Hạn nộp (dd-MM-yyyy)">
+                <DeadlinePickerField
+                    hideLabel
+                    value={formData.deadline || undefined}
+                    onChange={(val) => handleInputChange('deadline', val)}
                 />
-            </View>
+            </FormSectionCard>
         </View>
     );
 
     const renderRequirementsStep = () => (
-        <View className="gap-4">
-            <Text className="text-xl font-extrabold text-gray-900 dark:text-white mb-2">
-                Yêu cầu & Lợi ích
-            </Text>
+        <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Yêu cầu & Lợi ích</Text>
 
-            {/* Genres */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Thể loại nhạc
-                </Text>
-                <View className="flex-row gap-2">
-                    <TextInput
-                        placeholder="Thêm thể loại..."
-                        value={genreInput}
-                        onChangeText={setGenreInput}
-                        className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                        placeholderTextColor="#999"
-                    />
-                    <TouchableOpacity
-                        onPress={addGenre}
-                        className="bg-purple-600 px-4 py-3 rounded-lg items-center justify-center"
-                    >
-                        <Text className="text-white font-bold text-sm">Thêm</Text>
-                    </TouchableOpacity>
-                </View>
-                <View className="flex-row flex-wrap gap-2">
-                    {formData.genres?.map((genre, idx) => (
-                        <View
-                            key={idx}
-                            className="bg-purple-50 dark:bg-purple-900/30 px-3 py-1.5 rounded-full flex-row items-center gap-2"
-                        >
-                            <Text className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                                {genre}
-                            </Text>
-                            <TouchableOpacity onPress={() => removeGenre(idx)}>
-                                <X size={14} color="#7C3BED" />
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                </View>
-            </View>
+            <FormSectionCard title="Thể loại nhạc">
+                <GenreTagSection
+                    genres={formData.genres || []}
+                    inputValue={genreInput}
+                    onInputChange={setGenreInput}
+                    onAddCustom={addGenre}
+                    onTogglePopular={(genres) => handleInputChange('genres', genres)}
+                    onRemove={removeGenre}
+                />
+            </FormSectionCard>
 
-            {/* Required Skills */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Kỹ năng yêu cầu
-                </Text>
-                <View className="flex-row gap-2">
-                    <TextInput
-                        placeholder="Thêm kỹ năng..."
-                        value={skillInput}
-                        onChangeText={setSkillInput}
-                        className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                        placeholderTextColor="#999"
-                    />
-                    <TouchableOpacity
-                        onPress={addSkill}
-                        className="bg-green-600 px-4 py-3 rounded-lg items-center justify-center"
-                    >
-                        <Text className="text-white font-bold text-sm">Thêm</Text>
-                    </TouchableOpacity>
-                </View>
-                <View className="gap-2">
+            <FormSectionCard title="Kỹ năng yêu cầu">
+                <AddItemRow
+                    placeholder="Thêm kỹ năng..."
+                    value={skillInput}
+                    onChangeText={setSkillInput}
+                    onAdd={addSkill}
+                />
+                <View style={styles.listGap}>
                     {formData.required_skills?.map((skill, idx) => (
-                        <View
-                            key={idx}
-                            className="bg-green-50 dark:bg-green-900/20 px-3 py-2.5 rounded-lg flex-row items-center justify-between"
-                        >
-                            <Text className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                {skill}
-                            </Text>
+                        <View key={idx} style={styles.listItem}>
+                            <Text style={styles.listItemText}>{skill}</Text>
                             <TouchableOpacity onPress={() => removeSkill(idx)}>
-                                <X size={18} color="#10B981" />
+                                <X size={18} color={RECRUITMENT_FORM_COLORS.primary} />
                             </TouchableOpacity>
                         </View>
                     ))}
                 </View>
-            </View>
+            </FormSectionCard>
 
-            {/* Benefits */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Quyền lợi & Phúc lợi
-                </Text>
-                <View className="flex-row gap-2">
-                    <TextInput
-                        placeholder="Thêm phúc lợi..."
-                        value={benefitInput}
-                        onChangeText={setBenefitInput}
-                        className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-900 dark:text-white"
-                        placeholderTextColor="#999"
-                    />
-                    <TouchableOpacity
-                        onPress={addBenefit}
-                        className="bg-blue-600 px-4 py-3 rounded-lg items-center justify-center"
-                    >
-                        <Text className="text-white font-bold text-sm">Thêm</Text>
-                    </TouchableOpacity>
-                </View>
-                <View className="gap-2">
+            <FormSectionCard title="Quyền lợi & Phúc lợi">
+                <AddItemRow
+                    placeholder="Thêm phúc lợi..."
+                    value={benefitInput}
+                    onChangeText={setBenefitInput}
+                    onAdd={addBenefit}
+                />
+                <View style={styles.listGap}>
                     {formData.benefits?.map((benefit, idx) => (
-                        <View
-                            key={idx}
-                            className="bg-blue-50 dark:bg-blue-900/20 px-3 py-2.5 rounded-lg flex-row items-center justify-between"
-                        >
-                            <Text className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                {benefit}
-                            </Text>
+                        <View key={idx} style={styles.listItem}>
+                            <Text style={styles.listItemText}>{benefit}</Text>
                             <TouchableOpacity onPress={() => removeBenefit(idx)}>
-                                <X size={18} color="#3B82F6" />
+                                <X size={18} color={RECRUITMENT_FORM_COLORS.primary} />
                             </TouchableOpacity>
                         </View>
                     ))}
                 </View>
-            </View>
+            </FormSectionCard>
 
-            {/* Experience Level */}
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Cấp độ kinh nghiệm
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {EXPERIENCE_LEVELS.map((level) => (
-                        <TouchableOpacity
-                            key={level}
-                            onPress={() => handleInputChange('experience_level', level)}
-                            className={`flex-1 min-w-[45%] px-3 py-2 rounded-lg border-2 ${
-                                formData.experience_level === level
-                                    ? 'border-orange-600 bg-orange-50 dark:bg-orange-900/20'
-                                    : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'
-                            }`}
-                        >
-                            <Text
-                                className={`text-xs font-semibold text-center ${
-                                    formData.experience_level === level
-                                        ? 'text-orange-700 dark:text-orange-300'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
-                                {level === 'beginner'
-                                    ? 'Mới bắt đầu'
-                                    : level === 'intermediate'
-                                      ? 'Trung cấp'
-                                      : level === 'expert'
-                                        ? 'Chuyên gia'
-                                        : 'Không yêu cầu'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <FormSectionCard title="Cấp độ kinh nghiệm">
+                <TagChipPicker
+                    options={EXPERIENCE_LEVEL_OPTIONS}
+                    value={formData.experience_level ?? 'intermediate'}
+                    onChange={(level) => handleInputChange('experience_level', level)}
+                />
+            </FormSectionCard>
         </View>
     );
 
     const renderReviewStep = () => (
-        <View className="gap-4">
-            <Text className="text-xl font-extrabold text-gray-900 dark:text-white mb-2">
-                Xem lại & Xác nhận
-            </Text>
+        <View style={styles.stepContainer}>
+            <Text style={styles.stepTitle}>Xem lại & Xác nhận</Text>
 
-            <View className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg gap-3">
-                <View>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">Tiêu đề</Text>
-                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formData.title}
-                    </Text>
+            <FormSectionCard>
+                <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Tiêu đề</Text>
+                    <Text style={styles.reviewValue}>{formData.title}</Text>
                 </View>
-
-                <View>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">Mô tả ngắn</Text>
-                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formData.brief_description}
-                    </Text>
+                <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Mô tả ngắn</Text>
+                    <Text style={styles.reviewValue}>{formData.brief_description}</Text>
                 </View>
-
-                <View>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">
-                        Tuyển cho loại nghệ sĩ
-                    </Text>
-                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formData.type}
-                    </Text>
+                <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Tuyển cho loại nghệ sĩ</Text>
+                    <Text style={styles.reviewValue}>{formData.type}</Text>
                 </View>
-
-                <View>
-                    <Text className="text-xs text-gray-500 dark:text-gray-400">
-                        Hình thức tuyển dụng
-                    </Text>
-                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formData.recruitment_type}
-                    </Text>
+                <View style={styles.reviewRow}>
+                    <Text style={styles.reviewLabel}>Hình thức tuyển dụng</Text>
+                    <Text style={styles.reviewValue}>{formData.recruitment_type}</Text>
                 </View>
-
-                {formData.location && (
-                    <View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">Địa điểm</Text>
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {formData.location}
-                        </Text>
+                {formData.location ? (
+                    <View style={styles.reviewRow}>
+                        <Text style={styles.reviewLabel}>Địa điểm</Text>
+                        <Text style={styles.reviewValue}>{formData.location}</Text>
                     </View>
-                )}
-
+                ) : null}
                 {(formData.budget_min || formData.budget_max) && (
-                    <View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">Ngân sách</Text>
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                    <View style={styles.reviewRow}>
+                        <Text style={styles.reviewLabel}>Ngân sách</Text>
+                        <Text style={styles.reviewValue}>
                             {formData.budget_min && formData.budget_max
-                                ? `${formData.budget_min} - ${formData.budget_max}`
+                                ? `${formData.budget_min / 1_000_000} - ${formData.budget_max / 1_000_000} triệu VND`
                                 : formData.budget_min
-                                  ? `Từ ${formData.budget_min}`
-                                  : formData.budget_max
-                                    ? `Đến ${formData.budget_max}`
-                                    : 'Thỏa thuận'}
-                            {formData.budget_currency && ` ${formData.budget_currency}`}
+                                  ? `Từ ${(formData.budget_min ?? 0) / 1_000_000} triệu VND`
+                                  : `Đến ${(formData.budget_max ?? 0) / 1_000_000} triệu VND`}
                         </Text>
                     </View>
                 )}
-
-                {formData.deadline && (
-                    <View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">Hạn nộp</Text>
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {formData.deadline}
-                        </Text>
+                {formData.deadline ? (
+                    <View style={styles.reviewRow}>
+                        <Text style={styles.reviewLabel}>Hạn nộp</Text>
+                        <Text style={styles.reviewValue}>{formData.deadline}</Text>
                     </View>
-                )}
-
-                {formData.genres && formData.genres.length > 0 && (
-                    <View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                            Thể loại nhạc
-                        </Text>
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {formData.genres.join(', ')}
-                        </Text>
+                ) : null}
+                {formData.genres && formData.genres.length > 0 ? (
+                    <View style={styles.reviewRow}>
+                        <Text style={styles.reviewLabel}>Thể loại nhạc</Text>
+                        <Text style={styles.reviewValue}>{formData.genres.join(', ')}</Text>
                     </View>
-                )}
-
-                {formData.required_skills && formData.required_skills.length > 0 && (
-                    <View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">
-                            Kỹ năng yêu cầu
-                        </Text>
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                ) : null}
+                {formData.required_skills && formData.required_skills.length > 0 ? (
+                    <View style={styles.reviewRow}>
+                        <Text style={styles.reviewLabel}>Kỹ năng yêu cầu</Text>
+                        <Text style={styles.reviewValue}>
                             {formData.required_skills.join(', ')}
                         </Text>
                     </View>
-                )}
-
-                {formData.benefits && formData.benefits.length > 0 && (
-                    <View>
-                        <Text className="text-xs text-gray-500 dark:text-gray-400">Quyền lợi</Text>
-                        <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {formData.benefits.join(', ')}
-                        </Text>
+                ) : null}
+                {formData.benefits && formData.benefits.length > 0 ? (
+                    <View style={styles.reviewRow}>
+                        <Text style={styles.reviewLabel}>Quyền lợi</Text>
+                        <Text style={styles.reviewValue}>{formData.benefits.join(', ')}</Text>
                     </View>
-                )}
-            </View>
+                ) : null}
+            </FormSectionCard>
 
-            <View className="gap-2">
-                <Text className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Quyền riêng tư
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                    {VISIBILITY_OPTIONS.map((option) => (
-                        <TouchableOpacity
-                            key={option.value}
-                            onPress={() => handleInputChange('visibility', option.value)}
-                            className={`px-3 py-2 rounded-lg border-2 ${
-                                formData.visibility === option.value
-                                    ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/30'
-                                    : 'border-gray-200 dark:border-gray-700'
-                            }`}
-                        >
-                            <Text
-                                className={`text-sm font-semibold ${
-                                    formData.visibility === option.value
-                                        ? 'text-purple-700 dark:text-purple-300'
-                                        : 'text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
-                                {option.label}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
+            <FormSectionCard title="Quyền riêng tư">
+                <TagChipPicker
+                    options={VISIBILITY_OPTIONS}
+                    value={formData.visibility ?? 'public'}
+                    onChange={(val) => handleInputChange('visibility', val)}
+                />
+            </FormSectionCard>
 
-            <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
-                <Text className="text-xs text-blue-700 dark:text-blue-300">
+            <View style={styles.infoBanner}>
+                <Text style={styles.infoBannerText}>
                     Bạn có thể lưu nháp để chỉnh sửa sau, hoặc đăng ngay để mọi người thấy bài tuyển
                     dụng.
                 </Text>
@@ -765,27 +427,29 @@ export default function RecruitmentFormScreen() {
 
     const steps: FormStep[] = ['basic', 'details', 'requirements', 'review'];
     const currentStepIndex = steps.indexOf(step);
+    const isReviewStep = step === 'review';
+    const hasThreeFooterActions = isReviewStep && currentStepIndex > 0;
 
     return (
-        <SafeAreaView className="flex-1 bg-white dark:bg-gray-900" edges={['top', 'left', 'right']}>
-            {/* Header */}
-            <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-800">
-                <TouchableOpacity onPress={() => router.back()}>
-                    <ChevronLeft size={24} color="#7C3BED" />
+        <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+                    <ChevronLeft size={24} color={RECRUITMENT_FORM_COLORS.primary} />
                 </TouchableOpacity>
-                <Text className="text-lg font-bold text-gray-900 dark:text-white">
-                    Tạo bài đăng công việc
-                </Text>
-                <Text className="text-sm font-semibold text-purple-600">
+                <Text style={styles.headerTitle}>Tạo bài đăng công việc</Text>
+                <Text style={styles.headerStep}>
                     {currentStepIndex + 1}/{steps.length}
                 </Text>
             </View>
 
             {/* Progress Bar */}
-            <View className="h-1 bg-gray-200 dark:bg-gray-800">
-                <View
-                    className="h-full bg-gradient-to-r from-purple-600 to-pink-600"
+            <View style={styles.progressTrack}>
+                <LinearGradient
+                    colors={[...PRIMARY_GRADIENT]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={{
+                        height: '100%',
                         width: `${((currentStepIndex + 1) / steps.length) * 100}%`,
                     }}
                 />
@@ -793,14 +457,11 @@ export default function RecruitmentFormScreen() {
 
             {/* Content */}
             <KeyboardAwareScrollView
-                className="flex-1"
-                contentContainerStyle={{
-                    paddingHorizontal: 16,
-                    paddingVertical: 24,
-                    gap: 20,
-                }}
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
                 bottomOffset={24}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
             >
                 {step === 'basic' && renderBasicStep()}
                 {step === 'details' && renderDetailsStep()}
@@ -809,13 +470,27 @@ export default function RecruitmentFormScreen() {
             </KeyboardAwareScrollView>
 
             {/* Footer */}
-            <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-800 flex-row gap-2">
+            <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                 {currentStepIndex > 0 && (
                     <TouchableOpacity
                         onPress={() => setStep(steps[currentStepIndex - 1])}
-                        className="flex-1 px-4 py-3 border-2 border-purple-600 rounded-lg items-center justify-center"
+                        style={[
+                            styles.footerSecondaryButton,
+                            hasThreeFooterActions && styles.footerButtonCompact,
+                            hasThreeFooterActions && styles.footerBackButton,
+                        ]}
                     >
-                        <Text className="text-purple-600 font-bold">Quay lại</Text>
+                        <Text
+                            style={[
+                                styles.footerSecondaryText,
+                                hasThreeFooterActions && styles.footerTextCompact,
+                            ]}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.75}
+                        >
+                            Quay lại
+                        </Text>
                     </TouchableOpacity>
                 )}
 
@@ -823,31 +498,27 @@ export default function RecruitmentFormScreen() {
                     <TouchableOpacity
                         onPress={() => setStep(steps[currentStepIndex + 1])}
                         disabled={!isBasicValid && step === 'basic'}
-                        className={`flex-1 px-4 py-3 rounded-lg items-center justify-center flex-row gap-1.5 ${
-                            !isBasicValid && step === 'basic' ? 'opacity-50' : 'bg-purple-600'
-                        }`}
+                        activeOpacity={0.85}
+                        style={[
+                            styles.footerPrimaryButton,
+                            currentStepIndex === 0 ? styles.footerPrimaryButtonFull : null,
+                            !isBasicValid && step === 'basic'
+                                ? styles.footerPrimaryButtonDisabled
+                                : null,
+                        ]}
                     >
                         <LinearGradient
                             colors={
                                 !isBasicValid && step === 'basic'
-                                    ? ['#CCCCCC', '#CCCCCC']
-                                    : ['#7C3BED', '#F471B7']
+                                    ? ['#D1D5DB', '#9CA3AF']
+                                    : [...PRIMARY_GRADIENT]
                             }
                             start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{
-                                flexDirection: 'row',
-                                flex: 1,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 6,
-                                paddingHorizontal: 16,
-                                paddingVertical: 12,
-                                borderRadius: 8,
-                            }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.footerPrimaryGradient}
                         >
-                            <Text className="text-white font-bold">Tiếp tục</Text>
-                            <ChevronRight size={20} color="white" />
+                            <Text style={styles.footerPrimaryText}>Tiếp tục</Text>
+                            <ChevronRight size={20} color="#FFFFFF" />
                         </LinearGradient>
                     </TouchableOpacity>
                 ) : (
@@ -855,37 +526,52 @@ export default function RecruitmentFormScreen() {
                         <TouchableOpacity
                             onPress={() => submitJob('draft')}
                             disabled={isPending}
-                            className="flex-1 px-4 py-3 border-2 border-purple-600 rounded-lg items-center justify-center"
+                            style={[
+                                styles.footerSecondaryButton,
+                                styles.footerButtonCompact,
+                                styles.footerDraftButton,
+                            ]}
                         >
                             {isPending ? (
-                                <ActivityIndicator color="#7C3BED" />
+                                <ActivityIndicator color={RECRUITMENT_FORM_COLORS.primary} />
                             ) : (
-                                <Text className="text-purple-600 font-bold">Lưu nháp</Text>
+                                <Text
+                                    style={[styles.footerSecondaryText, styles.footerTextCompact]}
+                                    numberOfLines={1}
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.75}
+                                >
+                                    Lưu nháp
+                                </Text>
                             )}
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => submitJob('published')}
                             disabled={isPending}
-                            className="flex-1"
+                            activeOpacity={0.85}
+                            style={[
+                                styles.footerPrimaryButton,
+                                styles.footerButtonCompact,
+                                styles.footerPublishButton,
+                            ]}
                         >
                             <LinearGradient
-                                colors={['#7C3BED', '#F471B7']}
+                                colors={[...PRIMARY_GRADIENT]}
                                 start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                                style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 8,
-                                    paddingHorizontal: 20,
-                                    paddingVertical: 14,
-                                    borderRadius: 12,
-                                }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.footerPrimaryGradient}
                             >
                                 {isPending ? (
-                                    <ActivityIndicator color="white" />
+                                    <ActivityIndicator color="#FFFFFF" />
                                 ) : (
-                                    <Text className="text-white font-bold">Đăng bài</Text>
+                                    <Text
+                                        style={[styles.footerPrimaryText, styles.footerTextCompact]}
+                                        numberOfLines={1}
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.75}
+                                    >
+                                        Đăng bài
+                                    </Text>
                                 )}
                             </LinearGradient>
                         </TouchableOpacity>
@@ -895,3 +581,210 @@ export default function RecruitmentFormScreen() {
         </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+        backgroundColor: RECRUITMENT_FORM_COLORS.surfaceMuted,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: RECRUITMENT_FORM_SPACING.screen,
+        paddingVertical: 16,
+        backgroundColor: RECRUITMENT_FORM_COLORS.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: RECRUITMENT_FORM_COLORS.border,
+    },
+    headerTitle: {
+        fontSize: 17,
+        fontWeight: '700',
+        color: RECRUITMENT_FORM_COLORS.text,
+    },
+    headerStep: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: RECRUITMENT_FORM_COLORS.primary,
+    },
+    progressTrack: {
+        height: 3,
+        backgroundColor: RECRUITMENT_FORM_COLORS.border,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingHorizontal: RECRUITMENT_FORM_SPACING.screen,
+        paddingTop: 24,
+        paddingBottom: 16,
+        flexGrow: 0,
+    },
+    stepContainer: {
+        gap: 16,
+    },
+    stepTitle: {
+        fontSize: 22,
+        fontWeight: '800',
+        color: RECRUITMENT_FORM_COLORS.text,
+        marginBottom: 4,
+    },
+    multilineInput: {
+        minHeight: 80,
+        textAlignVertical: 'top',
+    },
+    multilineInputLarge: {
+        minHeight: 140,
+        textAlignVertical: 'top',
+    },
+    addRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    addInput: {
+        flex: 1,
+        backgroundColor: RECRUITMENT_FORM_COLORS.surfaceMuted,
+        borderWidth: 1,
+        borderColor: RECRUITMENT_FORM_COLORS.border,
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 15,
+        color: RECRUITMENT_FORM_COLORS.text,
+    },
+    chipRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    chip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: RECRUITMENT_FORM_COLORS.primaryMuted,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 999,
+    },
+    chipText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: RECRUITMENT_FORM_COLORS.primaryDark,
+    },
+    listGap: {
+        gap: 8,
+    },
+    listItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: RECRUITMENT_FORM_COLORS.surfaceMuted,
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderWidth: 1,
+        borderColor: RECRUITMENT_FORM_COLORS.border,
+    },
+    listItemText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '500',
+        color: RECRUITMENT_FORM_COLORS.text,
+        marginRight: 8,
+    },
+    reviewRow: {
+        gap: 4,
+    },
+    reviewLabel: {
+        fontSize: 12,
+        color: RECRUITMENT_FORM_COLORS.textSubtle,
+    },
+    reviewValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: RECRUITMENT_FORM_COLORS.text,
+    },
+    infoBanner: {
+        backgroundColor: RECRUITMENT_FORM_COLORS.primaryMuted,
+        borderWidth: 1,
+        borderColor: RECRUITMENT_FORM_COLORS.primaryLight,
+        borderRadius: 12,
+        padding: 14,
+    },
+    infoBannerText: {
+        fontSize: 12,
+        lineHeight: 18,
+        color: RECRUITMENT_FORM_COLORS.primaryDark,
+    },
+    footer: {
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        gap: 8,
+        paddingHorizontal: RECRUITMENT_FORM_SPACING.screen,
+        paddingTop: 12,
+        backgroundColor: RECRUITMENT_FORM_COLORS.surface,
+        borderTopWidth: 1,
+        borderTopColor: RECRUITMENT_FORM_COLORS.border,
+    },
+    footerSecondaryButton: {
+        flex: 1,
+        minWidth: 0,
+        minHeight: 52,
+        borderWidth: 2,
+        borderColor: RECRUITMENT_FORM_COLORS.primary,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        backgroundColor: RECRUITMENT_FORM_COLORS.surface,
+    },
+    footerButtonCompact: {
+        paddingHorizontal: 8,
+    },
+    footerBackButton: {
+        flex: 0.9,
+    },
+    footerDraftButton: {
+        flex: 1,
+    },
+    footerPublishButton: {
+        flex: 1.15,
+    },
+    footerSecondaryText: {
+        color: RECRUITMENT_FORM_COLORS.primary,
+        fontSize: 15,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    footerTextCompact: {
+        fontSize: 13,
+    },
+    footerPrimaryButton: {
+        flex: 1,
+        minWidth: 0,
+        borderRadius: 14,
+        overflow: 'hidden',
+    },
+    footerPrimaryButtonFull: {
+        flex: 1,
+    },
+    footerPrimaryButtonDisabled: {
+        opacity: 0.7,
+    },
+    footerPrimaryGradient: {
+        minHeight: 52,
+        borderRadius: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingHorizontal: 16,
+        width: '100%',
+    },
+    footerPrimaryText: {
+        color: '#FFFFFF',
+        fontSize: 15,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+});
