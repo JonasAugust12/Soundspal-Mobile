@@ -15,6 +15,8 @@ import {
     useFeaturedUsers,
     useFeaturedJobs,
 } from '@/features/explore/presentation/hooks/useSearchApi';
+import { useBlogFeed } from '@/features/blog/presentation/hooks/useBlogApi';
+import { BlogPreviewCard, BlogPreviewCardSkeleton } from '@/features/blog/presentation/components';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
 import { raisedShadow } from '@/shared/presentation/ui/shadows';
 
@@ -31,6 +33,7 @@ export default function HomeScreen() {
     // Fetch featured data
     const { data: featuredUsersData, isLoading: isLoadingUsers } = useFeaturedUsers(10);
     const { data: featuredJobsData, isLoading: isLoadingJobs } = useFeaturedJobs(10);
+    const { data: blogPosts = [], isLoading: isLoadingBlog } = useBlogFeed();
 
     // Transform featured users to ArtistItem format
     const artists: ArtistItem[] = useMemo(() => {
@@ -340,6 +343,48 @@ export default function HomeScreen() {
                     <Text className="text-sm text-gray-400 text-center py-8">
                         Chưa có việc làm nổi bật
                     </Text>
+                )}
+            </View>
+
+            {/* Blog Section */}
+            <View className="mb-10">
+                <View className="px-5 flex-row justify-between items-center mb-4">
+                    <View className="flex-row items-center gap-2">
+                        <View className="w-1 h-5 bg-blue-500 rounded-full" />
+                        <Text className="text-lg font-bold text-gray-900">Blog · Tin tức</Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => router.push('/(blog)')}
+                        className="flex-row items-center gap-1"
+                    >
+                        <Text className="text-sm font-semibold text-purple-600">Tất cả</Text>
+                        <ChevronRight size={16} color="#7C3BED" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Blog Carousel */}
+                {isLoadingBlog ? (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
+                    >
+                        {[1, 2, 3].map((i) => (
+                            <BlogPreviewCardSkeleton key={i} />
+                        ))}
+                    </ScrollView>
+                ) : blogPosts.length > 0 ? (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
+                    >
+                        {blogPosts.slice(0, 6).map((post) => (
+                            <BlogPreviewCard key={post.id} article={post} />
+                        ))}
+                    </ScrollView>
+                ) : (
+                    <Text className="text-sm text-gray-400 text-center py-8">Chưa có bài viết</Text>
                 )}
             </View>
         </TabScreenWrapper>

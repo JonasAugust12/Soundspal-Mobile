@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, User, Phone, Share2, Music, Briefcase } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -185,9 +186,10 @@ export default function EditProfileScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-            <ScrollView
+            <KeyboardAwareScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
+                bottomOffset={24}
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoadingUser}
@@ -327,7 +329,7 @@ export default function EditProfileScreen() {
                         />
                     )}
                 </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Loading overlay */}
             {(uploadAvatar.isPending || uploadCover.isPending) && (

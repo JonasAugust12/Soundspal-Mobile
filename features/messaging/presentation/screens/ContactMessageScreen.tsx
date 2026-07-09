@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, Image } from 'react-native';
+import { View, Text, TextInput, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -29,7 +30,10 @@ export default function ContactMessageScreen() {
     return (
         <SafeAreaView className="flex-1 bg-background" edges={SCREEN_SAFE_AREA_EDGES}>
             <View className="flex-1">
-                <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+                <KeyboardAwareScrollView
+                    bottomOffset={24}
+                    contentContainerStyle={{ paddingBottom: 24 }}
+                >
                     <View>
                         {/* Header */}
                         <View className="p-3 flex-row items-center">
@@ -138,7 +142,7 @@ export default function ContactMessageScreen() {
                             />
                         </View>
                     </View>
-                </ScrollView>
+                </KeyboardAwareScrollView>
 
                 {/* Buttons */}
                 <View className="flex-row justify-around pt-5 pb-2">

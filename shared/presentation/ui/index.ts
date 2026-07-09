@@ -8,4 +8,5 @@ export { FilterSheet } from './FilterSheet';
 export { ConfirmModal } from './ConfirmModal';
 export { CommonHeader } from './CommonHeader';
 export { ScreenSafeArea, SCREEN_SAFE_AREA_EDGES } from './ScreenSafeArea';
+export { KeyboardAwareModalOverlay } from './KeyboardAwareModal';
 export { cardShadow, raisedShadow, floatingShadow, accentFabShadow } from './shadows';

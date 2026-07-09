@@ -9,6 +9,7 @@ import {
     Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -791,20 +792,21 @@ export default function RecruitmentFormScreen() {
             </View>
 
             {/* Content */}
-            <ScrollView
+            <KeyboardAwareScrollView
                 className="flex-1"
                 contentContainerStyle={{
                     paddingHorizontal: 16,
                     paddingVertical: 24,
                     gap: 20,
                 }}
+                bottomOffset={24}
                 showsVerticalScrollIndicator={false}
             >
                 {step === 'basic' && renderBasicStep()}
                 {step === 'details' && renderDetailsStep()}
                 {step === 'requirements' && renderRequirementsStep()}
                 {step === 'review' && renderReviewStep()}
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             {/* Footer */}
             <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-800 flex-row gap-2">

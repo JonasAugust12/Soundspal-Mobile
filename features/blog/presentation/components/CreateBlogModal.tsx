@@ -21,6 +21,7 @@ import {
     logBlogUploadFailure,
 } from '@/features/blog/presentation/hooks/useBlogApi';
 import { BLOG_CREATE_TOPIC_OPTIONS } from '@/features/blog/domain/constants/blog';
+import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
 import type { CreatePostRequest } from '@/features/blog/domain/entities/blog.type';
 import type { BlogNoticePayload } from './BlogSlidingNotice';
 
@@ -259,248 +260,258 @@ export function CreateBlogModal({
 
     return (
         <Modal visible={visible} animationType="none" transparent onRequestClose={handleClose}>
-            <View
-                style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                }}
-            >
-                {/* Overlay */}
-                <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={handleClose}
+            <KeyboardAwareModalOverlay>
+                <View
                     style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                    }}
-                />
-
-                {/* Modal container */}
-                <Animated.View
-                    style={{
-                        width: '90%',
-                        maxHeight: '90%',
-                        backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
-                        borderRadius: 20,
-                        overflow: 'hidden',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 12,
-                        elevation: 20,
-                        zIndex: 1000,
-                        transform: [
-                            {
-                                scale: scaleAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0.5, 1],
-                                }),
-                            },
-                        ],
-                        opacity: opacityAnim,
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     }}
                 >
-                    {/* Header */}
-                    <View
-                        className={`flex-row items-center justify-between px-5 py-4 border-b ${
-                            isDark ? 'border-slate-700 bg-slate-800' : 'border-gray-200 bg-gray-50'
-                        }`}
-                    >
-                        <Text
-                            className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}
-                        >
-                            Create Blog Post
-                        </Text>
-                        <TouchableOpacity onPress={handleClose} style={{ zIndex: 2 }}>
-                            <X size={24} color={isDark ? '#E2E8F0' : '#1F2937'} strokeWidth={2} />
-                        </TouchableOpacity>
-                    </View>
+                    {/* Overlay */}
+                    <TouchableOpacity
+                        activeOpacity={1}
+                        onPress={handleClose}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                        }}
+                    />
 
-                    {/* Content */}
-                    <ScrollView
-                        contentContainerStyle={{ padding: 16, gap: 16 }}
-                        showsVerticalScrollIndicator={false}
+                    {/* Modal container */}
+                    <Animated.View
+                        style={{
+                            width: '90%',
+                            maxHeight: '90%',
+                            backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+                            borderRadius: 20,
+                            overflow: 'hidden',
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 12,
+                            elevation: 20,
+                            zIndex: 1000,
+                            transform: [
+                                {
+                                    scale: scaleAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [0.5, 1],
+                                    }),
+                                },
+                            ],
+                            opacity: opacityAnim,
+                        }}
                     >
-                        {/* Title input */}
-                        <View>
+                        {/* Header */}
+                        <View
+                            className={`flex-row items-center justify-between px-5 py-4 border-b ${
+                                isDark
+                                    ? 'border-slate-700 bg-slate-800'
+                                    : 'border-gray-200 bg-gray-50'
+                            }`}
+                        >
                             <Text
-                                className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}
                             >
-                                Title *
+                                Create Blog Post
                             </Text>
-                            <TextInput
-                                value={title}
-                                onChangeText={setTitle}
-                                placeholder="Enter blog title..."
-                                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: isDark ? '#374151' : '#D1D5DB',
-                                    borderRadius: 10,
-                                    padding: 12,
-                                    fontSize: 16,
-                                    color: isDark ? '#F3F4F6' : '#1F2937',
-                                    backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                                }}
-                                editable={!isSubmitting && !isMediaWorking}
-                            />
-                            <Text
-                                className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
-                            >
-                                At least {TITLE_MIN_LEN} characters
-                            </Text>
+                            <TouchableOpacity onPress={handleClose} style={{ zIndex: 2 }}>
+                                <X
+                                    size={24}
+                                    color={isDark ? '#E2E8F0' : '#1F2937'}
+                                    strokeWidth={2}
+                                />
+                            </TouchableOpacity>
                         </View>
 
-                        {/* short_description; optional, falls back to start of body */}
-                        <View>
-                            <View className="flex-row items-center justify-between mb-2">
+                        {/* Content */}
+                        <ScrollView
+                            contentContainerStyle={{ padding: 16, gap: 16 }}
+                            showsVerticalScrollIndicator={false}
+                        >
+                            {/* Title input */}
+                            <View>
                                 <Text
-                                    className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                    className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Short description (optional)
+                                    Title *
                                 </Text>
+                                <TextInput
+                                    value={title}
+                                    onChangeText={setTitle}
+                                    placeholder="Enter blog title..."
+                                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#374151' : '#D1D5DB',
+                                        borderRadius: 10,
+                                        padding: 12,
+                                        fontSize: 16,
+                                        color: isDark ? '#F3F4F6' : '#1F2937',
+                                        backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                                    }}
+                                    editable={!isSubmitting && !isMediaWorking}
+                                />
                                 <Text
-                                    className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
+                                    className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
                                 >
-                                    {shortDescription.length}/{SHORT_DESC_MAX}
+                                    At least {TITLE_MIN_LEN} characters
                                 </Text>
                             </View>
-                            <TextInput
-                                value={shortDescription}
-                                onChangeText={(text) =>
-                                    setShortDescription(
-                                        text.length <= SHORT_DESC_MAX
-                                            ? text
-                                            : text.slice(0, SHORT_DESC_MAX),
-                                    )
-                                }
-                                placeholder="Shown on cards; if empty, the start of your content is used"
-                                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                                multiline
-                                numberOfLines={3}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: isDark ? '#374151' : '#D1D5DB',
-                                    borderRadius: 10,
-                                    padding: 12,
-                                    fontSize: 15,
-                                    color: isDark ? '#F3F4F6' : '#1F2937',
-                                    backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                                    textAlignVertical: 'top',
-                                    minHeight: 72,
-                                }}
-                                editable={!isSubmitting && !isMediaWorking}
-                            />
-                        </View>
 
-                        {/* Content input */}
-                        <View>
-                            <Text
-                                className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                            >
-                                Content *
-                            </Text>
-                            <TextInput
-                                value={content}
-                                onChangeText={setContent}
-                                placeholder="Write your blog content here..."
-                                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                                multiline
-                                numberOfLines={6}
-                                style={{
-                                    borderWidth: 1,
-                                    borderColor: isDark ? '#374151' : '#D1D5DB',
-                                    borderRadius: 10,
-                                    padding: 12,
-                                    fontSize: 16,
-                                    color: isDark ? '#F3F4F6' : '#1F2937',
-                                    backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
-                                    textAlignVertical: 'top',
-                                }}
-                                editable={!isSubmitting && !isMediaWorking}
-                            />
-                            <Text
-                                className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
-                            >
-                                At least {CONTENT_MIN_LEN} characters
-                            </Text>
-                        </View>
+                            {/* short_description; optional, falls back to start of body */}
+                            <View>
+                                <View className="flex-row items-center justify-between mb-2">
+                                    <Text
+                                        className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                    >
+                                        Short description (optional)
+                                    </Text>
+                                    <Text
+                                        className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
+                                    >
+                                        {shortDescription.length}/{SHORT_DESC_MAX}
+                                    </Text>
+                                </View>
+                                <TextInput
+                                    value={shortDescription}
+                                    onChangeText={(text) =>
+                                        setShortDescription(
+                                            text.length <= SHORT_DESC_MAX
+                                                ? text
+                                                : text.slice(0, SHORT_DESC_MAX),
+                                        )
+                                    }
+                                    placeholder="Shown on cards; if empty, the start of your content is used"
+                                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                                    multiline
+                                    numberOfLines={3}
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#374151' : '#D1D5DB',
+                                        borderRadius: 10,
+                                        padding: 12,
+                                        fontSize: 15,
+                                        color: isDark ? '#F3F4F6' : '#1F2937',
+                                        backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                                        textAlignVertical: 'top',
+                                        minHeight: 72,
+                                    }}
+                                    editable={!isSubmitting && !isMediaWorking}
+                                />
+                            </View>
 
-                        <View>
-                            <Text
-                                className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                            >
-                                Topic *
-                            </Text>
-                            <View className="flex-row flex-wrap gap-2">
-                                {BLOG_CREATE_TOPIC_OPTIONS.map((tab) => {
-                                    const active = selectedTopic === tab.value;
-                                    return (
-                                        <TouchableOpacity
-                                            key={tab.value}
-                                            onPress={() => setSelectedTopic(tab.value)}
-                                            disabled={isSubmitting || isMediaWorking}
-                                            className={`rounded-full px-3 py-2 border ${
-                                                active
-                                                    ? 'bg-purple-600 border-purple-500'
-                                                    : isDark
-                                                      ? 'border-slate-600 bg-slate-800'
-                                                      : 'border-gray-300 bg-white'
-                                            }`}
-                                        >
-                                            <Text
-                                                className={`text-xs font-medium ${
+                            {/* Content input */}
+                            <View>
+                                <Text
+                                    className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                >
+                                    Content *
+                                </Text>
+                                <TextInput
+                                    value={content}
+                                    onChangeText={setContent}
+                                    placeholder="Write your blog content here..."
+                                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                                    multiline
+                                    numberOfLines={6}
+                                    style={{
+                                        borderWidth: 1,
+                                        borderColor: isDark ? '#374151' : '#D1D5DB',
+                                        borderRadius: 10,
+                                        padding: 12,
+                                        fontSize: 16,
+                                        color: isDark ? '#F3F4F6' : '#1F2937',
+                                        backgroundColor: isDark ? '#1F2937' : '#F9FAFB',
+                                        textAlignVertical: 'top',
+                                    }}
+                                    editable={!isSubmitting && !isMediaWorking}
+                                />
+                                <Text
+                                    className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
+                                >
+                                    At least {CONTENT_MIN_LEN} characters
+                                </Text>
+                            </View>
+
+                            <View>
+                                <Text
+                                    className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                >
+                                    Topic *
+                                </Text>
+                                <View className="flex-row flex-wrap gap-2">
+                                    {BLOG_CREATE_TOPIC_OPTIONS.map((tab) => {
+                                        const active = selectedTopic === tab.value;
+                                        return (
+                                            <TouchableOpacity
+                                                key={tab.value}
+                                                onPress={() => setSelectedTopic(tab.value)}
+                                                disabled={isSubmitting || isMediaWorking}
+                                                className={`rounded-full px-3 py-2 border ${
                                                     active
-                                                        ? 'text-white'
+                                                        ? 'bg-purple-600 border-purple-500'
                                                         : isDark
-                                                          ? 'text-gray-200'
-                                                          : 'text-gray-800'
+                                                          ? 'border-slate-600 bg-slate-800'
+                                                          : 'border-gray-300 bg-white'
                                                 }`}
                                             >
-                                                {tab.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    );
-                                })}
+                                                <Text
+                                                    className={`text-xs font-medium ${
+                                                        active
+                                                            ? 'text-white'
+                                                            : isDark
+                                                              ? 'text-gray-200'
+                                                              : 'text-gray-800'
+                                                    }`}
+                                                >
+                                                    {tab.label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
                             </View>
-                        </View>
 
-                        <View>
-                            <View className="flex-row items-center justify-between mb-2">
-                                <Text
-                                    className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                                >
-                                    Tags * (1–5)
-                                </Text>
-                            </View>
-
-                            {/* Show selected tags */}
-                            <View className="flex-row flex-wrap gap-2 mb-3">
-                                {selectedTags.map((tag) => (
-                                    <TouchableOpacity
-                                        key={tag}
-                                        onPress={() =>
-                                            setSelectedTags(selectedTags.filter((t) => t !== tag))
-                                        }
-                                        className="bg-purple-600 rounded-full px-3 py-1.5 flex-row items-center gap-1"
+                            <View>
+                                <View className="flex-row items-center justify-between mb-2">
+                                    <Text
+                                        className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                     >
-                                        <Text className="text-white text-xs font-medium">
-                                            {tag}
-                                        </Text>
-                                        <X size={12} color="white" strokeWidth={3} />
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
+                                        Tags * (1–5)
+                                    </Text>
+                                </View>
 
-                            {/* Show tag suggestions */}
-                            <View className="flex-row flex-wrap gap-2">
-                                {AVAILABLE_TAGS.filter((tag) => !selectedTags.includes(tag)).map(
-                                    (tag) => (
+                                {/* Show selected tags */}
+                                <View className="flex-row flex-wrap gap-2 mb-3">
+                                    {selectedTags.map((tag) => (
+                                        <TouchableOpacity
+                                            key={tag}
+                                            onPress={() =>
+                                                setSelectedTags(
+                                                    selectedTags.filter((t) => t !== tag),
+                                                )
+                                            }
+                                            className="bg-purple-600 rounded-full px-3 py-1.5 flex-row items-center gap-1"
+                                        >
+                                            <Text className="text-white text-xs font-medium">
+                                                {tag}
+                                            </Text>
+                                            <X size={12} color="white" strokeWidth={3} />
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+
+                                {/* Show tag suggestions */}
+                                <View className="flex-row flex-wrap gap-2">
+                                    {AVAILABLE_TAGS.filter(
+                                        (tag) => !selectedTags.includes(tag),
+                                    ).map((tag) => (
                                         <TouchableOpacity
                                             key={tag}
                                             onPress={() => {
@@ -520,125 +531,134 @@ export function CreateBlogModal({
                                                 + {tag}
                                             </Text>
                                         </TouchableOpacity>
-                                    ),
-                                )}
-                            </View>
-                        </View>
-
-                        <View>
-                            <Text
-                                className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                            >
-                                Cover image (optional)
-                            </Text>
-                            {!isFormValid ? (
-                                <Text
-                                    className={`text-xs mb-2 ${isDark ? 'text-amber-400/90' : 'text-amber-700'}`}
-                                >
-                                    Complete title, content, topic, and at least one tag before
-                                    adding a cover image.
-                                </Text>
-                            ) : null}
-                            {selectedImage ? (
-                                <View className="relative">
-                                    <Image
-                                        source={{ uri: selectedImage }}
-                                        style={{ width: '100%', height: 150, borderRadius: 10 }}
-                                    />
-                                    <TouchableOpacity
-                                        onPress={() => setSelectedImage(null)}
-                                        className="absolute top-2 right-2 bg-red-500 rounded-full p-1.5"
-                                    >
-                                        <X size={16} color="white" strokeWidth={3} />
-                                    </TouchableOpacity>
+                                    ))}
                                 </View>
-                            ) : (
-                                <TouchableOpacity
-                                    onPress={handlePickImage}
-                                    disabled={isSubmitting || isMediaWorking || !isFormValid}
-                                    className={`border-2 border-dashed rounded-10 py-6 items-center justify-center ${
-                                        isDark ? 'border-slate-600' : 'border-gray-300'
-                                    }`}
+                            </View>
+
+                            <View>
+                                <Text
+                                    className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    <ImageIcon size={32} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                                    Cover image (optional)
+                                </Text>
+                                {!isFormValid ? (
                                     <Text
-                                        className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+                                        className={`text-xs mb-2 ${isDark ? 'text-amber-400/90' : 'text-amber-700'}`}
                                     >
-                                        Tap to select image
+                                        Complete title, content, topic, and at least one tag before
+                                        adding a cover image.
                                     </Text>
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </ScrollView>
-
-                    {/* Footer buttons */}
-                    <View className={`px-5 pt-2 pb-1 ${isDark ? 'bg-slate-900/30' : 'bg-gray-50'}`}>
-                        {formError ? (
-                            <Text
-                                className={`text-xs text-center mb-2 ${isDark ? 'text-amber-400' : 'text-amber-800'}`}
-                            >
-                                {formError}
-                            </Text>
-                        ) : null}
-                    </View>
-                    <View
-                        className={`flex-row gap-3 px-5 py-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}
-                    >
-                        <TouchableOpacity
-                            onPress={handleClose}
-                            disabled={isSubmitting || isMediaWorking}
-                            className={`flex-1 py-3 px-4 rounded-lg ${
-                                isDark ? 'bg-slate-700' : 'bg-gray-200'
-                            }`}
-                        >
-                            <Text
-                                className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                            >
-                                Cancel
-                            </Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            onPress={handleSubmit}
-                            disabled={!isFormValid || isSubmitting || isMediaWorking}
-                            className={`flex-1 py-3 px-4 rounded-lg flex-row items-center justify-center gap-2 ${
-                                !isFormValid && !isSubmitting
-                                    ? isDark
-                                        ? 'bg-slate-600'
-                                        : 'bg-gray-300'
-                                    : 'bg-purple-600'
-                            }`}
-                        >
-                            {isSubmitting || isMediaWorking ? (
-                                <ActivityIndicator
-                                    color={!isFormValid && !isSubmitting ? '#9CA3AF' : '#fff'}
-                                />
-                            ) : (
-                                <>
-                                    <Plus
-                                        size={18}
-                                        color={
-                                            !isFormValid ? (isDark ? '#94A3B8' : '#4B5563') : '#fff'
-                                        }
-                                        strokeWidth={2}
-                                    />
-                                    <Text
-                                        className={`text-center font-semibold ${
-                                            !isFormValid
-                                                ? isDark
-                                                    ? 'text-slate-300'
-                                                    : 'text-gray-600'
-                                                : 'text-white'
+                                ) : null}
+                                {selectedImage ? (
+                                    <View className="relative">
+                                        <Image
+                                            source={{ uri: selectedImage }}
+                                            style={{ width: '100%', height: 150, borderRadius: 10 }}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() => setSelectedImage(null)}
+                                            className="absolute top-2 right-2 bg-red-500 rounded-full p-1.5"
+                                        >
+                                            <X size={16} color="white" strokeWidth={3} />
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity
+                                        onPress={handlePickImage}
+                                        disabled={isSubmitting || isMediaWorking || !isFormValid}
+                                        className={`border-2 border-dashed rounded-10 py-6 items-center justify-center ${
+                                            isDark ? 'border-slate-600' : 'border-gray-300'
                                         }`}
                                     >
-                                        Post Blog
-                                    </Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
-                    </View>
-                </Animated.View>
-            </View>
+                                        <ImageIcon
+                                            size={32}
+                                            color={isDark ? '#9CA3AF' : '#6B7280'}
+                                        />
+                                        <Text
+                                            className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+                                        >
+                                            Tap to select image
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </ScrollView>
+
+                        {/* Footer buttons */}
+                        <View
+                            className={`px-5 pt-2 pb-1 ${isDark ? 'bg-slate-900/30' : 'bg-gray-50'}`}
+                        >
+                            {formError ? (
+                                <Text
+                                    className={`text-xs text-center mb-2 ${isDark ? 'text-amber-400' : 'text-amber-800'}`}
+                                >
+                                    {formError}
+                                </Text>
+                            ) : null}
+                        </View>
+                        <View
+                            className={`flex-row gap-3 px-5 py-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}
+                        >
+                            <TouchableOpacity
+                                onPress={handleClose}
+                                disabled={isSubmitting || isMediaWorking}
+                                className={`flex-1 py-3 px-4 rounded-lg ${
+                                    isDark ? 'bg-slate-700' : 'bg-gray-200'
+                                }`}
+                            >
+                                <Text
+                                    className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                >
+                                    Cancel
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={handleSubmit}
+                                disabled={!isFormValid || isSubmitting || isMediaWorking}
+                                className={`flex-1 py-3 px-4 rounded-lg flex-row items-center justify-center gap-2 ${
+                                    !isFormValid && !isSubmitting
+                                        ? isDark
+                                            ? 'bg-slate-600'
+                                            : 'bg-gray-300'
+                                        : 'bg-purple-600'
+                                }`}
+                            >
+                                {isSubmitting || isMediaWorking ? (
+                                    <ActivityIndicator
+                                        color={!isFormValid && !isSubmitting ? '#9CA3AF' : '#fff'}
+                                    />
+                                ) : (
+                                    <>
+                                        <Plus
+                                            size={18}
+                                            color={
+                                                !isFormValid
+                                                    ? isDark
+                                                        ? '#94A3B8'
+                                                        : '#4B5563'
+                                                    : '#fff'
+                                            }
+                                            strokeWidth={2}
+                                        />
+                                        <Text
+                                            className={`text-center font-semibold ${
+                                                !isFormValid
+                                                    ? isDark
+                                                        ? 'text-slate-300'
+                                                        : 'text-gray-600'
+                                                    : 'text-white'
+                                            }`}
+                                        >
+                                            Post Blog
+                                        </Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </Animated.View>
+                </View>
+            </KeyboardAwareModalOverlay>
         </Modal>
     );
 }

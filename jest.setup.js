@@ -49,6 +49,12 @@ jest.mock('expo-linear-gradient', () => ({
     LinearGradient: 'LinearGradient',
 }));
 
+// Mock react-native-keyboard-controller with its official Jest mock
+// (the native module is not linked in the Jest environment)
+jest.mock('react-native-keyboard-controller', () =>
+    require('react-native-keyboard-controller/jest'),
+);
+
 // Silence console errors/warnings in tests unless explicitly needed
 global.console = {
     ...console,

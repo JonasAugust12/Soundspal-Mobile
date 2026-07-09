@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Plus, Trash2, X, Music4 } from 'lucide-react-native';
 
+import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
 import { YoutubeEmbed } from '@/features/profiles/presentation/components/profile';
 import {
     useGetCurrentUser,
@@ -159,64 +160,70 @@ export default function FeaturedReleasesScreen() {
                 transparent
                 onRequestClose={() => setShowAddModal(false)}
             >
-                <View className="flex-1 bg-black/40 items-center justify-center px-6">
-                    <View
-                        className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl overflow-hidden"
-                        style={styles.modalContainer}
-                    >
-                        {/* Header */}
-                        <View className="flex-row items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
-                            <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                                Thêm YouTube Link
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => setShowAddModal(false)}
-                                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center"
-                            >
-                                <X size={20} color="#6B7280" />
-                            </TouchableOpacity>
-                        </View>
-
-                        {/* Content */}
-                        <View className="px-5 py-5 gap-5">
-                            <View className="gap-2">
-                                <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                                    YouTube URL <Text className="text-red-500">*</Text>
+                <KeyboardAwareModalOverlay>
+                    <View className="flex-1 bg-black/40 items-center justify-center px-6">
+                        <View
+                            className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl overflow-hidden"
+                            style={styles.modalContainer}
+                        >
+                            {/* Header */}
+                            <View className="flex-row items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <Text className="text-xl font-bold text-gray-900 dark:text-white">
+                                    Thêm YouTube Link
                                 </Text>
-                                <TextInput
-                                    value={newUrl}
-                                    onChangeText={setNewUrl}
-                                    placeholder="https://youtube.com/watch?v=..."
-                                    className="px-4 py-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
-                                    placeholderTextColor="#9CA3AF"
-                                    autoCapitalize="none"
-                                />
-                            </View>
-
-                            {/* Actions */}
-                            <View className="flex-row gap-3">
                                 <TouchableOpacity
                                     onPress={() => setShowAddModal(false)}
-                                    className="flex-1 py-3.5 rounded-xl bg-gray-100 dark:bg-gray-800 items-center"
+                                    className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center"
                                 >
-                                    <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
-                                        Hủy
-                                    </Text>
+                                    <X size={20} color="#6B7280" />
                                 </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={handleAddLink}
-                                    disabled={updateFeaturedReleases.isPending || !newUrl.trim()}
-                                    className={`flex-1 py-3.5 rounded-xl bg-purple-600 items-center ${!newUrl.trim() || updateFeaturedReleases.isPending ? 'opacity-50' : ''}`}
-                                    activeOpacity={0.8}
-                                >
-                                    <Text className="text-base font-bold text-white">
-                                        {updateFeaturedReleases.isPending ? 'Đang thêm...' : 'Thêm'}
+                            </View>
+
+                            {/* Content */}
+                            <View className="px-5 py-5 gap-5">
+                                <View className="gap-2">
+                                    <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        YouTube URL <Text className="text-red-500">*</Text>
                                     </Text>
-                                </TouchableOpacity>
+                                    <TextInput
+                                        value={newUrl}
+                                        onChangeText={setNewUrl}
+                                        placeholder="https://youtube.com/watch?v=..."
+                                        className="px-4 py-3.5 bg-gray-50 dark:bg-gray-800 rounded-xl text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
+                                        placeholderTextColor="#9CA3AF"
+                                        autoCapitalize="none"
+                                    />
+                                </View>
+
+                                {/* Actions */}
+                                <View className="flex-row gap-3">
+                                    <TouchableOpacity
+                                        onPress={() => setShowAddModal(false)}
+                                        className="flex-1 py-3.5 rounded-xl bg-gray-100 dark:bg-gray-800 items-center"
+                                    >
+                                        <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
+                                            Hủy
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={handleAddLink}
+                                        disabled={
+                                            updateFeaturedReleases.isPending || !newUrl.trim()
+                                        }
+                                        className={`flex-1 py-3.5 rounded-xl bg-purple-600 items-center ${!newUrl.trim() || updateFeaturedReleases.isPending ? 'opacity-50' : ''}`}
+                                        activeOpacity={0.8}
+                                    >
+                                        <Text className="text-base font-bold text-white">
+                                            {updateFeaturedReleases.isPending
+                                                ? 'Đang thêm...'
+                                                : 'Thêm'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     </View>
-                </View>
+                </KeyboardAwareModalOverlay>
             </Modal>
         </SafeAreaView>
     );

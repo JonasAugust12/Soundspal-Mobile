@@ -15,15 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import {
-    Search,
-    SlidersHorizontal,
-    Disc2,
-    MicVocal,
-    Building2,
-    Users,
-    BookOpen,
-} from 'lucide-react-native';
+import { Search, SlidersHorizontal, Disc2, MicVocal, Building2, Users } from 'lucide-react-native';
 import { useSearchUsersInfinite } from '@/features/explore/presentation/hooks/useSearchApi';
 import { useSearchStore, UserRole } from '@/features/explore/presentation/store/searchStore';
 import { FilterSheet } from '@/shared/presentation/ui';
@@ -259,15 +251,6 @@ export default function ExploreScreen() {
                                 </TouchableOpacity>
                             );
                         })}
-                        {/* Blog Button */}
-                        <TouchableOpacity
-                            onPress={() => router.push('/(blog)')}
-                            style={{ minWidth: 80, height: 44 }}
-                            className="flex-row items-center justify-center gap-2 px-4 rounded-xl bg-gray-100"
-                        >
-                            <BookOpen size={18} color="#7C3AED" />
-                            <Text className="text-sm font-semibold text-gray-700">Blog</Text>
-                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </View>
