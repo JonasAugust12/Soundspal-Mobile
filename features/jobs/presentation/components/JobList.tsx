@@ -24,6 +24,8 @@ interface JobListProps {
     isRefreshing?: boolean;
     error?: unknown;
     onRetry?: () => void;
+    /** Header cuộn cùng danh sách (vd: số lượng kết quả). Ẩn khi danh sách trống. */
+    listHeader?: React.ReactNode;
 }
 
 export const JobList = ({
@@ -36,6 +38,7 @@ export const JobList = ({
     isRefreshing = false,
     error,
     onRetry,
+    listHeader,
 }: JobListProps) => {
     const renderItem: ListRenderItem<Job & { isOwned?: boolean }> = useCallback(
         ({ item }) => <JobListItem item={item} />,
@@ -108,11 +111,15 @@ export const JobList = ({
 
     const itemSeparator = useCallback(() => <View className="h-4" />, []);
 
+    // Chỉ hiện header khi đã có dữ liệu để không lơ lửng trên trạng thái trống/lỗi.
+    const listHeaderComponent = jobs.length > 0 ? <>{listHeader}</> : null;
+
     return (
         <FlatList
             data={jobs}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
+            ListHeaderComponent={listHeaderComponent}
             ListFooterComponent={renderListFooter}
             ListEmptyComponent={renderEmpty}
             ItemSeparatorComponent={itemSeparator}

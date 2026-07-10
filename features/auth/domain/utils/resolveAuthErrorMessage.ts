@@ -1,13 +1,19 @@
 import {
     AuthApiErrorCode,
     AUTH_API_ERROR_MESSAGES,
+    AUTH_BACKEND_ERROR_CODES,
     AUTH_ERROR_CONTEXT_FALLBACKS,
     AuthErrorContext,
 } from '@/features/auth/domain/constants/authApiErrorCode';
 
 interface ApiErrorBody {
     code?: number | string;
+    /** Mã lỗi dạng snake_case, vd: 'email_not_verified'. */
+    error?: string;
     message?: string;
+    details?: {
+        email?: string;
+    };
 }
 
 interface AxiosLikeError {
@@ -18,6 +24,8 @@ interface AxiosLikeError {
         data?: ApiErrorBody;
     };
 }
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type BackendPattern = {
     code: AuthApiErrorCode;
@@ -38,7 +46,7 @@ const BACKEND_MESSAGE_PATTERNS: BackendPattern[] = [
     },
     {
         code: AuthApiErrorCode.AccountNotVerified,
-        patterns: [/not verified/i, /chưa.*xác thực/i, /email.*not.*verified/i],
+        patterns: [/not verified/i, /chưa.*xác thực/i, /chưa.*xác minh/i, /email.*not.*verified/i],
     },
     {
         code: AuthApiErrorCode.AccountDisabled,
@@ -133,30 +141,70 @@ function isNetworkError(error: AxiosLikeError): boolean {
     return message.includes('network error') || message.includes('timeout');
 }
 
+/**
+ * Suy ra mã lỗi nghiệp vụ từ error của axios.
+ * Thứ tự ưu tiên: lỗi mạng → mã lỗi backend → message backend → HTTP status.
+ */
+export function resolveAuthErrorCode(error: unknown): AuthApiErrorCode {
+    const axiosError = error as AxiosLikeError;
+    const body = axiosError.response?.data;
+
+    if (isNetworkError(axiosError)) {
+        return AuthApiErrorCode.NetworkError;
+    }
+
+    if (body?.error) {
+        const backendCode = AUTH_BACKEND_ERROR_CODES[normalizeMessage(body.error)];
+        if (backendCode) {
+            return backendCode;
+        }
+    }
+
+    if (body?.message) {
+        const matchedCode = matchBackendCode(body.message);
+        if (matchedCode) {
+            return matchedCode;
+        }
+    }
+
+    const status = axiosError.response?.status;
+    const statusCode = status ? HTTP_STATUS_TO_CODE[status] : undefined;
+    if (statusCode) {
+        return statusCode;
+    }
+
+    return AuthApiErrorCode.Unknown;
+}
+
+/**
+ * Email của tài khoản chưa xác thực, để điều hướng sang màn nhập mã xác nhận.
+ * Backend trả về trong `details.email`; nếu thiếu thì dùng identifier khi nó là email
+ * (identifier cũng có thể là username — khi đó không đủ dữ liệu để verify).
+ */
+export function resolveUnverifiedEmail(error: unknown, identifier?: string): string | null {
+    const detailsEmail = (error as AxiosLikeError).response?.data?.details?.email?.trim();
+    if (detailsEmail && EMAIL_PATTERN.test(detailsEmail)) {
+        return detailsEmail;
+    }
+
+    const trimmedIdentifier = identifier?.trim();
+    if (trimmedIdentifier && EMAIL_PATTERN.test(trimmedIdentifier)) {
+        return trimmedIdentifier;
+    }
+
+    return null;
+}
+
 export function resolveAuthErrorMessage(
     error: unknown,
     context: AuthErrorContext = AuthErrorContext.Generic,
 ): string {
     const axiosError = error as AxiosLikeError;
     const backendMessage = axiosError.response?.data?.message;
-    const status = axiosError.response?.status;
+    const code = resolveAuthErrorCode(error);
 
-    if (isNetworkError(axiosError)) {
-        return AUTH_API_ERROR_MESSAGES[AuthApiErrorCode.NetworkError];
-    }
-
-    if (backendMessage) {
-        const matchedCode = matchBackendCode(backendMessage);
-        if (matchedCode) {
-            return AUTH_API_ERROR_MESSAGES[matchedCode];
-        }
-    }
-
-    if (status && HTTP_STATUS_TO_CODE[status]) {
-        const statusCode = HTTP_STATUS_TO_CODE[status];
-        if (statusCode) {
-            return AUTH_API_ERROR_MESSAGES[statusCode];
-        }
+    if (code !== AuthApiErrorCode.Unknown) {
+        return AUTH_API_ERROR_MESSAGES[code];
     }
 
     if (backendMessage && backendMessage.trim().length > 0) {

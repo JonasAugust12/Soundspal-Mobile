@@ -10,6 +10,7 @@ import { jobRepository } from '@/features/jobs/data/repositories/JobRepositoryIm
 import { GetJobsUseCase } from '@/features/jobs/domain/usecases/GetJobsUseCase';
 import { SubmitJobApplicationUseCase } from '@/features/jobs/domain/usecases/SubmitJobApplicationUseCase';
 import { isApiNotFound } from '@/shared/utils/apiError';
+import { findMockJobById } from '@/mock-data/jobs';
 
 const getJobsUseCase = new GetJobsUseCase(jobRepository);
 const submitJobApplicationUseCase = new SubmitJobApplicationUseCase(jobRepository);
@@ -111,6 +112,11 @@ export const useGetJobById = (id: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: jobKeys.detail(id),
         queryFn: async () => {
+            // Job mock chỉ tồn tại ở client — trả thẳng, không gọi API (sẽ 404).
+            const mockJob = findMockJobById(id);
+            if (mockJob) {
+                return mockJob;
+            }
             try {
                 return await jobRepository.getJobById(id);
             } catch (err) {

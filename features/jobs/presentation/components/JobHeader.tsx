@@ -9,10 +9,10 @@ export const JobHeader = () => {
     const router = useRouter();
 
     return (
-        <View className="w-full px-4 py-6">
+        <View className="w-full px-4 pt-5 pb-4">
             <View className="flex-row justify-between items-center">
                 <View className="gap-1">
-                    <Text className="text-3xl font-extrabold text-gray-900 dark:text-white">
+                    <Text className="text-2xl font-extrabold text-gray-900 dark:text-white">
                         Việc làm
                     </Text>
                     <Text className="text-sm text-gray-600 dark:text-gray-400">

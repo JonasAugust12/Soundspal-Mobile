@@ -32,6 +32,14 @@ export enum AuthErrorContext {
     Generic = 'generic',
 }
 
+/**
+ * Map field `error` trong body lỗi của backend sang AuthApiErrorCode.
+ * Ưu tiên hơn việc đoán qua message/HTTP status. Thêm key mới khi backend bổ sung mã lỗi.
+ */
+export const AUTH_BACKEND_ERROR_CODES: Record<string, AuthApiErrorCode> = {
+    email_not_verified: AuthApiErrorCode.AccountNotVerified,
+};
+
 export const AUTH_API_ERROR_MESSAGES: Record<AuthApiErrorCode, string> = {
     [AuthApiErrorCode.InvalidCredentials]:
         'Email/username hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.',

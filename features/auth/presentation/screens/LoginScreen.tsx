@@ -18,13 +18,20 @@ import {
     AuthSuccessToast,
     AuthToastTitle,
 } from '@/features/auth/domain/constants/authMessages';
-import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
-import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
+import {
+    AuthApiErrorCode,
+    AuthErrorContext,
+} from '@/features/auth/domain/constants/authApiErrorCode';
+import {
+    resolveAuthErrorCode,
+    resolveAuthErrorMessage,
+    resolveUnverifiedEmail,
+} from '@/features/auth/domain/utils/resolveAuthErrorMessage';
 
 export default function LoginScreen() {
     const { mutateAsync: login, isPending: isLoading } = useLogin();
     const { signInWithGoogle, isLoading: isGoogleLoading } = useGoogleSignIn();
-    const { showSuccess, showError } = useToast();
+    const { showSuccess, showError, showInfo } = useToast();
     const router = useRouter();
 
     const handleLogin = async (data: LoginFormData) => {
@@ -38,10 +45,23 @@ export default function LoginScreen() {
                 router.replace('/(tabs)');
             }
         } catch (error: unknown) {
-            showError(
-                AuthToastTitle.LoginFailed,
-                resolveAuthErrorMessage(error, AuthErrorContext.Login),
-            );
+            const message = resolveAuthErrorMessage(error, AuthErrorContext.Login);
+
+            // Tài khoản chưa xác thực email: đưa thẳng người dùng tới màn nhập mã xác nhận.
+            if (resolveAuthErrorCode(error) === AuthApiErrorCode.AccountNotVerified) {
+                const email = resolveUnverifiedEmail(error, data.identifier);
+
+                if (email) {
+                    showInfo(AuthToastTitle.EmailNotVerified, message);
+                    router.push({
+                        pathname: '/(auth)/verify-email',
+                        params: { email },
+                    });
+                    return;
+                }
+            }
+
+            showError(AuthToastTitle.LoginFailed, message);
         }
     };
 

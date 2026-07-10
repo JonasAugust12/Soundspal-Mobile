@@ -126,6 +126,19 @@ export const formatRecruitmentType = (type: string): string => {
 };
 
 /**
+ * Format experience level to Vietnamese display name
+ */
+export const formatExperienceLevel = (level: string): string => {
+    const levelMap: { [key: string]: string } = {
+        beginner: 'Mới bắt đầu',
+        intermediate: 'Trung cấp',
+        expert: 'Chuyên gia',
+        any: 'Mọi cấp độ',
+    };
+    return levelMap[level?.toLowerCase()] || '';
+};
+
+/**
  * Format location type to Vietnamese display name
  */
 export const formatLocationType = (type: string): string => {

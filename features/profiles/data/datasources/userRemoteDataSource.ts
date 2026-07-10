@@ -1,4 +1,8 @@
 import { createApiCall } from '@/shared/infrastructure/api/apiClient';
+import {
+    postMultipartWithFetch,
+    unwrapUploadPayload,
+} from '@/shared/infrastructure/api/multipartUpload';
 import type {
     User,
     MediaItem,
@@ -72,24 +76,29 @@ export const userRemoteDataSource = {
         }
     >('PUT', '/users/me/social'),
 
-    uploadUserAvatar: (formData: FormData) => {
-        return createApiCall<MediaItem, FormData>('POST', '/users/me/avatar')(formData);
+    // Upload đi qua fetch (không phải axios) vì axios 1.x trên RN gửi hỏng multipart — xem multipartUpload.ts.
+    uploadUserAvatar: async (formData: FormData): Promise<MediaItem> => {
+        const payload = await postMultipartWithFetch('/users/me/avatar', formData);
+        return unwrapUploadPayload<MediaItem>(payload);
     },
 
-    uploadUserCover: (formData: FormData) => {
-        return createApiCall<MediaItem, FormData>('POST', '/users/me/cover')(formData);
+    uploadUserCover: async (formData: FormData): Promise<MediaItem> => {
+        const payload = await postMultipartWithFetch('/users/me/cover', formData);
+        return unwrapUploadPayload<MediaItem>(payload);
     },
 
-    uploadUserMedia: (formData: FormData) => {
-        return createApiCall<MediaItem, FormData>('POST', '/users/me/media')(formData);
+    uploadUserMedia: async (formData: FormData): Promise<MediaItem> => {
+        const payload = await postMultipartWithFetch('/users/me/media', formData);
+        return unwrapUploadPayload<MediaItem>(payload);
     },
 
     deleteUserMedia: (mediaId: string) => {
         return createApiCall<void>('DELETE', `/users/me/media/${mediaId}`)();
     },
 
-    uploadUserVideo: (formData: FormData) => {
-        return createApiCall<VideoItem, FormData>('POST', '/users/videos')(formData);
+    uploadUserVideo: async (formData: FormData): Promise<VideoItem> => {
+        const payload = await postMultipartWithFetch('/users/videos', formData);
+        return unwrapUploadPayload<VideoItem>(payload);
     },
 
     deleteUserVideo: (videoId: string) => {

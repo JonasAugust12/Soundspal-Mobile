@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bookmark, Briefcase, Calendar, DollarSign, MapPin, Crown } from 'lucide-react-native';
+import {
+    Bookmark,
+    Briefcase,
+    Calendar,
+    DollarSign,
+    MapPin,
+    Crown,
+    Building2,
+    Users,
+    BarChart3,
+} from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Job } from '@/features/jobs/domain/entities/job.type';
 import {
@@ -9,9 +19,12 @@ import {
     formatDate,
     formatJobType,
     formatPostStatus,
+    formatRecruitmentType,
+    formatExperienceLevel,
     isJobAcceptingApplications,
 } from '@/features/jobs/domain/utils/jobFormatters';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
+import { getMockCoverUrl } from '@/mock-data/explore';
 import { useJobBookmarkStore } from '@/features/jobs/presentation/store/jobBookmarkStore';
 
 import { JobApplyModal } from './JobApplyModal';
@@ -22,6 +35,14 @@ interface JobCardFullProps {
     onEdit?: () => void;
 }
 
+/** Gradient nền cho thumbnail khi ảnh chưa tải xong / lỗi, phối theo loại job. */
+const TYPE_GRADIENT: Record<string, readonly [string, string]> = {
+    singer: ['#F472B6', '#DB2777'],
+    producer: ['#60A5FA', '#4F46E5'],
+    venue: ['#FBBF24', '#F97316'],
+};
+const FALLBACK_GRADIENT: readonly [string, string] = ['#8B5CF6', '#7C3BED'];
+
 export const JobCardFull = React.memo(function JobCardFull({
     job,
     isOwned,
@@ -29,16 +50,29 @@ export const JobCardFull = React.memo(function JobCardFull({
 }: JobCardFullProps) {
     const router = useRouter();
     const [showApplyModal, setShowApplyModal] = useState(false);
+    const [imgFailed, setImgFailed] = useState(false);
     const isBookmarked = useJobBookmarkStore((s) => s.isBookmarked(job.id));
     const toggleBookmark = useJobBookmarkStore((s) => s.toggleBookmark);
 
-    const imgUri = job.assets?.[0]?.thumbnail_url || job.assets?.[0]?.storage_url;
+    // Ưu tiên ảnh thật của job; chưa có thì mượn ảnh mock theo loại job cho đẹp và chuyên nghiệp.
+    const imgUri =
+        job.assets?.[0]?.thumbnail_url ||
+        job.assets?.[0]?.storage_url ||
+        getMockCoverUrl(job.id, job.type);
+    const showImage = !!imgUri && !imgFailed;
+    const thumbGradient = TYPE_GRADIENT[job.type] ?? FALLBACK_GRADIENT;
+
     const formattedBudget = formatBudget(job.budget_min, job.budget_max, job.budget_currency);
     const datePosted = formatDate(job.created_at);
     const jobTypeDisplay = formatJobType(job.type);
+    const recruitmentDisplay = formatRecruitmentType(job.recruitment_type);
+    const experienceDisplay = formatExperienceLevel(job.experience_level);
     const canApply = !isOwned && isJobAcceptingApplications(job.status);
     const statusLabel = formatPostStatus(job.status);
     const showStatusBadge = isOwned || job.status !== 'published';
+    const creatorName = job.creator_display_name?.trim();
+    const CreatorIcon = job.creator_role === 'venue' ? Building2 : Users;
+    const applicants = job.applications_count;
 
     const handleViewDetails = () => {
         router.push(`/(jobs)/detail?id=${job.id}` as `${string}`);
@@ -55,38 +89,48 @@ export const JobCardFull = React.memo(function JobCardFull({
     return (
         <View className="w-full">
             <View
-                className="gap-4 p-4 rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                className="gap-4 p-4 rounded-3xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700"
                 style={styles.card}
             >
-                {/* Top section with image and title */}
-                <View className="flex-row gap-4 items-start">
-                    <View
-                        style={styles.imageContainer}
-                        className="bg-white dark:bg-gray-700 rounded-2xl p-1"
-                    >
-                        {imgUri ? (
+                {/* Header: thumbnail + title + meta */}
+                <View className="flex-row gap-3.5 items-start">
+                    <View style={styles.thumb} className="rounded-2xl overflow-hidden">
+                        <LinearGradient
+                            colors={thumbGradient}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={StyleSheet.absoluteFill}
+                        />
+                        {showImage ? (
                             <Image
                                 source={{ uri: imgUri }}
-                                className="w-full h-full rounded-xl"
+                                onError={() => setImgFailed(true)}
+                                style={StyleSheet.absoluteFill}
                                 resizeMode="cover"
                             />
                         ) : (
-                            <View className="w-full h-full rounded-xl bg-purple-50 dark:bg-purple-900/20 items-center justify-center">
-                                <Briefcase size={32} color="#7C3BED" />
+                            <View className="flex-1 items-center justify-center">
+                                <Briefcase size={30} color="#FFFFFF" />
                             </View>
                         )}
+                        {/* Lớp tối nhẹ ở đáy để ảnh sáng không chói. */}
+                        <LinearGradient
+                            colors={['transparent', 'rgba(0,0,0,0.28)']}
+                            style={StyleSheet.absoluteFill}
+                            pointerEvents="none"
+                        />
                     </View>
 
-                    <View className="flex-1 gap-1">
+                    <View className="flex-1 gap-1.5">
                         <View className="flex-row justify-between items-start">
                             <Text
-                                className="text-lg font-bold text-gray-900 dark:text-white flex-1 pr-2 leading-tight"
+                                className="text-base font-bold text-gray-900 dark:text-white flex-1 pr-2 leading-snug"
                                 numberOfLines={2}
                             >
                                 {job.title}
                             </Text>
                             <TouchableOpacity
-                                className="p-1"
+                                className="w-8 h-8 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/20"
                                 onPress={() => toggleBookmark(job.id)}
                                 accessibilityRole="button"
                                 accessibilityLabel={
@@ -94,22 +138,42 @@ export const JobCardFull = React.memo(function JobCardFull({
                                 }
                             >
                                 <Bookmark
-                                    size={20}
+                                    size={16}
                                     color="#7C3BED"
                                     fill={isBookmarked ? '#7C3BED' : 'transparent'}
                                 />
                             </TouchableOpacity>
                         </View>
 
-                        <View className="flex-row items-center gap-2 flex-wrap mt-1">
-                            <View className="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded-md">
-                                <Text className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tighter">
+                        {creatorName ? (
+                            <View className="flex-row items-center gap-1">
+                                <CreatorIcon size={12} color="#9CA3AF" />
+                                <Text
+                                    className="text-xs text-gray-500 dark:text-gray-400 flex-1"
+                                    numberOfLines={1}
+                                >
+                                    {creatorName}
+                                </Text>
+                            </View>
+                        ) : null}
+
+                        <View className="flex-row items-center gap-1.5 flex-wrap">
+                            <View className="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded-md">
+                                <Text className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-tight">
                                     {jobTypeDisplay}
                                 </Text>
                             </View>
+                            {experienceDisplay ? (
+                                <View className="flex-row items-center gap-1 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-md">
+                                    <BarChart3 size={10} color="#6B7280" />
+                                    <Text className="text-[10px] font-bold text-gray-600 dark:text-gray-300">
+                                        {experienceDisplay}
+                                    </Text>
+                                </View>
+                            ) : null}
                             {showStatusBadge && (
                                 <View className="bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded-md">
-                                    <Text className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-tighter">
+                                    <Text className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-tight">
                                         {statusLabel}
                                     </Text>
                                 </View>
@@ -117,7 +181,7 @@ export const JobCardFull = React.memo(function JobCardFull({
                             {isOwned && (
                                 <View className="flex-row items-center gap-1 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md border border-amber-100 dark:border-amber-900/50">
                                     <Crown size={10} color="#F59E0B" />
-                                    <Text className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-tighter">
+                                    <Text className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-tight">
                                         Của tôi
                                     </Text>
                                 </View>
@@ -127,114 +191,84 @@ export const JobCardFull = React.memo(function JobCardFull({
                 </View>
 
                 {/* Info grid */}
-                <View className="flex-row flex-wrap gap-2 mt-2">
-                    <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
-                        <View className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/30 items-center justify-center">
-                            <Briefcase size={14} color="#7C3BED" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
-                                Hình thức
-                            </Text>
-                            <Text
-                                className="text-xs font-bold text-gray-700 dark:text-gray-200"
-                                numberOfLines={1}
-                            >
-                                {job.recruitment_type}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
-                        <View className="w-7 h-7 rounded-full bg-green-100 dark:bg-green-900/30 items-center justify-center">
-                            <DollarSign size={14} color="#10B981" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
-                                Ngân sách
-                            </Text>
-                            <Text
-                                className="text-xs font-bold text-gray-700 dark:text-gray-200"
-                                numberOfLines={1}
-                            >
-                                {formattedBudget}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
-                        <View className="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 items-center justify-center">
-                            <MapPin size={14} color="#EF4444" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
-                                Địa điểm
-                            </Text>
-                            <Text
-                                className="text-xs font-bold text-gray-700 dark:text-gray-200"
-                                numberOfLines={1}
-                            >
-                                {job.location || 'Toàn quốc'}
-                            </Text>
-                        </View>
-                    </View>
-
-                    <View className="flex-row items-center gap-1.5 bg-gray-50 dark:bg-gray-700/30 px-3 py-2 rounded-xl border border-gray-100 dark:border-gray-700 flex-1 min-w-[48%]">
-                        <View className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/30 items-center justify-center">
-                            <Calendar size={14} color="#3B82F6" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
-                                Ngày đăng
-                            </Text>
-                            <Text
-                                className="text-xs font-bold text-gray-700 dark:text-gray-200"
-                                numberOfLines={1}
-                            >
-                                {datePosted}
-                            </Text>
-                        </View>
-                    </View>
+                <View className="flex-row flex-wrap gap-2">
+                    <InfoChip
+                        icon={<Briefcase size={14} color="#7C3BED" />}
+                        tintClass="bg-purple-50 dark:bg-purple-900/30"
+                        label="Hình thức"
+                        value={recruitmentDisplay}
+                    />
+                    <InfoChip
+                        icon={<DollarSign size={14} color="#059669" />}
+                        tintClass="bg-emerald-50 dark:bg-emerald-900/30"
+                        label="Ngân sách"
+                        value={formattedBudget}
+                    />
+                    <InfoChip
+                        icon={<MapPin size={14} color="#E11D48" />}
+                        tintClass="bg-rose-50 dark:bg-rose-900/30"
+                        label="Địa điểm"
+                        value={job.location || 'Toàn quốc'}
+                    />
+                    <InfoChip
+                        icon={<Calendar size={14} color="#2563EB" />}
+                        tintClass="bg-blue-50 dark:bg-blue-900/30"
+                        label="Ngày đăng"
+                        value={datePosted}
+                    />
                 </View>
 
-                {/* Action Buttons */}
-                <View className="flex-row gap-3 mt-2">
-                    <TouchableOpacity
-                        onPress={
-                            isOwned
-                                ? handleEdit
-                                : canApply
-                                  ? () => setShowApplyModal(true)
-                                  : handleViewDetails
-                        }
-                        activeOpacity={0.8}
-                        className="flex-1"
-                    >
-                        <LinearGradient
-                            colors={['#7C3BED', '#8B5CF6']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={[styles.gradientButtonFix, { flex: 1 }]}
-                        >
-                            <Text className="text-white font-bold text-sm">
-                                {isOwned
-                                    ? 'Chỉnh sửa'
-                                    : canApply
-                                      ? 'Ứng tuyển ngay'
-                                      : 'Không nhận ứng tuyển'}
+                {/* Footer: applicants + actions */}
+                <View className="flex-row items-center gap-3">
+                    {applicants > 0 ? (
+                        <View className="flex-row items-center gap-1">
+                            <Users size={13} color="#9CA3AF" />
+                            <Text className="text-xs text-gray-500 dark:text-gray-400">
+                                <Text className="font-bold text-gray-700 dark:text-gray-200">
+                                    {applicants}
+                                </Text>{' '}
+                                ứng tuyển
                             </Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
+                        </View>
+                    ) : null}
 
-                    <TouchableOpacity
-                        onPress={handleViewDetails}
-                        activeOpacity={0.8}
-                        className="flex-1 bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 py-3.5 rounded-2xl items-center justify-center"
-                    >
-                        <Text className="text-gray-900 dark:text-white font-bold text-sm">
-                            Chi tiết
-                        </Text>
-                    </TouchableOpacity>
+                    <View className="flex-row gap-2.5 flex-1 justify-end">
+                        <TouchableOpacity
+                            onPress={handleViewDetails}
+                            activeOpacity={0.8}
+                            className="px-5 py-3 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 items-center justify-center"
+                        >
+                            <Text className="text-gray-700 dark:text-gray-200 font-bold text-sm">
+                                Chi tiết
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            onPress={
+                                isOwned
+                                    ? handleEdit
+                                    : canApply
+                                      ? () => setShowApplyModal(true)
+                                      : handleViewDetails
+                            }
+                            activeOpacity={0.85}
+                        >
+                            <LinearGradient
+                                colors={['#7C3BED', '#8B5CF6']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.primaryButton}
+                            >
+                                <Text className="text-white font-bold text-sm">
+                                    {isOwned
+                                        ? 'Chỉnh sửa'
+                                        : canApply
+                                          ? 'Ứng tuyển ngay'
+                                          : 'Không nhận ứng tuyển'}
+                                </Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
 
@@ -248,14 +282,43 @@ export const JobCardFull = React.memo(function JobCardFull({
     );
 });
 
+interface InfoChipProps {
+    icon: React.ReactNode;
+    tintClass: string;
+    label: string;
+    value: string;
+}
+
+function InfoChip({ icon, tintClass, label, value }: InfoChipProps) {
+    return (
+        <View className="flex-row items-center gap-2 bg-gray-50 dark:bg-gray-700/30 px-3 py-2.5 rounded-2xl flex-1 min-w-[47%]">
+            <View className={`w-8 h-8 rounded-xl items-center justify-center ${tintClass}`}>
+                {icon}
+            </View>
+            <View className="flex-1">
+                <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
+                    {label}
+                </Text>
+                <Text
+                    className="text-xs font-bold text-gray-800 dark:text-gray-100"
+                    numberOfLines={1}
+                >
+                    {value}
+                </Text>
+            </View>
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
     card: cardShadow,
-    imageContainer: {
-        width: 80,
-        height: 80,
+    thumb: {
+        width: 76,
+        height: 76,
     },
-    gradientButtonFix: {
-        paddingVertical: 14,
+    primaryButton: {
+        paddingHorizontal: 22,
+        paddingVertical: 13,
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',

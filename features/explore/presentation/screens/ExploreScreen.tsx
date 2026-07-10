@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Search, SlidersHorizontal, Disc2, MicVocal, Building2, Users } from 'lucide-react-native';
 import { useSearchUsersInfinite } from '@/features/explore/presentation/hooks/useSearchApi';
@@ -28,13 +29,15 @@ const ROLE_TABS: {
     label: string;
     value: 'singer' | 'producer' | 'venue' | 'all';
     icon: React.ElementType;
-    color: string;
 }[] = [
-    { label: 'Tất cả', value: 'all', icon: Users, color: '#7C3AED' },
-    { label: 'Ca sĩ', value: 'singer', icon: MicVocal, color: '#EC4899' },
-    { label: 'Producer', value: 'producer', icon: Disc2, color: '#3B82F6' },
-    { label: 'Venue', value: 'venue', icon: Building2, color: '#F59E0B' },
+    { label: 'Tất cả', value: 'all', icon: Users },
+    { label: 'Ca sĩ', value: 'singer', icon: MicVocal },
+    { label: 'Producer', value: 'producer', icon: Disc2 },
+    { label: 'Venue', value: 'venue', icon: Building2 },
 ];
+
+/** Gradient chủ đạo cho tab đang chọn. */
+const ROLE_TAB_ACTIVE_GRADIENT: readonly [string, string] = ['#7C3BED', '#A855F7'];
 
 export default function ExploreScreen() {
     const params = useLocalSearchParams<{ query?: string }>();
@@ -214,44 +217,58 @@ export default function ExploreScreen() {
             </View>
 
             {/* Role Tabs */}
-            <View style={{ height: 70 }} className="bg-white border-b border-gray-100">
+            <View style={{ height: 66 }} className="bg-white border-b border-gray-100">
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{
-                        paddingHorizontal: 12,
-                        alignItems: 'center',
-                        height: 70,
-                    }}
+                    contentContainerStyle={styles.tabsRow}
                 >
-                    <View className="flex-row gap-2">
-                        {ROLE_TABS.map((tab) => {
-                            const isSelected = selectedRole === tab.value;
-                            const IconComponent = tab.icon;
-                            return (
-                                <TouchableOpacity
-                                    key={tab.value}
-                                    onPress={() => handleRoleChange(tab.value)}
-                                    style={{ minWidth: 80, height: 44 }}
-                                    className={`flex-row items-center justify-center gap-2 px-4 rounded-xl ${
-                                        isSelected ? 'bg-purple-600' : 'bg-gray-100'
-                                    }`}
-                                >
-                                    <IconComponent
-                                        size={18}
-                                        color={isSelected ? '#FFFFFF' : tab.color}
-                                    />
-                                    <Text
-                                        className={`text-sm font-semibold ${
-                                            isSelected ? 'text-white' : 'text-gray-700'
-                                        }`}
+                    {ROLE_TABS.map((tab) => {
+                        const isSelected = selectedRole === tab.value;
+                        const IconComponent = tab.icon;
+                        return (
+                            <TouchableOpacity
+                                key={tab.value}
+                                onPress={() => handleRoleChange(tab.value)}
+                                activeOpacity={0.85}
+                            >
+                                {isSelected ? (
+                                    <LinearGradient
+                                        colors={ROLE_TAB_ACTIVE_GRADIENT}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 1 }}
+                                        style={[styles.tab, styles.tabActive]}
                                     >
-                                        {tab.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
+                                        <IconComponent
+                                            size={18}
+                                            color="#FFFFFF"
+                                            strokeWidth={2.4}
+                                        />
+                                        <Text
+                                            className="text-sm font-bold text-white"
+                                            numberOfLines={1}
+                                        >
+                                            {tab.label}
+                                        </Text>
+                                    </LinearGradient>
+                                ) : (
+                                    <View style={styles.tab} className="bg-gray-100">
+                                        <IconComponent
+                                            size={18}
+                                            color="#6B7280"
+                                            strokeWidth={2.2}
+                                        />
+                                        <Text
+                                            className="text-sm font-semibold text-gray-600"
+                                            numberOfLines={1}
+                                        >
+                                            {tab.label}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
                 </ScrollView>
             </View>
 
@@ -320,5 +337,27 @@ const styles = StyleSheet.create({
                 elevation: 2,
             },
         }),
+    },
+    tabsRow: {
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        gap: 10,
+        height: 66,
+    },
+    tab: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingHorizontal: 16,
+        height: 42,
+        borderRadius: 14,
+    },
+    tabActive: {
+        shadowColor: '#7C3BED',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
     },
 });

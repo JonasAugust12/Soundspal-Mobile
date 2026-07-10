@@ -3,6 +3,7 @@ export enum AuthToastTitle {
     LoginFailed = 'Đăng nhập thất bại',
     RegisterFailed = 'Lỗi đăng ký',
     LoginError = 'Lỗi đăng nhập',
+    EmailNotVerified = 'Email chưa được xác minh',
 }
 
 export enum AuthSuccessToast {

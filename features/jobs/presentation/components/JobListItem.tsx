@@ -10,7 +10,7 @@ type JobListItemProps = {
 export const JobListItem = React.memo(
     function JobListItem({ item }: JobListItemProps) {
         return (
-            <View className="w-[90%] self-center">
+            <View className="w-full px-4">
                 <JobCardFull job={item} isOwned={item.isOwned} />
             </View>
         );
