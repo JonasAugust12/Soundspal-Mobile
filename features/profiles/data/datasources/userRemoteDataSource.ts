@@ -14,6 +14,8 @@ import type {
     ExperienceCreatePayload,
     ExperienceUpdatePayload,
     ExperienceListData,
+    UpdateMyProfilePayload,
+    UpdateVenueRequirementsPayload,
 } from '@/features/profiles/domain/entities/user.type';
 import { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
 
@@ -77,8 +79,19 @@ export const userRemoteDataSource = {
             facebook_url?: string;
             instagram_url?: string;
             youtube_url?: string;
+            tiktok_url?: string;
+            soundcloud_url?: string;
         }
     >('PUT', '/users/me/social'),
+
+    // Cập nhật gộp hồ sơ (basic + location + offering + availability)
+    updateMyProfile: createApiCall<User, UpdateMyProfilePayload>('PATCH', '/users/me'),
+
+    // Yêu cầu nghệ sĩ của venue
+    updateVenueRequirements: createApiCall<User, UpdateVenueRequirementsPayload>(
+        'PATCH',
+        '/users/me/venue-requirements',
+    ),
 
     // Upload đi qua fetch (không phải axios) vì axios 1.x trên RN gửi hỏng multipart — xem multipartUpload.ts.
     uploadUserAvatar: async (formData: FormData): Promise<MediaItem> => {
@@ -162,6 +175,7 @@ export const userRemoteDataSource = {
             phone_number?: string;
             city?: string;
             country?: string;
+            state_province?: string;
             detailed_address?: string;
             website_url?: string;
         }

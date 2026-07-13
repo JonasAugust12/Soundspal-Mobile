@@ -31,6 +31,10 @@ import {
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import {
+    feeRangeLabel,
+    serviceTypeLabel,
+} from '@/features/profiles/domain/constants/profileConstants';
 
 const fmtMonthYear = (iso?: string | null): string => {
     if (!iso) return '';
@@ -187,11 +191,58 @@ export default function ArtistProfile() {
                         </Pressable>
                     )}
 
+                    {/* Availability + fee + service types */}
+                    {(userData?.is_available !== undefined ||
+                        userData?.fee_min != null ||
+                        (userData?.service_types?.length ?? 0) > 0) && (
+                        <View className="gap-3">
+                            <View className="flex-row flex-wrap items-center gap-2">
+                                {userData?.is_available === true && (
+                                    <View className="px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30">
+                                        <Text className="text-xs font-bold text-green-700 dark:text-green-400">
+                                            ● Đang nhận show
+                                        </Text>
+                                    </View>
+                                )}
+                                {userData?.is_available === false && (
+                                    <View className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
+                                        <Text className="text-xs font-bold text-gray-500">
+                                            ○ Tạm nghỉ
+                                        </Text>
+                                    </View>
+                                )}
+                                {!!feeRangeLabel(userData?.fee_min, userData?.fee_max) && (
+                                    <View className="px-3 py-1.5 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                                        <Text className="text-xs font-bold text-purple-700 dark:text-purple-300">
+                                            {feeRangeLabel(userData?.fee_min, userData?.fee_max)}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            {(userData?.service_types?.length ?? 0) > 0 && (
+                                <View className="flex-row flex-wrap gap-2">
+                                    {userData?.service_types?.map((v) => (
+                                        <View
+                                            key={v}
+                                            className="px-3 py-1.5 rounded-full bg-secondary"
+                                        >
+                                            <Text className="text-xs font-semibold text-foreground">
+                                                {serviceTypeLabel(v)}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+                    )}
+
                     {/* Social Links */}
                     <SocialList
                         facebook={userData?.facebook_url}
                         instagram={userData?.instagram_url}
                         youtube={userData?.youtube_url}
+                        tiktok={userData?.tiktok_url}
+                        soundcloud={userData?.soundcloud_url}
                     />
 
                     {/* Services */}

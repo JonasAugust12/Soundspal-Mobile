@@ -49,6 +49,18 @@ export interface BaseUser {
     featured_release_links?: string[];
     genres?: string[];
     services?: UserService[];
+
+    // Profile uplift (đồng bộ với web)
+    state_province?: string;
+    service_types?: string[];
+    fee_min?: number | null;
+    fee_max?: number | null;
+    is_available?: boolean;
+    tiktok_url?: string;
+    soundcloud_url?: string;
+    // Venue artist requirements
+    preferred_genre_ids?: string[];
+    artist_requirements_note?: string;
 }
 
 // Singer/Producer specific fields
@@ -76,6 +88,26 @@ export interface VenueUser extends BaseUser {
 
 // Union type for all user types
 export type User = ArtistUser | VenueUser | BaseUser;
+
+// PATCH /users/me — cập nhật gộp (basic + location + offering + availability)
+export interface UpdateMyProfilePayload {
+    display_name?: string;
+    brief_bio?: string;
+    detail_bio?: string;
+    city?: string;
+    country?: string;
+    state_province?: string;
+    service_types?: string[];
+    fee_min?: number | null;
+    fee_max?: number | null;
+    is_available?: boolean;
+}
+
+// PATCH /users/me/venue-requirements
+export interface UpdateVenueRequirementsPayload {
+    preferred_genre_ids: string[];
+    artist_requirements_note: string;
+}
 
 export interface UpdateUserRequest {
     display_name?: string;

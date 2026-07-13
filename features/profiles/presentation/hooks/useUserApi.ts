@@ -269,6 +269,30 @@ export const useUpdateVenueAdditional = () => {
     });
 };
 
+// Update My Profile Hook (PATCH /users/me — basic + location + offering + availability)
+export const useUpdateMyProfile = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: userRepository.updateMyProfile,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// Update Venue Requirements Hook (PATCH /users/me/venue-requirements)
+export const useUpdateVenueRequirements = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: userRepository.updateVenueRequirements,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
 // ---- Experience (kinh nghiệm) ----
 
 // Get User Experiences Hook

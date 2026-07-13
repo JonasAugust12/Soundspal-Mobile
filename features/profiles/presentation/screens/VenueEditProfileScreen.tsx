@@ -8,15 +8,22 @@ import {
     RefreshControl,
     TextInput,
     TouchableOpacity,
+    Switch,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Building2, Phone, Clock, Check } from 'lucide-react-native';
+import { ChevronLeft, Building2, Phone, Clock, Check, Music } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 
-import { AvatarFrame, CoverImage } from '@/features/profiles/presentation/components/editprofile';
+import {
+    AvatarFrame,
+    CoverImage,
+    ProvincePicker,
+    VenueRequirementsForm,
+    EditProfileSkeleton,
+} from '@/features/profiles/presentation/components/editprofile';
 import {
     useGetCurrentUser,
     useUpdateVenueBasic,
@@ -24,15 +31,17 @@ import {
     useUpdateVenueAdditional,
     useUploadUserAvatar,
     useUploadUserCover,
+    useUpdateMyProfile,
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 
-type TabKey = 'basic' | 'contact' | 'additional';
+type TabKey = 'basic' | 'contact' | 'additional' | 'requirements';
 
 const TABS = [
     { key: 'basic' as TabKey, label: 'Cơ bản', icon: Building2 },
     { key: 'contact' as TabKey, label: 'Liên hệ', icon: Phone },
     { key: 'additional' as TabKey, label: 'Hoạt động', icon: Clock },
+    { key: 'requirements' as TabKey, label: 'Yêu cầu', icon: Music },
 ];
 
 const BUSINESS_TYPES = [
@@ -75,16 +84,20 @@ export default function VenueEditProfileScreen() {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [city, setCity] = useState('');
     const [country, setCountry] = useState('');
+    const [stateProvince, setStateProvince] = useState('');
     const [detailedAddress, setDetailedAddress] = useState('');
     const [websiteUrl, setWebsiteUrl] = useState('');
 
     const [openHour, setOpenHour] = useState('');
     const [rentPrice, setRentPrice] = useState('');
     const [facilities, setFacilities] = useState<string[]>([]);
+    const [isAvailable, setIsAvailable] = useState(false);
+    const [savingAvailability, setSavingAvailability] = useState(false);
 
     // Queries & Mutations
     const { data: userData, isLoading: isLoadingUser, refetch } = useGetCurrentUser();
     const updateBasic = useUpdateVenueBasic();
+    const updateMyProfile = useUpdateMyProfile();
     const updateContact = useUpdateVenueContact();
     const updateAdditional = useUpdateVenueAdditional();
     const uploadAvatar = useUploadUserAvatar();
@@ -101,6 +114,7 @@ export default function VenueEditProfileScreen() {
             setPhoneNumber(userData.phone_number || '');
             setCity(userData.city || '');
             setCountry(userData.country || '');
+            setStateProvince(userData.state_province || '');
 
             // Venue specific
             //eslint-disable-next-line
@@ -112,8 +126,27 @@ export default function VenueEditProfileScreen() {
             setOpenHour(venueData.open_hour || '');
             setRentPrice(venueData.rent_price || '');
             setFacilities(venueData.convenient_facilities || []);
+            setIsAvailable(!!venueData.is_available);
         }
     }, [userData]);
+
+    const toggleAvailability = async (val: boolean) => {
+        setIsAvailable(val);
+        setSavingAvailability(true);
+        try {
+            await updateMyProfile.mutateAsync({ is_available: val });
+            Toast.show({
+                type: 'success',
+                text1: val ? 'Đang tuyển nghệ sĩ' : 'Ngừng tuyển',
+            });
+        } catch (error) {
+            console.error('Update availability failed:', error);
+            setIsAvailable(!val);
+            Toast.show({ type: 'error', text1: 'Không thể cập nhật trạng thái' });
+        } finally {
+            setSavingAvailability(false);
+        }
+    };
 
     const pickAvatar = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -190,6 +223,7 @@ export default function VenueEditProfileScreen() {
                 phone_number: phoneNumber,
                 city,
                 country,
+                state_province: stateProvince,
                 detailed_address: detailedAddress,
                 website_url: websiteUrl,
             });
@@ -229,13 +263,7 @@ export default function VenueEditProfileScreen() {
     };
 
     if (isLoadingUser) {
-        return (
-            <SafeAreaView className="flex-1 bg-background">
-                <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#7C3BED" />
-                </View>
-            </SafeAreaView>
-        );
+        return <EditProfileSkeleton />;
     }
 
     /* Unused: const isLoading = updateBasic.isPending || updateContact.isPending || updateAdditional.isPending; */
@@ -316,6 +344,32 @@ export default function VenueEditProfileScreen() {
                 <View className="px-4">
                     {activeTab === 'basic' && (
                         <View className="gap-5">
+                            {/* Availability toggle */}
+                            <View className="flex-row items-center gap-3 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800">
+                                <View className="flex-1">
+                                    <Text className="text-base font-bold text-foreground">
+                                        Đang tuyển nghệ sĩ
+                                    </Text>
+                                    <Text className="text-xs text-muted-foreground">
+                                        {isAvailable ? 'Địa điểm đang mở tuyển' : 'Tạm ngừng tuyển'}
+                                    </Text>
+                                </View>
+                                {savingAvailability && (
+                                    <ActivityIndicator
+                                        size="small"
+                                        color="#3B82F6"
+                                        style={{ marginRight: 4 }}
+                                    />
+                                )}
+                                <Switch
+                                    value={isAvailable}
+                                    onValueChange={toggleAvailability}
+                                    disabled={savingAvailability}
+                                    trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
+                                    thumbColor={isAvailable ? '#2563EB' : '#F3F4F6'}
+                                />
+                            </View>
+
                             <View className="gap-1.5">
                                 <Text className="text-sm font-semibold text-gray-500 ml-1">
                                     Tên địa điểm
@@ -429,31 +483,27 @@ export default function VenueEditProfileScreen() {
                                 />
                             </View>
 
-                            <View className="flex-row gap-3">
-                                <View className="flex-1 gap-1.5">
-                                    <Text className="text-sm font-semibold text-gray-500 ml-1">
-                                        Thành phố
-                                    </Text>
-                                    <TextInput
-                                        className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
-                                        value={city}
-                                        onChangeText={setCity}
-                                        placeholder="TP. Hồ Chí Minh"
-                                        placeholderTextColor="#9CA3AF"
-                                    />
-                                </View>
-                                <View className="flex-1 gap-1.5">
-                                    <Text className="text-sm font-semibold text-gray-500 ml-1">
-                                        Quốc gia
-                                    </Text>
-                                    <TextInput
-                                        className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
-                                        value={country}
-                                        onChangeText={setCountry}
-                                        placeholder="Việt Nam"
-                                        placeholderTextColor="#9CA3AF"
-                                    />
-                                </View>
+                            <ProvincePicker
+                                accentColor="#3B82F6"
+                                valueIso={stateProvince}
+                                fallbackName={city}
+                                onChange={(iso, name) => {
+                                    setStateProvince(iso);
+                                    setCity(name);
+                                }}
+                            />
+
+                            <View className="gap-1.5">
+                                <Text className="text-sm font-semibold text-gray-500 ml-1">
+                                    Quốc gia
+                                </Text>
+                                <TextInput
+                                    className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-foreground border border-gray-200 dark:border-gray-700"
+                                    value={country}
+                                    onChangeText={setCountry}
+                                    placeholder="Việt Nam"
+                                    placeholderTextColor="#9CA3AF"
+                                />
                             </View>
 
                             <View className="gap-1.5">
@@ -568,6 +618,15 @@ export default function VenueEditProfileScreen() {
                                 </Text>
                             </TouchableOpacity>
                         </View>
+                    )}
+
+                    {activeTab === 'requirements' && (
+                        <VenueRequirementsForm
+                            onSaveSuccess={() => {
+                                Toast.show({ type: 'success', text1: 'Đã cập nhật yêu cầu' });
+                                refetch();
+                            }}
+                        />
                     )}
                 </View>
             </KeyboardAwareScrollView>

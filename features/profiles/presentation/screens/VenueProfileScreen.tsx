@@ -13,6 +13,7 @@ import {
     Phone,
     Banknote,
     Check,
+    Music4,
 } from 'lucide-react-native';
 
 import {
@@ -20,12 +21,14 @@ import {
     ProfileImageList,
     SocialList,
     ProfileSkeleton,
+    VenueOpenJobs,
 } from '@/features/profiles/presentation/components/profile';
 import {
     useGetCurrentUser,
     useGetUserByUsername,
     useGetCurrentUserMedia,
     useGetUserMedia,
+    useGetAllGenres,
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
@@ -63,11 +66,20 @@ export default function VenueProfile() {
     const isLoadingMedia = isMe ? isLoadingCurrentMedia : isLoadingOtherMedia;
     const isLoading = isLoadingUser || isLoadingMedia;
 
+    const { data: allGenresData } = useGetAllGenres();
+
     // Venue specific data
     const venueData = userData as unknown as VenueUser;
     const businessTypes = venueData?.business_types || [];
     const facilities = venueData?.convenient_facilities || [];
     const portfolioImages = userMedia?.media?.filter((m) => m.media_type === 'portfolio') || [];
+
+    // Yêu cầu nghệ sĩ
+    const allGenres = allGenresData?.genres || [];
+    const preferredGenreNames = (venueData?.preferred_genre_ids || [])
+        .map((id) => allGenres.find((g) => g.id === id)?.name)
+        .filter((n): n is string => !!n);
+    const requirementsNote = venueData?.artist_requirements_note;
 
     const handleSendMessage = async () => {
         if (!userData?.id) return;
@@ -138,6 +150,15 @@ export default function VenueProfile() {
                         </Pressable>
                     )}
 
+                    {/* Đang tuyển nghệ sĩ */}
+                    {userData?.is_available === true && (
+                        <View className="self-start px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30">
+                            <Text className="text-xs font-bold text-green-700 dark:text-green-400">
+                                ● Đang tuyển nghệ sĩ
+                            </Text>
+                        </View>
+                    )}
+
                     {/* Business Types */}
                     {businessTypes.length > 0 && (
                         <View className="flex-row flex-wrap gap-2">
@@ -153,6 +174,9 @@ export default function VenueProfile() {
                             ))}
                         </View>
                     )}
+
+                    {/* Đang tuyển (open jobs) */}
+                    <VenueOpenJobs isMe={isMe} username={userData?.username} />
 
                     {/* Venue Stats */}
                     <View className="flex-row gap-3">
@@ -258,11 +282,48 @@ export default function VenueProfile() {
                         </View>
                     )}
 
+                    {/* Yêu cầu nghệ sĩ */}
+                    {(preferredGenreNames.length > 0 || !!requirementsNote) && (
+                        <View className="gap-3">
+                            <View className="flex-row items-center gap-2">
+                                <View className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 items-center justify-center">
+                                    <Music4 size={18} color="#7C3AED" />
+                                </View>
+                                <Text className="text-lg font-bold text-foreground">
+                                    Yêu cầu nghệ sĩ
+                                </Text>
+                            </View>
+                            {preferredGenreNames.length > 0 && (
+                                <View className="flex-row flex-wrap gap-2">
+                                    {preferredGenreNames.map((n) => (
+                                        <View
+                                            key={n}
+                                            className="px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30"
+                                        >
+                                            <Text className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                                                {n}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+                            {!!requirementsNote && (
+                                <View className="p-4 bg-card border border-border rounded-xl">
+                                    <Text className="text-sm text-foreground leading-5">
+                                        {requirementsNote}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                    )}
+
                     {/* Social Links */}
                     <SocialList
                         facebook={userData?.facebook_url}
                         instagram={userData?.instagram_url}
                         youtube={userData?.youtube_url}
+                        tiktok={userData?.tiktok_url}
+                        soundcloud={userData?.soundcloud_url}
                     />
 
                     {/* About */}

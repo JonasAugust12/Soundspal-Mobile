@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { RotateCcw, Save } from 'lucide-react-native';
+import { ProvincePicker } from './ProvincePicker';
 
 const basicInfoSchema = z.object({
     display_name: z.string().min(1, 'Tên nghệ danh là bắt buộc'),
@@ -11,6 +12,7 @@ const basicInfoSchema = z.object({
     detail_bio: z.string().optional(),
     city: z.string().optional(),
     country: z.string().optional(),
+    state_province: z.string().optional(),
 });
 
 export type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
@@ -26,6 +28,8 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
         control,
         handleSubmit,
         reset,
+        setValue,
+        watch,
         formState: { errors, isDirty },
     } = useForm<BasicInfoFormData>({
         resolver: zodResolver(basicInfoSchema),
@@ -35,6 +39,7 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
             detail_bio: defaultValues?.detail_bio || '',
             city: defaultValues?.city || '',
             country: defaultValues?.country || '',
+            state_province: defaultValues?.state_province || '',
         },
     });
 
@@ -117,42 +122,32 @@ export function BasicInfoForm({ defaultValues, onSubmit, isLoading }: BasicInfoF
                 />
             </View>
 
-            <View className="flex-row gap-4">
-                {/* City */}
-                <View className="flex-1 gap-2">
-                    <Text className="text-sm font-bold text-foreground">Thành phố</Text>
-                    <Controller
-                        control={control}
-                        name="city"
-                        render={({ field: { onChange, value } }) => (
-                            <TextInput
-                                placeholder="Thành phố"
-                                value={value}
-                                onChangeText={onChange}
-                                className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base border border-transparent focus:border-primary"
-                                placeholderTextColor="#71717a"
-                            />
-                        )}
-                    />
-                </View>
+            {/* Province (state_province) — chọn tỉnh/thành, tự set city */}
+            <ProvincePicker
+                valueIso={watch('state_province')}
+                fallbackName={watch('city')}
+                onChange={(iso, name) => {
+                    setValue('state_province', iso, { shouldDirty: true });
+                    setValue('city', name, { shouldDirty: true });
+                }}
+            />
 
-                {/* Country */}
-                <View className="flex-1 gap-2">
-                    <Text className="text-sm font-bold text-foreground">Quốc gia</Text>
-                    <Controller
-                        control={control}
-                        name="country"
-                        render={({ field: { onChange, value } }) => (
-                            <TextInput
-                                placeholder="Quốc gia"
-                                value={value}
-                                onChangeText={onChange}
-                                className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base border border-transparent focus:border-primary"
-                                placeholderTextColor="#71717a"
-                            />
-                        )}
-                    />
-                </View>
+            {/* Country */}
+            <View className="gap-2">
+                <Text className="text-sm font-bold text-foreground">Quốc gia</Text>
+                <Controller
+                    control={control}
+                    name="country"
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            placeholder="Quốc gia"
+                            value={value}
+                            onChangeText={onChange}
+                            className="px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base border border-transparent focus:border-primary"
+                            placeholderTextColor="#71717a"
+                        />
+                    )}
+                />
             </View>
 
             {/* Action Buttons */}

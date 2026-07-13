@@ -9,3 +9,4 @@ export { AddVideoModal } from './AddVideoModal';
 export { ServicesList } from './ServicesList';
 export { GlassCard } from './GlassCard';
 export { GradientIcon, THEME_GRADIENT } from './GradientIcon';
+export { VenueOpenJobs } from './VenueOpenJobs';

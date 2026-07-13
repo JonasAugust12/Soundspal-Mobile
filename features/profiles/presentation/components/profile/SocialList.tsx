@@ -1,16 +1,25 @@
 import React from 'react';
 import { View, Text, Pressable, Linking } from 'react-native';
-import { Facebook, Instagram, Youtube, Globe } from 'lucide-react-native';
+import { Facebook, Instagram, Youtube, Globe, Music, Music2 } from 'lucide-react-native';
 
 interface SocialListProps {
     facebook?: string;
     instagram?: string;
     youtube?: string;
+    tiktok?: string;
+    soundcloud?: string;
     website?: string;
 }
 
-export function SocialList({ facebook, instagram, youtube, website }: SocialListProps) {
-    const hasSocials = facebook || instagram || youtube || website;
+export function SocialList({
+    facebook,
+    instagram,
+    youtube,
+    tiktok,
+    soundcloud,
+    website,
+}: SocialListProps) {
+    const hasSocials = facebook || instagram || youtube || tiktok || soundcloud || website;
 
     const openUrl = (url?: string) => {
         if (url) Linking.openURL(url);
@@ -44,6 +53,22 @@ export function SocialList({ facebook, instagram, youtube, website }: SocialList
                         className="w-12 h-12 rounded-full bg-secondary items-center justify-center"
                     >
                         <Youtube size={22} color="#ff0000" />
+                    </Pressable>
+                )}
+                {tiktok && (
+                    <Pressable
+                        onPress={() => openUrl(tiktok)}
+                        className="w-12 h-12 rounded-full bg-secondary items-center justify-center"
+                    >
+                        <Music size={22} color="#000000" />
+                    </Pressable>
+                )}
+                {soundcloud && (
+                    <Pressable
+                        onPress={() => openUrl(soundcloud)}
+                        className="w-12 h-12 rounded-full bg-secondary items-center justify-center"
+                    >
+                        <Music2 size={22} color="#ff5500" />
                     </Pressable>
                 )}
                 {website && (

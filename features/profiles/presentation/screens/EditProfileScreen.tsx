@@ -3,7 +3,16 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, User, Phone, Share2, Music, Briefcase, Award } from 'lucide-react-native';
+import {
+    ChevronLeft,
+    User,
+    Phone,
+    Share2,
+    Music,
+    Briefcase,
+    Award,
+    CalendarCheck,
+} from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 
@@ -17,10 +26,12 @@ import {
     ServicesForm,
     ExperienceForm,
     ProfileCompletionBar,
+    OfferingForm,
+    EditProfileSkeleton,
 } from '@/features/profiles/presentation/components/editprofile';
 import {
     useGetCurrentUser,
-    useUpdateBasicInfo,
+    useUpdateMyProfile,
     useUpdateContactInfo,
     useUpdateSocialLinks,
     useUploadUserAvatar,
@@ -31,7 +42,7 @@ import {
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { GradientPill } from '@/shared/presentation/ui';
 
-type TabKey = 'basic' | 'contact' | 'social' | 'genres' | 'services' | 'experience';
+type TabKey = 'basic' | 'contact' | 'social' | 'genres' | 'services' | 'offering' | 'experience';
 
 interface Tab {
     key: TabKey;
@@ -45,6 +56,7 @@ const TABS: Tab[] = [
     { key: 'social', label: 'Mạng XH' },
     { key: 'genres', label: 'Thể loại', forArtist: true },
     { key: 'services', label: 'Dịch vụ', forArtist: true },
+    { key: 'offering', label: 'Nhận show', forArtist: true },
     { key: 'experience', label: 'Kinh nghiệm', forArtist: true },
 ];
 
@@ -61,6 +73,8 @@ const TabIcon = ({ tabKey, isActive }: { tabKey: TabKey; isActive: boolean }) =>
             return <Music size={16} color={color} />;
         case 'services':
             return <Briefcase size={16} color={color} />;
+        case 'offering':
+            return <CalendarCheck size={16} color={color} />;
         case 'experience':
             return <Award size={16} color={color} />;
     }
@@ -89,7 +103,7 @@ export default function EditProfileScreen() {
     });
 
     // Mutations
-    const updateBasicInfo = useUpdateBasicInfo();
+    const updateMyProfile = useUpdateMyProfile();
     const updateContactInfo = useUpdateContactInfo();
     const updateSocialLinks = useUpdateSocialLinks();
     const uploadAvatar = useUploadUserAvatar();
@@ -171,7 +185,7 @@ export default function EditProfileScreen() {
     // Form Submit Handlers
     //eslint-disable-next-line
     const handleSaveBasicInfo = async (data: any) => {
-        await updateBasicInfo.mutateAsync(data);
+        await updateMyProfile.mutateAsync(data);
         if (data.display_name) {
             updateDisplayName(data.display_name);
         }
@@ -194,13 +208,7 @@ export default function EditProfileScreen() {
     };
 
     if (isLoadingUser) {
-        return (
-            <SafeAreaView className="flex-1 bg-background">
-                <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color="#7C3BED" />
-                </View>
-            </SafeAreaView>
-        );
+        return <EditProfileSkeleton />;
     }
 
     return (
@@ -284,17 +292,6 @@ export default function EditProfileScreen() {
                                 onPress={() => setActiveTab(tab.key)}
                                 className="flex-row items-center gap-2 px-4 py-2.5 rounded-full"
                                 inactiveClassName="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                                style={
-                                    isActive
-                                        ? {
-                                              shadowColor: '#7C3AED',
-                                              shadowOffset: { width: 0, height: 4 },
-                                              shadowOpacity: 0.3,
-                                              shadowRadius: 8,
-                                              elevation: 4,
-                                          }
-                                        : undefined
-                                }
                             >
                                 <TabIcon tabKey={tab.key} isActive={isActive} />
                                 <Text
@@ -319,9 +316,10 @@ export default function EditProfileScreen() {
                                 detail_bio: userData?.detail_bio,
                                 city: userData?.city,
                                 country: userData?.country,
+                                state_province: userData?.state_province,
                             }}
                             onSubmit={handleSaveBasicInfo}
-                            isLoading={updateBasicInfo.isPending}
+                            isLoading={updateMyProfile.isPending}
                         />
                     )}
 
@@ -342,6 +340,8 @@ export default function EditProfileScreen() {
                                 facebook_url: userData?.facebook_url,
                                 instagram_url: userData?.instagram_url,
                                 youtube_url: userData?.youtube_url,
+                                tiktok_url: userData?.tiktok_url,
+                                soundcloud_url: userData?.soundcloud_url,
                             }}
                             onSubmit={handleSaveSocialLinks}
                             isLoading={updateSocialLinks.isPending}
@@ -360,6 +360,17 @@ export default function EditProfileScreen() {
                         <ServicesForm
                             onSaveSuccess={() => {
                                 Toast.show({ type: 'success', text1: 'Đã cập nhật dịch vụ' });
+                                refetch();
+                            }}
+                        />
+                    )}
+                    {activeTab === 'offering' && (
+                        <OfferingForm
+                            onSaveSuccess={() => {
+                                Toast.show({
+                                    type: 'success',
+                                    text1: 'Đã cập nhật loại hình & giá',
+                                });
                                 refetch();
                             }}
                         />

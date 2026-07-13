@@ -24,6 +24,8 @@ export class UserRepositoryImpl implements IUserRepository {
     updateVenueBasic = userRemoteDataSource.updateVenueBasic;
     updateVenueContact = userRemoteDataSource.updateVenueContact;
     updateVenueAdditional = userRemoteDataSource.updateVenueAdditional;
+    updateMyProfile = userRemoteDataSource.updateMyProfile;
+    updateVenueRequirements = userRemoteDataSource.updateVenueRequirements;
     getUserExperiences = userRemoteDataSource.getUserExperiences;
     createExperience = userRemoteDataSource.createExperience;
     updateExperience = userRemoteDataSource.updateExperience;

@@ -3,12 +3,14 @@ import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-nativ
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { RotateCcw, Save, Link, Camera, Video } from 'lucide-react-native';
+import { RotateCcw, Save, Link, Camera, Video, Music, Music2 } from 'lucide-react-native';
 
 const socialLinksSchema = z.object({
     facebook_url: z.string().url('URL không hợp lệ').optional().or(z.literal('')),
     instagram_url: z.string().url('URL không hợp lệ').optional().or(z.literal('')),
     youtube_url: z.string().url('URL không hợp lệ').optional().or(z.literal('')),
+    tiktok_url: z.string().url('URL không hợp lệ').optional().or(z.literal('')),
+    soundcloud_url: z.string().url('URL không hợp lệ').optional().or(z.literal('')),
 });
 
 export type SocialLinksFormData = z.infer<typeof socialLinksSchema>;
@@ -31,6 +33,8 @@ export function SocialLinksForm({ defaultValues, onSubmit, isLoading }: SocialLi
             facebook_url: defaultValues?.facebook_url || '',
             instagram_url: defaultValues?.instagram_url || '',
             youtube_url: defaultValues?.youtube_url || '',
+            tiktok_url: defaultValues?.tiktok_url || '',
+            soundcloud_url: defaultValues?.soundcloud_url || '',
         },
     });
 
@@ -133,6 +137,68 @@ export function SocialLinksForm({ defaultValues, onSubmit, isLoading }: SocialLi
                 {errors.youtube_url && (
                     <Text className="text-xs font-medium text-red-500 ml-1">
                         {errors.youtube_url.message}
+                    </Text>
+                )}
+            </View>
+
+            {/* TikTok */}
+            <View className="gap-2">
+                <View className="flex-row items-center gap-2">
+                    <Music size={18} color="#000000" />
+                    <Text className="text-sm font-bold text-foreground">TikTok</Text>
+                </View>
+                <Controller
+                    control={control}
+                    name="tiktok_url"
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            placeholder="https://tiktok.com/@username"
+                            value={value}
+                            onChangeText={onChange}
+                            autoCapitalize="none"
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${
+                                errors.tiktok_url
+                                    ? 'border border-red-500'
+                                    : 'border border-transparent focus:border-primary'
+                            }`}
+                            placeholderTextColor="#71717a"
+                        />
+                    )}
+                />
+                {errors.tiktok_url && (
+                    <Text className="text-xs font-medium text-red-500 ml-1">
+                        {errors.tiktok_url.message}
+                    </Text>
+                )}
+            </View>
+
+            {/* SoundCloud */}
+            <View className="gap-2">
+                <View className="flex-row items-center gap-2">
+                    <Music2 size={18} color="#ff5500" />
+                    <Text className="text-sm font-bold text-foreground">SoundCloud</Text>
+                </View>
+                <Controller
+                    control={control}
+                    name="soundcloud_url"
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            placeholder="https://soundcloud.com/username"
+                            value={value}
+                            onChangeText={onChange}
+                            autoCapitalize="none"
+                            className={`px-4 py-4 bg-secondary dark:bg-gray-800 rounded-xl text-foreground text-base ${
+                                errors.soundcloud_url
+                                    ? 'border border-red-500'
+                                    : 'border border-transparent focus:border-primary'
+                            }`}
+                            placeholderTextColor="#71717a"
+                        />
+                    )}
+                />
+                {errors.soundcloud_url && (
+                    <Text className="text-xs font-medium text-red-500 ml-1">
+                        {errors.soundcloud_url.message}
                     </Text>
                 )}
             </View>
