@@ -129,6 +129,49 @@ export interface VideoResponse {
     total: number;
 }
 
+export interface ExperienceGenre {
+    id: string;
+    name: string;
+    created_at?: string;
+    updated_at?: string;
+}
+
+// Kinh nghiệm / work history của artist
+export interface Experience {
+    id: string;
+    user_id: string;
+    title?: string;
+    description?: string;
+    portfolio_url?: string;
+    start_date?: string | null; // ISO (YYYY-MM-DD)
+    end_date?: string | null; // ISO (YYYY-MM-DD)
+    created_at?: string;
+    updated_at?: string;
+    genres?: ExperienceGenre[];
+}
+
+export interface ExperienceCreatePayload {
+    title?: string;
+    description?: string;
+    start_date?: string;
+    end_date?: string;
+    portfolio_url?: string;
+    genre_names?: string[];
+}
+
+export interface ExperienceUpdatePayload {
+    title?: string;
+    description?: string;
+    start_date?: string;
+    end_date?: string;
+    portfolio_url?: string;
+}
+
+// Backend có thể trả mảng trực tiếp hoặc bọc trong {experiences|items, total}
+export type ExperienceListData =
+    | Experience[]
+    | { experiences?: Experience[]; items?: Experience[]; total?: number };
+
 export interface Genre {
     id: string;
     name: string;

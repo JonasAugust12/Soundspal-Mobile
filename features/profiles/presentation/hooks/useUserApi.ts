@@ -14,6 +14,8 @@ export const userKeys = {
     genres: () => [...userKeys.all, 'genres'] as const,
     allGenres: () => [...userKeys.genres(), 'all'] as const,
     userGenres: (username: string) => [...userKeys.genres(), username] as const,
+    experiences: () => [...userKeys.all, 'experiences'] as const,
+    userExperiences: (username: string) => [...userKeys.experiences(), username] as const,
 };
 
 // Get Current User Hook
@@ -263,6 +265,73 @@ export const useUpdateVenueAdditional = () => {
         mutationFn: userRepository.updateVenueAdditional,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userKeys.current() });
+        },
+    });
+};
+
+// ---- Experience (kinh nghiệm) ----
+
+// Get User Experiences Hook
+export const useGetUserExperiences = (username: string, options?: { enabled?: boolean }) => {
+    return useQuery({
+        queryKey: userKeys.userExperiences(username),
+        queryFn: () => userRepository.getUserExperiences(username),
+        enabled: options?.enabled !== false && !!username,
+        staleTime: 300000, // 5 minutes
+    });
+};
+
+// Create Experience Hook
+export const useCreateExperience = (username: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: userRepository.createExperience,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.userExperiences(username) });
+        },
+    });
+};
+
+// Update Experience Hook
+export const useUpdateExperience = (username: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            id,
+            payload,
+        }: {
+            id: string;
+            payload: Parameters<typeof userRepository.updateExperience>[1];
+        }) => userRepository.updateExperience(id, payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.userExperiences(username) });
+        },
+    });
+};
+
+// Update Experience Genres Hook
+export const useUpdateExperienceGenres = (username: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, genreNames }: { id: string; genreNames: string[] }) =>
+            userRepository.updateExperienceGenres(id, genreNames),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.userExperiences(username) });
+        },
+    });
+};
+
+// Delete Experience Hook
+export const useDeleteExperience = (username: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (id: string) => userRepository.deleteExperience(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: userKeys.userExperiences(username) });
         },
     });
 };

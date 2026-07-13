@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, User, Phone, Share2, Music, Briefcase } from 'lucide-react-native';
+import { ChevronLeft, User, Phone, Share2, Music, Briefcase, Award } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 
@@ -15,6 +15,8 @@ import {
     CoverImage,
     GenresForm,
     ServicesForm,
+    ExperienceForm,
+    ProfileCompletionBar,
 } from '@/features/profiles/presentation/components/editprofile';
 import {
     useGetCurrentUser,
@@ -23,10 +25,13 @@ import {
     useUpdateSocialLinks,
     useUploadUserAvatar,
     useUploadUserCover,
+    useGetUserGenres,
+    useGetUserVideos,
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { GradientPill } from '@/shared/presentation/ui';
 
-type TabKey = 'basic' | 'contact' | 'social' | 'genres' | 'services';
+type TabKey = 'basic' | 'contact' | 'social' | 'genres' | 'services' | 'experience';
 
 interface Tab {
     key: TabKey;
@@ -40,6 +45,7 @@ const TABS: Tab[] = [
     { key: 'social', label: 'Mạng XH' },
     { key: 'genres', label: 'Thể loại', forArtist: true },
     { key: 'services', label: 'Dịch vụ', forArtist: true },
+    { key: 'experience', label: 'Kinh nghiệm', forArtist: true },
 ];
 
 const TabIcon = ({ tabKey, isActive }: { tabKey: TabKey; isActive: boolean }) => {
@@ -55,11 +61,14 @@ const TabIcon = ({ tabKey, isActive }: { tabKey: TabKey; isActive: boolean }) =>
             return <Music size={16} color={color} />;
         case 'services':
             return <Briefcase size={16} color={color} />;
+        case 'experience':
+            return <Award size={16} color={color} />;
     }
 };
 
 export default function EditProfileScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { updateAvatarUrl, updateDisplayName } = useAuthStore();
 
     const [activeTab, setActiveTab] = useState<TabKey>('basic');
@@ -68,6 +77,16 @@ export default function EditProfileScreen() {
 
     // Queries
     const { data: userData, isLoading: isLoadingUser, refetch } = useGetCurrentUser();
+    const username = userData?.username || '';
+    const isArtist = userData?.role === 'singer' || userData?.role === 'producer';
+
+    // Dữ liệu cho thanh hoàn thiện hồ sơ (artist)
+    const { data: completionGenres } = useGetUserGenres(username, {
+        enabled: !!username && isArtist,
+    });
+    const { data: completionVideos } = useGetUserVideos(username, {
+        enabled: !!username && isArtist,
+    });
 
     // Mutations
     const updateBasicInfo = useUpdateBasicInfo();
@@ -190,6 +209,7 @@ export default function EditProfileScreen() {
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
                 bottomOffset={24}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoadingUser}
@@ -225,6 +245,24 @@ export default function EditProfileScreen() {
                     </View>
                 </View>
 
+                {/* Profile completion (artist) */}
+                {isArtist && userData && (
+                    <ProfileCompletionBar
+                        input={{
+                            avatar_url: userData.avatar_url,
+                            cover_url: userData.cover_url,
+                            display_name: userData.display_name,
+                            username: userData.username,
+                            city: userData.city,
+                            country: userData.country,
+                            brief_bio: userData.brief_bio,
+                            genresCount: completionGenres?.genres?.length ?? 0,
+                            servicesCount: userData.services?.length ?? 0,
+                            videoCount: completionVideos?.items?.length ?? 0,
+                        }}
+                    />
+                )}
+
                 {/* Tabs */}
                 <ScrollView
                     horizontal
@@ -240,14 +278,12 @@ export default function EditProfileScreen() {
                     ).map((tab) => {
                         const isActive = activeTab === tab.key;
                         return (
-                            <Pressable
+                            <GradientPill
                                 key={tab.key}
+                                active={isActive}
                                 onPress={() => setActiveTab(tab.key)}
-                                className={`flex-row items-center gap-2 px-4 py-2.5 rounded-full ${
-                                    isActive
-                                        ? 'bg-purple-600'
-                                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                                }`}
+                                className="flex-row items-center gap-2 px-4 py-2.5 rounded-full"
+                                inactiveClassName="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                                 style={
                                     isActive
                                         ? {
@@ -268,13 +304,13 @@ export default function EditProfileScreen() {
                                 >
                                     {tab.label}
                                 </Text>
-                            </Pressable>
+                            </GradientPill>
                         );
                     })}
                 </ScrollView>
 
                 {/* Tab Content */}
-                <View className="px-4 pb-8">
+                <View className="px-4">
                     {activeTab === 'basic' && (
                         <BasicInfoForm
                             defaultValues={{
@@ -325,6 +361,13 @@ export default function EditProfileScreen() {
                             onSaveSuccess={() => {
                                 Toast.show({ type: 'success', text1: 'Đã cập nhật dịch vụ' });
                                 refetch();
+                            }}
+                        />
+                    )}
+                    {activeTab === 'experience' && (
+                        <ExperienceForm
+                            onSaveSuccess={() => {
+                                Toast.show({ type: 'success', text1: 'Đã cập nhật kinh nghiệm' });
                             }}
                         />
                     )}

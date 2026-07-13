@@ -19,6 +19,11 @@ import type {
     MobileOAuthResponse,
     CompleteOAuthRequest,
     CompleteOAuthResponse,
+    RequestEmailChangeRequest,
+    RequestEmailChangeResponse,
+    VerifyEmailChangeRequest,
+    VerifyEmailChangeResponse,
+    GetMeResponse,
 } from '@/features/auth/domain/entities/auth.type';
 
 export interface IAuthRepository {
@@ -35,4 +40,7 @@ export interface IAuthRepository {
     resetPassword(body: ResetPasswordRequest): Promise<ResetPasswordResponse>;
     mobileOAuth(body: MobileOAuthRequest): Promise<MobileOAuthResponse>;
     completeOAuth(body: CompleteOAuthRequest): Promise<CompleteOAuthResponse>;
+    requestEmailChange(body: RequestEmailChangeRequest): Promise<RequestEmailChangeResponse>;
+    verifyEmailChange(body: VerifyEmailChangeRequest): Promise<VerifyEmailChangeResponse>;
+    getMe(): Promise<GetMeResponse>;
 }

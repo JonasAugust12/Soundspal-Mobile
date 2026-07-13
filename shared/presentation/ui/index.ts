@@ -8,5 +8,8 @@ export { FilterSheet } from './FilterSheet';
 export { ConfirmModal } from './ConfirmModal';
 export { CommonHeader } from './CommonHeader';
 export { ScreenSafeArea, SCREEN_SAFE_AREA_EDGES } from './ScreenSafeArea';
+export { GradientPill, BRAND_GRADIENT } from './GradientPill';
+export { AppDialog } from './AppDialog';
+export type { AppDialogProps } from './AppDialog';
 export { KeyboardAwareModalOverlay } from './KeyboardAwareModal';
 export { cardShadow, raisedShadow, floatingShadow, accentFabShadow } from './shadows';

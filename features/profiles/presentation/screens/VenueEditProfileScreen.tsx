@@ -9,7 +9,7 @@ import {
     TextInput,
     TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Building2, Phone, Clock, Check } from 'lucide-react-native';
@@ -58,6 +58,7 @@ const FACILITIES = [
 
 export default function VenueEditProfileScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const { updateAvatarUrl, updateDisplayName } = useAuthStore();
 
     const [activeTab, setActiveTab] = useState<TabKey>('basic');
@@ -245,6 +246,7 @@ export default function VenueEditProfileScreen() {
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
                 bottomOffset={24}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={isLoadingUser}
@@ -311,7 +313,7 @@ export default function VenueEditProfileScreen() {
                 </ScrollView>
 
                 {/* Tab Content */}
-                <View className="px-4 pb-8">
+                <View className="px-4">
                     {activeTab === 'basic' && (
                         <View className="gap-5">
                             <View className="gap-1.5">

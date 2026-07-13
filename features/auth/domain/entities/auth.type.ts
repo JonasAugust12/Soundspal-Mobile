@@ -115,6 +115,45 @@ export interface ResetPasswordResponse {
     message: string;
 }
 
+// Change Email Types
+export interface RequestEmailChangeRequest {
+    new_email: string;
+}
+
+export interface RequestEmailChangeResponse {
+    code: number;
+    data: null;
+    message: string;
+}
+
+export interface VerifyEmailChangeRequest {
+    new_email: string;
+    code: string;
+}
+
+export interface VerifyEmailChangeResponse {
+    code: number;
+    data: null;
+    message: string;
+}
+
+// Current User (/users/me) — dùng khi khởi động app để làm mới thông tin user
+export interface MeUser {
+    id: string;
+    email: string;
+    role: string;
+    is_verified?: boolean;
+    username?: string;
+    avatar_url?: string;
+    display_name?: string;
+    tier?: string;
+}
+
+export interface GetMeResponse {
+    message: string;
+    data: MeUser;
+}
+
 // Google OAuth Types
 export interface MobileOAuthRequest {
     code: string;

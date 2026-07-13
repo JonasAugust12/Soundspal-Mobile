@@ -10,6 +10,10 @@ import type {
     VideoItem,
     VideoResponse,
     GenresResponse,
+    Experience,
+    ExperienceCreatePayload,
+    ExperienceUpdatePayload,
+    ExperienceListData,
 } from '@/features/profiles/domain/entities/user.type';
 import { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
 
@@ -171,4 +175,42 @@ export const userRemoteDataSource = {
             rent_price?: string;
         }
     >('PUT', '/users/me/venue/additional'),
+
+    // Experience (kinh nghiệm / work history)
+    getUserExperiences: async (username: string): Promise<Experience[]> => {
+        const response = await createApiCall<ApiResponse<ExperienceListData>>(
+            'GET',
+            `/users/experiences/${username}`,
+        )();
+        const data = response.data;
+        if (Array.isArray(data)) return data;
+        return data?.experiences ?? data?.items ?? [];
+    },
+
+    createExperience: async (payload: ExperienceCreatePayload): Promise<Experience> => {
+        const response = await createApiCall<ApiResponse<Experience>, ExperienceCreatePayload>(
+            'POST',
+            '/experiences',
+        )(payload);
+        return response.data;
+    },
+
+    updateExperience: async (id: string, payload: ExperienceUpdatePayload): Promise<Experience> => {
+        const response = await createApiCall<ApiResponse<Experience>, ExperienceUpdatePayload>(
+            'PUT',
+            `/experiences/${id}`,
+        )(payload);
+        return response.data;
+    },
+
+    deleteExperience: (id: string): Promise<void> => {
+        return createApiCall<void>('DELETE', `/experiences/${id}`)();
+    },
+
+    updateExperienceGenres: (id: string, genreNames: string[]): Promise<unknown> => {
+        return createApiCall<unknown, { genre_names: string[] }>(
+            'PUT',
+            `/experiences/genres/${id}`,
+        )({ genre_names: genreNames });
+    },
 };

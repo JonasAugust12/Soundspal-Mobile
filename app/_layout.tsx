@@ -8,11 +8,15 @@ import { useThemeStore } from '@/shared/presentation/store/themeStore';
 import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import { useProtectedRoute } from '@/shared/presentation/hooks/useProtectedRoute';
+import { useAuthInitialize } from '@/features/auth/presentation/hooks/useAuthInitialize';
 import '../global.css';
 
 function RootLayoutNav() {
     const { isDark } = useThemeStore();
     const { setColorScheme } = useColorScheme();
+
+    // Xác thực token + làm mới user (/users/me) khi mở app
+    useAuthInitialize();
 
     // Handle auth redirects
     useProtectedRoute();

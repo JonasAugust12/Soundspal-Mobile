@@ -11,6 +11,10 @@ export enum AuthApiErrorCode {
     ResetTokenExpired = 'RESET_TOKEN_EXPIRED',
     InvalidOAuthToken = 'INVALID_OAUTH_TOKEN',
     OAuthRegistrationExpired = 'OAUTH_REGISTRATION_EXPIRED',
+    /** Đăng nhập email/mật khẩu nhưng tài khoản được tạo qua Google. */
+    OAuthAccount = 'OAUTH_ACCOUNT',
+    /** Quên mật khẩu cho tài khoản Google (không có mật khẩu). */
+    OAuthAccountNoPassword = 'OAUTH_ACCOUNT_NO_PASSWORD',
     RateLimited = 'RATE_LIMITED',
     NetworkError = 'NETWORK_ERROR',
     ValidationError = 'VALIDATION_ERROR',
@@ -28,6 +32,7 @@ export enum AuthErrorContext {
     ResendResetCode = 'resendResetCode',
     GoogleSignIn = 'googleSignIn',
     CompleteOAuth = 'completeOAuth',
+    ChangeEmail = 'changeEmail',
     Logout = 'logout',
     Generic = 'generic',
 }
@@ -38,6 +43,8 @@ export enum AuthErrorContext {
  */
 export const AUTH_BACKEND_ERROR_CODES: Record<string, AuthApiErrorCode> = {
     email_not_verified: AuthApiErrorCode.AccountNotVerified,
+    oauth_account: AuthApiErrorCode.OAuthAccount,
+    oauth_account_no_password: AuthApiErrorCode.OAuthAccountNoPassword,
 };
 
 export const AUTH_API_ERROR_MESSAGES: Record<AuthApiErrorCode, string> = {
@@ -62,6 +69,10 @@ export const AUTH_API_ERROR_MESSAGES: Record<AuthApiErrorCode, string> = {
     [AuthApiErrorCode.InvalidOAuthToken]: 'Phiên đăng nhập Google không hợp lệ. Vui lòng thử lại.',
     [AuthApiErrorCode.OAuthRegistrationExpired]:
         'Phiên hoàn tất đăng ký đã hết hạn. Vui lòng đăng nhập Google lại.',
+    [AuthApiErrorCode.OAuthAccount]:
+        'Tài khoản này được tạo qua Google. Vui lòng đăng nhập bằng Google.',
+    [AuthApiErrorCode.OAuthAccountNoPassword]:
+        'Tài khoản này đăng nhập qua Google và không có mật khẩu. Vui lòng đăng nhập bằng Google.',
     [AuthApiErrorCode.RateLimited]: 'Bạn thao tác quá nhanh. Vui lòng đợi vài phút rồi thử lại.',
     [AuthApiErrorCode.NetworkError]: 'Không thể kết nối máy chủ. Kiểm tra mạng và thử lại.',
     [AuthApiErrorCode.ValidationError]: 'Thông tin gửi lên không hợp lệ. Vui lòng kiểm tra lại.',
@@ -81,6 +92,7 @@ export const AUTH_ERROR_CONTEXT_FALLBACKS: Record<AuthErrorContext, string> = {
     [AuthErrorContext.ResendResetCode]: 'Không thể gửi lại mã. Vui lòng thử lại.',
     [AuthErrorContext.GoogleSignIn]: 'Đăng nhập Google thất bại. Vui lòng thử lại.',
     [AuthErrorContext.CompleteOAuth]: 'Không thể hoàn tất đăng ký. Vui lòng thử lại.',
+    [AuthErrorContext.ChangeEmail]: 'Không thể đổi email. Vui lòng thử lại.',
     [AuthErrorContext.Logout]: 'Không thể đăng xuất từ server, nhưng đã xóa session local.',
     [AuthErrorContext.Generic]: AUTH_API_ERROR_MESSAGES[AuthApiErrorCode.Unknown],
 };

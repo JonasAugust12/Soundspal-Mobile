@@ -75,8 +75,8 @@ export const useGoogleSignIn = () => {
                         },
                     });
 
+                    // Điều hướng sau đăng nhập do useProtectedRoute xử lý (bao gồm returnTo).
                     showSuccess(AuthSuccessToast.LoginTitle, AuthSuccessToast.LoginBody);
-                    router.replace('/(tabs)');
                 }
             } else {
                 setRegistrationToken(response.data.registration_token!);

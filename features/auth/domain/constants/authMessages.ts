@@ -4,6 +4,8 @@ export enum AuthToastTitle {
     RegisterFailed = 'Lỗi đăng ký',
     LoginError = 'Lỗi đăng nhập',
     EmailNotVerified = 'Email chưa được xác minh',
+    OAuthAccount = 'Tài khoản Google',
+    ChangeEmailFailed = 'Đổi email thất bại',
 }
 
 export enum AuthSuccessToast {
@@ -23,6 +25,10 @@ export enum AuthSuccessToast {
     ResendCodeBody = 'Vui lòng kiểm tra email của bạn.',
     LogoutTitle = 'Đăng xuất thành công! 👋',
     LogoutBody = 'Hẹn gặp lại bạn.',
+    ChangeEmailCodeSentTitle = 'Đã gửi mã xác thực! 📧',
+    ChangeEmailCodeSentBody = 'Vui lòng kiểm tra email mới để nhận mã xác thực.',
+    ChangeEmailSuccessTitle = 'Đổi email thành công! ✅',
+    ChangeEmailSuccessBody = 'Vui lòng đăng nhập lại bằng email mới.',
 }
 
 export enum AuthGoogleError {
@@ -144,6 +150,22 @@ export const AUTH_EMAIL_REQUIRED_UI = {
     whyNotify: '• Nhận thông báo quan trọng qua email',
     whyRecover: '• Khôi phục mật khẩu khi cần thiết',
     footer: 'Không nhận được email? Kiểm tra thư mục spam hoặc liên hệ hỗ trợ',
+} as const;
+
+export const AUTH_CHANGE_EMAIL_UI = {
+    title: 'Đổi email',
+    subtitle: 'Cập nhật email đăng nhập cho tài khoản',
+    currentEmailLabel: 'Email hiện tại',
+    stepEmailPrompt: 'Nhập email mới',
+    stepEmailHint: 'Chúng tôi sẽ gửi mã 6 số đến email mới để xác thực',
+    newEmailLabel: 'Email mới',
+    newEmailPlaceholder: 'email@example.com',
+    sendCode: 'Gửi mã xác thực',
+    stepOtpTitle: 'Nhập mã 6 số',
+    stepOtpHint: 'Mã xác thực đã được gửi đến',
+    confirmChange: 'Xác nhận đổi email',
+    changeAnotherEmail: 'Đổi email khác',
+    securityNote: '💡 Sau khi đổi email thành công, bạn sẽ cần đăng nhập lại bằng email mới.',
 } as const;
 
 export const AUTH_OAUTH_UI = {

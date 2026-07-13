@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Check, Music } from 'lucide-react-native';
+import { GradientPill } from '@/shared/presentation/ui';
 
 import {
     useGetAllGenres,
@@ -90,15 +91,12 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
                 {allGenres.map((genre: Genre) => {
                     const isSelected = selectedGenres.includes(genre.name);
                     return (
-                        <TouchableOpacity
+                        <GradientPill
                             key={genre.id}
+                            active={isSelected}
                             onPress={() => toggleGenre(genre.name)}
-                            className={`flex-row items-center px-4 py-2.5 rounded-full border ${
-                                isSelected
-                                    ? 'bg-purple-600 border-purple-600'
-                                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                            }`}
-                            activeOpacity={0.7}
+                            className="flex-row items-center px-4 py-2.5 rounded-full"
+                            inactiveClassName="border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                         >
                             {isSelected && (
                                 <Check size={14} color="#FFFFFF" style={{ marginRight: 6 }} />
@@ -110,7 +108,7 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
                             >
                                 {genre.name}
                             </Text>
-                        </TouchableOpacity>
+                        </GradientPill>
                     );
                 })}
             </View>

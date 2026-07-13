@@ -24,6 +24,11 @@ export class UserRepositoryImpl implements IUserRepository {
     updateVenueBasic = userRemoteDataSource.updateVenueBasic;
     updateVenueContact = userRemoteDataSource.updateVenueContact;
     updateVenueAdditional = userRemoteDataSource.updateVenueAdditional;
+    getUserExperiences = userRemoteDataSource.getUserExperiences;
+    createExperience = userRemoteDataSource.createExperience;
+    updateExperience = userRemoteDataSource.updateExperience;
+    deleteExperience = userRemoteDataSource.deleteExperience;
+    updateExperienceGenres = userRemoteDataSource.updateExperienceGenres;
 }
 
 export const userRepository = new UserRepositoryImpl();

@@ -5,3 +5,5 @@ export { AvatarFrame } from './AvatarFrame';
 export { CoverImage } from './CoverImage';
 export { GenresForm } from './GenresForm';
 export { ServicesForm } from './ServicesForm';
+export { ExperienceForm } from './ExperienceForm';
+export { ProfileCompletionBar } from './ProfileCompletionBar';

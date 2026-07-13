@@ -21,6 +21,7 @@ interface AuthState {
 
     // Actions
     setCredentials: (data: { accessToken: string; refreshToken: string; user: AuthUser }) => void;
+    setUser: (user: AuthUser) => void;
     updateAvatarUrl: (avatarUrl: string) => void;
     updateDisplayName: (displayName: string) => void;
     logout: () => void;
@@ -41,6 +42,11 @@ export const useAuthStore = create<AuthState>()(
                     user,
                     isAuthenticated: true,
                 });
+            },
+
+            // Làm mới thông tin user (vd: từ /users/me khi mở app) mà không đụng tới token.
+            setUser: (user) => {
+                set({ user, isAuthenticated: true });
             },
 
             updateAvatarUrl: (avatarUrl) => {

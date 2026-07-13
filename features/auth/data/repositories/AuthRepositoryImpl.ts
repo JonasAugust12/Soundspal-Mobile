@@ -13,6 +13,9 @@ export class AuthRepositoryImpl implements IAuthRepository {
     resetPassword = authRemoteDataSource.resetPassword;
     mobileOAuth = authRemoteDataSource.mobileOAuth;
     completeOAuth = authRemoteDataSource.completeOAuth;
+    requestEmailChange = authRemoteDataSource.requestEmailChange;
+    verifyEmailChange = authRemoteDataSource.verifyEmailChange;
+    getMe = authRemoteDataSource.getMe;
 }
 
 export const authRepository = new AuthRepositoryImpl();

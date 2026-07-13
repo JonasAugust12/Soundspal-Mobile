@@ -8,6 +8,7 @@ import {
     MessageCircle,
     Music4,
     Video as VideoIcon,
+    Briefcase,
 } from 'lucide-react-native';
 
 import {
@@ -26,9 +27,17 @@ import {
     useGetUserMedia,
     useGetUserVideos,
     useGetUserGenres,
+    useGetUserExperiences,
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+
+const fmtMonthYear = (iso?: string | null): string => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+};
 
 export default function ArtistProfile() {
     const router = useRouter();
@@ -76,6 +85,11 @@ export default function ArtistProfile() {
         enabled: !!username,
     });
     const userGenres = userGenresData?.genres || [];
+
+    // Get user experiences (kinh nghiệm)
+    const { data: experiences = [] } = useGetUserExperiences(username, {
+        enabled: !!username,
+    });
 
     const isLoading = (isLoadingUser || isLoadingMedia || isLoadingVideos) && !isRefetching;
 
@@ -201,6 +215,62 @@ export default function ArtistProfile() {
                                         <Text className="text-sm font-semibold text-purple-700 dark:text-purple-300">
                                             {genre.name}
                                         </Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
+
+                    {/* Experience (kinh nghiệm) */}
+                    {experiences.length > 0 && (
+                        <View className="gap-3">
+                            <View className="flex-row items-center gap-2">
+                                <View className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 items-center justify-center">
+                                    <Briefcase size={18} color="#7C3AED" />
+                                </View>
+                                <Text className="text-lg font-bold text-foreground">
+                                    Kinh nghiệm
+                                </Text>
+                            </View>
+                            <View className="gap-3">
+                                {experiences.map((exp, index) => (
+                                    <View
+                                        key={exp.id || `exp-${index}`}
+                                        className="p-4 rounded-2xl border border-border bg-card"
+                                    >
+                                        <Text className="font-bold text-foreground">
+                                            {exp.title || 'Chưa có tiêu đề'}
+                                        </Text>
+                                        {(exp.start_date || exp.end_date) && (
+                                            <Text className="text-xs text-muted-foreground mt-0.5">
+                                                {exp.start_date
+                                                    ? fmtMonthYear(exp.start_date)
+                                                    : '—'}
+                                                {' - '}
+                                                {exp.end_date
+                                                    ? fmtMonthYear(exp.end_date)
+                                                    : 'Hiện tại'}
+                                            </Text>
+                                        )}
+                                        {!!exp.description && (
+                                            <Text className="text-sm text-muted-foreground mt-1">
+                                                {exp.description}
+                                            </Text>
+                                        )}
+                                        {!!exp.genres?.length && (
+                                            <View className="flex-row flex-wrap gap-1 mt-2">
+                                                {exp.genres.map((g) => (
+                                                    <View
+                                                        key={g.id || g.name}
+                                                        className="px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30"
+                                                    >
+                                                        <Text className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+                                                            {g.name}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
                                     </View>
                                 ))}
                             </View>

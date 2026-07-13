@@ -19,6 +19,7 @@ import {
     BriefcaseBusiness,
     Shield,
     Lock,
+    Mail,
     LogOut,
     ChevronRight,
     Settings,
@@ -319,6 +320,15 @@ export default function PersonalScreen() {
                         Cài đặt
                     </Text>
                     <GlassCard>
+                        <MenuItem
+                            icon={<GradientIcon Icon={Mail} />}
+                            title="Đổi email"
+                            subtitle={user?.email}
+                            onPress={() =>
+                                router.push('/(editprofile)/change-email' as `${string}`)
+                            }
+                        />
+                        <View className="h-px bg-black/5 mx-4" />
                         <MenuItem
                             icon={<GradientIcon Icon={Shield} />}
                             title="Tài khoản và bảo mật"

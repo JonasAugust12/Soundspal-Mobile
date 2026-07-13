@@ -20,6 +20,11 @@ import type {
     MobileOAuthResponse,
     CompleteOAuthRequest,
     CompleteOAuthResponse,
+    RequestEmailChangeRequest,
+    RequestEmailChangeResponse,
+    VerifyEmailChangeRequest,
+    VerifyEmailChangeResponse,
+    GetMeResponse,
 } from '@/features/auth/domain/entities/auth.type';
 
 export const authRemoteDataSource = {
@@ -58,4 +63,14 @@ export const authRemoteDataSource = {
         'POST',
         '/auth/complete-oauth',
     ),
+    requestEmailChange: createApiCall<RequestEmailChangeResponse, RequestEmailChangeRequest>(
+        'POST',
+        '/auth/change-email-request',
+    ),
+    verifyEmailChange: createApiCall<VerifyEmailChangeResponse, VerifyEmailChangeRequest>(
+        'POST',
+        '/auth/verify-email-change',
+    ),
+    // Lấy thông tin user hiện tại để xác thực token + làm mới dữ liệu khi mở app.
+    getMe: createApiCall<GetMeResponse>('GET', '/users/me'),
 };

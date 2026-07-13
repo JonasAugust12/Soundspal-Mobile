@@ -133,6 +133,20 @@ export const useMobileOAuth = () => {
     });
 };
 
+// Request Email Change Hook — gửi mã OTP tới email mới
+export const useRequestEmailChange = () => {
+    return useMutation({
+        mutationFn: authRepository.requestEmailChange,
+    });
+};
+
+// Verify Email Change Hook — xác nhận OTP để đổi email
+export const useVerifyEmailChange = () => {
+    return useMutation({
+        mutationFn: authRepository.verifyEmailChange,
+    });
+};
+
 // Complete OAuth Hook
 export const useCompleteOAuth = () => {
     const { setCredentials } = useAuthStore();

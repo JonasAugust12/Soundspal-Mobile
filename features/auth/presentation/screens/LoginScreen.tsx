@@ -41,14 +41,15 @@ export default function LoginScreen() {
             const response = await login(data);
 
             if (response.data?.access_token) {
+                // Điều hướng sau đăng nhập do useProtectedRoute xử lý (bao gồm returnTo).
                 showSuccess(AuthSuccessToast.LoginTitle, AuthSuccessToast.LoginBody);
-                router.replace('/(tabs)');
             }
         } catch (error: unknown) {
             const message = resolveAuthErrorMessage(error, AuthErrorContext.Login);
+            const code = resolveAuthErrorCode(error);
 
             // Tài khoản chưa xác thực email: đưa thẳng người dùng tới màn nhập mã xác nhận.
-            if (resolveAuthErrorCode(error) === AuthApiErrorCode.AccountNotVerified) {
+            if (code === AuthApiErrorCode.AccountNotVerified) {
                 const email = resolveUnverifiedEmail(error, data.identifier);
 
                 if (email) {
@@ -59,6 +60,12 @@ export default function LoginScreen() {
                     });
                     return;
                 }
+            }
+
+            // Tài khoản tạo qua Google: gợi ý người dùng đăng nhập bằng Google.
+            if (code === AuthApiErrorCode.OAuthAccount) {
+                showError(AuthToastTitle.OAuthAccount, message);
+                return;
             }
 
             showError(AuthToastTitle.LoginFailed, message);
