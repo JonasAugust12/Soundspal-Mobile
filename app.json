@@ -14,9 +14,7 @@
             "backgroundColor": "#ffffff"
         },
         "ios": {
-            "supportsTablet": true,
-            "bundleIdentifier": "com.jonasaugust12.talentlink",
-            "googleServicesFile": "./GoogleService-Info.plist"
+            "supportsTablet": true
         },
         "android": {
             "adaptiveIcon": {
@@ -64,9 +62,6 @@
                         "targetSdkVersion": 35,
                         "compileSdkVersion": 35,
                         "buildToolsVersion": "35.0.0"
-                    },
-                    "ios": {
-                        "useFrameworks": "static"
                     }
                 }
             ],
