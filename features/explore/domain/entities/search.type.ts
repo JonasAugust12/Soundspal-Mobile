@@ -122,6 +122,13 @@ export interface SearchUsersRequest {
     capacity?: string;
     businessTypes?: string[];
     convenientFacilities?: string[];
+    // Bộ lọc nâng cao — đồng bộ với web (backend POST /search/users hỗ trợ đầy đủ)
+    feeMin?: number;
+    feeMax?: number;
+    serviceTypes?: string[];
+    isAvailable?: boolean;
+    stateProvince?: string;
+    venueType?: string;
     page?: number;
     pageSize?: number;
     sortBy?: 'displayName';

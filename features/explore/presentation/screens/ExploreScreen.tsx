@@ -66,7 +66,13 @@ export default function ExploreScreen() {
             location: filters.location,
             genres: filters.genres.length > 0 ? filters.genres : undefined,
             businessTypes: filters.businessTypes.length > 0 ? filters.businessTypes : undefined,
+            serviceTypes: filters.serviceTypes.length > 0 ? filters.serviceTypes : undefined,
             capacity: filters.capacity,
+            feeMin: filters.feeMin,
+            feeMax: filters.feeMax,
+            isAvailable: filters.isAvailable,
+            stateProvince: filters.stateProvince,
+            venueType: filters.venueType,
             pageSize: SEARCH_PAGE_SIZE,
         }),
         [
@@ -75,7 +81,13 @@ export default function ExploreScreen() {
             filters.location,
             filters.genres,
             filters.businessTypes,
+            filters.serviceTypes,
             filters.capacity,
+            filters.feeMin,
+            filters.feeMax,
+            filters.isAvailable,
+            filters.stateProvince,
+            filters.venueType,
         ],
     );
 

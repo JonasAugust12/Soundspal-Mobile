@@ -9,6 +9,13 @@ export interface SearchFilters {
     genres: string[];
     businessTypes: string[];
     capacity?: string;
+    // Bộ lọc nâng cao — đồng bộ với web discovery
+    serviceTypes: string[];
+    feeMin?: number;
+    feeMax?: number;
+    isAvailable?: boolean;
+    stateProvince?: string;
+    venueType?: string;
     page: number;
     pageSize: number;
 }
@@ -21,6 +28,12 @@ interface SearchState {
     toggleGenre: (genreId: string) => void;
     toggleBusinessType: (businessType: string) => void;
     setCapacity: (capacity: string | undefined) => void;
+    toggleServiceType: (serviceType: string) => void;
+    setFeeMin: (feeMin: number | undefined) => void;
+    setFeeMax: (feeMax: number | undefined) => void;
+    setIsAvailable: (isAvailable: boolean | undefined) => void;
+    setStateProvince: (stateProvince: string | undefined) => void;
+    setVenueType: (venueType: string | undefined) => void;
     resetFilters: () => void;
     applyFilters: (filters: Partial<SearchFilters>) => void;
 }
@@ -32,6 +45,12 @@ const initialFilters: SearchFilters = {
     genres: [],
     businessTypes: [],
     capacity: undefined,
+    serviceTypes: [],
+    feeMin: undefined,
+    feeMax: undefined,
+    isAvailable: undefined,
+    stateProvince: undefined,
+    venueType: undefined,
     page: 1,
     pageSize: 20,
 };
@@ -45,8 +64,20 @@ export const useSearchStore = create<SearchState>()((set) => ({
         })),
 
     setRole: (role) =>
+        // Đổi role thì dọn các filter đặc thù role kia (khớp web) — giữ lại query + tỉnh/thành.
         set((state) => ({
-            filters: { ...state.filters, role, page: 1 },
+            filters: {
+                ...state.filters,
+                role,
+                genres: [],
+                serviceTypes: [],
+                businessTypes: [],
+                feeMin: undefined,
+                feeMax: undefined,
+                venueType: undefined,
+                isAvailable: undefined,
+                page: 1,
+            },
         })),
 
     setLocation: (location) =>
@@ -77,6 +108,41 @@ export const useSearchStore = create<SearchState>()((set) => ({
     setCapacity: (capacity) =>
         set((state) => ({
             filters: { ...state.filters, capacity, page: 1 },
+        })),
+
+    toggleServiceType: (serviceType) =>
+        set((state) => {
+            const serviceTypes = state.filters.serviceTypes.includes(serviceType)
+                ? state.filters.serviceTypes.filter((type) => type !== serviceType)
+                : [...state.filters.serviceTypes, serviceType];
+            return {
+                filters: { ...state.filters, serviceTypes, page: 1 },
+            };
+        }),
+
+    setFeeMin: (feeMin) =>
+        set((state) => ({
+            filters: { ...state.filters, feeMin, page: 1 },
+        })),
+
+    setFeeMax: (feeMax) =>
+        set((state) => ({
+            filters: { ...state.filters, feeMax, page: 1 },
+        })),
+
+    setIsAvailable: (isAvailable) =>
+        set((state) => ({
+            filters: { ...state.filters, isAvailable, page: 1 },
+        })),
+
+    setStateProvince: (stateProvince) =>
+        set((state) => ({
+            filters: { ...state.filters, stateProvince, page: 1 },
+        })),
+
+    setVenueType: (venueType) =>
+        set((state) => ({
+            filters: { ...state.filters, venueType, page: 1 },
         })),
 
     resetFilters: () =>

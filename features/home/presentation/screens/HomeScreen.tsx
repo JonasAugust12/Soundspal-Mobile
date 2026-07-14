@@ -49,7 +49,7 @@ export default function HomeScreen() {
             <View className="px-5 mb-6">
                 <TouchableOpacity
                     activeOpacity={0.9}
-                    onPress={() => router.push(search.exploreRoute)}
+                    onPress={() => router.push('/(search)')}
                     style={styles.searchShadow}
                     className="flex-row items-center bg-white rounded-2xl px-4 py-4 border border-gray-100"
                 >
