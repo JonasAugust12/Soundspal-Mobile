@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, ScrollView, Alert, ActivityIndicator, Text } from 'react-native';
+import { View, ScrollView, ActivityIndicator, Text } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
@@ -58,7 +59,7 @@ export default function BlogDetailScreen() {
 
     const handleBookmarkPress = useCallback(() => {
         if (!user?.id || !postId) {
-            Alert.alert('Sign in required', 'Log in to save posts to your bookmarks.');
+            showAppDialog('Sign in required', 'Log in to save posts to your bookmarks.');
             return;
         }
         if (isArticleBookmarked) {
@@ -66,7 +67,7 @@ export default function BlogDetailScreen() {
                 { postId },
                 {
                     onError: (e) =>
-                        Alert.alert('Error', e instanceof Error ? e.message : 'Could not remove'),
+                        showAppDialog('Error', e instanceof Error ? e.message : 'Could not remove'),
                 },
             );
         } else {
@@ -74,7 +75,7 @@ export default function BlogDetailScreen() {
                 { postId },
                 {
                     onError: (e) =>
-                        Alert.alert('Error', e instanceof Error ? e.message : 'Could not save'),
+                        showAppDialog('Error', e instanceof Error ? e.message : 'Could not save'),
                 },
             );
         }
@@ -115,7 +116,7 @@ export default function BlogDetailScreen() {
     };
 
     const handleNotificationPress = () => {
-        Alert.alert('', 'Notifications enabled for this author');
+        showAppDialog('', 'Notifications enabled for this author');
     };
 
     const handleRelatedArticlePress = (relatedArticle: BlogPost) => {
@@ -130,7 +131,7 @@ export default function BlogDetailScreen() {
             await createCommentM.mutateAsync({ content: text.trim() });
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Could not post comment';
-            Alert.alert('Error', msg);
+            showAppDialog('Error', msg);
         }
     };
 
@@ -142,7 +143,7 @@ export default function BlogDetailScreen() {
             });
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Could not update comment';
-            Alert.alert('Error', msg);
+            showAppDialog('Error', msg);
         }
     };
 
@@ -151,7 +152,7 @@ export default function BlogDetailScreen() {
             await deleteCommentM.mutateAsync(commentId);
         } catch (e) {
             const msg = e instanceof Error ? e.message : 'Could not delete comment';
-            Alert.alert('Error', msg);
+            showAppDialog('Error', msg);
         }
     };
 

@@ -9,6 +9,9 @@ import type {
     MySubmissionsResponse,
     PostStatus,
     PostVisibility,
+    PostType,
+    LocationType,
+    ExperienceLevel,
     GetJobSubmissionsParams,
     OpportunitySubmission,
     OpportunitySubmissionsResponse,
@@ -16,6 +19,8 @@ import type {
     ReviewSubmissionRequest,
     ReviewSubmissionResponse,
     PendingCountResponse,
+    BulkReviewRequest,
+    BulkActionResponse,
 } from '@/features/jobs/domain/entities/job.type';
 
 export interface GetJobsParams {
@@ -24,6 +29,16 @@ export interface GetJobsParams {
     search?: string;
     status?: PostStatus;
     visibility?: PostVisibility;
+    // Bộ lọc nâng cao (khớp JobPostFilters bên web — gửi query params tới GET /posts)
+    post_type?: PostType;
+    location?: string;
+    location_type?: LocationType;
+    experience_level?: ExperienceLevel;
+    budget_min?: number;
+    budget_max?: number;
+    genres?: string[];
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
 }
 
 export interface IJobRepository {
@@ -51,4 +66,5 @@ export interface IJobRepository {
         body: ReviewSubmissionRequest,
     ): Promise<ReviewSubmissionResponse>;
     getPendingApplicationsCount(): Promise<PendingCountResponse>;
+    bulkReviewSubmissions(body: BulkReviewRequest): Promise<BulkActionResponse>;
 }

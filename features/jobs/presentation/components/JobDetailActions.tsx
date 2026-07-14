@@ -2,8 +2,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Users, MessageCircle } from 'lucide-react-native';
-import { isJobAcceptingApplications } from '@/features/jobs/domain/utils/jobFormatters';
+import { Users, MessageCircle, Bookmark, FileText } from 'lucide-react-native';
+import type { JobPrimaryAction } from '@/features/jobs/domain/utils/jobInteractionState';
 
 interface JobDetailActionsProps {
     jobId: string;
@@ -20,6 +20,13 @@ interface JobDetailActionsProps {
     isPublishing?: boolean;
     isReopening?: boolean;
     isClosing?: boolean;
+    // Trạng thái tương tác (non-owner)
+    primaryAction?: JobPrimaryAction;
+    reasonLabel?: string;
+    onViewApplication?: () => void;
+    canSave?: boolean;
+    isSaved?: boolean;
+    onToggleSave?: () => void;
 }
 
 export const JobDetailActions = ({
@@ -37,9 +44,14 @@ export const JobDetailActions = ({
     isPublishing,
     isReopening,
     isClosing,
+    primaryAction = 'apply',
+    reasonLabel,
+    onViewApplication,
+    canSave,
+    isSaved,
+    onToggleSave,
 }: JobDetailActionsProps) => {
     const router = useRouter();
-    const canApply = !isOwned && isJobAcceptingApplications(status);
 
     if (isOwned) {
         return (
@@ -139,6 +151,20 @@ export const JobDetailActions = ({
         );
     }
 
+    // ---- Non-owner ----
+    const gradientButton = (label: string, onPress?: () => void) => (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.primaryButton}>
+            <LinearGradient
+                colors={['#7C3BED', '#F471B7']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientButton}
+            >
+                <Text className="text-white font-bold text-base">{label}</Text>
+            </LinearGradient>
+        </TouchableOpacity>
+    );
+
     const contactButton = onContact ? (
         <TouchableOpacity
             onPress={onContact}
@@ -157,31 +183,83 @@ export const JobDetailActions = ({
         </TouchableOpacity>
     ) : null;
 
+    const saveButton =
+        canSave && onToggleSave ? (
+            <TouchableOpacity
+                onPress={onToggleSave}
+                activeOpacity={0.8}
+                className="flex-row items-center justify-center gap-2 border-2 border-gray-300 dark:border-gray-600 rounded-2xl py-4"
+            >
+                <Bookmark
+                    size={18}
+                    color={isSaved ? '#7C3BED' : '#6B7280'}
+                    fill={isSaved ? '#7C3BED' : 'transparent'}
+                />
+                <Text
+                    className={`font-bold text-base ${isSaved ? 'text-purple-600' : 'text-gray-600 dark:text-gray-300'}`}
+                >
+                    {isSaved ? 'Đã lưu' : 'Lưu tin'}
+                </Text>
+            </TouchableOpacity>
+        ) : null;
+
+    let primary: React.ReactNode = null;
+    if (primaryAction === 'apply') {
+        primary = gradientButton('Ứng tuyển ngay', onApply);
+    } else if (primaryAction === 'contact') {
+        primary = onContact ? (
+            <TouchableOpacity
+                onPress={onContact}
+                disabled={isContacting}
+                activeOpacity={0.8}
+                style={styles.primaryButton}
+            >
+                <LinearGradient
+                    colors={['#7C3BED', '#F471B7']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.gradientButton}
+                >
+                    {isContacting ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <View className="flex-row items-center gap-2">
+                            <MessageCircle size={18} color="#FFFFFF" />
+                            <Text className="text-white font-bold text-base">
+                                Liên hệ / Nhắn tin
+                            </Text>
+                        </View>
+                    )}
+                </LinearGradient>
+            </TouchableOpacity>
+        ) : null;
+    } else if (primaryAction === 'view_application') {
+        primary = (
+            <TouchableOpacity
+                onPress={onViewApplication}
+                activeOpacity={0.8}
+                className="flex-row items-center justify-center gap-2 border-2 border-purple-600 rounded-2xl py-4"
+            >
+                <FileText size={18} color="#7C3BED" />
+                <Text className="text-purple-600 font-bold text-base">Xem đơn của tôi</Text>
+            </TouchableOpacity>
+        );
+    } else {
+        // unavailable
+        primary = (
+            <View className="bg-gray-100 dark:bg-gray-800 rounded-2xl py-4 items-center">
+                <Text className="text-gray-600 dark:text-gray-300 font-semibold text-center px-4">
+                    {reasonLabel || 'Bài đăng hiện không nhận ứng tuyển'}
+                </Text>
+            </View>
+        );
+    }
+
     return (
         <View className="gap-3">
-            {canApply ? (
-                <TouchableOpacity
-                    onPress={onApply}
-                    activeOpacity={0.8}
-                    style={styles.primaryButton}
-                >
-                    <LinearGradient
-                        colors={['#7C3BED', '#F471B7']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.gradientButton}
-                    >
-                        <Text className="text-white font-bold text-base">Ứng tuyển ngay</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
-            ) : (
-                <View className="bg-gray-100 dark:bg-gray-800 rounded-2xl py-4 items-center">
-                    <Text className="text-gray-600 dark:text-gray-300 font-semibold">
-                        Bài đăng hiện không nhận ứng tuyển
-                    </Text>
-                </View>
-            )}
-            {contactButton}
+            {primary}
+            {primaryAction !== 'contact' && contactButton}
+            {saveButton}
         </View>
     );
 };

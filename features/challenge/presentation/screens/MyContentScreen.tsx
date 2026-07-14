@@ -6,12 +6,12 @@ import {
     StatusBar,
     TouchableOpacity,
     Image,
-    Alert,
     ActivityIndicator,
     RefreshControl,
     StyleSheet,
     Platform,
 } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -338,7 +338,7 @@ export default function MyContentScreen() {
     // ── Delete handlers ──────────────────────────────────────────────────────────
 
     const handleDeleteBeat = (beat: Beat) => {
-        Alert.alert(
+        showAppDialog(
             'Xóa beat',
             `Bạn có chắc chắn muốn xóa beat "${beat.title}" không? Hành động này không thể hoàn tác.`,
             [
@@ -351,7 +351,7 @@ export default function MyContentScreen() {
                             setDeletingBeatId(beat.id);
                             await deleteBeatMutation.mutateAsync(beat.id);
                         } catch {
-                            Alert.alert('Lỗi', 'Không thể xóa beat. Vui lòng thử lại.');
+                            showAppDialog('Lỗi', 'Không thể xóa beat. Vui lòng thử lại.');
                         } finally {
                             setDeletingBeatId(null);
                         }
@@ -362,7 +362,7 @@ export default function MyContentScreen() {
     };
 
     const handleDeleteEntry = (entry: BeatEntry) => {
-        Alert.alert(
+        showAppDialog(
             'Xóa entry',
             'Bạn có chắc chắn muốn xóa entry này không? Hành động này không thể hoàn tác.',
             [
@@ -375,7 +375,7 @@ export default function MyContentScreen() {
                             setDeletingEntryId(entry.id);
                             await deleteEntryMutation.mutateAsync(entry.id);
                         } catch {
-                            Alert.alert('Lỗi', 'Không thể xóa entry. Vui lòng thử lại.');
+                            showAppDialog('Lỗi', 'Không thể xóa entry. Vui lòng thử lại.');
                         } finally {
                             setDeletingEntryId(null);
                         }

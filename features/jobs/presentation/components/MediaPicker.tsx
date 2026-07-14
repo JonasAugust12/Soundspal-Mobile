@@ -7,9 +7,9 @@ import {
     TouchableOpacity,
     Image,
     ActivityIndicator,
-    Alert,
     Dimensions,
 } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { X } from 'lucide-react-native';
 import { useGetMyMedia } from '@/features/profiles/presentation/hooks/useMediaApi';
 import type { Media } from '@/features/profiles/domain/entities/media.type';
@@ -109,7 +109,7 @@ export const MediaPicker = ({ visible, onClose, onSelect, selectedMediaId }: Med
     const handleConfirm = () => {
         const selected = mediaList.find((m) => m.id === localSelectedId);
         if (!selected) {
-            Alert.alert('Lỗi', 'Vui lòng chọn một file');
+            showAppDialog('Lỗi', 'Vui lòng chọn một file');
             return;
         }
         onSelect(selected);

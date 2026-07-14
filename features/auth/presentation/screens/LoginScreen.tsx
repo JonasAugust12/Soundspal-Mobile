@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Keyboard, Image, Platform, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
+import { SCREEN_SAFE_AREA_EDGES, LoadingOverlay } from '@/shared/presentation/ui';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { LinearGradient } from 'expo-linear-gradient';
 import { LoginForm } from '@/features/auth/presentation/components';
@@ -202,6 +202,11 @@ export default function LoginScreen() {
                     </View>
                 </KeyboardAwareScrollView>
             </SafeAreaView>
+
+            <LoadingOverlay
+                visible={isLoading || isGoogleLoading}
+                message={isGoogleLoading ? 'Đang đăng nhập với Google...' : 'Đang đăng nhập...'}
+            />
         </View>
     );
 }

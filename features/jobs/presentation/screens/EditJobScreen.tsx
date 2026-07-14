@@ -1,13 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    ActivityIndicator,
-    Alert,
-    TextInput,
-    Switch,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, TextInput, Switch } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -291,7 +284,7 @@ export default function EditJobScreen() {
 
     const handleCloseJob = () => {
         if (!jobId) return;
-        Alert.alert('Đóng bài đăng', 'Bạn có chắc muốn đóng bài đăng này?', [
+        showAppDialog('Đóng bài đăng', 'Bạn có chắc muốn đóng bài đăng này?', [
             { text: 'Hủy', style: 'cancel' },
             {
                 text: 'Đóng',
@@ -313,7 +306,7 @@ export default function EditJobScreen() {
     };
 
     const handleDelete = () => {
-        Alert.alert(
+        showAppDialog(
             'Xóa bài đăng',
             'Bạn có chắc chắn muốn xóa bài đăng này? Hành động này không thể hoàn tác.',
             [

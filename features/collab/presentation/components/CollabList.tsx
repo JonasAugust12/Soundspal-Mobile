@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { MySubmissionCard } from './MySubmissionCard';
 import { JobPostCard } from './JobPostCard';
 import {
@@ -34,11 +35,11 @@ export const CollabList = ({ tab, onViewJobDetail, onViewJobSubmissions }: Colla
             { id, body: { reason } },
             {
                 onSuccess: () => {
-                    Alert.alert('Thành công', 'Đã rút đơn ứng tuyển');
+                    showAppDialog('Thành công', 'Đã rút đơn ứng tuyển');
                 },
                 onError: (error: unknown) => {
                     const err = error as { message?: string };
-                    Alert.alert('Lỗi', err?.message || 'Không thể rút đơn');
+                    showAppDialog('Lỗi', err?.message || 'Không thể rút đơn');
                 },
             },
         );

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -8,10 +9,16 @@ import {
     usePublishJob,
     useReopenJob,
     useCloseJob,
+    useGetMySubmissions,
 } from '@/features/jobs/presentation/hooks/useJobApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useToast } from '@/shared/presentation/hooks/useToast';
+import { useJobBookmarkStore } from '@/features/jobs/presentation/store/jobBookmarkStore';
+import {
+    getJobInteractionState,
+    getJobReasonLabel,
+} from '@/features/jobs/domain/utils/jobInteractionState';
 import {
     JobDetailHeader,
     JobDetailTags,
@@ -87,7 +94,7 @@ export default function JobDetailScreen() {
 
     const handleClose = () => {
         if (!jobId) return;
-        Alert.alert(
+        showAppDialog(
             'Đóng bài đăng',
             'Bạn có chắc muốn đóng bài đăng này? Hành động này không thể hoàn tác.',
             [
@@ -116,10 +123,28 @@ export default function JobDetailScreen() {
         );
     };
 
-    const isOwned = useMemo(
-        () => !!(job && user && String(job.creator_id).trim() === String(user.id).trim()),
-        [job, user],
+    // Đơn ứng tuyển của tôi → suy ra trạng thái tương tác (đã ứng tuyển / accepted / withdrawn)
+    const { data: mySubmissionsData } = useGetMySubmissions({ pageSize: 50 });
+    const mySubmissionStatus = useMemo(() => {
+        if (!jobId) return null;
+        const found = mySubmissionsData?.submissions?.find((s) => s.job?.id === jobId);
+        return found?.status ?? null;
+    }, [mySubmissionsData, jobId]);
+
+    const interaction = useMemo(
+        () => (job ? getJobInteractionState(job, user?.id, mySubmissionStatus) : null),
+        [job, user?.id, mySubmissionStatus],
     );
+
+    const isOwned = interaction?.isOwner ?? false;
+
+    // Saved (bookmark) — client-side (dùng store sẵn có jobBookmarkStore)
+    const isSaved = useJobBookmarkStore((s) => (jobId ? s.bookmarkedIds.includes(jobId) : false));
+    const toggleSave = useJobBookmarkStore((s) => s.toggleBookmark);
+
+    const handleViewApplication = () => {
+        router.push('/(jobs)/my-applications' as `${string}`);
+    };
 
     const handleViewApplicants = () => {
         if (!jobId) return;
@@ -287,6 +312,12 @@ export default function JobDetailScreen() {
                     isPublishing={isPublishing}
                     isReopening={isReopening}
                     isClosing={isClosing}
+                    primaryAction={interaction?.primaryAction}
+                    reasonLabel={interaction ? getJobReasonLabel(interaction.reason) : undefined}
+                    onViewApplication={handleViewApplication}
+                    canSave={interaction?.canSave}
+                    isSaved={isSaved}
+                    onToggleSave={() => jobId && toggleSave(jobId)}
                 />
             </View>
 

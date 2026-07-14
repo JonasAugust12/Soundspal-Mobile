@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Briefcase, User } from 'lucide-react-native';
+import { InitialsAvatar } from '@/shared/presentation/ui';
 import { Job } from '@/features/jobs/domain/entities/job.type';
 import { formatDate, formatJobType } from '@/features/jobs/domain/utils/jobFormatters';
 
@@ -10,24 +10,29 @@ interface JobDetailHeaderProps {
 }
 
 export const JobDetailHeader = ({ job }: JobDetailHeaderProps) => {
-    const imgUri = job.assets?.[0]?.storage_url || job.assets?.[0]?.thumbnail_url;
+    const posterName = job.creator_display_name || job.creator_username;
+    // Ảnh nền hero: ưu tiên cover người đăng → avatar người đăng → chữ-từ-tên.
+    const heroUri =
+        job.creator_cover_url?.trim() ||
+        job.creator_avatar_url?.trim() ||
+        job.creator_avatar?.trim();
+    // Avatar mục "Đăng bởi".
+    const posterAvatarUri = job.creator_avatar_url?.trim() || job.creator_avatar?.trim();
     const datePosted = formatDate(job.created_at);
     const jobTypeDisplay = formatJobType(job.type);
 
     return (
         <View className="gap-4">
             {/* Hero Image */}
-            <View className="relative">
-                {imgUri ? (
+            <View className="relative w-full h-72 rounded-3xl overflow-hidden">
+                {heroUri ? (
                     <Image
-                        source={{ uri: imgUri }}
-                        className="w-full h-72 rounded-3xl"
+                        source={{ uri: heroUri }}
+                        style={StyleSheet.absoluteFill}
                         resizeMode="cover"
                     />
                 ) : (
-                    <View className="w-full h-72 rounded-3xl bg-purple-50 dark:bg-purple-900/10 items-center justify-center border border-purple-100 dark:border-purple-900/30">
-                        <Briefcase size={64} color="#7C3BED" />
-                    </View>
+                    <InitialsAvatar fill name={posterName} fontSize={72} />
                 )}
                 <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.6)']}
@@ -56,18 +61,25 @@ export const JobDetailHeader = ({ job }: JobDetailHeaderProps) => {
                 </Text>
 
                 {/* Creator Info */}
-                {job.creator_display_name && (
+                {posterName && (
                     <View className="flex-row items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
                         <View className="flex-row items-center gap-3">
-                            <View className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 items-center justify-center">
-                                <User size={20} color="#7C3BED" />
+                            <View className="w-10 h-10 rounded-full overflow-hidden">
+                                {posterAvatarUri ? (
+                                    <Image
+                                        source={{ uri: posterAvatarUri }}
+                                        className="w-10 h-10 rounded-full"
+                                    />
+                                ) : (
+                                    <InitialsAvatar fill name={posterName} fontSize={16} />
+                                )}
                             </View>
                             <View>
                                 <Text className="text-[10px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-tight">
                                     Đăng bởi
                                 </Text>
                                 <Text className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {job.creator_display_name}
+                                    {posterName}
                                 </Text>
                             </View>
                         </View>

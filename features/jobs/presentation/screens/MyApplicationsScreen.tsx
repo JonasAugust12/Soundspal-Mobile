@@ -5,9 +5,9 @@ import {
     FlatList,
     TouchableOpacity,
     ActivityIndicator,
-    Alert,
     RefreshControl,
 } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, FileText } from 'lucide-react-native';
@@ -30,7 +30,7 @@ export default function MyApplicationsScreen() {
     const submissions = data?.submissions ?? [];
 
     const handleWithdraw = (submission: MySubmission) => {
-        Alert.alert(
+        showAppDialog(
             'Rút đơn ứng tuyển',
             'Bạn có chắc muốn rút đơn? Hành động này không thể hoàn tác và bạn không thể ứng tuyển lại công việc này.',
             [

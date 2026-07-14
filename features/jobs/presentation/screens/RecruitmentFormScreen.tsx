@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
@@ -138,7 +139,7 @@ export default function RecruitmentFormScreen() {
 
     const submitJob = (status: PostStatus) => {
         if (!isBasicValid) {
-            Alert.alert('Lỗi', 'Vui lòng điền đầy đủ thông tin cơ bản');
+            showAppDialog('Lỗi', 'Vui lòng điền đầy đủ thông tin cơ bản');
             return;
         }
 
@@ -151,7 +152,7 @@ export default function RecruitmentFormScreen() {
                             ? 'Bài đăng đã được lưu nháp'
                             : (data as { message?: string })?.message ||
                               'Bài đăng đã được đăng thành công';
-                    Alert.alert('Thành công', successMessage, [
+                    showAppDialog('Thành công', successMessage, [
                         { text: 'OK', onPress: () => router.back() },
                     ]);
                 },
@@ -162,7 +163,7 @@ export default function RecruitmentFormScreen() {
                     };
                     const errorMessage =
                         err?.response?.data?.message || err?.message || 'Không thể tạo bài đăng';
-                    Alert.alert('Lỗi', errorMessage);
+                    showAppDialog('Lỗi', errorMessage);
                 },
             },
         );

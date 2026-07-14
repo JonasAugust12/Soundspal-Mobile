@@ -4,6 +4,7 @@ import { MapPin, BadgeCheck, MicVocal, Disc2, Building2, Music2 } from 'lucide-r
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
+import { Shimmer } from '@/shared/presentation/ui';
 import { getMockCoverUrl } from '@/mock-data/explore';
 import type { UserProfile } from '@/features/explore/domain/entities/search.type';
 
@@ -49,6 +50,9 @@ type Props = {
 
 export const ExploreUserCard = React.memo(function ExploreUserCard({ item, onPress }: Props) {
     const [coverFailed, setCoverFailed] = useState(false);
+    const [coverLoaded, setCoverLoaded] = useState(false);
+    const [avatarLoaded, setAvatarLoaded] = useState(false);
+    const hasRemoteAvatar = !!item.avatar_url;
 
     const location = [item.city, item.country].filter(Boolean).join(', ') || 'Chưa cập nhật';
     const role: RoleConfig = ROLE_CONFIG[item.role] ?? {
@@ -79,9 +83,19 @@ export const ExploreUserCard = React.memo(function ExploreUserCard({ item, onPre
             {!coverFailed && (
                 <Image
                     source={{ uri: coverUrl }}
+                    onLoadStart={() => setCoverLoaded(false)}
+                    onLoad={() => setCoverLoaded(true)}
                     onError={() => setCoverFailed(true)}
                     style={StyleSheet.absoluteFill}
                     resizeMode="cover"
+                />
+            )}
+            {/* Skeleton khi ảnh bìa đang tải */}
+            {!coverFailed && !coverLoaded && (
+                <Shimmer
+                    style={StyleSheet.absoluteFill}
+                    baseColor="rgba(0,0,0,0.06)"
+                    highlightColor="rgba(255,255,255,0.45)"
                 />
             )}
 
@@ -164,8 +178,14 @@ export const ExploreUserCard = React.memo(function ExploreUserCard({ item, onPre
                                 ? { uri: item.avatar_url }
                                 : require('@/assets/images/user-default.jpg')
                         }
+                        onLoadStart={() => setAvatarLoaded(false)}
+                        onLoad={() => setAvatarLoaded(true)}
                         className="w-16 h-16 rounded-full"
                     />
+                    {/* Skeleton khi avatar (remote) đang tải */}
+                    {hasRemoteAvatar && !avatarLoaded && (
+                        <Shimmer style={StyleSheet.absoluteFill} borderRadius={999} />
+                    )}
                     {item.is_verified && (
                         <View className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
                             <BadgeCheck size={16} color="white" fill="#7C3AED" />
