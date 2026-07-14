@@ -6,6 +6,8 @@ export default function JobsLayout() {
             <Stack.Screen name="detail" />
             <Stack.Screen name="recruitment-form" />
             <Stack.Screen name="edit-job" />
+            <Stack.Screen name="my-applications" />
+            <Stack.Screen name="applicants" />
         </Stack>
     );
 }

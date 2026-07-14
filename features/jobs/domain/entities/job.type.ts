@@ -186,7 +186,14 @@ export interface Application {
 export type SubmitApplicationResponse = Application;
 
 // Submission types (for my submissions and received submissions)
-export type SubmissionStatus = 'pending_review' | 'accepted' | 'rejected' | 'withdrawn';
+export type SubmissionStatus =
+    | 'pending_review'
+    | 'under_review'
+    | 'accepted'
+    | 'rejected'
+    | 'skipped'
+    | 'withdrawn'
+    | 'expired';
 
 export interface OpportunityInfo {
     id: string;
@@ -255,6 +262,20 @@ export interface OpportunitySubmissionsResponse {
 
 export interface WithdrawSubmissionRequest {
     reason: string;
+}
+
+// Params khi venue lấy danh sách đơn ứng tuyển của 1 job (GET /posts/:id/submissions)
+export interface GetJobSubmissionsParams {
+    page?: number;
+    pageSize?: number;
+    status?: SubmissionStatus;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+
+// GET /submissions/pending-count → { count }
+export interface PendingCountResponse {
+    count: number;
 }
 
 // Review submission types

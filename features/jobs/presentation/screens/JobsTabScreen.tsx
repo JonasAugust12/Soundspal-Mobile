@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
 import {
     JobHeader,
@@ -11,6 +12,7 @@ import {
 import {
     useGetJobsInfinite,
     useGetMyPostsInfinite,
+    useGetPendingApplicationsCount,
 } from '@/features/jobs/presentation/hooks/useJobApi';
 import { Job } from '@/features/jobs/domain/entities/job.type';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
@@ -20,6 +22,9 @@ const SEARCH_DEBOUNCE_MS = 500;
 
 export default function JobsScreen() {
     const { user } = useAuthStore();
+    const router = useRouter();
+    const isVenue = user?.role === 'venue';
+    const isArtist = user?.role === 'producer' || user?.role === 'singer';
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [jobTab, setJobTab] = useState<'others' | 'mine'>('others');
@@ -57,6 +62,10 @@ export default function JobsScreen() {
         refetch: refetchMyJobs,
         isRefetching: myJobsRefetching,
     } = useGetMyPostsInfinite({ pageSize: JOB_PAGE_SIZE });
+
+    // Flow 9 — badge số đơn chờ duyệt, chỉ bật cho venue.
+    const { data: pendingCountData } = useGetPendingApplicationsCount({ enabled: isVenue });
+    const pendingCount = isVenue ? (pendingCountData?.count ?? 0) : 0;
 
     const currentUserId = user?.id;
 
@@ -116,10 +125,20 @@ export default function JobsScreen() {
     return (
         <TabScreenWrapper scrollable={false}>
             <View className="flex-1">
-                <JobHeader />
+                <JobHeader
+                    onOpenMyApplications={
+                        isArtist
+                            ? () => router.push('/(jobs)/my-applications' as `${string}`)
+                            : undefined
+                    }
+                />
 
                 <View className="gap-3">
-                    <JobTabs activeTab={jobTab} onTabChange={handleTabChange} />
+                    <JobTabs
+                        activeTab={jobTab}
+                        onTabChange={handleTabChange}
+                        mineBadge={pendingCount}
+                    />
                     {jobTab === 'others' && (
                         <SearchBar
                             value={searchInput}

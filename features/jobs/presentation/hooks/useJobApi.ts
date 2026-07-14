@@ -4,6 +4,9 @@ import type {
     UpdateJobRequest,
     SubmitApplicationRequest,
     JobListResponse,
+    GetJobSubmissionsParams,
+    WithdrawSubmissionRequest,
+    ReviewSubmissionRequest,
 } from '@/features/jobs/domain/entities/job.type';
 import type { GetJobsParams } from '@/features/jobs/domain/repositories/IJobRepository';
 import { jobRepository } from '@/features/jobs/data/repositories/JobRepositoryImpl';
@@ -74,6 +77,10 @@ export const jobKeys = {
     mySubmissions: () => [...jobKeys.all, 'mySubmissions'] as const,
     mySubmissionsList: (params: { page?: number; pageSize?: number }) =>
         [...jobKeys.mySubmissions(), params] as const,
+    jobSubmissions: (jobId: string) => [...jobKeys.all, 'jobSubmissions', jobId] as const,
+    jobSubmissionsList: (jobId: string, params: GetJobSubmissionsParams) =>
+        [...jobKeys.jobSubmissions(jobId), params] as const,
+    pendingCount: () => [...jobKeys.all, 'pendingCount'] as const,
 };
 
 export const useGetJobs = (params: GetJobsParams) => {
@@ -255,6 +262,67 @@ export const useGetMySubmissions = (params: { page?: number; pageSize?: number }
         queryKey: jobKeys.mySubmissionsList(params),
         queryFn: () => jobRepository.getMySubmissions(params),
         staleTime: 30000,
+    });
+};
+
+/** Flow 7 — Artist rút đơn ứng tuyển. */
+export const useWithdrawSubmission = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            submissionId,
+            body,
+        }: {
+            submissionId: string;
+            body: WithdrawSubmissionRequest;
+        }) => jobRepository.withdrawSubmission(submissionId, body),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: jobKeys.mySubmissions() });
+        },
+    });
+};
+
+/** Flow 5 — Venue xem danh sách đơn ứng tuyển của 1 job. */
+export const useGetJobSubmissions = (jobId: string, params: GetJobSubmissionsParams = {}) => {
+    return useQuery({
+        queryKey: jobKeys.jobSubmissionsList(jobId, params),
+        queryFn: () => jobRepository.getJobSubmissions(jobId, params),
+        enabled: !!jobId,
+        staleTime: 30000,
+    });
+};
+
+/** Flow 5 — Venue accept/reject/skip 1 đơn. */
+export const useReviewSubmission = (jobId?: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            submissionId,
+            body,
+        }: {
+            submissionId: string;
+            body: ReviewSubmissionRequest;
+        }) => jobRepository.reviewSubmission(submissionId, body),
+        onSuccess: () => {
+            if (jobId) {
+                queryClient.invalidateQueries({ queryKey: jobKeys.jobSubmissions(jobId) });
+                queryClient.invalidateQueries({ queryKey: jobKeys.detail(jobId) });
+            }
+            queryClient.invalidateQueries({ queryKey: jobKeys.pendingCount() });
+        },
+    });
+};
+
+/** Flow 9 — Số đơn đang chờ duyệt (badge cho venue). */
+export const useGetPendingApplicationsCount = (options?: { enabled?: boolean }) => {
+    return useQuery({
+        queryKey: jobKeys.pendingCount(),
+        queryFn: () => jobRepository.getPendingApplicationsCount(),
+        enabled: options?.enabled !== false,
+        staleTime: 60000,
+        refetchInterval: 60000,
     });
 };
 

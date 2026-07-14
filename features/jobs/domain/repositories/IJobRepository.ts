@@ -9,6 +9,13 @@ import type {
     MySubmissionsResponse,
     PostStatus,
     PostVisibility,
+    GetJobSubmissionsParams,
+    OpportunitySubmission,
+    OpportunitySubmissionsResponse,
+    WithdrawSubmissionRequest,
+    ReviewSubmissionRequest,
+    ReviewSubmissionResponse,
+    PendingCountResponse,
 } from '@/features/jobs/domain/entities/job.type';
 
 export interface GetJobsParams {
@@ -31,4 +38,17 @@ export interface IJobRepository {
     closeJob(id: string): Promise<Job>;
     submitJobApplication(jobId: string, body: SubmitApplicationRequest): Promise<Application>;
     getMySubmissions(params: { page?: number; pageSize?: number }): Promise<MySubmissionsResponse>;
+    withdrawSubmission(
+        submissionId: string,
+        body: WithdrawSubmissionRequest,
+    ): Promise<OpportunitySubmission>;
+    getJobSubmissions(
+        jobId: string,
+        params?: GetJobSubmissionsParams,
+    ): Promise<OpportunitySubmissionsResponse>;
+    reviewSubmission(
+        submissionId: string,
+        body: ReviewSubmissionRequest,
+    ): Promise<ReviewSubmissionResponse>;
+    getPendingApplicationsCount(): Promise<PendingCountResponse>;
 }

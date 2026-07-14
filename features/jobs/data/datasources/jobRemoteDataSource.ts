@@ -10,6 +10,13 @@ import type {
     MySubmissionsResponse,
     PostStatus,
     PostVisibility,
+    GetJobSubmissionsParams,
+    OpportunitySubmission,
+    OpportunitySubmissionsResponse,
+    WithdrawSubmissionRequest,
+    ReviewSubmissionRequest,
+    ReviewSubmissionResponse,
+    PendingCountResponse,
 } from '@/features/jobs/domain/entities/job.type';
 
 export interface GetJobsParams {
@@ -93,5 +100,41 @@ export const jobRemoteDataSource = {
             'GET',
             `/my-submissions?${searchParams.toString()}`,
         )();
+    },
+
+    // Flow 7 — Artist rút đơn ứng tuyển
+    withdrawSubmission: (submissionId: string, body: WithdrawSubmissionRequest) => {
+        return createApiCall<OpportunitySubmission, WithdrawSubmissionRequest>(
+            'PUT',
+            `/submissions/${submissionId}/withdraw`,
+        )(body);
+    },
+
+    // Flow 5 — Venue xem danh sách đơn ứng tuyển của 1 job
+    getJobSubmissions: (jobId: string, params: GetJobSubmissionsParams = {}) => {
+        const searchParams = new URLSearchParams({
+            page: (params.page || 1).toString(),
+            page_size: (params.pageSize || 20).toString(),
+        });
+        if (params.status) searchParams.append('status', params.status);
+        if (params.sortBy) searchParams.append('sort_by', params.sortBy);
+        if (params.sortOrder) searchParams.append('sort_order', params.sortOrder);
+        return createApiCall<OpportunitySubmissionsResponse>(
+            'GET',
+            `/posts/${jobId}/submissions?${searchParams.toString()}`,
+        )();
+    },
+
+    // Flow 5 — Venue accept/reject/skip 1 đơn
+    reviewSubmission: (submissionId: string, body: ReviewSubmissionRequest) => {
+        return createApiCall<ReviewSubmissionResponse, ReviewSubmissionRequest>(
+            'PUT',
+            `/submissions/${submissionId}/review`,
+        )(body);
+    },
+
+    // Flow 9 — Đếm số đơn đang chờ duyệt (toàn bộ job của venue)
+    getPendingApplicationsCount: () => {
+        return createApiCall<PendingCountResponse>('GET', '/submissions/pending-count')();
     },
 };

@@ -10,6 +10,7 @@ import {
     useCloseJob,
 } from '@/features/jobs/presentation/hooks/useJobApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import {
     JobDetailHeader,
@@ -43,6 +44,8 @@ export default function JobDetailScreen() {
     const { mutate: publishJob, isPending: isPublishing } = usePublishJob();
     const { mutate: reopenJob, isPending: isReopening } = useReopenJob();
     const { mutate: closeJob, isPending: isClosing } = useCloseJob();
+    const { mutate: getOrCreateConversation, isPending: isContacting } =
+        useGetOrCreateConversation();
 
     const handlePublish = () => {
         if (!jobId) return;
@@ -117,6 +120,23 @@ export default function JobDetailScreen() {
         () => !!(job && user && String(job.creator_id).trim() === String(user.id).trim()),
         [job, user],
     );
+
+    const handleViewApplicants = () => {
+        if (!jobId) return;
+        router.push(`/(jobs)/applicants?id=${jobId}` as `${string}`);
+    };
+
+    const handleContact = () => {
+        if (!job?.creator_id) return;
+        getOrCreateConversation(job.creator_id, {
+            onSuccess: (conversation) => {
+                router.push(
+                    `/(messages)/detailMessage?conversationId=${conversation.id}` as `${string}`,
+                );
+            },
+            onError: () => showError('Lỗi', 'Không thể mở cuộc trò chuyện'),
+        });
+    };
 
     // Loading state
     if (isLoading) {
@@ -257,6 +277,10 @@ export default function JobDetailScreen() {
                     isOwned={isOwned}
                     status={job.status}
                     onApply={() => setShowApplyModal(true)}
+                    onViewApplicants={isOwned ? handleViewApplicants : undefined}
+                    submissionsCount={job.total_submissions}
+                    onContact={!isOwned ? handleContact : undefined}
+                    isContacting={isContacting}
                     onPublish={isOwned ? handlePublish : undefined}
                     onReopen={isOwned ? handleReopen : undefined}
                     onClose={isOwned ? handleClose : undefined}

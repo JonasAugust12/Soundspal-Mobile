@@ -1,5 +1,5 @@
 import type { IJobRepository } from '@/features/jobs/domain/repositories/IJobRepository';
-import type { JobDetailResponse, Job } from '@/features/jobs/domain/entities/job.type';
+import type { JobDetailResponse } from '@/features/jobs/domain/entities/job.type';
 import { jobRemoteDataSource } from '@/features/jobs/data/datasources/jobRemoteDataSource';
 import {
     getJobByIdWithOwnedFallback,
@@ -20,6 +20,10 @@ export class JobRepositoryImpl implements IJobRepository {
     closeJob = jobRemoteDataSource.closeJob;
     submitJobApplication = jobRemoteDataSource.submitJobApplication;
     getMySubmissions = jobRemoteDataSource.getMySubmissions;
+    withdrawSubmission = jobRemoteDataSource.withdrawSubmission;
+    getJobSubmissions = jobRemoteDataSource.getJobSubmissions;
+    reviewSubmission = jobRemoteDataSource.reviewSubmission;
+    getPendingApplicationsCount = jobRemoteDataSource.getPendingApplicationsCount;
 }
 
 export const jobRepository = new JobRepositoryImpl();
