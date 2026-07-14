@@ -12,11 +12,13 @@ import {
 } from '@/features/auth/domain/constants/authMessages';
 import { AuthErrorContext } from '@/features/auth/domain/constants/authApiErrorCode';
 import { resolveAuthErrorMessage } from '@/features/auth/domain/utils/resolveAuthErrorMessage';
+import { useDevicePayload } from '@/features/notifications/presentation/hooks/useDevicePayload';
 
 export const useGoogleSignIn = () => {
     const { showSuccess, showError } = useToast();
     const { mutateAsync: mobileOAuth, isPending: isLoading } = useMobileOAuth();
     const { setCredentials } = useAuthStore();
+    const { getDevicePayload } = useDevicePayload();
     const router = useRouter();
     const [registrationToken, setRegistrationToken] = useState<string | null>(null);
 
@@ -51,8 +53,13 @@ export const useGoogleSignIn = () => {
                 return;
             }
 
+            // Đính token FCM + thông tin thiết bị để backend đăng ký nhận push.
+            const device = await getDevicePayload();
             const response = await mobileOAuth({
                 code: authCode,
+                device_id: device.device_id,
+                platform: device.platform,
+                ...(device.fcm_token ? { fcm_token: device.fcm_token } : {}),
             });
 
             console.warn('mobile-oauth response:', response);

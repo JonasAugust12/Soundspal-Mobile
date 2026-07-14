@@ -14,7 +14,9 @@
             "backgroundColor": "#ffffff"
         },
         "ios": {
-            "supportsTablet": true
+            "supportsTablet": true,
+            "bundleIdentifier": "com.jonasaugust12.talentlink",
+            "googleServicesFile": "./GoogleService-Info.plist"
         },
         "android": {
             "adaptiveIcon": {
@@ -22,7 +24,8 @@
             },
             "edgeToEdgeEnabled": true,
             "package": "com.jonasaugust12.talent_link",
-            "versionCode": 10
+            "versionCode": 10,
+            "googleServicesFile": "./google-services.json"
         },
         "web": {
             "favicon": "./assets/favicon.png"
@@ -61,10 +64,15 @@
                         "targetSdkVersion": 35,
                         "compileSdkVersion": 35,
                         "buildToolsVersion": "35.0.0"
+                    },
+                    "ios": {
+                        "useFrameworks": "static"
                     }
                 }
             ],
-            "@react-native-community/datetimepicker"
+            "@react-native-community/datetimepicker",
+            "@react-native-firebase/app",
+            "@react-native-firebase/messaging"
         ],
         "extra": {
             "eas": {

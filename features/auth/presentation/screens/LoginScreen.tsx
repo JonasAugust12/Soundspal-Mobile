@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LoginForm } from '@/features/auth/presentation/components';
 import { useLogin } from '@/features/auth/presentation/hooks/useAuthApi';
 import { useGoogleSignIn } from '@/features/auth/presentation/hooks/useGoogleSignIn';
+import { useDevicePayload } from '@/features/notifications/presentation/hooks/useDevicePayload';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import type { LoginFormData } from '@/features/auth/presentation/components/LoginForm';
@@ -32,13 +33,21 @@ export default function LoginScreen() {
     const { mutateAsync: login, isPending: isLoading } = useLogin();
     const { signInWithGoogle, isLoading: isGoogleLoading } = useGoogleSignIn();
     const { showSuccess, showError, showInfo } = useToast();
+    const { getDevicePayload } = useDevicePayload();
     const router = useRouter();
 
     const handleLogin = async (data: LoginFormData) => {
         Keyboard.dismiss();
 
         try {
-            const response = await login(data);
+            // Đính token FCM + thông tin thiết bị để backend đăng ký nhận push.
+            const device = await getDevicePayload();
+            const response = await login({
+                ...data,
+                device_id: device.device_id,
+                platform: device.platform,
+                ...(device.fcm_token ? { fcm_token: device.fcm_token } : {}),
+            });
 
             if (response.data?.access_token) {
                 // Điều hướng sau đăng nhập do useProtectedRoute xử lý (bao gồm returnTo).

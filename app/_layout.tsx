@@ -9,6 +9,10 @@ import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import { useProtectedRoute } from '@/shared/presentation/hooks/useProtectedRoute';
 import { useAuthInitialize } from '@/features/auth/presentation/hooks/useAuthInitialize';
+import { usePushNotifications } from '@/features/notifications/presentation/hooks/usePushNotifications';
+import { usePushTokenSync } from '@/features/notifications/presentation/hooks/usePushTokenSync';
+// Side-effect: đăng ký handler nhận push khi app ở background/killed. Phải import sớm.
+import '@/features/notifications/presentation/handlers/registerBackgroundHandler';
 import '../global.css';
 
 function RootLayoutNav() {
@@ -20,6 +24,10 @@ function RootLayoutNav() {
 
     // Handle auth redirects
     useProtectedRoute();
+
+    // Push notification: nhận thông báo (foreground/tap) + đồng bộ token khi xoay vòng
+    usePushNotifications();
+    usePushTokenSync();
 
     // Sync theme with NativeWind
     useEffect(() => {

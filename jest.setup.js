@@ -55,6 +55,23 @@ jest.mock('react-native-keyboard-controller', () =>
     require('react-native-keyboard-controller/jest'),
 );
 
+// Mock @react-native-firebase (native modules not linked in the Jest environment)
+jest.mock('@react-native-firebase/app', () => ({
+    getApp: jest.fn(() => ({})),
+}));
+
+jest.mock('@react-native-firebase/messaging', () => ({
+    getMessaging: jest.fn(() => ({})),
+    getToken: jest.fn(() => Promise.resolve('test-fcm-token')),
+    requestPermission: jest.fn(() => Promise.resolve(1)),
+    onMessage: jest.fn(() => jest.fn()),
+    onNotificationOpenedApp: jest.fn(() => jest.fn()),
+    getInitialNotification: jest.fn(() => Promise.resolve(null)),
+    onTokenRefresh: jest.fn(() => jest.fn()),
+    setBackgroundMessageHandler: jest.fn(),
+    AuthorizationStatus: { NOT_DETERMINED: -1, DENIED: 0, AUTHORIZED: 1, PROVISIONAL: 2 },
+}));
+
 // Silence console errors/warnings in tests unless explicitly needed
 global.console = {
     ...console,

@@ -1,6 +1,14 @@
 export type UserRole = 'producer' | 'singer' | 'venue';
 
-export interface LoginRequest {
+// Thông tin thiết bị cho push (FCM). Tùy chọn — thiếu vẫn login được.
+// Khớp field backend: device_id, fcm_token (*string omitempty), platform.
+export interface DeviceInfo {
+    device_id?: string;
+    fcm_token?: string;
+    platform?: 'ANDROID' | 'IOS' | 'WEB';
+}
+
+export interface LoginRequest extends DeviceInfo {
     identifier: string;
     password: string;
 }
@@ -155,7 +163,7 @@ export interface GetMeResponse {
 }
 
 // Google OAuth Types
-export interface MobileOAuthRequest {
+export interface MobileOAuthRequest extends DeviceInfo {
     code: string;
 }
 
