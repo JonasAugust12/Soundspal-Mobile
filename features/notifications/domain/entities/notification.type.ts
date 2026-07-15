@@ -9,7 +9,7 @@ export interface DevicePayload {
 }
 
 // Body cho endpoint cập nhật token riêng (dùng cho onTokenRefresh).
-// ⚠️ Endpoint phía backend hiện CHƯA có — xem khuyến nghị #2 trong docs/features/notifications.md
+// Backend: POST /auth/device-token (user-service) — phát lại event device-lifecycle.
 export interface RegisterDeviceRequest {
     device_id: string;
     fcm_token: string;
@@ -20,4 +20,16 @@ export interface RegisterDeviceResponse {
     code: number;
     message: string;
     data: null;
+}
+
+// Data payload backend đính kèm push (job-post-service phát notification-requested).
+// Không có sẵn 'route' — đường dẫn được dựng từ 'type' + id (xem resolvePushRoute).
+export interface PushNotificationData {
+    type?: string; // 'new_application' | 'application_status_changed'
+    job_id?: string;
+    submission_id?: string;
+    new_status?: string;
+    // Tương thích ngược: producer khác có thể gửi sẵn đường dẫn.
+    route?: string;
+    path?: string;
 }

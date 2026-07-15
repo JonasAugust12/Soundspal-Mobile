@@ -9,19 +9,20 @@ import {
     type FirebaseMessagingTypes,
 } from '@react-native-firebase/messaging';
 import { useToast } from '@/shared/presentation/hooks/useToast';
+import { resolvePushRoute } from '@/features/notifications/domain/utils/resolvePushRoute';
+import type { PushNotificationData } from '@/features/notifications/domain/entities/notification.type';
 
 type RemoteMessage = FirebaseMessagingTypes.RemoteMessage;
 
-// Backend đính đường dẫn deep-link trong data payload (vd data.route = '/(messages)/123').
+// Dựng deep-link từ data backend gửi ({ type, job_id, ... }) — xem resolvePushRoute.
 function extractRoute(message?: RemoteMessage | null): string | null {
-    const route = message?.data?.route ?? message?.data?.path;
-    return typeof route === 'string' && route.length > 0 ? route : null;
+    return resolvePushRoute(message?.data as PushNotificationData | undefined);
 }
 
 /**
  * Đăng ký các listener nhận thông báo. Gọi MỘT lần ở app/_layout.tsx.
  * - Foreground: OS không tự hiện banner → hiện toast in-app.
- * - Bấm thông báo (background/killed): điều hướng theo data.route.
+ * - Bấm thông báo (background/killed): điều hướng theo data payload (resolvePushRoute).
  */
 export function usePushNotifications() {
     const router = useRouter();
