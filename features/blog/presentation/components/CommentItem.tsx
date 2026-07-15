@@ -1,5 +1,6 @@
 import React, { memo, useState, useCallback, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, TextInput } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { useColorScheme } from 'nativewind';
 import { ThumbsUp, Pencil, Trash2 } from 'lucide-react-native';
 import { VoicePlayer } from './VoicePlayer';
@@ -63,7 +64,7 @@ function CommentItemComponent({
     }, [comment.id, editText, onUpdate]);
 
     const confirmDelete = useCallback(() => {
-        Alert.alert('Delete comment', 'This cannot be undone.', [
+        showAppDialog('Delete comment', 'This cannot be undone.', [
             { text: 'Cancel', style: 'cancel' },
             {
                 text: 'Delete',

@@ -6,13 +6,13 @@ import {
     ScrollView,
     TextInput,
     TouchableOpacity,
-    Alert,
     ActivityIndicator,
     Platform,
     StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Play } from 'lucide-react-native';
-import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
+import { KeyboardAwareModalOverlay, showAppDialog } from '@/shared/presentation/ui';
 import { useSubmitJobApplication } from '@/features/jobs/presentation/hooks/useJobApi';
 import { MediaPicker } from './MediaPicker';
 import type { Media } from '@/features/profiles/domain/entities/media.type';
@@ -33,6 +33,7 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
     const [showMediaPicker, setShowMediaPicker] = useState(false);
 
     const { mutate: submitApplication, isPending: isLoading } = useSubmitJobApplication();
+    const insets = useSafeAreaInsets();
 
     // Reset form when modal closes
     useEffect(() => {
@@ -49,26 +50,26 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
     const handleSubmit = () => {
         // Validation
         if (!fullName || fullName.trim().length < 2) {
-            Alert.alert('Lỗi', 'Họ và tên phải có ít nhất 2 ký tự');
+            showAppDialog('Lỗi', 'Họ và tên phải có ít nhất 2 ký tự');
             return;
         }
 
         // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !emailRegex.test(email)) {
-            Alert.alert('Lỗi', 'Email không hợp lệ');
+            showAppDialog('Lỗi', 'Email không hợp lệ');
             return;
         }
 
         // Phone number validation (Vietnamese format)
         const phoneRegex = /^(0|\+84)[0-9]{9,10}$/;
         if (!phoneNumber || !phoneRegex.test(phoneNumber.replace(/\s/g, ''))) {
-            Alert.alert('Lỗi', 'Số điện thoại không hợp lệ (VD: 0912345678)');
+            showAppDialog('Lỗi', 'Số điện thoại không hợp lệ (VD: 0912345678)');
             return;
         }
 
         if (!coverLetter || coverLetter.trim().length < 50) {
-            Alert.alert('Lỗi', 'Giới thiệu bản thân phải có ít nhất 50 ký tự');
+            showAppDialog('Lỗi', 'Giới thiệu bản thân phải có ít nhất 50 ký tự');
             return;
         }
 
@@ -83,7 +84,7 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
             const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
             const invalidLinks = parsedLinks.filter((link) => !urlRegex.test(link));
             if (invalidLinks.length > 0) {
-                Alert.alert('Lỗi', `Link không hợp lệ: ${invalidLinks[0]}`);
+                showAppDialog('Lỗi', `Link không hợp lệ: ${invalidLinks[0]}`);
                 return;
             }
         }
@@ -105,7 +106,7 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
                     const successMessage =
                         (data as { message?: string })?.message ||
                         'Đã gửi đơn ứng tuyển thành công!';
-                    Alert.alert('Thành công', successMessage, [
+                    showAppDialog('Thành công', successMessage, [
                         {
                             text: 'OK',
                             onPress: onClose,
@@ -121,7 +122,7 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
                         err?.response?.data?.message ||
                         err?.message ||
                         'Không thể gửi đơn ứng tuyển';
-                    Alert.alert('Lỗi', errorMessage);
+                    showAppDialog('Lỗi', errorMessage);
                 },
             },
         );
@@ -283,7 +284,10 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
                         </ScrollView>
 
                         {/* Footer Buttons */}
-                        <View className="p-5 border-t border-gray-200 dark:border-gray-700 gap-3">
+                        <View
+                            className="px-5 pt-5 border-t border-gray-200 dark:border-gray-700 gap-3"
+                            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+                        >
                             <TouchableOpacity
                                 onPress={handleSubmit}
                                 disabled={isLoading}

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
@@ -104,14 +105,14 @@ export default function JobSubmissionsScreen() {
                                                             : action === 'reject'
                                                               ? 'từ chối'
                                                               : 'bỏ qua';
-                                                    Alert.alert(
+                                                    showAppDialog(
                                                         'Thành công',
                                                         `Đã ${actionText} ứng tuyển`,
                                                     );
                                                 },
                                                 onError: (error: unknown) => {
                                                     const err = error as { message?: string };
-                                                    Alert.alert(
+                                                    showAppDialog(
                                                         'Lỗi',
                                                         err?.message || 'Không thể xử lý ứng tuyển',
                                                     );

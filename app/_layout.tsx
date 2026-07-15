@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import { useProtectedRoute } from '@/shared/presentation/hooks/useProtectedRoute';
 import { useAuthInitialize } from '@/features/auth/presentation/hooks/useAuthInitialize';
+import { AppDialogHost } from '@/shared/presentation/ui';
 import { usePushNotifications } from '@/features/notifications/presentation/hooks/usePushNotifications';
 import { usePushTokenSync } from '@/features/notifications/presentation/hooks/usePushTokenSync';
 // Side-effect: đăng ký handler nhận push khi app ở background/killed. Phải import sớm.
@@ -49,6 +50,7 @@ function RootLayoutNav() {
                 <Stack.Screen name="(blog)" />
                 <Stack.Screen name="(challenge)" />
             </Stack>
+            <AppDialogHost />
             <Toast />
         </>
     );

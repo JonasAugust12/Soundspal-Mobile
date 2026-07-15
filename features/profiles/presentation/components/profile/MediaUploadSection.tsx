@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    ActivityIndicator,
-    Alert,
-    Image,
-    Dimensions,
-} from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Image, Dimensions } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import * as ImagePicker from 'expo-image-picker';
 import { Plus, Trash2 } from 'lucide-react-native';
 import {
@@ -129,7 +122,7 @@ export const MediaUploadSection = () => {
             uploadMedia(formData, {
                 onSuccess: () => {
                     console.warn('✅ Upload thành công!');
-                    Alert.alert(
+                    showAppDialog(
                         'Thành công',
                         `Tải lên ${type === 'image' ? 'ảnh' : 'video'} thành công`,
                     );
@@ -137,14 +130,14 @@ export const MediaUploadSection = () => {
                 onError: (error: unknown) => {
                     const err = error as { message?: string };
                     console.error('❌ Upload lỗi:', err);
-                    Alert.alert('Lỗi', err?.message || 'Không thể tải lên phương tiện');
+                    showAppDialog('Lỗi', err?.message || 'Không thể tải lên phương tiện');
                 },
             });
         }
     };
 
     const handleDeleteMedia = (id: string) => {
-        Alert.alert('Xác nhận', 'Bạn có chắc chắn muốn xóa phương tiện này?', [
+        showAppDialog('Xác nhận', 'Bạn có chắc chắn muốn xóa phương tiện này?', [
             { text: 'Hủy' },
             {
                 text: 'Xóa',

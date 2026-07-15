@@ -54,6 +54,8 @@ export interface AppDialogProps {
     confirmDisabled?: boolean;
     /** Chạm ra nền tối để đóng (mặc định true). */
     dismissOnBackdrop?: boolean;
+    /** Ẩn nút Hủy — chế độ thông báo 1 nút (alert). */
+    hideCancel?: boolean;
 }
 
 /**
@@ -73,6 +75,7 @@ export function AppDialog({
     loading = false,
     confirmDisabled = false,
     dismissOnBackdrop = true,
+    hideCancel = false,
 }: AppDialogProps) {
     const t = TONES[tone];
     const confirmBlocked = loading || confirmDisabled;
@@ -112,16 +115,18 @@ export function AppDialog({
 
                     {/* Actions (nằm ngang) */}
                     <View className="flex-row gap-3 mt-6 w-full">
-                        <TouchableOpacity
-                            onPress={onCancel}
-                            disabled={loading}
-                            activeOpacity={0.7}
-                            className={`flex-1 py-3.5 rounded-2xl items-center bg-white dark:bg-gray-900 ${t.outlineBtnClass} ${loading ? 'opacity-50' : ''}`}
-                        >
-                            <Text className={`text-base font-bold ${t.outlineTextClass}`}>
-                                {cancelText}
-                            </Text>
-                        </TouchableOpacity>
+                        {!hideCancel && (
+                            <TouchableOpacity
+                                onPress={onCancel}
+                                disabled={loading}
+                                activeOpacity={0.7}
+                                className={`flex-1 py-3.5 rounded-2xl items-center bg-white dark:bg-gray-900 ${t.outlineBtnClass} ${loading ? 'opacity-50' : ''}`}
+                            >
+                                <Text className={`text-base font-bold ${t.outlineTextClass}`}>
+                                    {cancelText}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
 
                         <TouchableOpacity
                             onPress={onConfirm}

@@ -62,6 +62,9 @@ export interface Job {
     creator_role: string;
     creator_username: string;
     creator_display_name: string;
+    creator_avatar_url?: string;
+    creator_avatar?: string;
+    creator_cover_url?: string;
     deadline: string;
     description: string;
     experience_level: string;
@@ -90,6 +93,13 @@ export interface Job {
     total_submissions: number;
     can_accept_submissions: boolean;
     is_deadline_passed: boolean;
+    max_submissions?: number;
+
+    // Trạng thái theo người xem (backend trả khi có auth) — additive contract
+    viewer_is_owner?: boolean;
+    viewer_has_applied?: boolean;
+    viewer_submission_id?: string;
+    viewer_submission_status?: SubmissionStatus;
 }
 
 // Pagination
@@ -296,3 +306,24 @@ export interface ReviewSubmissionRequest {
 }
 
 export type ReviewSubmissionResponse = OpportunitySubmission;
+
+// Bulk review (POST /submissions/bulk-action)
+export type BulkReviewAction = 'accept' | 'reject' | 'skip';
+
+export interface BulkReviewRequest {
+    submission_ids: string[];
+    action: BulkReviewAction;
+    notes?: string;
+}
+
+export interface BulkActionResultItem {
+    submission_id: string;
+    success: boolean;
+    error?: string;
+}
+
+export interface BulkActionResponse {
+    success_count: number;
+    failure_count: number;
+    results: BulkActionResultItem[];
+}

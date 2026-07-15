@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { Mail, Phone, CheckCircle, XCircle } from 'lucide-react-native';
 import type { OpportunitySubmission } from '@/features/collab/domain/entities/collaboration.type';
 import { formatDate } from '@/features/jobs/domain/utils/jobFormatters';
@@ -17,7 +18,7 @@ export const OpportunitySubmissionCard = ({
     isReviewing = false,
 }: OpportunitySubmissionCardProps) => {
     const handleAccept = () => {
-        Alert.alert(
+        showAppDialog(
             'Xác nhận chấp nhận',
             `Bạn chắc chắn muốn chấp nhận ứng tuyển từ ${item.full_name}?`,
             [
@@ -32,19 +33,17 @@ export const OpportunitySubmissionCard = ({
     };
 
     const handleReject = () => {
-        Alert.prompt(
-            'Lý do từ chối',
-            'Vui lòng nhập lý do từ chối (tùy chọn)',
+        showAppDialog(
+            'Từ chối ứng tuyển',
+            `Bạn chắc chắn muốn từ chối ứng tuyển từ ${item.full_name}?`,
             [
-                { text: 'Hủy', onPress: () => {} },
+                { text: 'Hủy', style: 'cancel' },
                 {
                     text: 'Từ chối',
-                    onPress: (reason?: string) => onReview?.(item.id, 'reject', reason),
                     style: 'destructive',
+                    onPress: () => onReview?.(item.id, 'reject'),
                 },
             ],
-            'plain-text',
-            '',
         );
     };
 

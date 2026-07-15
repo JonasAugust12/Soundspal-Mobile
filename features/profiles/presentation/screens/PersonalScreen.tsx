@@ -9,7 +9,7 @@ import {
     StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
+import { SCREEN_SAFE_AREA_EDGES, LoadingOverlay } from '@/shared/presentation/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
@@ -79,7 +79,7 @@ const DEFAULT_ACCENT: RoleAccent = {
 
 export default function PersonalScreen() {
     const { mutateAsync: logoutApi, isPending: isLoggingOut } = useLogout();
-    const { user, logout: clearAuthState } = useAuthStore();
+    const { user } = useAuthStore();
     const { data: currentUser } = useGetCurrentUser();
     const { showSuccess, showError } = useToast();
     const router = useRouter();
@@ -94,15 +94,13 @@ export default function PersonalScreen() {
     const showCover = !!coverUrl && !coverFailed;
 
     const handleLogout = async () => {
+        // useLogout (onSettled) đã tự xóa session + cache dù API thành công hay lỗi.
+        // Điều hướng về màn đăng nhập do useProtectedRoute lo → chỉ 1 lần, tránh vào login 2 lần.
         try {
             await logoutApi();
             showSuccess(AuthSuccessToast.LogoutTitle, AuthSuccessToast.LogoutBody);
-            clearAuthState();
-            router.replace('/(auth)/login');
         } catch {
             showError(AuthToastTitle.Error, AUTH_ERROR_CONTEXT_FALLBACKS[AuthErrorContext.Logout]);
-            clearAuthState();
-            router.replace('/(auth)/login');
         }
     };
 
@@ -366,6 +364,9 @@ export default function PersonalScreen() {
                 {/* Bottom Spacing */}
                 <View className="h-20" />
             </ScrollView>
+
+            {/* Loading khi đang đăng xuất */}
+            <LoadingOverlay visible={isLoggingOut} message="Đang đăng xuất..." />
         </SafeAreaView>
     );
 }

@@ -24,6 +24,7 @@ export class JobRepositoryImpl implements IJobRepository {
     getJobSubmissions = jobRemoteDataSource.getJobSubmissions;
     reviewSubmission = jobRemoteDataSource.reviewSubmission;
     getPendingApplicationsCount = jobRemoteDataSource.getPendingApplicationsCount;
+    bulkReviewSubmissions = jobRemoteDataSource.bulkReviewSubmissions;
 }
 
 export const jobRepository = new JobRepositoryImpl();

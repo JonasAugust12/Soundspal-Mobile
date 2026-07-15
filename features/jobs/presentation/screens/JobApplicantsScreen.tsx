@@ -5,16 +5,25 @@ import {
     FlatList,
     TouchableOpacity,
     ActivityIndicator,
-    Alert,
     RefreshControl,
     Linking,
 } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, Mail, Phone, Link as LinkIcon, Users } from 'lucide-react-native';
+import {
+    ChevronLeft,
+    Mail,
+    Phone,
+    Link as LinkIcon,
+    Users,
+    CheckSquare,
+    Square,
+} from 'lucide-react-native';
 import {
     useGetJobSubmissions,
     useReviewSubmission,
+    useBulkReviewSubmissions,
 } from '@/features/jobs/presentation/hooks/useJobApi';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { getSubmissionStatusMeta } from '@/features/jobs/domain/utils/submissionStatus';
@@ -31,13 +40,68 @@ export default function JobApplicantsScreen() {
         pageSize: 50,
     });
     const { mutate: review, isPending: isReviewing } = useReviewSubmission(jobId);
+    const { mutate: bulkReview, isPending: isBulkReviewing } = useBulkReviewSubmissions(jobId);
     const [reviewingId, setReviewingId] = useState<string | null>(null);
 
+    // Chế độ chọn nhiều để duyệt hàng loạt.
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
     const submissions = data?.submissions ?? [];
+    const reviewableCount = submissions.filter((s) => s.can_be_reviewed).length;
+
+    const toggleSelect = (id: string) =>
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+        );
+
+    const exitSelection = () => {
+        setSelectionMode(false);
+        setSelectedIds([]);
+    };
+
+    const doBulk = (action: 'accept' | 'reject') => {
+        if (selectedIds.length === 0) return;
+        const verb = action === 'accept' ? 'Chấp nhận' : 'Từ chối';
+        showAppDialog(
+            `${verb} ${selectedIds.length} đơn`,
+            `Bạn có chắc muốn ${verb.toLowerCase()} ${selectedIds.length} đơn đã chọn?`,
+            [
+                { text: 'Hủy', style: 'cancel' },
+                {
+                    text: verb,
+                    style: action === 'reject' ? 'destructive' : 'default',
+                    onPress: () =>
+                        bulkReview(
+                            { submission_ids: selectedIds, action },
+                            {
+                                onSuccess: (res) => {
+                                    showSuccess(
+                                        'Thành công',
+                                        `Đã ${verb.toLowerCase()} ${res.success_count} đơn` +
+                                            (res.failure_count > 0
+                                                ? `, ${res.failure_count} lỗi`
+                                                : ''),
+                                    );
+                                    exitSelection();
+                                },
+                                onError: (err: unknown) => {
+                                    const message =
+                                        (err as { response?: { data?: { message?: string } } })
+                                            ?.response?.data?.message ||
+                                        'Không thể duyệt hàng loạt';
+                                    showError('Lỗi', message);
+                                },
+                            },
+                        ),
+                },
+            ],
+        );
+    };
 
     const doReview = (submission: OpportunitySubmission, action: 'accept' | 'reject') => {
         const verb = action === 'accept' ? 'Chấp nhận' : 'Từ chối';
-        Alert.alert(`${verb} đơn ứng tuyển`, `Bạn có chắc muốn ${verb.toLowerCase()} đơn này?`, [
+        showAppDialog(`${verb} đơn ứng tuyển`, `Bạn có chắc muốn ${verb.toLowerCase()} đơn này?`, [
             { text: 'Hủy', style: 'cancel' },
             {
                 text: verb,
@@ -66,13 +130,31 @@ export default function JobApplicantsScreen() {
     const renderItem = ({ item }: { item: OpportunitySubmission }) => {
         const meta = getSubmissionStatusMeta(item.status);
         const isThisReviewing = isReviewing && reviewingId === item.id;
+        const selectable = item.can_be_reviewed;
+        const selected = selectedIds.includes(item.id);
 
         return (
-            <View className="mx-4 mb-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-4 gap-2.5">
-                <View className="flex-row items-start justify-between gap-2">
-                    <Text className="flex-1 text-base font-bold text-gray-900 dark:text-white">
-                        {item.full_name || 'Ứng viên'}
-                    </Text>
+            <View
+                className={`mx-4 mb-3 rounded-2xl bg-white dark:bg-gray-800 border p-4 gap-2.5 ${selectionMode && selected ? 'border-purple-500' : 'border-gray-100 dark:border-gray-700'}`}
+            >
+                <View className="flex-row items-center justify-between gap-2">
+                    <View className="flex-row items-center gap-2 flex-1">
+                        {selectionMode && selectable && (
+                            <TouchableOpacity
+                                onPress={() => toggleSelect(item.id)}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                {selected ? (
+                                    <CheckSquare size={22} color="#7C3BED" />
+                                ) : (
+                                    <Square size={22} color="#9CA3AF" />
+                                )}
+                            </TouchableOpacity>
+                        )}
+                        <Text className="flex-1 text-base font-bold text-gray-900 dark:text-white">
+                            {item.full_name || 'Ứng viên'}
+                        </Text>
+                    </View>
                     <View className={`px-2.5 py-1 rounded-full ${meta.bgClass}`}>
                         <Text className={`text-xs font-semibold ${meta.textClass}`}>
                             {meta.label}
@@ -127,7 +209,7 @@ export default function JobApplicantsScreen() {
                     </Text>
                 ) : null}
 
-                {item.can_be_reviewed && (
+                {!selectionMode && item.can_be_reviewed && (
                     <View className="flex-row gap-3 mt-1">
                         <TouchableOpacity
                             onPress={() => doReview(item, 'accept')}
@@ -161,9 +243,20 @@ export default function JobApplicantsScreen() {
                 <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
                     <ChevronLeft size={24} color="#7C3BED" />
                 </TouchableOpacity>
-                <Text className="text-xl font-extrabold text-gray-900 dark:text-white">
+                <Text className="text-xl font-extrabold text-gray-900 dark:text-white flex-1">
                     Đơn ứng tuyển {data?.total ? `(${data.total})` : ''}
                 </Text>
+                {reviewableCount > 0 && (
+                    <TouchableOpacity
+                        onPress={() => (selectionMode ? exitSelection() : setSelectionMode(true))}
+                        className="px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20"
+                        activeOpacity={0.7}
+                    >
+                        <Text className="text-purple-600 font-bold text-sm">
+                            {selectionMode ? 'Xong' : 'Chọn nhiều'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             {isLoading ? (
@@ -200,6 +293,36 @@ export default function JobApplicantsScreen() {
                         </View>
                     }
                 />
+            )}
+
+            {/* Thanh duyệt hàng loạt */}
+            {selectionMode && selectedIds.length > 0 && (
+                <View className="px-4 pt-3 pb-6 border-t border-gray-100 dark:border-gray-800 flex-row gap-3 bg-white dark:bg-gray-900">
+                    <TouchableOpacity
+                        onPress={() => doBulk('reject')}
+                        disabled={isBulkReviewing}
+                        className="flex-1 border-2 border-red-400 rounded-2xl py-3.5 items-center justify-center"
+                        activeOpacity={0.8}
+                    >
+                        <Text className="text-red-500 font-bold">
+                            Từ chối ({selectedIds.length})
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => doBulk('accept')}
+                        disabled={isBulkReviewing}
+                        className="flex-1 bg-green-500 rounded-2xl py-3.5 items-center justify-center"
+                        activeOpacity={0.8}
+                    >
+                        {isBulkReviewing ? (
+                            <ActivityIndicator size="small" color="white" />
+                        ) : (
+                            <Text className="text-white font-bold">
+                                Chấp nhận ({selectedIds.length})
+                            </Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
             )}
         </SafeAreaView>
     );

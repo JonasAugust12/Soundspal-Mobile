@@ -10,6 +10,9 @@ import type {
     MySubmissionsResponse,
     PostStatus,
     PostVisibility,
+    PostType,
+    LocationType,
+    ExperienceLevel,
     GetJobSubmissionsParams,
     OpportunitySubmission,
     OpportunitySubmissionsResponse,
@@ -17,6 +20,8 @@ import type {
     ReviewSubmissionRequest,
     ReviewSubmissionResponse,
     PendingCountResponse,
+    BulkReviewRequest,
+    BulkActionResponse,
 } from '@/features/jobs/domain/entities/job.type';
 
 export interface GetJobsParams {
@@ -25,6 +30,16 @@ export interface GetJobsParams {
     search?: string;
     status?: PostStatus;
     visibility?: PostVisibility;
+    // Bộ lọc nâng cao
+    post_type?: PostType;
+    location?: string;
+    location_type?: LocationType;
+    experience_level?: ExperienceLevel;
+    budget_min?: number;
+    budget_max?: number;
+    genres?: string[];
+    sort_by?: string;
+    sort_order?: 'asc' | 'desc';
 }
 
 const buildListQuery = (params: GetJobsParams) => {
@@ -32,24 +47,44 @@ const buildListQuery = (params: GetJobsParams) => {
         page: (params.page ?? 1).toString(),
         page_size: (params.pageSize ?? 10).toString(),
     });
-    if (params.status) {
-        searchParams.append('status', params.status);
-    }
-    if (params.visibility) {
-        searchParams.append('visibility', params.visibility);
-    }
+    if (params.status) searchParams.append('status', params.status);
+    if (params.visibility) searchParams.append('visibility', params.visibility);
+    if (params.post_type) searchParams.append('post_type', params.post_type);
+    if (params.location_type) searchParams.append('location_type', params.location_type);
+    if (params.experience_level) searchParams.append('experience_level', params.experience_level);
+    if (params.location?.trim()) searchParams.append('location', params.location.trim());
+    if (typeof params.budget_min === 'number')
+        searchParams.append('budget_min', String(params.budget_min));
+    if (typeof params.budget_max === 'number')
+        searchParams.append('budget_max', String(params.budget_max));
+    if (params.sort_by) searchParams.append('sort_by', params.sort_by);
+    if (params.sort_order) searchParams.append('sort_order', params.sort_order);
+    params.genres?.forEach((g) => searchParams.append('genres', g));
     return searchParams;
 };
 
 export const jobRemoteDataSource = {
     getJobs: (params: GetJobsParams) => {
         const searchParams = buildListQuery(params);
+        const hasAdvancedFilters = !!(
+            params.post_type ||
+            params.location_type ||
+            params.experience_level ||
+            params.location ||
+            typeof params.budget_min === 'number' ||
+            typeof params.budget_max === 'number' ||
+            (params.genres && params.genres.length > 0)
+        );
+        // Text search dùng /posts/search; nhưng nếu có filter nâng cao thì ưu tiên /posts
+        // (endpoint hỗ trợ JobPostFilters). Vẫn đính q để BE lọc thêm nếu hỗ trợ.
         if (params.search?.trim()) {
             searchParams.append('q', params.search.trim());
-            return createApiCall<JobListResponse>(
-                'GET',
-                `/posts/search?${searchParams.toString()}`,
-            )();
+            if (!hasAdvancedFilters) {
+                return createApiCall<JobListResponse>(
+                    'GET',
+                    `/posts/search?${searchParams.toString()}`,
+                )();
+            }
         }
         return createApiCall<JobListResponse>('GET', `/posts?${searchParams.toString()}`)();
     },
@@ -136,5 +171,13 @@ export const jobRemoteDataSource = {
     // Flow 9 — Đếm số đơn đang chờ duyệt (toàn bộ job của venue)
     getPendingApplicationsCount: () => {
         return createApiCall<PendingCountResponse>('GET', '/submissions/pending-count')();
+    },
+
+    // Flow 5 — Venue duyệt HÀNG LOẠT (accept/reject/skip nhiều đơn cùng lúc)
+    bulkReviewSubmissions: (body: BulkReviewRequest) => {
+        return createApiCall<BulkActionResponse, BulkReviewRequest>(
+            'POST',
+            '/submissions/bulk-action',
+        )(body);
     },
 };
