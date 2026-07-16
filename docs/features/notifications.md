@@ -1,8 +1,13 @@
-# Feature: Push Notification (FCM)
+# Feature: Push Notification (FCM) — MOBILE
 
 > Tài liệu tổng thể cho tính năng push notification. Viết để **cả người mới lẫn AI agent khác**
 > đều tiếp nối được: có đầy đủ path file (2 repo), contract dữ liệu, trạng thái từng phần và
 > hướng dẫn code cho phần còn thiếu.
+>
+> 📄 Tài liệu anh em:
+>
+> - [`notifications-messaging.md`](./notifications-messaging.md) — push cho **tin nhắn** (gửi tin → có banner)
+> - [`notifications-web.md`](./notifications-web.md) — để **web** cũng đăng ký FCM token và nhận push
 
 ## 0. Bối cảnh 2 repo
 
@@ -59,21 +64,25 @@ sequenceDiagram
 
 ## 2. Trạng thái tổng quan
 
-| Chặng                                          | Phía                           | Trạng thái               |
-| ---------------------------------------------- | ------------------------------ | ------------------------ |
-| Xin quyền + lấy FCM token                      | Mobile                         | ✅ Xong                  |
-| Cấu hình `google-services.json` (Android)      | Mobile                         | ✅ Xong                  |
-| Gửi token kèm login / mobile-oauth             | Mobile                         | ✅ Xong                  |
-| Nhận token ở DTO login + phát event            | Backend `user-service`         | ✅ Xong                  |
-| **Ghi `DeviceRegistration` vào DB (consumer)** | Backend `notification-service` | 🔴 **THIẾU — nút nghẽn** |
-| Service nghiệp vụ phát sự kiện push            | Backend                        | 🟠 Cần nối               |
-| Đọc device + gọi FCM gửi                       | Backend `notification-service` | ✅ Xong                  |
-| Nhận / hiện / bấm mở màn                       | Mobile                         | ✅ Xong                  |
-| Endpoint cập nhật token (`/auth/device-token`) | Backend `user-service`         | 🟠 Thiếu                 |
-| Rebuild dev client (native module mới)         | Mobile                         | ⏳ Cần chạy              |
+| Chặng                                          | Phía                           | Trạng thái                               |
+| ---------------------------------------------- | ------------------------------ | ---------------------------------------- |
+| Xin quyền + lấy FCM token                      | Mobile                         | ✅ Xong                                  |
+| Cấu hình `google-services.json` (Android)      | Mobile                         | ✅ Xong                                  |
+| Gửi token kèm login / mobile-oauth             | Mobile                         | ✅ Xong                                  |
+| Nhận token ở DTO login + phát event            | Backend `user-service`         | ✅ Xong                                  |
+| **Ghi `DeviceRegistration` vào DB (consumer)** | Backend `notification-service` | ✅ Xong (`RedisDeviceLifecycleConsumer`) |
+| Service nghiệp vụ phát sự kiện push (job)      | Backend `job-post-service`     | ✅ Xong (submission + review)            |
+| Đọc device + gọi FCM gửi                       | Backend `notification-service` | ✅ Xong                                  |
+| Nhận / hiện / bấm mở màn                       | Mobile                         | ✅ Xong                                  |
+| Endpoint cập nhật token (`/auth/device-token`) | Backend `user-service`         | ✅ Xong                                  |
+| Unit test luồng push (mobile)                  | Mobile                         | ✅ 28 test pass                          |
+| Rebuild dev client (native module mới)         | Mobile                         | ⏳ Cần chạy                              |
+| Trỏ đúng backend đã deploy pipeline FCM        | Mobile                         | ⚠️ Cần xác nhận (xem §3.3)               |
 
-**Tóm tắt:** Mobile xong code + cấu hình Android, chỉ còn **rebuild**. Backend gửi push được nhưng
-**quên bước lưu token** → mảnh 🔴 là thứ duy nhất chặn cả luồng.
+**Tóm tắt (cập nhật 2026-07-15):** Backend đã hoàn thiện cả 3 mảnh từng thiếu (consumer ghi device,
+phát push job, endpoint token — xem `DATN-Backend/docs/PUSH_BACKEND_CHANGES.md`). Phía mobile code +
+cấu hình + unit test đã xong. Chỉ còn **2 việc để bật**: (1) **rebuild dev client** (§3.2) và
+(2) **xác nhận `baseURL` trỏ đúng backend có pipeline FCM** (§3.3).
 
 ---
 
@@ -119,6 +128,21 @@ cd TL-Mobile
 npx expo prebuild --clean --platform android
 npx expo run:android        # hoặc: npm run build:android:dev  (EAS)
 ```
+
+### 3.3 ⚠️ Xác nhận backend đích trước khi bật
+
+`shared/infrastructure/api/apiClient.ts` hiện đặt:
+
+```ts
+baseURL: 'https://api.soundspal.com/api/v1',   // dòng đang dùng
+//baseURL:'https://talentlink.io.vn/api/v1',   // dòng cũ (đã comment)
+```
+
+Login (đính `fcm_token`) đi theo `baseURL` này → **backend sau `api.soundspal.com` phải là bản
+`DATN-Backend` đã deploy `RedisDeviceLifecycleConsumer` + `notification-service`** thì device mới được
+ghi và push mới tới. Nếu pipeline FCM chỉ chạy trên stack `talentlink.io.vn` thì đổi lại dòng baseURL.
+Lưu ý interceptor refresh (dòng ~124) vẫn hardcode `talentlink.io.vn/api/v1/auth/refresh` — hai domain
+đang lệch nhau, cần thống nhất về đúng stack có pipeline FCM.
 
 ---
 

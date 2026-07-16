@@ -94,6 +94,14 @@ function bringToFront(order: string[], id: string): string[] {
     return [id, ...filtered];
 }
 
+// Helper: cũ → mới. Không sửa mảng gốc; sort của JS ổn định nên các tin nhắn trùng
+// createdAt giữ nguyên thứ tự tương đối.
+function sortByCreatedAtAsc(messages: Message[]): Message[] {
+    return [...messages].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+}
+
 export const useMessagingStore = create<MessagingState>()((set, get) => ({
     // ── Initial state ────────────────────────────────────────────────────────
     conversationsById: {},
@@ -186,7 +194,11 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
             const newMessagesById = { ...state.messagesById };
             const msgIds: string[] = [];
 
-            for (const msg of messages) {
+            // Store luôn giữ thứ tự CŨ → MỚI (addMessage nối vào cuối, prependMessages chèn vào
+            // đầu). API `GET /messages/conversation/:id` trả DESC (mới nhất trước) để phân trang
+            // bằng cursor `before` → chuẩn hoá tại đây để caller không phải tự nhớ, và để màn chat
+            // không hiển thị ngược.
+            for (const msg of sortByCreatedAtAsc(messages)) {
                 newMessagesById[msg.id] = msg;
                 msgIds.push(msg.id);
             }

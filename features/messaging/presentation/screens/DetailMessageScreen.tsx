@@ -9,7 +9,7 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Phone, Video } from 'lucide-react-native';
@@ -43,6 +43,11 @@ export default function DetailMessageScreen() {
     const router = useRouter();
     const params = useLocalSearchParams<{ conversationId: string }>();
     const conversationId = params.conversationId;
+
+    // SCREEN_SAFE_AREA_EDGES bỏ cạnh 'bottom' (các màn trong tabs đã có tab bar lo phần đáy).
+    // Màn này là stack screen có ô nhập cố định ở đáy → phải tự chừa chỗ cho thanh điều hướng,
+    // nếu không ô nhập sẽ bị nav bar đè (app bật edgeToEdgeEnabled).
+    const insets = useSafeAreaInsets();
 
     const { user: currentUser } = useAuthStore();
     const currentUserId = currentUser?.id;
@@ -619,7 +624,11 @@ export default function DetailMessageScreen() {
 
                     {/* Message Input */}
                     <View
-                        style={styles.inputContainer}
+                        style={[
+                            styles.inputContainer,
+                            // MessageInput đã có sẵn py-2; phần này chỉ chừa thêm chỗ nav bar.
+                            { paddingBottom: Math.max(insets.bottom, 8) },
+                        ]}
                         className="bg-white border-t border-gray-100"
                     >
                         <MessageInput

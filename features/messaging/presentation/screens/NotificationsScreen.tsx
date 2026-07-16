@@ -17,7 +17,6 @@ import Toast from 'react-native-toast-message';
 import { ChatItem, showAppDialog } from '@/shared/presentation/ui';
 import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
-import { socketService } from '@/shared/infrastructure/socket/socketService';
 import { apiClient } from '@/shared/infrastructure/api/apiClient';
 import { getConversationPreview } from '@/features/messaging/domain/utils/messageContent';
 import type { Conversation } from '@/features/messaging/domain/entities/messaging.type';
@@ -59,12 +58,8 @@ export default function MessagesScreen() {
         fetchConversations();
     }, [setConversations, setLoadingConversations]);
 
-    // Ensure socket is connected
-    useEffect(() => {
-        if (!socketService.isConnected()) {
-            socketService.connect();
-        }
-    }, []);
+    // Vòng đời socket do SocketProvider (app/_layout.tsx) sở hữu — màn hình không tự connect,
+    // nếu không sẽ nối lại socket ngay sau khi AppState ngắt lúc app xuống nền.
 
     const handleConversationPress = (conversationId: string) => {
         router.push({

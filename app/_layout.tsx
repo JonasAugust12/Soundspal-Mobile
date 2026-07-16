@@ -10,6 +10,7 @@ import Toast from 'react-native-toast-message';
 import { useProtectedRoute } from '@/shared/presentation/hooks/useProtectedRoute';
 import { useAuthInitialize } from '@/features/auth/presentation/hooks/useAuthInitialize';
 import { AppDialogHost } from '@/shared/presentation/ui';
+import { SocketProvider } from '@/shared/presentation/providers/SocketProvider';
 import { usePushNotifications } from '@/features/notifications/presentation/hooks/usePushNotifications';
 import { usePushTokenSync } from '@/features/notifications/presentation/hooks/usePushTokenSync';
 // Side-effect: đăng ký handler nhận push khi app ở background/killed. Phải import sớm.
@@ -61,7 +62,10 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
             <SafeAreaProvider>
                 <KeyboardProvider>
-                    <RootLayoutNav />
+                    {/* Sở hữu vòng đời socket + ngắt khi app xuống nền để nhận được push tin nhắn */}
+                    <SocketProvider>
+                        <RootLayoutNav />
+                    </SocketProvider>
                 </KeyboardProvider>
             </SafeAreaProvider>
         </QueryClientProvider>

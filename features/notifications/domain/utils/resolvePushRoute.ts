@@ -3,11 +3,13 @@ import type { PushNotificationData } from '@/features/notifications/domain/entit
 /**
  * Dựng đường dẫn deep-link từ data payload của push notification.
  *
- * Backend (job-post-service) phát `notification-requested` với data dạng
- *   { type, job_id, submission_id, new_status } — KHÔNG có sẵn 'route'.
+ * Backend phát `notification-requested` với data trung lập — KHÔNG có sẵn 'route':
+ *   job-post-service:   { type, job_id, submission_id, new_status }
+ *   messaging-service:  { type, conversation_id, message_id }
  *
  * - `new_application` (gửi tới venue): mở danh sách đơn ứng tuyển của job đó.
  * - `application_status_changed` (gửi tới artist): mở màn "Đơn của tôi".
+ * - `new_message` (gửi tới người nhận): mở đúng cuộc trò chuyện.
  *
  * Vẫn ưu tiên `route`/`path` nếu một producer khác gửi sẵn đường dẫn.
  * Trả `null` khi không suy ra được (chỉ mở app, không điều hướng).
@@ -25,6 +27,11 @@ export function resolvePushRoute(data?: PushNotificationData | null): string | n
             return data.job_id ? `/(jobs)/applicants?id=${data.job_id}` : null;
         case 'application_status_changed':
             return '/(jobs)/my-applications';
+        case 'new_message':
+            // Route thật của màn chat — KHÔNG phải `/(messages)/<id>` (route đó không tồn tại).
+            return data.conversation_id
+                ? `/(messages)/detailMessage?conversationId=${data.conversation_id}`
+                : null;
         default:
             return null;
     }

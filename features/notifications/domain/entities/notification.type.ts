@@ -22,13 +22,18 @@ export interface RegisterDeviceResponse {
     data: null;
 }
 
-// Data payload backend đính kèm push (job-post-service phát notification-requested).
-// Không có sẵn 'route' — đường dẫn được dựng từ 'type' + id (xem resolvePushRoute).
+// Data payload backend đính kèm push (job-post-service / messaging-service phát
+// notification-requested). Không có sẵn 'route' — đường dẫn được dựng từ 'type' + id
+// (xem resolvePushRoute) để mỗi client tự map sang route của mình.
 export interface PushNotificationData {
-    type?: string; // 'new_application' | 'application_status_changed'
+    type?: string; // 'new_application' | 'application_status_changed' | 'new_message'
+    // job-post-service
     job_id?: string;
     submission_id?: string;
     new_status?: string;
+    // messaging-service
+    conversation_id?: string;
+    message_id?: string;
     // Tương thích ngược: producer khác có thể gửi sẵn đường dẫn.
     route?: string;
     path?: string;
