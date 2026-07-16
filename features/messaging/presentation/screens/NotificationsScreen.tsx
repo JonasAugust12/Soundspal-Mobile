@@ -13,11 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Search } from 'lucide-react-native';
-import { ChatItem } from '@/shared/presentation/ui';
+import Toast from 'react-native-toast-message';
+import { ChatItem, showAppDialog } from '@/shared/presentation/ui';
 import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { socketService } from '@/shared/infrastructure/socket/socketService';
 import { apiClient } from '@/shared/infrastructure/api/apiClient';
+import { getConversationPreview } from '@/features/messaging/domain/utils/messageContent';
 import type { Conversation } from '@/features/messaging/domain/entities/messaging.type';
 
 export default function MessagesScreen() {
@@ -37,6 +39,7 @@ export default function MessagesScreen() {
         setConversations,
         setLoadingConversations,
         getSortedConversations,
+        removeConversation,
     } = useMessagingStore();
 
     // Fetch conversations on mount
@@ -68,6 +71,30 @@ export default function MessagesScreen() {
             pathname: '/(messages)/detailMessage',
             params: { conversationId },
         });
+    };
+
+    const handleDeleteConversation = (conversationId: string, name: string) => {
+        showAppDialog('Xóa hội thoại', `Xóa cuộc trò chuyện với ${name}?`, [
+            { text: 'Hủy', style: 'cancel' },
+            {
+                text: 'Xóa',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await apiClient.delete(`/conversations/${conversationId}`);
+                        removeConversation(conversationId);
+                        Toast.show({ type: 'success', text1: 'Đã xóa hội thoại' });
+                    } catch (error) {
+                        console.error('Failed to delete conversation:', error);
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Không thể xóa hội thoại',
+                            text2: 'Vui lòng thử lại',
+                        });
+                    }
+                },
+            },
+        ]);
     };
 
     const getOtherParticipant = (conversation: Conversation) => {
@@ -251,10 +278,9 @@ export default function MessagesScreen() {
                                         >
                                             <ChatItem
                                                 name={participant.name}
-                                                preview={
-                                                    conversation.lastMessage?.content ||
-                                                    'Chưa có tin nhắn'
-                                                }
+                                                preview={getConversationPreview(
+                                                    conversation.lastMessage,
+                                                )}
                                                 avatarSource={
                                                     participant.avatarUrl
                                                         ? { uri: participant.avatarUrl }
@@ -272,6 +298,12 @@ export default function MessagesScreen() {
                                                 userId={participant.id}
                                                 onPress={() =>
                                                     handleConversationPress(conversation.id)
+                                                }
+                                                onLongPress={() =>
+                                                    handleDeleteConversation(
+                                                        conversation.id,
+                                                        participant.name,
+                                                    )
                                                 }
                                             />
                                         </View>

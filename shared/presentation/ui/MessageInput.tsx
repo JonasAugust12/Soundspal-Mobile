@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TextInput, Pressable, ViewStyle } from 'react-native';
-import { Image as ImageIcon, ArrowRight } from 'lucide-react-native';
+import { Image as ImageIcon, Paperclip, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export type MessageInputProps = {
@@ -9,6 +9,7 @@ export type MessageInputProps = {
     placeholder?: string;
     onSend?: () => void;
     onImagePick?: () => void;
+    onFilePick?: () => void;
     disabled?: boolean;
     style?: ViewStyle;
 };
@@ -19,6 +20,7 @@ export function MessageInput({
     placeholder = 'Send Message',
     onSend,
     onImagePick,
+    onFilePick,
     disabled,
     style,
 }: MessageInputProps) {
@@ -31,6 +33,15 @@ export function MessageInput({
                 <Pressable onPress={onImagePick} disabled={disabled}>
                     <View className="w-10 h-10 rounded-full items-center justify-center bg-secondary">
                         <ImageIcon size={20} color="#7C3BED" />
+                    </View>
+                </Pressable>
+            )}
+
+            {/* File / media picker button */}
+            {onFilePick && (
+                <Pressable onPress={onFilePick} disabled={disabled}>
+                    <View className="w-10 h-10 rounded-full items-center justify-center bg-secondary">
+                        <Paperclip size={20} color="#7C3BED" />
                     </View>
                 </Pressable>
             )}

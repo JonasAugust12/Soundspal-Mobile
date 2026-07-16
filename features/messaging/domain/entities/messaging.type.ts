@@ -22,7 +22,8 @@ export interface Message {
     senderId: string;
     content: string;
     attachmentUrl?: string | null;
-    attachmentType?: 'image' | 'video' | 'file' | null;
+    attachmentType?: 'image' | 'video' | 'audio' | 'file' | null;
+    readBy?: string[];
     isEdited: boolean;
     isDeleted: boolean;
     createdAt: string;
@@ -39,7 +40,7 @@ export interface SendMessageRequest {
     conversationId: string;
     content: string;
     attachmentUrl?: string;
-    attachmentType?: 'image' | 'video' | 'file';
+    attachmentType?: 'image' | 'video' | 'audio' | 'file';
 }
 
 export interface EditMessageRequest {

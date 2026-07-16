@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Conversation, Message } from '@/features/messaging/domain/entities/messaging.type';
+import type { JobRefData } from '@/features/messaging/domain/utils/messageContent';
 
 // ─── Normalized State Shape ───────────────────────────────────────────────────
 //
@@ -30,6 +31,9 @@ interface MessagingState {
     typingUsers: Record<string, string[]>; // convId → userId[]
     activeConversationId: string | null;
 
+    // Pending JOB_REF to prepend to the first message of a job-originated conversation
+    pendingJobRefs: Record<string, { jobData: JobRefData; defaultText: string }>;
+
     // Loading states
     isLoadingConversations: boolean;
     loadingMessages: Record<string, boolean>;
@@ -50,6 +54,10 @@ interface MessagingState {
     setLoadingMessages: (conversationId: string, loading: boolean) => void;
     hasMessages: (conversationId: string) => boolean;
 
+    // ── Actions: Read receipts ───────────────────────────────────────────────
+    markMessageReadBy: (conversationId: string, messageId: string, readerId: string) => void;
+    markMessagesReadBy: (conversationId: string, readerId: string) => void;
+
     // ── Actions: Unread ──────────────────────────────────────────────────────
     setUnreadCount: (conversationId: string, count: number) => void;
     incrementUnread: (conversationId: string) => void;
@@ -64,6 +72,13 @@ interface MessagingState {
 
     // ── Actions: Active conversation ─────────────────────────────────────────
     setActiveConversation: (conversationId: string | null) => void;
+
+    // ── Actions: Pending JOB_REF ─────────────────────────────────────────────
+    setPendingJobRef: (
+        conversationId: string,
+        payload: { jobData: JobRefData; defaultText: string },
+    ) => void;
+    clearPendingJobRef: (conversationId: string) => void;
 
     // ── Selectors ────────────────────────────────────────────────────────────
     getMessages: (conversationId: string) => Message[];
@@ -89,6 +104,7 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
     onlineUsers: new Set<string>(),
     typingUsers: {},
     activeConversationId: null,
+    pendingJobRefs: {},
     isLoadingConversations: false,
     loadingMessages: {},
 
@@ -280,6 +296,42 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
         return !!get().conversationMessages[conversationId];
     },
 
+    // ── Read receipts ─────────────────────────────────────────────────────────
+
+    markMessageReadBy: (_conversationId, messageId, readerId) =>
+        set((state) => {
+            const msg = state.messagesById[messageId];
+            // A sender never "reads" their own message.
+            if (!msg || msg.senderId === readerId) return state;
+            const readBy = msg.readBy || [];
+            if (readBy.includes(readerId)) return state;
+            return {
+                messagesById: {
+                    ...state.messagesById,
+                    [messageId]: { ...msg, readBy: [...readBy, readerId] },
+                },
+            };
+        }),
+
+    markMessagesReadBy: (conversationId, readerId) =>
+        set((state) => {
+            const ids = state.conversationMessages[conversationId] || [];
+            if (ids.length === 0) return state;
+
+            let changed = false;
+            const newById = { ...state.messagesById };
+            for (const id of ids) {
+                const msg = newById[id];
+                if (!msg || msg.senderId === readerId) continue;
+                const readBy = msg.readBy || [];
+                if (readBy.includes(readerId)) continue;
+                newById[id] = { ...msg, readBy: [...readBy, readerId] };
+                changed = true;
+            }
+            if (!changed) return state;
+            return { messagesById: newById };
+        }),
+
     // ── Unread ───────────────────────────────────────────────────────────────
 
     setUnreadCount: (conversationId, count) =>
@@ -346,6 +398,21 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
     // ── Active conversation ───────────────────────────────────────────────────
 
     setActiveConversation: (conversationId) => set({ activeConversationId: conversationId }),
+
+    // ── Pending JOB_REF ───────────────────────────────────────────────────────
+
+    setPendingJobRef: (conversationId, payload) =>
+        set((state) => ({
+            pendingJobRefs: { ...state.pendingJobRefs, [conversationId]: payload },
+        })),
+
+    clearPendingJobRef: (conversationId) =>
+        set((state) => {
+            if (!state.pendingJobRefs[conversationId]) return state;
+            const next = { ...state.pendingJobRefs };
+            delete next[conversationId];
+            return { pendingJobRefs: next };
+        }),
 
     // ── Selectors ─────────────────────────────────────────────────────────────
 

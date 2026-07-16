@@ -13,6 +13,7 @@ import {
 } from '@/features/jobs/presentation/hooks/useJobApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
+import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useJobBookmarkStore } from '@/features/jobs/presentation/store/jobBookmarkStore';
 import {
@@ -53,6 +54,7 @@ export default function JobDetailScreen() {
     const { mutate: closeJob, isPending: isClosing } = useCloseJob();
     const { mutate: getOrCreateConversation, isPending: isContacting } =
         useGetOrCreateConversation();
+    const setPendingJobRef = useMessagingStore((s) => s.setPendingJobRef);
 
     const handlePublish = () => {
         if (!jobId) return;
@@ -155,6 +157,25 @@ export default function JobDetailScreen() {
         if (!job?.creator_id) return;
         getOrCreateConversation(job.creator_id, {
             onSuccess: (conversation) => {
+                // Attach a JOB_REF so the first message renders as a job card
+                // for the recipient (mirrors web's job-message flow).
+                const budgetLabel =
+                    job.budget_min || job.budget_max
+                        ? `${job.budget_min ?? ''}${job.budget_max ? ` - ${job.budget_max}` : ''} ${
+                              job.budget_currency ?? ''
+                          }`.trim()
+                        : undefined;
+                setPendingJobRef(conversation.id, {
+                    jobData: {
+                        id: job.id,
+                        title: job.title,
+                        location: job.location,
+                        type: job.post_type,
+                        budget: budgetLabel,
+                        description: job.description,
+                    },
+                    defaultText: `Xin chào, tôi quan tâm đến "${job.title}".`,
+                });
                 router.push(
                     `/(messages)/detailMessage?conversationId=${conversation.id}` as `${string}`,
                 );

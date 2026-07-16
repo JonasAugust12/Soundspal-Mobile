@@ -161,6 +161,39 @@ class SocketService {
             },
         );
 
+        // Read receipt events
+        // Bulk: emitted when someone marks a whole conversation read
+        // (POST /messages/conversation/:id/read) → { conversationId, readerId, count }
+        this.socket.on(
+            'messages:read',
+            ({ conversationId, readerId }: { conversationId: string; readerId: string }) => {
+                if (!conversationId || !readerId) return;
+                console.warn('👁️ Conversation read by:', readerId);
+                useMessagingStore.getState().markMessagesReadBy(conversationId, readerId);
+            },
+        );
+
+        // Single message read. Gateway emits { messageId, userId }; REST emits
+        // { messageId, readerId, conversationId }. Normalize both shapes.
+        this.socket.on(
+            'message:read',
+            (payload: {
+                messageId: string;
+                userId?: string;
+                readerId?: string;
+                conversationId?: string;
+            }) => {
+                const store = useMessagingStore.getState();
+                const readerId = payload.readerId ?? payload.userId;
+                if (!payload.messageId || !readerId) return;
+                const conversationId =
+                    payload.conversationId ?? store.messagesById[payload.messageId]?.conversationId;
+                if (!conversationId) return;
+                console.warn('👁️ Message read by:', readerId);
+                store.markMessageReadBy(conversationId, payload.messageId, readerId);
+            },
+        );
+
         // Online status events
         this.socket.on('user:online', ({ userId }: { userId: string }) => {
             console.warn('🟢 User online:', userId);
@@ -170,6 +203,17 @@ class SocketService {
         this.socket.on('user:offline', ({ userId }: { userId: string }) => {
             console.warn('⚫ User offline:', userId);
             useMessagingStore.getState().removeOnlineUser(userId);
+        });
+
+        // Initial presence snapshot (list of currently-online user ids).
+        // NOTE: the current DATN backend does not emit this yet — it only sends
+        // per-user user:online/user:offline. Wired here so presence bootstraps
+        // correctly as soon as the backend starts emitting a snapshot on connect.
+        this.socket.on('users:online', (payload: string[] | { userIds?: string[] }) => {
+            const ids = Array.isArray(payload) ? payload : (payload?.userIds ?? []);
+            if (!Array.isArray(ids)) return;
+            console.warn('🟢 Online snapshot:', ids.length, 'users');
+            useMessagingStore.getState().setOnlineUsers(ids);
         });
     }
 

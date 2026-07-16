@@ -19,6 +19,7 @@ export type ChatItemProps = {
     unreadCount?: number;
     userId?: string;
     onPress?: () => void;
+    onLongPress?: () => void;
 };
 
 export function ChatItem({
@@ -30,12 +31,15 @@ export function ChatItem({
     unreadCount,
     userId,
     onPress,
+    onLongPress,
 }: ChatItemProps) {
     const hasUnread = unread || (unreadCount && unreadCount > 0);
 
     return (
         <Pressable
             onPress={onPress}
+            onLongPress={onLongPress}
+            delayLongPress={400}
             style={({ pressed }) => [styles.container, pressed && styles.pressed]}
             className="flex-row items-center gap-3 p-3 rounded-2xl"
         >

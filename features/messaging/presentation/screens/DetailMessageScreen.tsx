@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft, Phone, Video } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import Toast from 'react-native-toast-message';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -31,6 +32,12 @@ import { socketService } from '@/shared/infrastructure/socket/socketService';
 import { apiClient } from '@/shared/infrastructure/api/apiClient';
 import type { ChatMessage } from '@/shared/presentation/ui/MessageBubble';
 import type { Message, Conversation } from '@/features/messaging/domain/entities/messaging.type';
+import {
+    isJobReference,
+    buildJobReference,
+    getAttachmentTypeFromMimeType,
+    isMessageSeenBy,
+} from '@/features/messaging/domain/utils/messageContent';
 
 export default function DetailMessageScreen() {
     const router = useRouter();
@@ -54,8 +61,11 @@ export default function DetailMessageScreen() {
         clearUnread,
         getMessages,
         isUserOnline,
+        pendingJobRefs,
+        clearPendingJobRef,
     } = useMessagingStore();
 
+    const pendingJobRef = pendingJobRefs[conversationId || ''];
     const messages = getMessages(conversationId || '');
     const isLoadingMessages = loadingMessages[conversationId || ''] || false;
     const allTypingUsers = typingUsers[conversationId || ''] || [];
@@ -147,6 +157,13 @@ export default function DetailMessageScreen() {
         }
     }, [messages.length]);
 
+    // Prefill composer with a default message when opening from a job (JOB_REF flow)
+    useEffect(() => {
+        if (pendingJobRef) {
+            setMessageText((prev) => (prev.length === 0 ? pendingJobRef.defaultText : prev));
+        }
+    }, [pendingJobRef]);
+
     const handleSendMessage = async () => {
         if (!messageText.trim() || !conversationId) return;
 
@@ -168,12 +185,19 @@ export default function DetailMessageScreen() {
                 return;
             }
 
+            // First message of a job-originated conversation is wrapped as a
+            // JOB_REF so the recipient sees the rich job card (mirrors web).
+            const content = pendingJobRef
+                ? buildJobReference(pendingJobRef.jobData, messageText.trim())
+                : messageText.trim();
+
             const response = await apiClient.post<Message>('/messages', {
                 conversationId,
-                content: messageText.trim(),
+                content,
             });
 
             addMessage(conversationId, response.data);
+            if (pendingJobRef) clearPendingJobRef(conversationId);
             setMessageText('');
             socketService.stopTyping(conversationId);
         } catch (error) {
@@ -233,6 +257,70 @@ export default function DetailMessageScreen() {
             Toast.show({
                 type: 'error',
                 text1: 'Không thể tải ảnh lên',
+                text2: 'Vui lòng thử lại',
+            });
+        }
+    };
+
+    const handleFilePick = async () => {
+        if (!conversationId) return;
+
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: '*/*',
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+
+            if (result.canceled || !result.assets?.[0]) return;
+            const asset = result.assets[0];
+
+            // Backend caps attachments at 10 MB
+            if (asset.size && asset.size > 10 * 1024 * 1024) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Tệp quá lớn',
+                    text2: 'Vui lòng chọn tệp dưới 10MB',
+                });
+                return;
+            }
+
+            setIsUploading(true);
+            const mimeType = asset.mimeType || 'application/octet-stream';
+            const attachmentType = getAttachmentTypeFromMimeType(mimeType);
+
+            const formData = new FormData();
+            formData.append('file', {
+                uri: asset.uri,
+                type: mimeType,
+                name: asset.name || 'file',
+            } as unknown as Blob);
+            formData.append('folder', 'messages');
+
+            const uploadResponse = await apiClient.post<{ url: string }>(
+                '/storage/upload',
+                formData,
+                {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                },
+            );
+
+            const messageResponse = await apiClient.post<Message>('/messages', {
+                conversationId,
+                content: messageText.trim() || '',
+                attachmentUrl: uploadResponse.data.url,
+                attachmentType,
+            });
+
+            addMessage(conversationId, messageResponse.data);
+            setMessageText('');
+            setIsUploading(false);
+        } catch (error) {
+            console.error('Failed to upload file:', error);
+            setIsUploading(false);
+            Toast.show({
+                type: 'error',
+                text1: 'Không thể tải tệp lên',
                 text2: 'Vui lòng thử lại',
             });
         }
@@ -327,17 +415,35 @@ export default function DetailMessageScreen() {
                 ? { uri: msg.sender.avatarUrl }
                 : require('@/assets/images/user-default.jpg'),
             attachmentUrl: msg.attachmentUrl,
+            attachmentType: msg.attachmentType,
             isEdited: msg.isEdited,
             isDeleted: msg.isDeleted,
             onLongPress: () => handleMessageLongPress(msg.id),
         }));
     }, [messages, currentUserId]);
 
+    // Last own message the other participant has read → drives the "Đã xem" row
+    const lastSeenOwnMessageId = useMemo(() => {
+        if (!otherUser?.id) return null;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const m = messages[i];
+            if (m.senderId === currentUserId && !m.isDeleted && isMessageSeenBy(m, otherUser.id)) {
+                return m.id;
+            }
+        }
+        return null;
+    }, [messages, otherUser?.id, currentUserId]);
+
     const selectedMessage = messages.find((m) => m.id === selectedMessageId);
+    const selectedIsJobRef = selectedMessage ? isJobReference(selectedMessage.content) : false;
+    const isSelectedOwn = selectedMessage?.senderId === currentUserId;
+    // JOB_REF messages are locked (no edit/delete); attachments cannot be edited.
     const canEditSelected =
-        selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
-    const canDeleteSelected =
-        selectedMessage?.senderId === currentUserId && !selectedMessage?.isDeleted;
+        isSelectedOwn &&
+        !selectedMessage?.isDeleted &&
+        !selectedIsJobRef &&
+        !selectedMessage?.attachmentUrl;
+    const canDeleteSelected = isSelectedOwn && !selectedMessage?.isDeleted && !selectedIsJobRef;
 
     if (isLoadingMessages && messages.length === 0) {
         return (
@@ -459,6 +565,24 @@ export default function DetailMessageScreen() {
                             {chatMessages.map((chat) => (
                                 <MessageBubble key={chat.id} {...chat} />
                             ))}
+
+                            {/* Seen indicator */}
+                            {lastSeenOwnMessageId && otherUser && (
+                                <View className="flex-row items-center justify-end gap-1.5 mt-1 pr-1">
+                                    <Text className="text-[11px] font-medium text-gray-500">
+                                        Đã xem
+                                    </Text>
+                                    <Image
+                                        source={
+                                            otherUser.avatarUrl
+                                                ? { uri: otherUser.avatarUrl }
+                                                : require('@/assets/images/user-default.jpg')
+                                        }
+                                        className="w-4 h-4 rounded-full"
+                                    />
+                                </View>
+                            )}
+
                             {filteredTypingUsers.length > 0 && <TypingIndicator />}
                             {isUploading && (
                                 <View className="items-start p-3">
@@ -503,6 +627,7 @@ export default function DetailMessageScreen() {
                             onChangeText={handleTextChange}
                             onSend={handleSendMessage}
                             onImagePick={handleImagePick}
+                            onFilePick={handleFilePick}
                             disabled={isUploading}
                             placeholder={
                                 editingMessageId ? 'Chỉnh sửa tin nhắn...' : 'Nhập tin nhắn...'
