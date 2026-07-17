@@ -1,38 +1,39 @@
 import type { PushNotificationData } from '@/features/notifications/domain/entities/notification.type';
 
+/** Backend gửi lẫn snake_case (job-post-service) và camelCase (messaging-service). */
+function pick(data: PushNotificationData, ...keys: string[]): string | undefined {
+    for (const key of keys) {
+        const value = (data as Record<string, unknown>)[key];
+        if (typeof value === 'string' && value.length > 0) return value;
+    }
+    return undefined;
+}
+
+const chatRoute = (conversationId: string) =>
+    `/(messages)/detailMessage?conversationId=${conversationId}`;
+
 /**
- * Dựng đường dẫn deep-link từ data payload của push notification.
- *
- * Backend phát `notification-requested` với data trung lập — KHÔNG có sẵn 'route':
- *   job-post-service:   { type, job_id, submission_id, new_status }
- *   messaging-service:  { type, conversation_id, message_id }
- *
- * - `new_application` (gửi tới venue): mở danh sách đơn ứng tuyển của job đó.
- * - `application_status_changed` (gửi tới artist): mở màn "Đơn của tôi".
- * - `new_message` (gửi tới người nhận): mở đúng cuộc trò chuyện.
- *
- * Vẫn ưu tiên `route`/`path` nếu một producer khác gửi sẵn đường dẫn.
- * Trả `null` khi không suy ra được (chỉ mở app, không điều hướng).
+ * Suy route từ `type` + id trước, `route`/`path` chỉ là fallback: messaging-service
+ * đính sẵn `route: "/(messages)/<id>"` nhưng route đó không tồn tại trong app.
  */
 export function resolvePushRoute(data?: PushNotificationData | null): string | null {
     if (!data) return null;
 
-    const explicit = data.route ?? data.path;
-    if (typeof explicit === 'string' && explicit.length > 0) {
-        return explicit;
-    }
+    const type = pick(data, 'type');
+    const conversationId = pick(data, 'conversation_id', 'conversationId');
+    const jobId = pick(data, 'job_id', 'jobId');
 
-    switch (data.type) {
+    switch (type) {
         case 'new_application':
-            return data.job_id ? `/(jobs)/applicants?id=${data.job_id}` : null;
+            return jobId ? `/(jobs)/applicants?id=${jobId}` : null;
         case 'application_status_changed':
             return '/(jobs)/my-applications';
         case 'new_message':
-            // Route thật của màn chat — KHÔNG phải `/(messages)/<id>` (route đó không tồn tại).
-            return data.conversation_id
-                ? `/(messages)/detailMessage?conversationId=${data.conversation_id}`
-                : null;
-        default:
-            return null;
+            return conversationId ? chatRoute(conversationId) : null;
     }
+
+    // messaging-service không gửi `type`.
+    if (conversationId) return chatRoute(conversationId);
+
+    return pick(data, 'route', 'path') ?? null;
 }

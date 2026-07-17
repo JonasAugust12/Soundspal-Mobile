@@ -5,13 +5,7 @@ import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { getOrCreateDeviceId, resolvePlatform } from '@/features/notifications/data/deviceInfo';
 import { notificationRemoteDataSource } from '@/features/notifications/data/datasources/notificationRemoteDataSource';
 
-/**
- * Token FCM tự xoay vòng theo thời gian. Khi đã đăng nhập, lắng nghe onTokenRefresh và
- * đẩy token mới lên backend để push không bị chết.
- *
- * ⚠️ Phụ thuộc endpoint POST /auth/device-token — backend CHƯA có (khuyến nghị #2).
- * Trước khi backend bổ sung, lời gọi sẽ 404 và bị nuốt lặng ở catch.
- */
+/** FCM tự xoay vòng token; không đẩy token mới lên backend thì push sẽ chết im lặng. */
 export function usePushTokenSync() {
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 

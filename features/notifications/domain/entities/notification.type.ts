@@ -1,15 +1,11 @@
-// Nền tảng thiết bị — khớp với giá trị backend mong đợi ('ANDROID' | 'IOS' | 'WEB').
 export type DevicePlatform = 'ANDROID' | 'IOS' | 'WEB';
 
-// Thông tin thiết bị gửi kèm khi login / mobile-oauth để backend lưu vào DeviceRegistration.
 export interface DevicePayload {
     device_id: string;
     fcm_token: string | null;
     platform: DevicePlatform;
 }
 
-// Body cho endpoint cập nhật token riêng (dùng cho onTokenRefresh).
-// Backend: POST /auth/device-token (user-service) — phát lại event device-lifecycle.
 export interface RegisterDeviceRequest {
     device_id: string;
     fcm_token: string;
@@ -22,19 +18,21 @@ export interface RegisterDeviceResponse {
     data: null;
 }
 
-// Data payload backend đính kèm push (job-post-service / messaging-service phát
-// notification-requested). Không có sẵn 'route' — đường dẫn được dựng từ 'type' + id
-// (xem resolvePushRoute) để mỗi client tự map sang route của mình.
+/** `data` của push. Mỗi producer một quy ước đặt tên, xem resolvePushRoute. */
 export interface PushNotificationData {
     type?: string; // 'new_application' | 'application_status_changed' | 'new_message'
+
     // job-post-service
     job_id?: string;
     submission_id?: string;
     new_status?: string;
-    // messaging-service
+
+    // messaging-service — gửi camelCase, không kèm `type`
+    conversationId?: string;
+    messageId?: string;
     conversation_id?: string;
     message_id?: string;
-    // Tương thích ngược: producer khác có thể gửi sẵn đường dẫn.
+
     route?: string;
     path?: string;
 }

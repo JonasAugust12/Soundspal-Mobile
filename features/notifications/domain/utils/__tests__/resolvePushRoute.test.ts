@@ -76,18 +76,56 @@ describe('resolvePushRoute (push deep-link: job + tin nhắn)', () => {
         });
     });
 
-    describe('ưu tiên route/path tường minh (tương thích ngược)', () => {
-        it('route tường minh được ưu tiên hơn type', () => {
+    // Bug A: messaging-service (chat.gateway.ts) gửi camelCase, KHÔNG kèm `type`,
+    // và tự đính `route: "/(messages)/<id>"` — route đó không tồn tại trong app.
+    describe('payload THẬT của messaging-service (regression Bug A)', () => {
+        const realPayload = {
+            conversationId: 'conv-42',
+            messageId: 'msg-1',
+            route: '/(messages)/conv-42',
+        } as PushNotificationData;
+
+        it('bỏ qua route chết, dựng đúng route chat từ conversationId (camelCase)', () => {
+            expect(resolvePushRoute(realPayload)).toBe(
+                '/(messages)/detailMessage?conversationId=conv-42',
+            );
+        });
+
+        it('không bao giờ trả về route chết /(messages)/<id>', () => {
+            expect(resolvePushRoute(realPayload)).not.toBe('/(messages)/conv-42');
+        });
+
+        it('nhận diện chat qua conversationId kể cả khi thiếu type', () => {
+            expect(resolvePushRoute({ conversationId: 'c1' })).toBe(
+                '/(messages)/detailMessage?conversationId=c1',
+            );
+        });
+    });
+
+    describe('route/path tường minh chỉ là FALLBACK', () => {
+        // Đảo ngược so với trước: route suy ra từ data thắng, vì producer có thể
+        // gửi route sai (xem Bug A).
+        it('route suy từ type thắng route tường minh do producer gửi', () => {
             const data: PushNotificationData = {
                 type: 'new_application',
                 job_id: 'job-123',
                 route: '/(messages)/42',
             };
-            expect(resolvePushRoute(data)).toBe('/(messages)/42');
+            expect(resolvePushRoute(data)).toBe('/(jobs)/applicants?id=job-123');
+        });
+
+        it('dùng route tường minh khi không suy ra được từ data', () => {
+            expect(resolvePushRoute({ route: '/(blog)/7' })).toBe('/(blog)/7');
         });
 
         it('dùng path khi không có route', () => {
             expect(resolvePushRoute({ path: '/(blog)/7' })).toBe('/(blog)/7');
+        });
+
+        it('type lạ nhưng có route tường minh → dùng route', () => {
+            expect(resolvePushRoute({ type: 'something_else', route: '/(blog)/7' })).toBe(
+                '/(blog)/7',
+            );
         });
 
         it('route rỗng thì bỏ qua, rơi về nhánh type', () => {

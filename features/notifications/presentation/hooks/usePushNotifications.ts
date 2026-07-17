@@ -14,16 +14,11 @@ import type { PushNotificationData } from '@/features/notifications/domain/entit
 
 type RemoteMessage = FirebaseMessagingTypes.RemoteMessage;
 
-// Dựng deep-link từ data backend gửi ({ type, job_id, ... }) — xem resolvePushRoute.
 function extractRoute(message?: RemoteMessage | null): string | null {
     return resolvePushRoute(message?.data as PushNotificationData | undefined);
 }
 
-/**
- * Đăng ký các listener nhận thông báo. Gọi MỘT lần ở app/_layout.tsx.
- * - Foreground: OS không tự hiện banner → hiện toast in-app.
- * - Bấm thông báo (background/killed): điều hướng theo data payload (resolvePushRoute).
- */
+/** Gọi MỘT lần ở app/_layout.tsx — các listener là global, đăng ký nhiều lần sẽ nhân bản. */
 export function usePushNotifications() {
     const router = useRouter();
     const { showInfo } = useToast();
@@ -31,20 +26,19 @@ export function usePushNotifications() {
     useEffect(() => {
         const messaging = getMessaging(getApp());
 
-        // 1. App đang mở: hiện toast (dùng luôn hệ thống toast sẵn có).
+        // Foreground: OS không hiện banner, phải tự hiển thị.
         const unsubscribeOnMessage = onMessage(messaging, async (message) => {
             const title = message.notification?.title ?? 'Thông báo mới';
             const body = message.notification?.body ?? '';
             showInfo(title, body);
         });
 
-        // 2. App ở background, user bấm thông báo → điều hướng.
         const unsubscribeOpened = onNotificationOpenedApp(messaging, (message) => {
             const route = extractRoute(message);
             if (route) router.push(route as Href);
         });
 
-        // 3. App bị kill, mở lại do bấm thông báo.
+        // Bấm thông báo lúc app đã bị kill: onNotificationOpenedApp không bắn, phải hỏi riêng.
         getInitialNotification(messaging).then((message) => {
             const route = extractRoute(message);
             if (route) router.push(route as Href);
