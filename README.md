@@ -1,70 +1,61 @@
 # TalentLink
 
-Dự án React Native Expo với TypeScript và NativeWind (Tailwind CSS) version 1.0.1.
+React Native Expo app with TypeScript, NativeWind, and **feature-based Clean Architecture**.
 
-## Cài đặt
+## Quick start
 
 ```bash
 npm install
-```
-
-## Chạy ứng dụng
-
-```bash
-# Chạy trên Android
+npm start          # Expo dev server
 npm run android
-
-# Chạy trên iOS (cần macOS)
 npm run ios
-
-# Chạy trên web
-npm run web
-
-# Chạy Expo dev server
-npm start
+npm run typecheck
+npm test
 ```
 
-## Công nghệ sử dụng
-
-- **React Native** - Framework phát triển mobile
-- **Expo** - Công cụ phát triển và build
-- **TypeScript** - Hỗ trợ type-safe
-- **NativeWind** - Tailwind CSS cho React Native
-- **Tailwind CSS** - Framework CSS utility-first
-
-## Cấu trúc dự án
+## Project structure
 
 ```
-.
-├── App.tsx             # Component chính (TypeScript)
-├── assets/             # Hình ảnh và tài nguyên
-├── babel.config.js     # Cấu hình Babel
-├── tailwind.config.js  # Cấu hình Tailwind CSS
-├── tsconfig.json       # Cấu hình TypeScript
-├── nativewind-env.d.ts # Type definitions cho NativeWind
-└── package.json        # Dependencies
+app/                    # Thin Expo Router layer (re-exports screens from features)
+features/
+  auth/                 # domain | data | presentation
+  jobs/
+  challenge/
+  blog/
+  messaging/
+  profiles/
+  collab/
+  payments/
+  explore/
+  home/
+shared/
+  domain/               # Cross-cutting types & constants
+  infrastructure/       # apiClient, storage, socket
+  presentation/         # Shared UI, hooks, navigation, providers
+  utils/
 ```
 
-## Sử dụng NativeWind với TypeScript
+### Layer rules
 
-NativeWind cho phép bạn sử dụng Tailwind CSS classes trong React Native:
+| Layer           | Responsibility                                                |
+| --------------- | ------------------------------------------------------------- |
+| `domain/`       | Entities, repository interfaces, use cases (pure TS)          |
+| `data/`         | Remote datasources, repository implementations, mappers       |
+| `presentation/` | Screens, components, React Query hooks, Zustand stores        |
+| `app/`          | Route files only — `export { default } from '@/features/...'` |
 
-```tsx
-import React from 'react';
-import { View, Text } from 'react-native';
+## Tech stack
 
-export default function MyComponent(): React.JSX.Element {
-    return (
-        <View className="flex-1 bg-blue-500 items-center justify-center">
-            <Text className="text-white text-2xl font-bold">Hello TalentLink!</Text>
-        </View>
-    );
-}
-```
+- React Native + Expo Router
+- TypeScript (strict)
+- NativeWind / Tailwind CSS
+- TanStack React Query + Zustand
+- Axios + Socket.IO
 
-## Tài liệu tham khảo
+## Documentation
 
-- [Expo Documentation](https://docs.expo.dev/)
-- [React Native TypeScript](https://reactnative.dev/docs/typescript)
-- [NativeWind Documentation](https://www.nativewind.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
+| Doc                                                  | Description                                |
+| ---------------------------------------------------- | ------------------------------------------ |
+| [docs/features/README.md](./docs/features/README.md) | Tài liệu từng feature (business + code)    |
+| [docs/architecture.md](./docs/architecture.md)       | Sơ đồ Clean Architecture, Mermaid diagrams |
+| [docs/onboarding.md](./docs/onboarding.md)           | Hướng dẫn nắm source tổng quan             |

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { SocialList } from '@/components/profile/SocialList';
+import { SocialList } from '@/features/profiles/presentation/components/profile/SocialList';
 
 describe('SocialList', () => {
     it('should render "Kết nối" title when socials exist', () => {

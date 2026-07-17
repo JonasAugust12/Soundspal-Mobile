@@ -1,25 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="10" failures="0" errors="0" time="15.723">
-  <testsuite name="__tests__\hooks\useProtectedRoute.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-02T14:26:26" time="8.667" tests="10">
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (tabs)" time="0.032">
+<testsuites name="jest tests" tests="42" failures="0" errors="0" time="4.182">
+  <testsuite name="features\notifications\domain\utils\__tests__\resolvePushRoute.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-16T12:47:44" time="1.857" tests="14">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data undefined" time="0.017">
     </testcase>
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (profiles)" time="0.034">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data null" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (jobs)" time="0.007">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi type không xác định" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should not redirect when on auth screen" time="0.005">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data rỗng (không type, không route)" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should redirect to email verification required" time="0.005">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_application → gửi tới venue" name="mở danh sách ứng viên của đúng job khi có job_id" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should not redirect when on email-verification-required page" time="0.004">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_application → gửi tới venue" name="trả null khi thiếu job_id (không đủ dữ liệu để điều hướng)" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should not redirect when on verify-email page" time="0.003">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › application_status_changed → gửi tới artist" name="mở màn &quot;Đơn của tôi&quot;" time="0.005">
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should redirect to home when on auth screen" time="0.004">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › application_status_changed → gửi tới artist" name="vẫn mở &quot;Đơn của tôi&quot; kể cả khi chỉ có type" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should not redirect when on protected routes" time="0.004">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_message → gửi tới người nhận tin nhắn" name="mở đúng cuộc trò chuyện khi có conversation_id" time="0.001">
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should not redirect when on profiles" time="0.027">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_message → gửi tới người nhận tin nhắn" name="trả null khi thiếu conversation_id" time="0.001">
+    </testcase>
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_message → gửi tới người nhận tin nhắn" name="không sinh route dạng /(messages)/&lt;id&gt; (route không tồn tại)" time="0.002">
+    </testcase>
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › ưu tiên route/path tường minh (tương thích ngược)" name="route tường minh được ưu tiên hơn type" time="0">
+    </testcase>
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › ưu tiên route/path tường minh (tương thích ngược)" name="dùng path khi không có route" time="0.001">
+    </testcase>
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › ưu tiên route/path tường minh (tương thích ngược)" name="route rỗng thì bỏ qua, rơi về nhánh type" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="features\notifications\data\__tests__\deviceInfo.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-16T12:47:44" time="1.864" tests="6">
+    <testcase classname="deviceInfo › getOrCreateDeviceId" name="tạo device_id dạng UUID v4 hợp lệ trong lần gọi đầu" time="0.016">
+    </testcase>
+    <testcase classname="deviceInfo › getOrCreateDeviceId" name="lưu lại và trả cùng một id ở các lần gọi sau (ổn định theo lần cài)" time="0.001">
+    </testcase>
+    <testcase classname="deviceInfo › getOrCreateDeviceId" name="đọc lại id đã có sẵn trong storage thay vì tạo mới" time="0.001">
+    </testcase>
+    <testcase classname="deviceInfo › resolvePlatform" name="trả ANDROID trên Android" time="0.002">
+    </testcase>
+    <testcase classname="deviceInfo › resolvePlatform" name="trả IOS trên iOS" time="0.001">
+    </testcase>
+    <testcase classname="deviceInfo › resolvePlatform" name="trả WEB cho nền tảng còn lại" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="features\messaging\presentation\store\__tests__\messagingStore.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-16T12:47:44" time="1.841" tests="6">
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="chuẩn hoá về CŨ → MỚI dù API trả DESC" time="0.019">
+    </testcase>
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="giữ nguyên CŨ → MỚI khi input đã đúng thứ tự" time="0.001">
+    </testcase>
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="không làm biến đổi mảng gốc của caller" time="0.001">
+    </testcase>
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="tin nhắn cũ nhất đứng đầu, mới nhất đứng cuối" time="0.001">
+    </testcase>
+    <testcase classname="messagingStore — thứ tự tin nhắn › addMessage" name="tin nhắn mới được nối vào CUỐI (dưới đáy màn chat)" time="0.001">
+    </testcase>
+    <testcase classname="messagingStore — thứ tự tin nhắn › addMessage" name="bỏ qua tin nhắn trùng id" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="features\notifications\presentation\hooks\__tests__\usePushNotifications.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-16T12:47:44" time="2.316" tests="6">
+    <testcase classname="usePushNotifications" name="foreground: hiện toast với title/body của thông báo" time="0.038">
+    </testcase>
+    <testcase classname="usePushNotifications" name="foreground: fallback title khi payload thiếu notification block" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="bấm thông báo (background) new_application → mở màn ứng viên của job" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="bấm thông báo (background) application_status_changed → mở &quot;Đơn của tôi&quot;" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="không điều hướng khi payload không suy ra được route" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="mở app từ trạng thái killed do bấm thông báo → điều hướng theo payload" time="0.056">
+    </testcase>
+  </testsuite>
+  <testsuite name="features\notifications\presentation\hooks\__tests__\useDevicePayload.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-16T12:47:44" time="2.324" tests="10">
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="xin POST_NOTIFICATIONS và đính token khi user đồng ý" time="0.064">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="KHÔNG dùng requestPermission() của RNFirebase trên Android (no-op luôn trả AUTHORIZED)" time="0.006">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="fcm_token = null khi user từ chối quyền" time="0.005">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="fcm_token = null khi user chọn &quot;không hỏi lại&quot;" time="0.004">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android &lt; 13 (quyền cấp sẵn lúc cài)" name="không xin runtime permission, vẫn lấy được token" time="0.008">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › iOS" name="dùng requestPermission của RNFirebase và đính token khi được cấp" time="0.003">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › iOS" name="fcm_token = null khi user từ chối" time="0.003">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="fcm_token = null khi getToken ném lỗi (không chặn login)" time="0.003">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="dùng lại device_id đã lưu giữa các lần gọi" time="0.004">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="timeout 5s → fcm_token null nếu native call bị treo (không treo login)" time="0.007">
     </testcase>
   </testsuite>
 </testsuites>

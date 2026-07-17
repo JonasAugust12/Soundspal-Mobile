@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { ArtistCard } from '@/components/home/ArtistCard';
+import { ArtistCard } from '@/features/home/presentation/components/ArtistCard';
 
 describe('ArtistCard', () => {
     const mockItem = {

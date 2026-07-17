@@ -1,7 +1,6 @@
- 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { AuthButton } from '@/components/auth/AuthButton';
+import { AuthButton } from '@/features/auth/presentation/components/AuthButton';
 
 describe('AuthButton', () => {
     it('should render with children text', () => {

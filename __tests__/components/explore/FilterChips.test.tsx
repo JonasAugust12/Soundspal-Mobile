@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { FilterChips } from '@/components/explore/FilterChips';
+import { FilterChips } from '@/features/explore/presentation/components/FilterChips';
 
 // Mock the API hook
-jest.mock('@/hooks/useUserApi', () => ({
+jest.mock('@/features/profiles/presentation/hooks/useUserApi', () => ({
     useGetAllGenres: () => ({
         data: {
             genres: [

@@ -6,7 +6,7 @@ import {
     formatJobType,
     formatRecruitmentType,
     formatLocationType,
-} from '@/utils/jobFormatters';
+} from '@/features/jobs/domain/utils/jobFormatters';
 
 describe('jobFormatters', () => {
     describe('formatBudget', () => {

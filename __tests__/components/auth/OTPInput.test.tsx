@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { OTPInput } from '@/components/auth/OTPInput';
+import { OTPInput } from '@/features/auth/presentation/components/OTPInput';
 
 describe('OTPInput', () => {
     const mockOnChange = jest.fn();

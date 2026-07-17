@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 import Toast from 'react-native-toast-message';
-import { useToast } from '@/hooks/useToast';
+import { useToast } from '@/shared/presentation/hooks/useToast';
 
 jest.mock('react-native-toast-message');
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
-import { FormInput } from '@/components/auth/FormInput';
+import { render, screen, fireEvent } from '@testing-library/react-native';
+import { FormInput } from '@/features/auth/presentation/components/FormInput';
+import { AUTH_COMMON } from '@/features/auth/domain/constants/authMessages';
 
 describe('FormInput', () => {
     it('should render with label', () => {
@@ -60,5 +61,18 @@ describe('FormInput', () => {
 
         // Component should render with callback prop
         expect(screen.getByText('Email')).toBeTruthy();
+    });
+
+    it('should toggle password visibility when secureTextEntry is enabled', () => {
+        render(<FormInput label="Password" placeholder="Enter password" secureTextEntry />);
+
+        const input = screen.getByPlaceholderText('Enter password');
+        expect(input.props.secureTextEntry).toBe(true);
+
+        fireEvent.press(screen.getByLabelText(AUTH_COMMON.showPassword));
+        expect(input.props.secureTextEntry).toBe(false);
+
+        fireEvent.press(screen.getByLabelText(AUTH_COMMON.hidePassword));
+        expect(input.props.secureTextEntry).toBe(true);
     });
 });

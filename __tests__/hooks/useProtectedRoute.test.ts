@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook } from '@testing-library/react-native';
 import { useRouter, useSegments } from 'expo-router';
-import { useProtectedRoute } from '@/hooks/useProtectedRoute';
-import { useAuthStore } from '@/stores/authStore';
-import { useAuthHydration } from '@/hooks/useAuthHydration';
+import { useProtectedRoute } from '@/shared/presentation/hooks/useProtectedRoute';
+import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { useAuthHydration } from '@/features/auth/presentation/hooks/useAuthHydration';
 
 jest.mock('expo-router');
-jest.mock('@/stores/authStore');
-jest.mock('@/hooks/useAuthHydration');
+jest.mock('@/features/auth/presentation/store/authStore');
+jest.mock('@/features/auth/presentation/hooks/useAuthHydration');
 
 const mockRouter = {
     replace: jest.fn(),

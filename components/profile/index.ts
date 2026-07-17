@@ -1,9 +1,0 @@
-export { InfoProfile } from './InfoProfile';
-export { ProfileImageList } from './ProfileImageList';
-export { VideoPlayer } from './VideoPlayer';
-export { SocialList } from './SocialList';
-export { YoutubeEmbed } from './YoutubeEmbed';
-export { ProfileSkeleton } from './ProfileSkeleton';
-export { MenuItem } from './MenuItem';
-export { AddVideoModal } from './AddVideoModal';
-export { ServicesList } from './ServicesList';

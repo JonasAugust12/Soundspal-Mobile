@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { MenuItem } from '@/components/profile/MenuItem';
+import { MenuItem } from '@/features/profiles/presentation/components/profile/MenuItem';
 import { Settings } from 'lucide-react-native';
 
 describe('MenuItem', () => {

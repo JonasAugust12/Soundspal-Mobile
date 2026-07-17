@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { JobDetailInfo } from '@/components/jobs/JobDetailInfo';
+import { JobDetailInfo } from '@/features/jobs/presentation/components/JobDetailInfo';
 
 describe('JobDetailInfo', () => {
     const defaultProps = {

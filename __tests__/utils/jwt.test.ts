@@ -1,4 +1,4 @@
-import { decodeJWT, isTokenValid, getUserFromToken } from '@/utils/jwt';
+import { decodeJWT, isTokenValid, getUserFromToken } from '@/shared/utils/jwt';
 
 describe('jwt', () => {
     // Valid JWT token for testing (payload: {sub: "123", email: "test@example.com", role: "user", is_verified: true, username: "testuser", avatar_url: "https://example.com/avatar.jpg", display_name: "Test User", exp: 9999999999})

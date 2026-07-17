@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { LogoHeader } from '@/components/auth/LogoHeader';
+import { LogoHeader } from '@/features/auth/presentation/components/LogoHeader';
 
 describe('LogoHeader', () => {
     it('should render Soundspal text', () => {

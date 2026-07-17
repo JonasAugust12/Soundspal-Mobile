@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
-import { ChatItem } from '@/components/common/ChatItem';
+import { ChatItem } from '@/shared/presentation/ui/ChatItem';
 
 // Mock OnlineIndicator
-jest.mock('@/components/common/OnlineIndicator', () => ({
+jest.mock('@/shared/presentation/ui/OnlineIndicator', () => ({
     OnlineIndicator: 'OnlineIndicator',
 }));
 
