@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
 import { Shimmer } from '@/shared/presentation/ui';
-import { getMockCoverUrl } from '@/mock-data/explore';
+import { getDefaultCoverUrl } from '@/features/explore/domain/constants/defaultCoverImages';
 import type { UserProfile } from '@/features/explore/domain/entities/search.type';
 
 type RoleConfig = {
@@ -64,7 +64,8 @@ export const ExploreUserCard = React.memo(function ExploreUserCard({ item, onPre
     const RoleIcon = role.Icon;
 
     // Chưa có ảnh bìa thật thì mượn ảnh mock theo role; gradient chỉ dùng khi ảnh tải lỗi.
-    const coverUrl = item.cover_url?.trim() || getMockCoverUrl(item.id || item.username, item.role);
+    const coverUrl =
+        item.cover_url?.trim() || getDefaultCoverUrl(item.id || item.username, item.role);
 
     return (
         <TouchableOpacity

@@ -139,7 +139,9 @@ function Attachment({
     isRight: boolean;
 }) {
     if (type === 'image' || !type) {
-        return <Image source={{ uri: url }} className="w-55 h-40 rounded-xl" resizeMode="cover" />;
+        // w-56/h-40 phải là class Tailwind có thật: 'w-55' không nằm trong thang spacing
+        // nên NativeWind bỏ qua → ảnh mất width, co thành một vệt dọc.
+        return <Image source={{ uri: url }} className="w-56 h-40 rounded-xl" resizeMode="cover" />;
     }
     return <AttachmentChip url={url} type={type} isRight={isRight} />;
 }

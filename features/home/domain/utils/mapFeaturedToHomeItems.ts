@@ -1,40 +1,12 @@
 import type { ArtistItem, JobItem } from '@/features/home/presentation/components';
-import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 import type {
     FeaturedJob,
+    FeaturedJobsData,
     FeaturedUser,
     FeaturedUsersData,
-    FeaturedJobsData,
 } from '@/features/explore/domain/entities/search.type';
 
-import { MOCK_HOME_BLOG_POSTS } from './blogPosts.mock';
-import {
-    MOCK_FEATURED_JOBS,
-    MOCK_FEATURED_JOBS_RESPONSE,
-    MOCK_HOME_JOB_ITEMS,
-} from './featuredJobs.mock';
-import {
-    MOCK_FEATURED_USERS,
-    MOCK_FEATURED_USERS_RESPONSE,
-    MOCK_HOME_ARTIST_ITEMS,
-} from './featuredUsers.mock';
-import { MOCK_HOME_HEADER, MOCK_HOME_SECTIONS } from './homeSections.mock';
-import { MOCK_HOME_HERO } from './homeHero.mock';
-import { MOCK_HOME_SEARCH } from './homeSearch.mock';
-
-export const MOCK_HOME_SCREEN = {
-    header: MOCK_HOME_HEADER,
-    search: MOCK_HOME_SEARCH,
-    hero: MOCK_HOME_HERO,
-    sections: MOCK_HOME_SECTIONS,
-    blogPosts: MOCK_HOME_BLOG_POSTS,
-    featuredUsers: MOCK_FEATURED_USERS,
-    featuredUsersResponse: MOCK_FEATURED_USERS_RESPONSE,
-    featuredJobsResponse: MOCK_FEATURED_JOBS_RESPONSE,
-    artistItems: MOCK_HOME_ARTIST_ITEMS,
-    jobItems: MOCK_HOME_JOB_ITEMS,
-} as const;
-
+/** Chuyển response `/landing/featured-users` sang item hiển thị của ArtistCard. */
 export function mapFeaturedUsersToArtistItems(
     featuredUsersData: { data: FeaturedUsersData } | undefined,
 ): ArtistItem[] {
@@ -45,6 +17,9 @@ export function mapFeaturedUsersToArtistItems(
 
     return users.map((user: FeaturedUser) => ({
         id: user.id,
+        // Giữ username để điều hướng sang trang cá nhân — nếu không sẽ phải dò ngược
+        // sang mảng user gốc theo index (rất dễ lệch khi 2 mảng khác độ dài).
+        username: user.username,
         name: user.display_name,
         description: user.brief_bio || `${user.role} chuyên nghiệp`,
         location:
@@ -59,6 +34,7 @@ export function mapFeaturedUsersToArtistItems(
     }));
 }
 
+/** Chuyển response `/landing/featured-jobs` sang item hiển thị của JobCard. */
 export function mapFeaturedJobsToJobItems(
     featuredJobsData: { data: FeaturedJobsData } | undefined,
 ): JobItem[] {
@@ -83,19 +59,3 @@ export function mapFeaturedJobsToJobItems(
         postType: job.post_type,
     }));
 }
-
-export type HomeScreenMockData = typeof MOCK_HOME_SCREEN;
-
-export {
-    MOCK_HOME_BLOG_POSTS,
-    MOCK_FEATURED_USERS,
-    MOCK_FEATURED_USERS_RESPONSE,
-    MOCK_HOME_ARTIST_ITEMS,
-    MOCK_FEATURED_JOBS,
-    MOCK_FEATURED_JOBS_RESPONSE,
-    MOCK_HOME_JOB_ITEMS,
-    MOCK_HOME_HEADER,
-    MOCK_HOME_SECTIONS,
-    MOCK_HOME_HERO,
-    MOCK_HOME_SEARCH,
-};

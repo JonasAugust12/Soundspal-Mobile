@@ -45,7 +45,7 @@ class SocketService {
 
         this.isConnecting = true;
 
-        this.socket = io('https://talentlink.io.vn', {
+        this.socket = io('https://api.soundspal.com', {
             path: '/socket.io',
             auth: {
                 token: accessToken,

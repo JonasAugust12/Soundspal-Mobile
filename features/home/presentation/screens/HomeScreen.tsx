@@ -1,5 +1,13 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    Image,
+    StyleSheet,
+    ActivityIndicator,
+} from 'react-native';
 import { Search, ChevronRight, BookOpen, TrendingUp } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -7,7 +15,21 @@ import { ArtistCard, JobCard } from '@/features/home/presentation/components';
 import { BlogPreviewCard } from '@/features/blog/presentation/components';
 import { TabScreenWrapper } from '@/shared/presentation/navigation/TabScreenWrapper';
 import { raisedShadow } from '@/shared/presentation/ui/shadows';
-import { MOCK_HOME_SCREEN, MOCK_FEATURED_USERS } from '@/mock-data/home';
+import {
+    HOME_HEADER as header,
+    HOME_SEARCH as search,
+    HOME_HERO as hero,
+    HOME_SECTIONS as sections,
+} from '@/features/home/domain/constants/homeContent';
+import {
+    mapFeaturedUsersToArtistItems,
+    mapFeaturedJobsToJobItems,
+} from '@/features/home/domain/utils/mapFeaturedToHomeItems';
+import {
+    useFeaturedUsers,
+    useFeaturedJobs,
+} from '@/features/explore/presentation/hooks/useSearchApi';
+import { useBlogFeed } from '@/features/blog/presentation/hooks/useBlogApi';
 
 const CAROUSEL_CONTENT_STYLE = {
     paddingHorizontal: 20,
@@ -16,18 +38,42 @@ const CAROUSEL_CONTENT_STYLE = {
     paddingBottom: 10,
 } as const;
 
-const {
-    header,
-    search,
-    hero,
-    sections,
-    blogPosts,
-    artistItems: artists,
-    jobItems: jobs,
-} = MOCK_HOME_SCREEN;
+const FEATURED_LIMIT = 10;
+const BLOG_PREVIEW_LIMIT = 6;
+
+/** Mỗi mục hiển thị spinner khi đang tải, rồi mới tới rỗng — tránh nháy "Chưa có..." lúc đầu. */
+function SectionPlaceholder({
+    isLoading,
+    emptyMessage,
+}: {
+    isLoading: boolean;
+    emptyMessage: string;
+}) {
+    return (
+        <View className="py-8 items-center">
+            {isLoading ? (
+                <ActivityIndicator color="#7C3BED" />
+            ) : (
+                <Text className="text-sm text-gray-400 text-center">{emptyMessage}</Text>
+            )}
+        </View>
+    );
+}
 
 export default function HomeScreen() {
     const router = useRouter();
+
+    const { data: featuredUsersData, isLoading: isLoadingArtists } =
+        useFeaturedUsers(FEATURED_LIMIT);
+    const { data: featuredJobsData, isLoading: isLoadingJobs } = useFeaturedJobs(FEATURED_LIMIT);
+    const { data: blogFeed, isLoading: isLoadingBlog } = useBlogFeed();
+
+    const artists = useMemo(
+        () => mapFeaturedUsersToArtistItems(featuredUsersData),
+        [featuredUsersData],
+    );
+    const jobs = useMemo(() => mapFeaturedJobsToJobItems(featuredJobsData), [featuredJobsData]);
+    const blogPosts = blogFeed ?? [];
 
     return (
         <TabScreenWrapper>
@@ -154,45 +200,6 @@ export default function HomeScreen() {
                     <View className="flex-row items-center gap-2">
                         <View
                             className="w-1 h-5 rounded-full"
-                            style={{ backgroundColor: sections.blog.accentColor }}
-                        />
-                        <Text className="text-lg font-bold text-gray-900">
-                            {sections.blog.title}
-                        </Text>
-                    </View>
-                    <TouchableOpacity
-                        onPress={() => router.push(sections.blog.seeAllRoute as '/(blog)')}
-                        className="flex-row items-center gap-1"
-                    >
-                        <Text className="text-sm font-semibold text-purple-600">
-                            {sections.blog.seeAllLabel}
-                        </Text>
-                        <ChevronRight size={16} color="#7C3BED" />
-                    </TouchableOpacity>
-                </View>
-
-                {blogPosts.length > 0 ? (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
-                    >
-                        {blogPosts.slice(0, 6).map((post) => (
-                            <BlogPreviewCard key={post.id} article={post} />
-                        ))}
-                    </ScrollView>
-                ) : (
-                    <Text className="text-sm text-gray-400 text-center py-8">
-                        {sections.blog.emptyMessage}
-                    </Text>
-                )}
-            </View>
-
-            <View className="mb-8">
-                <View className="px-5 flex-row justify-between items-center mb-4">
-                    <View className="flex-row items-center gap-2">
-                        <View
-                            className="w-1 h-5 rounded-full"
                             style={{ backgroundColor: sections.artists.accentColor }}
                         />
                         <Text className="text-lg font-bold text-gray-900">
@@ -218,40 +225,33 @@ export default function HomeScreen() {
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={CAROUSEL_CONTENT_STYLE}
                     >
-                        {artists.map((artist, index) => {
-                            const user = MOCK_FEATURED_USERS[index];
-
-                            return (
-                                <ArtistCard
-                                    key={artist.id}
-                                    item={artist}
-                                    width={170}
-                                    onPress={() => {
-                                        if (!user?.username) return;
-                                        if (user.role === 'venue') {
-                                            router.push({
-                                                pathname: '/(profiles)/venueProfile',
-                                                params: { username: user.username },
-                                            });
-                                        } else {
-                                            router.push({
-                                                pathname: '/(profiles)/artistProfile',
-                                                params: { username: user.username },
-                                            });
-                                        }
-                                    }}
-                                />
-                            );
-                        })}
+                        {artists.map((artist) => (
+                            <ArtistCard
+                                key={artist.id}
+                                item={artist}
+                                width={170}
+                                onPress={() => {
+                                    if (!artist.username) return;
+                                    router.push({
+                                        pathname:
+                                            artist.role === 'venue'
+                                                ? '/(profiles)/venueProfile'
+                                                : '/(profiles)/artistProfile',
+                                        params: { username: artist.username },
+                                    });
+                                }}
+                            />
+                        ))}
                     </ScrollView>
                 ) : (
-                    <Text className="text-sm text-gray-400 text-center py-8">
-                        {sections.artists.emptyMessage}
-                    </Text>
+                    <SectionPlaceholder
+                        isLoading={isLoadingArtists}
+                        emptyMessage={sections.artists.emptyMessage}
+                    />
                 )}
             </View>
 
-            <View className="mb-10">
+            <View className="mb-8">
                 <View className="px-5 flex-row justify-between items-center mb-4">
                     <View className="flex-row items-center gap-2">
                         <View
@@ -301,9 +301,50 @@ export default function HomeScreen() {
                         ))}
                     </ScrollView>
                 ) : (
-                    <Text className="text-sm text-gray-400 text-center py-8">
-                        {sections.jobs.emptyMessage}
-                    </Text>
+                    <SectionPlaceholder
+                        isLoading={isLoadingJobs}
+                        emptyMessage={sections.jobs.emptyMessage}
+                    />
+                )}
+            </View>
+
+            <View className="mb-10">
+                <View className="px-5 flex-row justify-between items-center mb-4">
+                    <View className="flex-row items-center gap-2">
+                        <View
+                            className="w-1 h-5 rounded-full"
+                            style={{ backgroundColor: sections.blog.accentColor }}
+                        />
+                        <Text className="text-lg font-bold text-gray-900">
+                            {sections.blog.title}
+                        </Text>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => router.push(sections.blog.seeAllRoute as '/(blog)')}
+                        className="flex-row items-center gap-1"
+                    >
+                        <Text className="text-sm font-semibold text-purple-600">
+                            {sections.blog.seeAllLabel}
+                        </Text>
+                        <ChevronRight size={16} color="#7C3BED" />
+                    </TouchableOpacity>
+                </View>
+
+                {blogPosts.length > 0 ? (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
+                    >
+                        {blogPosts.slice(0, BLOG_PREVIEW_LIMIT).map((post) => (
+                            <BlogPreviewCard key={post.id} article={post} />
+                        ))}
+                    </ScrollView>
+                ) : (
+                    <SectionPlaceholder
+                        isLoading={isLoadingBlog}
+                        emptyMessage={sections.blog.emptyMessage}
+                    />
                 )}
             </View>
         </TabScreenWrapper>

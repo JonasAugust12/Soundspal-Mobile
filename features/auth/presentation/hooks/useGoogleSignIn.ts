@@ -24,7 +24,12 @@ export const useGoogleSignIn = () => {
 
     const configureGoogleSignIn = () => {
         GoogleSignin.configure({
-            webClientId: '705270152519-fqgafpn4joob49kqb79tfmcg4phjn3a0.apps.googleusercontent.com',
+            // OAuth client loại "Web application" của project talent-link-480717.
+            // PHẢI trùng client_id mà backend dùng để đổi serverAuthCode (backend giữ
+            // client_secret cặp với nó) — lệch nhau là 401 oauth_failed.
+            // Đây là project RIÊNG cho đăng nhập, khác project FCM (talentlink-22clc
+            // trong google-services.json) — hai thứ độc lập, đừng đồng bộ nhầm.
+            webClientId: '419154220948-58io8pdnh0e0ngcd7v94cf4icprgpf4l.apps.googleusercontent.com',
             offlineAccess: true,
             forceCodeForRefreshToken: true,
         });

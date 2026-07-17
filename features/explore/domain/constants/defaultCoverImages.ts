@@ -1,7 +1,7 @@
 import type { UserRole } from '@/features/explore/domain/entities/search.type';
 
 /**
- * Ảnh bìa mock cho các thẻ ở màn Khám phá, dùng khi user chưa upload cover.
+ * Ảnh bìa mặc định cho các thẻ ở màn Khám phá, dùng khi user chưa upload cover.
  * Toàn bộ ảnh lấy từ Unsplash, chủ đề nghệ thuật - âm nhạc, đã kiểm tra trả về 200.
  *
  * Ảnh phủ toàn bộ thẻ (phần dưới nằm sau lớp kính mờ) nên crop theo tỉ lệ thẻ ~1.54:1,
@@ -48,7 +48,7 @@ const ARTIST_COVERS: string[] = [
     unsplash('1465847899084-d164df4dedc6'), // Dàn violin trong dàn nhạc
 ];
 
-export const MOCK_EXPLORE_COVERS: Record<UserRole | 'artist', string[]> = {
+export const DEFAULT_EXPLORE_COVERS: Record<UserRole | 'artist', string[]> = {
     singer: SINGER_COVERS,
     producer: PRODUCER_COVERS,
     venue: VENUE_COVERS,
@@ -65,12 +65,12 @@ function hashSeed(seed: string): number {
 }
 
 /**
- * Ảnh bìa mock ổn định theo `seed` (nên truyền user id hoặc username).
+ * Ảnh bìa mặc định ổn định theo `seed` (nên truyền user id hoặc username).
  * Chọn theo role để nội dung ảnh khớp với nghề của nghệ sĩ. `role` nhận cả kiểu
  * chuỗi tự do (vd: Job.type) — không khớp thì rơi về bộ ảnh 'artist'.
  */
-export function getMockCoverUrl(seed: string, role?: UserRole | string): string {
-    const key = role as keyof typeof MOCK_EXPLORE_COVERS;
-    const covers = (role && MOCK_EXPLORE_COVERS[key]) || MOCK_EXPLORE_COVERS.artist;
+export function getDefaultCoverUrl(seed: string, role?: UserRole | string): string {
+    const key = role as keyof typeof DEFAULT_EXPLORE_COVERS;
+    const covers = (role && DEFAULT_EXPLORE_COVERS[key]) || DEFAULT_EXPLORE_COVERS.artist;
     return covers[hashSeed(seed) % covers.length];
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -8,11 +8,12 @@ import {
     ActivityIndicator,
     StyleSheet,
     TouchableOpacity,
+    AppState,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, Phone, Video } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -103,33 +104,45 @@ export default function DetailMessageScreen() {
         fetchConversation();
     }, [conversationId]);
 
-    // Fetch messages if not in cache
-    useEffect(() => {
+    /**
+     * Hiển thị cache ngay cho mượt, nhưng LUÔN gọi lại API.
+     *
+     * Không được tin vào cache: socket bị ngắt khi app xuống nền (để backend coi là
+     * offline mà gửi push — xem SocketProvider), nên mọi tin nhắn đến trong lúc đó
+     * KHÔNG về qua socket. Nếu chỉ đọc cache thì mở chat từ thông báo sẽ không thấy
+     * chính tin nhắn vừa được báo.
+     */
+    const fetchMessages = useCallback(async () => {
         if (!conversationId) return;
 
-        const fetchMessages = async () => {
-            if (hasMessages(conversationId)) {
-                console.warn('📦 Using cached messages for:', conversationId);
-                return;
-            }
+        const hasCache = hasMessages(conversationId);
+        if (!hasCache) setLoadingMessages(conversationId, true);
 
-            console.warn('📡 Fetching messages for:', conversationId);
-            setLoadingMessages(conversationId, true);
-
-            try {
-                const response = await apiClient.get<Message[]>(
-                    `/messages/conversation/${conversationId}`,
-                );
-                setMessages(conversationId, response.data);
-            } catch (error) {
-                console.error('Failed to fetch messages:', error);
-            } finally {
-                setLoadingMessages(conversationId, false);
-            }
-        };
-
-        fetchMessages();
+        try {
+            const response = await apiClient.get<Message[]>(
+                `/messages/conversation/${conversationId}`,
+            );
+            setMessages(conversationId, response.data);
+        } catch (error) {
+            console.error('Failed to fetch messages:', error);
+        } finally {
+            if (!hasCache) setLoadingMessages(conversationId, false);
+        }
     }, [conversationId, hasMessages, setMessages, setLoadingMessages]);
+
+    useEffect(() => {
+        fetchMessages();
+    }, [fetchMessages]);
+
+    // Đang mở sẵn màn chat rồi app xuống nền → lúc quay lại cũng phải fetch lại,
+    // vì socket đã ngắt nên không nhận được tin nhắn đến trong lúc đó.
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (state) => {
+            if (state === 'active') fetchMessages();
+        });
+
+        return () => subscription.remove();
+    }, [fetchMessages]);
 
     // Initialize socket and clear unread
     useEffect(() => {
@@ -531,16 +544,6 @@ export default function DetailMessageScreen() {
                                         <Text className="text-xs text-gray-400">Ngoại tuyến</Text>
                                     )}
                                 </View>
-                            </View>
-
-                            {/* Action Buttons */}
-                            <View className="flex-row gap-1">
-                                <TouchableOpacity className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center">
-                                    <Phone size={18} color="#7C3BED" />
-                                </TouchableOpacity>
-                                <TouchableOpacity className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center">
-                                    <Video size={18} color="#7C3BED" />
-                                </TouchableOpacity>
                             </View>
                         </View>
                     </View>

@@ -1,7 +1,10 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { ExploreUserCard } from '@/features/explore/presentation/components/ExploreUserCard';
-import { MOCK_EXPLORE_COVERS, getMockCoverUrl } from '@/mock-data/explore';
+import {
+    DEFAULT_EXPLORE_COVERS,
+    getDefaultCoverUrl,
+} from '@/features/explore/domain/constants/defaultCoverImages';
 import type { UserProfile } from '@/features/explore/domain/entities/search.type';
 
 const buildUser = (overrides: Partial<UserProfile> = {}): UserProfile =>
@@ -14,24 +17,26 @@ const buildUser = (overrides: Partial<UserProfile> = {}): UserProfile =>
         ...overrides,
     }) as UserProfile;
 
-describe('getMockCoverUrl', () => {
+describe('getDefaultCoverUrl', () => {
     it('picks a cover matching the role', () => {
-        expect(MOCK_EXPLORE_COVERS.singer).toContain(getMockCoverUrl('seed-a', 'singer'));
-        expect(MOCK_EXPLORE_COVERS.producer).toContain(getMockCoverUrl('seed-a', 'producer'));
-        expect(MOCK_EXPLORE_COVERS.venue).toContain(getMockCoverUrl('seed-a', 'venue'));
+        expect(DEFAULT_EXPLORE_COVERS.singer).toContain(getDefaultCoverUrl('seed-a', 'singer'));
+        expect(DEFAULT_EXPLORE_COVERS.producer).toContain(getDefaultCoverUrl('seed-a', 'producer'));
+        expect(DEFAULT_EXPLORE_COVERS.venue).toContain(getDefaultCoverUrl('seed-a', 'venue'));
     });
 
     it('falls back to the artist set when the role is unknown', () => {
-        expect(MOCK_EXPLORE_COVERS.artist).toContain(getMockCoverUrl('seed-a', undefined));
+        expect(DEFAULT_EXPLORE_COVERS.artist).toContain(getDefaultCoverUrl('seed-a', undefined));
     });
 
     it('is deterministic for the same seed', () => {
-        expect(getMockCoverUrl('bonpaul', 'producer')).toBe(getMockCoverUrl('bonpaul', 'producer'));
+        expect(getDefaultCoverUrl('bonpaul', 'producer')).toBe(
+            getDefaultCoverUrl('bonpaul', 'producer'),
+        );
     });
 
     it('spreads different seeds across the set', () => {
         const seeds = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const picked = new Set(seeds.map((seed) => getMockCoverUrl(seed, 'venue')));
+        const picked = new Set(seeds.map((seed) => getDefaultCoverUrl(seed, 'venue')));
         expect(picked.size).toBeGreaterThan(1);
     });
 });
@@ -61,8 +66,8 @@ describe('ExploreUserCard cover', () => {
             .map((node) => node.props.source?.uri)
             .filter(Boolean);
 
-        expect(uris).toContain(getMockCoverUrl('user-1', 'producer'));
-        expect(MOCK_EXPLORE_COVERS.producer).toContain(uris[0]);
+        expect(uris).toContain(getDefaultCoverUrl('user-1', 'producer'));
+        expect(DEFAULT_EXPLORE_COVERS.producer).toContain(uris[0]);
     });
 
     it('treats a blank cover_url as missing', () => {
@@ -74,6 +79,6 @@ describe('ExploreUserCard cover', () => {
             .map((node) => node.props.source?.uri)
             .filter(Boolean);
 
-        expect(uris).toContain(getMockCoverUrl('user-1', 'producer'));
+        expect(uris).toContain(getDefaultCoverUrl('user-1', 'producer'));
     });
 });

@@ -6,6 +6,8 @@ import { cardShadow } from '@/shared/presentation/ui/shadows';
 
 export type ArtistItem = {
     id: string;
+    /** Dùng để điều hướng sang trang cá nhân (route nhận username, không phải id). */
+    username?: string;
     name: string;
     description: string;
     location: string;
@@ -19,6 +21,9 @@ type Props = {
     width?: number;
     onPress?: () => void;
 };
+
+/** Số genre hiển thị tối đa; phần dư gom vào một chip "+N". */
+const MAX_VISIBLE_SKILLS = 3;
 
 export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, onPress }: Props) {
     // Get role badge config
@@ -54,6 +59,13 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
     };
 
     const roleBadge = getRoleBadge();
+
+    const allSkills = item.skills
+        .split('/')
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+    const visibleSkills = allSkills.slice(0, MAX_VISIBLE_SKILLS);
+    const hiddenSkillCount = allSkills.length - visibleSkills.length;
 
     return (
         <View style={[styles.cardWrapper, { width }]}>
@@ -102,22 +114,27 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
                         </View>
 
                         {/* Skills Badges - Professional style */}
-                        <View className="flex-row flex-wrap justify-center gap-1">
-                            {item.skills.split('/').map((skill, index) => {
-                                const trimmedSkill = skill.trim();
-                                if (!trimmedSkill) return null;
-
-                                return (
-                                    <View
-                                        key={index}
-                                        className="bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"
-                                    >
-                                        <Text className="text-[10px] font-semibold text-purple-700">
-                                            {trimmedSkill}
-                                        </Text>
-                                    </View>
-                                );
-                            })}
+                        <View
+                            style={styles.skillsRow}
+                            className="flex-row flex-wrap justify-center gap-1"
+                        >
+                            {visibleSkills.map((skill) => (
+                                <View
+                                    key={skill}
+                                    className="bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full"
+                                >
+                                    <Text className="text-[10px] font-semibold text-purple-700">
+                                        {skill}
+                                    </Text>
+                                </View>
+                            ))}
+                            {hiddenSkillCount > 0 && (
+                                <View className="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full">
+                                    <Text className="text-[10px] font-semibold text-gray-500">
+                                        +{hiddenSkillCount}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -132,5 +149,16 @@ const styles = StyleSheet.create({
         ...cardShadow,
         borderRadius: 20,
         alignSelf: 'flex-start',
+    },
+    /**
+     * Chốt cứng chỗ cho đúng 2 hàng chip. Số genre mỗi nghệ sĩ chênh nhau rất nhiều
+     * (có người 12, có người 3) nên để khối này tự co giãn thì các thẻ trong carousel
+     * cao thấp lệch nhau. Mọi dòng khác đã numberOfLines={1}, nên cố định khối này là
+     * đủ để mọi thẻ bằng nhau.
+     */
+    skillsRow: {
+        height: 44,
+        alignContent: 'center',
+        overflow: 'hidden',
     },
 });
