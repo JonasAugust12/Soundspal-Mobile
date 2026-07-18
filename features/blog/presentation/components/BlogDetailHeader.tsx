@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useColorScheme } from 'nativewind';
-import { ArrowLeft, Bookmark, Bell } from 'lucide-react-native';
+import { ArrowLeft, Bookmark, Bell, MessageCircle } from 'lucide-react-native';
 
 interface BlogDetailHeaderProps {
     onBackPress: () => void;
     onBookmarkPress?: () => void;
     onNotificationPress?: () => void;
+    onCommentPress?: () => void;
     isBookmarked?: boolean;
 }
 
@@ -14,6 +15,7 @@ export function BlogDetailHeader({
     onBackPress,
     onBookmarkPress,
     onNotificationPress,
+    onCommentPress,
     isBookmarked = false,
 }: BlogDetailHeaderProps) {
     const { colorScheme } = useColorScheme();
@@ -34,6 +36,15 @@ export function BlogDetailHeader({
             </Text>
 
             <View className="flex-row items-center gap-2">
+                {onCommentPress && (
+                    <TouchableOpacity onPress={onCommentPress} className="p-2">
+                        <MessageCircle
+                            size={20}
+                            color={isDark ? '#E2E8F0' : '#1F2937'}
+                            strokeWidth={1.5}
+                        />
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity onPress={onBookmarkPress} className="p-2">
                     <Bookmark
                         size={20}

@@ -21,6 +21,7 @@ import {
     mapBookmarkRowToBlogPost,
 } from '@/features/blog/data/mappers/blogPostMapper';
 import { mapApiCommentToBlogComment } from '@/features/blog/data/mappers/blogCommentMapper';
+import { MOCK_BLOG_ARTICLES } from '@/features/blog/domain/constants/mockBlogArticles';
 import { unwrapBlogData } from '@/features/blog/data/utils/blogResponseUtils';
 import {
     BLOG_UPLOAD_LOG_PREFIX,
@@ -39,23 +40,32 @@ const EMPTY_BOOKMARK_BODY: BookmarkPostRequest = {};
 
 export const blogRemoteDataSource = {
     async fetchBlogPosts(filters?: BlogPostFilters): Promise<BlogPost[]> {
-        const response = await apiClient.get<BlogsResponse>('/blogs', {
-            params: {
-                ...(filters?.topic_id ? { topic_id: filters.topic_id } : {}),
-                ...(filters?.author_id ? { author_id: filters.author_id } : {}),
-                ...(filters?.limit != null ? { page_size: filters.limit } : {}),
-                ...(filters?.offset != null && filters?.limit
-                    ? { page: Math.floor(filters.offset / filters.limit) + 1 }
-                    : {}),
-            },
-        });
-
-        const payload = response.data;
-        if (!payload?.data?.items || !Array.isArray(payload.data.items)) {
-            throw new Error('Invalid blogs response');
+        // Trong lúc backend blog chưa đủ nội dung: LUÔN thêm các bài mẫu vào cuối danh
+        // sách thật (dedup theo id) để màn Blog đầy đặn, ảnh đẹp, chi tiết đầy đủ.
+        // Bài thật vẫn đứng trước và không bị ẩn. Bỏ khối này khi blog thật đã ổn định.
+        let realPosts: BlogPost[] = [];
+        try {
+            const response = await apiClient.get<BlogsResponse>('/blogs', {
+                params: {
+                    ...(filters?.topic_id ? { topic_id: filters.topic_id } : {}),
+                    ...(filters?.author_id ? { author_id: filters.author_id } : {}),
+                    ...(filters?.limit != null ? { page_size: filters.limit } : {}),
+                    ...(filters?.offset != null && filters?.limit
+                        ? { page: Math.floor(filters.offset / filters.limit) + 1 }
+                        : {}),
+                },
+            });
+            const items = response.data?.data?.items;
+            if (Array.isArray(items)) {
+                realPosts = items.map(mapBlogItemToBlogPost);
+            }
+        } catch {
+            // Bỏ qua — vẫn trả bài mẫu bên dưới.
         }
 
-        return payload.data.items.map(mapBlogItemToBlogPost);
+        const seen = new Set(realPosts.map((p) => p.id));
+        const extras = MOCK_BLOG_ARTICLES.filter((p) => !seen.has(p.id));
+        return [...realPosts, ...extras];
     },
 
     async createPost(request: CreatePostRequest): Promise<BlogItem> {

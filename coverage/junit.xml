@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="358" failures="18" errors="0" time="38.362">
-  <testsuite name="__tests__\utils\multipartUpload.test.ts" errors="0" failures="1" skipped="0" timestamp="2026-07-17T12:40:37" time="2.794" tests="7">
-    <testcase classname="unwrapUploadPayload" name="bóc lớp { data } của envelope" time="0.028">
+<testsuites name="jest tests" tests="358" failures="18" errors="0" time="43.385">
+  <testsuite name="__tests__\utils\multipartUpload.test.ts" errors="0" failures="1" skipped="0" timestamp="2026-07-18T01:40:50" time="6.403" tests="7">
+    <testcase classname="unwrapUploadPayload" name="bóc lớp { data } của envelope" time="0.086">
     </testcase>
-    <testcase classname="unwrapUploadPayload" name="giữ nguyên khi server trả thẳng object" time="0.001">
+    <testcase classname="unwrapUploadPayload" name="giữ nguyên khi server trả thẳng object" time="0.002">
     </testcase>
     <testcase classname="unwrapUploadPayload" name="giữ nguyên payload khi data không phải object" time="0.001">
     </testcase>
-    <testcase classname="postMultipartWithFetch" name="gửi POST fetch với body FormData và kèm token" time="0.017">
+    <testcase classname="postMultipartWithFetch" name="gửi POST fetch với body FormData và kèm token" time="0.026">
       <failure>Error: expect(received).toBe(expected) // Object.is equality
 
 Expected: &quot;https://talentlink.io.vn/api/v1/users/me/avatar&quot;
@@ -18,15 +18,15 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at _next (D:\TL-Mobile\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
     at processTicksAndRejections (node:internal/process/task_queues:95:5)</failure>
     </testcase>
-    <testcase classname="postMultipartWithFetch" name="không thêm Authorization khi chưa đăng nhập" time="0.002">
+    <testcase classname="postMultipartWithFetch" name="không thêm Authorization khi chưa đăng nhập" time="0.003">
     </testcase>
-    <testcase classname="postMultipartWithFetch" name="ném lỗi kèm status khi server trả HTTP lỗi" time="0.009">
+    <testcase classname="postMultipartWithFetch" name="ném lỗi kèm status khi server trả HTTP lỗi" time="0.042">
     </testcase>
-    <testcase classname="postMultipartWithFetch" name="ném lỗi khi body không phải JSON" time="0.003">
+    <testcase classname="postMultipartWithFetch" name="ném lỗi khi body không phải JSON" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\hooks\useProtectedRoute.test.ts" errors="0" failures="10" skipped="0" timestamp="2026-07-17T12:40:36" time="3.654" tests="10">
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (tabs)" time="0.148">
+  <testsuite name="__tests__\hooks\useProtectedRoute.test.ts" errors="0" failures="10" skipped="0" timestamp="2026-07-18T01:40:50" time="8.524" tests="10">
+    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (tabs)" time="0.221">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:39:47
@@ -64,7 +64,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (profiles)" time="0.02">
+    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (profiles)" time="0.007">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:47:47
@@ -101,7 +101,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (jobs)" time="0.02">
+    <testcase classname="useProtectedRoute › Unauthenticated user" name="should redirect to login when accessing protected route (jobs)" time="0.007">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:55:47
@@ -138,7 +138,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Unauthenticated user" name="should not redirect when on auth screen" time="0.005">
+    <testcase classname="useProtectedRoute › Unauthenticated user" name="should not redirect when on auth screen" time="0.01">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:63:47
@@ -175,7 +175,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should redirect to email verification required" time="0.006">
+    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should redirect to email verification required" time="0.007">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:80:47
@@ -212,7 +212,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should not redirect when on email-verification-required page" time="0.007">
+    <testcase classname="useProtectedRoute › Authenticated but unverified user" name="should not redirect when on email-verification-required page" time="0.006">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:88:47
@@ -286,7 +286,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should redirect to home when on auth screen" time="0.006">
+    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should redirect to home when on auth screen" time="0.008">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:113:47
@@ -360,7 +360,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should not redirect when on profiles" time="0.006">
+    <testcase classname="useProtectedRoute › Authenticated and verified user" name="should not redirect when on profiles" time="0.007">
       <failure>TypeError: (0 , _expoRouter.useGlobalSearchParams) is not a function
     at useProtectedRoute (D:\TL-Mobile\shared\presentation\hooks\useProtectedRoute.ts:11:47)
     at D:\TL-Mobile\__tests__\hooks\useProtectedRoute.test.ts:129:47
@@ -398,58 +398,58 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\explore\BeatCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:37" time="13.982" tests="10">
-    <testcase classname="BeatCard" name="should render beat title" time="1.925">
+  <testsuite name="__tests__\components\explore\BeatCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:40:50" time="19.99" tests="10">
+    <testcase classname="BeatCard" name="should render beat title" time="2.538">
     </testcase>
-    <testcase classname="BeatCard" name="should render producer name" time="0.06">
+    <testcase classname="BeatCard" name="should render producer name" time="0.074">
     </testcase>
-    <testcase classname="BeatCard" name="should render BPM" time="0.06">
+    <testcase classname="BeatCard" name="should render BPM" time="0.074">
     </testcase>
-    <testcase classname="BeatCard" name="should render duration" time="0.049">
+    <testcase classname="BeatCard" name="should render duration" time="0.064">
     </testcase>
-    <testcase classname="BeatCard" name="should render entries count" time="0.05">
+    <testcase classname="BeatCard" name="should render entries count" time="0.059">
     </testcase>
-    <testcase classname="BeatCard" name="should render HOT badge when isHot is true" time="0.062">
+    <testcase classname="BeatCard" name="should render HOT badge when isHot is true" time="0.072">
     </testcase>
-    <testcase classname="BeatCard" name="should not render HOT badge when isHot is false" time="0.05">
+    <testcase classname="BeatCard" name="should not render HOT badge when isHot is false" time="0.077">
     </testcase>
-    <testcase classname="BeatCard" name="should render with onPlayAudio callback" time="0.046">
+    <testcase classname="BeatCard" name="should render with onPlayAudio callback" time="0.067">
     </testcase>
-    <testcase classname="BeatCard" name="should render with onRecord callback" time="0.048">
+    <testcase classname="BeatCard" name="should render with onRecord callback" time="0.062">
     </testcase>
-    <testcase classname="BeatCard" name="should render delete button when showDelete is true" time="0.069">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\home\JobCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:37" time="14.272" tests="13">
-    <testcase classname="JobCard" name="should render job title" time="1.905">
-    </testcase>
-    <testcase classname="JobCard" name="should render brief description" time="0.053">
-    </testcase>
-    <testcase classname="JobCard" name="should render creator name" time="0.055">
-    </testcase>
-    <testcase classname="JobCard" name="should render location" time="0.045">
-    </testcase>
-    <testcase classname="JobCard" name="should render budget range" time="0.041">
-    </testcase>
-    <testcase classname="JobCard" name="should render &quot;Thỏa thuận&quot; when no budget" time="0.079">
-    </testcase>
-    <testcase classname="JobCard" name="should render genres (max 3)" time="0.061">
-    </testcase>
-    <testcase classname="JobCard" name="should render recruitment type label" time="0.047">
-    </testcase>
-    <testcase classname="JobCard" name="should render work time when provided" time="0.086">
-    </testcase>
-    <testcase classname="JobCard" name="should render job_offer post type badge" time="0.096">
-    </testcase>
-    <testcase classname="JobCard" name="should render gig post type badge" time="0.05">
-    </testcase>
-    <testcase classname="JobCard" name="should render availability post type badge" time="0.064">
-    </testcase>
-    <testcase classname="JobCard" name="should not render work time when not provided" time="0.072">
+    <testcase classname="BeatCard" name="should render delete button when showDelete is true" time="0.077">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\jobs\JobApplyModal.test.tsx" errors="0" failures="7" skipped="0" timestamp="2026-07-17T12:40:37" time="14.744" tests="7">
-    <testcase classname="JobApplyModal" name="should render when visible is true" time="1.377">
+  <testsuite name="__tests__\components\home\JobCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:40:50" time="21.762" tests="13">
+    <testcase classname="JobCard" name="should render job title" time="2.861">
+    </testcase>
+    <testcase classname="JobCard" name="should render brief description" time="0.05">
+    </testcase>
+    <testcase classname="JobCard" name="should render creator name" time="0.052">
+    </testcase>
+    <testcase classname="JobCard" name="should render location" time="0.051">
+    </testcase>
+    <testcase classname="JobCard" name="should render budget range" time="0.054">
+    </testcase>
+    <testcase classname="JobCard" name="should render &quot;Thỏa thuận&quot; when no budget" time="0.06">
+    </testcase>
+    <testcase classname="JobCard" name="should render genres (max 3)" time="0.053">
+    </testcase>
+    <testcase classname="JobCard" name="should render recruitment type label" time="0.05">
+    </testcase>
+    <testcase classname="JobCard" name="should render work time when provided" time="0.049">
+    </testcase>
+    <testcase classname="JobCard" name="should render job_offer post type badge" time="0.051">
+    </testcase>
+    <testcase classname="JobCard" name="should render gig post type badge" time="0.074">
+    </testcase>
+    <testcase classname="JobCard" name="should render availability post type badge" time="0.056">
+    </testcase>
+    <testcase classname="JobCard" name="should not render work time when not provided" time="0.042">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\jobs\JobApplyModal.test.tsx" errors="0" failures="7" skipped="0" timestamp="2026-07-18T01:40:50" time="22.4" tests="7">
+    <testcase classname="JobApplyModal" name="should render when visible is true" time="1.242">
       <failure>Error: No safe area value available. Make sure you are rendering `&lt;SafeAreaProvider&gt;` at the top of your app.
     at useSafeAreaInsets (D:\TL-Mobile\node_modules\react-native-safe-area-context\src\SafeAreaContext.tsx:152:11)
     at JobApplyModal (D:\TL-Mobile\features\jobs\presentation\components\JobApplyModal.tsx:36:37)
@@ -485,7 +485,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="JobApplyModal" name="should validate empty full name" time="0.015">
+    <testcase classname="JobApplyModal" name="should validate empty full name" time="0.004">
       <failure>Error: No safe area value available. Make sure you are rendering `&lt;SafeAreaProvider&gt;` at the top of your app.
     at useSafeAreaInsets (D:\TL-Mobile\node_modules\react-native-safe-area-context\src\SafeAreaContext.tsx:152:11)
     at JobApplyModal (D:\TL-Mobile\features\jobs\presentation\components\JobApplyModal.tsx:36:37)
@@ -520,7 +520,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="JobApplyModal" name="should validate invalid email" time="0.006">
+    <testcase classname="JobApplyModal" name="should validate invalid email" time="0.004">
       <failure>Error: No safe area value available. Make sure you are rendering `&lt;SafeAreaProvider&gt;` at the top of your app.
     at useSafeAreaInsets (D:\TL-Mobile\node_modules\react-native-safe-area-context\src\SafeAreaContext.tsx:152:11)
     at JobApplyModal (D:\TL-Mobile\features\jobs\presentation\components\JobApplyModal.tsx:36:37)
@@ -555,7 +555,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="JobApplyModal" name="should validate invalid phone number" time="0.003">
+    <testcase classname="JobApplyModal" name="should validate invalid phone number" time="0.004">
       <failure>Error: No safe area value available. Make sure you are rendering `&lt;SafeAreaProvider&gt;` at the top of your app.
     at useSafeAreaInsets (D:\TL-Mobile\node_modules\react-native-safe-area-context\src\SafeAreaContext.tsx:152:11)
     at JobApplyModal (D:\TL-Mobile\features\jobs\presentation\components\JobApplyModal.tsx:36:37)
@@ -590,7 +590,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="JobApplyModal" name="should validate cover letter length" time="0.014">
+    <testcase classname="JobApplyModal" name="should validate cover letter length" time="0.004">
       <failure>Error: No safe area value available. Make sure you are rendering `&lt;SafeAreaProvider&gt;` at the top of your app.
     at useSafeAreaInsets (D:\TL-Mobile\node_modules\react-native-safe-area-context\src\SafeAreaContext.tsx:152:11)
     at JobApplyModal (D:\TL-Mobile\features\jobs\presentation\components\JobApplyModal.tsx:36:37)
@@ -625,7 +625,7 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at runTest (D:\TL-Mobile\node_modules\jest-runner\build\runTest.js:444:34)
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="JobApplyModal" name="should call onClose when close button is pressed" time="0.015">
+    <testcase classname="JobApplyModal" name="should call onClose when close button is pressed" time="0.004">
       <failure>Error: No safe area value available. Make sure you are rendering `&lt;SafeAreaProvider&gt;` at the top of your app.
     at useSafeAreaInsets (D:\TL-Mobile\node_modules\react-native-safe-area-context\src\SafeAreaContext.tsx:152:11)
     at JobApplyModal (D:\TL-Mobile\features\jobs\presentation\components\JobApplyModal.tsx:36:37)
@@ -696,598 +696,208 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     at Object.worker (D:\TL-Mobile\node_modules\jest-runner\build\testWorker.js:106:12)</failure>
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\jobs\JobCardFull.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:37" time="15.151" tests="8">
-    <testcase classname="JobCardFull" name="should render job title correctly" time="1.406">
+  <testsuite name="__tests__\components\editprofile\AvatarFrame.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:40:57" time="16.04" tests="8">
+    <testcase classname="AvatarFrame" name="should render with default avatar when no URI provided" time="2.41">
     </testcase>
-    <testcase classname="JobCardFull" name="should render basic job information" time="0.088">
+    <testcase classname="AvatarFrame" name="should render with singer role icon by default" time="0.009">
     </testcase>
-    <testcase classname="JobCardFull" name="should show &quot;Toán quốc&quot; if no location is provided" time="0.104">
+    <testcase classname="AvatarFrame" name="should render with producer role icon" time="0.011">
     </testcase>
-    <testcase classname="JobCardFull" name="should show ownership badge when isOwned is true" time="0.079">
+    <testcase classname="AvatarFrame" name="should render with venue role icon" time="0.007">
     </testcase>
-    <testcase classname="JobCardFull" name="should show &quot;Chỉnh sửa&quot; button when isOwned is true" time="0.079">
+    <testcase classname="AvatarFrame" name="should render with custom avatar URI" time="0.005">
     </testcase>
-    <testcase classname="JobCardFull" name="should show &quot;Ứng tuyển ngay&quot; button when isOwned is false" time="0.073">
+    <testcase classname="AvatarFrame" name="should show edit button when editable is true" time="0.636">
     </testcase>
-    <testcase classname="JobCardFull" name="should call onEdit when Chỉnh sửa button is clicked and onEdit is provided" time="0.082">
+    <testcase classname="AvatarFrame" name="should not show edit button when editable is false" time="0.006">
     </testcase>
-    <testcase classname="JobCardFull" name="should render &quot;Chi tiết&quot; button" time="0.081">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\explore\ExploreUserCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:37" time="15.15" tests="7">
-    <testcase classname="getDefaultCoverUrl" name="picks a cover matching the role" time="0.044">
-    </testcase>
-    <testcase classname="getDefaultCoverUrl" name="falls back to the artist set when the role is unknown" time="0.002">
-    </testcase>
-    <testcase classname="getDefaultCoverUrl" name="is deterministic for the same seed" time="0.001">
-    </testcase>
-    <testcase classname="getDefaultCoverUrl" name="spreads different seeds across the set" time="0.006">
-    </testcase>
-    <testcase classname="ExploreUserCard cover" name="uses the real cover_url when the user has one" time="1.544">
-    </testcase>
-    <testcase classname="ExploreUserCard cover" name="falls back to a role-matched mock cover when cover_url is missing" time="0.043">
-    </testcase>
-    <testcase classname="ExploreUserCard cover" name="treats a blank cover_url as missing" time="0.04">
+    <testcase classname="AvatarFrame" name="should call onPickAvatar when edit button is pressed" time="0.014">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\common\SearchBar.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:39" time="12.932" tests="9">
-    <testcase classname="SearchBar" name="should render with default placeholder" time="2.312">
+  <testsuite name="__tests__\components\jobs\JobCardFull.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:40:50" time="22.797" tests="8">
+    <testcase classname="JobCardFull" name="should render job title correctly" time="1.489">
     </testcase>
-    <testcase classname="SearchBar" name="should render with custom placeholder" time="0.039">
+    <testcase classname="JobCardFull" name="should render basic job information" time="0.085">
     </testcase>
-    <testcase classname="SearchBar" name="should display value prop" time="0.036">
+    <testcase classname="JobCardFull" name="should show &quot;Toán quốc&quot; if no location is provided" time="0.091">
     </testcase>
-    <testcase classname="SearchBar" name="should call onChangeText when text is entered" time="0.044">
+    <testcase classname="JobCardFull" name="should show ownership badge when isOwned is true" time="0.104">
     </testcase>
-    <testcase classname="SearchBar" name="should call onSubmitEditing when submit is pressed" time="0.027">
+    <testcase classname="JobCardFull" name="should show &quot;Chỉnh sửa&quot; button when isOwned is true" time="0.078">
+    </testcase>
+    <testcase classname="JobCardFull" name="should show &quot;Ứng tuyển ngay&quot; button when isOwned is false" time="0.077">
+    </testcase>
+    <testcase classname="JobCardFull" name="should call onEdit when Chỉnh sửa button is clicked and onEdit is provided" time="0.091">
+    </testcase>
+    <testcase classname="JobCardFull" name="should render &quot;Chi tiết&quot; button" time="0.088">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\common\SearchBar.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:40:59" time="14.331" tests="9">
+    <testcase classname="SearchBar" name="should render with default placeholder" time="2.612">
+    </testcase>
+    <testcase classname="SearchBar" name="should render with custom placeholder" time="0.042">
+    </testcase>
+    <testcase classname="SearchBar" name="should display value prop" time="0.037">
+    </testcase>
+    <testcase classname="SearchBar" name="should call onChangeText when text is entered" time="0.059">
+    </testcase>
+    <testcase classname="SearchBar" name="should call onSubmitEditing when submit is pressed" time="0.029">
     </testcase>
     <testcase classname="SearchBar" name="should show filter button by default" time="0.029">
     </testcase>
-    <testcase classname="SearchBar" name="should hide filter button when showFilter is false" time="0.014">
+    <testcase classname="SearchBar" name="should hide filter button when showFilter is false" time="0.012">
     </testcase>
-    <testcase classname="SearchBar" name="should have search returnKeyType" time="0.043">
+    <testcase classname="SearchBar" name="should have search returnKeyType" time="0.027">
     </testcase>
-    <testcase classname="SearchBar" name="should handle empty value" time="0.036">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\editprofile\AvatarFrame.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:40" time="12.528" tests="8">
-    <testcase classname="AvatarFrame" name="should render with default avatar when no URI provided" time="2.238">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should render with singer role icon by default" time="0.006">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should render with producer role icon" time="0.004">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should render with venue role icon" time="0.006">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should render with custom avatar URI" time="0.006">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should show edit button when editable is true" time="0.051">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should not show edit button when editable is false" time="0.007">
-    </testcase>
-    <testcase classname="AvatarFrame" name="should call onPickAvatar when edit button is pressed" time="0.017">
+    <testcase classname="SearchBar" name="should handle empty value" time="0.034">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\collab\CollabStatusBadge.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:52" time="5.229" tests="7">
-    <testcase classname="CollabStatusBadge" name="should render pending_review status" time="0.345">
+  <testsuite name="__tests__\components\home\ArtistCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:10" time="8.303" tests="9">
+    <testcase classname="ArtistCard" name="should render artist name and description" time="0.647">
     </testcase>
-    <testcase classname="CollabStatusBadge" name="should render accepted status" time="0.009">
+    <testcase classname="ArtistCard" name="should render location" time="0.038">
     </testcase>
-    <testcase classname="CollabStatusBadge" name="should render rejected status" time="0.011">
+    <testcase classname="ArtistCard" name="should render skills as badges" time="0.069">
     </testcase>
-    <testcase classname="CollabStatusBadge" name="should render withdrawn status" time="0.011">
+    <testcase classname="ArtistCard" name="should render Singer role badge" time="0.034">
     </testcase>
-    <testcase classname="CollabStatusBadge" name="should render with small size" time="0.014">
+    <testcase classname="ArtistCard" name="should render Producer role badge" time="0.032">
     </testcase>
-    <testcase classname="CollabStatusBadge" name="should render with medium size (default)" time="0.009">
+    <testcase classname="ArtistCard" name="should render Venue role badge" time="0.036">
     </testcase>
-    <testcase classname="CollabStatusBadge" name="should render with large size" time="0.009">
+    <testcase classname="ArtistCard" name="should not render role badge when role is undefined" time="0.025">
     </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\auth\SelectInput.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:52" time="5.231" tests="5">
-    <testcase classname="SelectInput" name="should render label" time="0.365">
+    <testcase classname="ArtistCard" name="should call onPress when card is pressed" time="0.033">
     </testcase>
-    <testcase classname="SelectInput" name="should render all options" time="0.036">
-    </testcase>
-    <testcase classname="SelectInput" name="should call onValueChange when option is pressed" time="0.031">
-    </testcase>
-    <testcase classname="SelectInput" name="should render error message when error is provided" time="0.024">
-    </testcase>
-    <testcase classname="SelectInput" name="should not render error when no error provided" time="0.025">
+    <testcase classname="ArtistCard" name="should handle empty skills" time="0.027">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\common\ConfirmModal.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:51" time="5.731" tests="7">
-    <testcase classname="ConfirmModal" name="should render when visible is true" time="0.414">
+  <testsuite name="__tests__\components\explore\ExploreUserCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:40:50" time="28.868" tests="7">
+    <testcase classname="getDefaultCoverUrl" name="picks a cover matching the role" time="0.128">
     </testcase>
-    <testcase classname="ConfirmModal" name="should display custom confirm and cancel text" time="0.045">
+    <testcase classname="getDefaultCoverUrl" name="falls back to the artist set when the role is unknown" time="0.008">
     </testcase>
-    <testcase classname="ConfirmModal" name="should use default button text when not provided" time="0.039">
+    <testcase classname="getDefaultCoverUrl" name="is deterministic for the same seed" time="0.002">
     </testcase>
-    <testcase classname="ConfirmModal" name="should call onConfirm when confirm button is pressed" time="0.044">
+    <testcase classname="getDefaultCoverUrl" name="spreads different seeds across the set" time="0.002">
     </testcase>
-    <testcase classname="ConfirmModal" name="should call onCancel when cancel button is pressed" time="0.034">
+    <testcase classname="ExploreUserCard cover" name="uses the real cover_url when the user has one" time="7.088">
     </testcase>
-    <testcase classname="ConfirmModal" name="should show loading state when isLoading is true" time="0.032">
+    <testcase classname="ExploreUserCard cover" name="falls back to a role-matched mock cover when cover_url is missing" time="0.063">
     </testcase>
-    <testcase classname="ConfirmModal" name="should render AlertTriangle icon" time="0.03">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\jobs\JobDetailInfo.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:52" time="5.336" tests="8">
-    <testcase classname="JobDetailInfo" name="should render detailed job info correctly" time="0.393">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should show &quot;Toàn quốc&quot; when location is empty" time="0.035">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should show negotiable badge when isNegotiable is true" time="0.03">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should not show negotiable badge when isNegotiable is false" time="0.05">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should render deadline when provided" time="0.042">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should not render deadline section when not provided" time="0.028">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should render work time when provided" time="0.039">
-    </testcase>
-    <testcase classname="JobDetailInfo" name="should not render work time section when not provided" time="0.026">
+    <testcase classname="ExploreUserCard cover" name="treats a blank cover_url as missing" time="0.053">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\userApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:51" time="7.816" tests="15">
-    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/:username - should respond for user profile request" time="0.999">
+  <testsuite name="__tests__\components\profile\SocialList.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:12" time="7.14" tests="7">
+    <testcase classname="SocialList" name="should render &quot;Kết nối&quot; title when socials exist" time="0.561">
     </testcase>
-    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/media/:username - should respond for user media request" time="0.375">
+    <testcase classname="SocialList" name="should render facebook icon when facebook is provided" time="0.025">
     </testcase>
-    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/videos/all/:username - should respond for user videos request" time="0.298">
+    <testcase classname="SocialList" name="should render instagram icon when instagram is provided" time="0.012">
     </testcase>
-    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/genres - should respond for all genres request" time="0.32">
+    <testcase classname="SocialList" name="should render youtube icon when youtube is provided" time="0.011">
     </testcase>
-    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/genres/:username - should respond for user genres request" time="0.517">
+    <testcase classname="SocialList" name="should render website icon when website is provided" time="0.014">
     </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="GET /users/me - should respond with 401 without token" time="0.295">
+    <testcase classname="SocialList" name="should render all social icons when all are provided" time="0.036">
     </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="GET /users/me/media - should respond with 401 without token" time="0.417">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/me/basic - should respond with 401 without token" time="0.415">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/me/contact - should respond with 401 without token" time="0.585">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/me/social - should respond with 401 without token" time="0.338">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="POST /users/me/avatar - should respond with 401 without token" time="0.407">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="POST /users/me/media - should respond with 401 without token" time="0.298">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /users/me/media/:id - should respond with 401 without token" time="0.381">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="POST /users/videos - should respond with 401 without token" time="0.341">
-    </testcase>
-    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/genres/:username - should respond with 401 without token" time="0.419">
+    <testcase classname="SocialList" name="should return null when no socials are provided" time="0.003">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\home\ArtistCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:51" time="8.193" tests="9">
-    <testcase classname="ArtistCard" name="should render artist name and description" time="0.356">
+  <testsuite name="__tests__\components\auth\SelectInput.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:13" time="6.706" tests="5">
+    <testcase classname="SelectInput" name="should render label" time="0.411">
     </testcase>
-    <testcase classname="ArtistCard" name="should render location" time="0.033">
+    <testcase classname="SelectInput" name="should render all options" time="0.034">
     </testcase>
-    <testcase classname="ArtistCard" name="should render skills as badges" time="0.034">
+    <testcase classname="SelectInput" name="should call onValueChange when option is pressed" time="0.026">
     </testcase>
-    <testcase classname="ArtistCard" name="should render Singer role badge" time="0.04">
+    <testcase classname="SelectInput" name="should render error message when error is provided" time="0.026">
     </testcase>
-    <testcase classname="ArtistCard" name="should render Producer role badge" time="0.029">
-    </testcase>
-    <testcase classname="ArtistCard" name="should render Venue role badge" time="0.032">
-    </testcase>
-    <testcase classname="ArtistCard" name="should not render role badge when role is undefined" time="0.039">
-    </testcase>
-    <testcase classname="ArtistCard" name="should call onPress when card is pressed" time="0.032">
-    </testcase>
-    <testcase classname="ArtistCard" name="should handle empty skills" time="0.026">
+    <testcase classname="SelectInput" name="should not render error when no error provided" time="0.029">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\authApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:53" time="6.535" tests="11">
-    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/login - should respond (endpoint alive)" time="0.842">
+  <testsuite name="__tests__\components\jobs\JobDetailInfo.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:13" time="6.915" tests="8">
+    <testcase classname="JobDetailInfo" name="should render detailed job info correctly" time="0.41">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/signup - should respond (endpoint alive)" time="1.415">
+    <testcase classname="JobDetailInfo" name="should show &quot;Toàn quốc&quot; when location is empty" time="0.039">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/reset-password-request - should respond (endpoint alive)" time="0.397">
+    <testcase classname="JobDetailInfo" name="should show negotiable badge when isNegotiable is true" time="0.036">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/verify-email - should respond (endpoint alive)" time="0.329">
+    <testcase classname="JobDetailInfo" name="should not show negotiable badge when isNegotiable is false" time="0.032">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/verification-email-resend - should respond (endpoint alive)" time="0.408">
+    <testcase classname="JobDetailInfo" name="should render deadline when provided" time="0.041">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Protected Endpoints (Auth Required)" name="POST /auth/logout - should respond with 401 without token" time="0.311">
+    <testcase classname="JobDetailInfo" name="should not render deadline section when not provided" time="0.034">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Protected Endpoints (Auth Required)" name="POST /auth/mobile-oauth - should respond (endpoint alive)" time="0.366">
+    <testcase classname="JobDetailInfo" name="should render work time when provided" time="0.042">
     </testcase>
-    <testcase classname="Auth API Integration Tests › Protected Endpoints (Auth Required)" name="POST /auth/complete-oauth - should respond (endpoint alive)" time="0.342">
-    </testcase>
-    <testcase classname="Auth API Integration Tests › Password Reset Flow" name="POST /auth/confirm-reset-password-request - should respond (endpoint alive)" time="0.3">
-    </testcase>
-    <testcase classname="Auth API Integration Tests › Password Reset Flow" name="POST /auth/reset-password - should respond (endpoint alive)" time="0.56">
-    </testcase>
-    <testcase classname="Auth API Integration Tests › Password Reset Flow" name="POST /auth/reset-password-request-resend - should respond (endpoint alive)" time="0.311">
+    <testcase classname="JobDetailInfo" name="should not render work time section when not provided" time="0.028">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\common\OnlineIndicator.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:00" time="1.372" tests="7">
-    <testcase classname="OnlineIndicator" name="should render when user is online" time="0.389">
+  <testsuite name="__tests__\components\common\ConfirmModal.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:13" time="7.307" tests="7">
+    <testcase classname="ConfirmModal" name="should render when visible is true" time="0.638">
     </testcase>
-    <testcase classname="OnlineIndicator" name="should not render when user is offline" time="0.005">
+    <testcase classname="ConfirmModal" name="should display custom confirm and cancel text" time="0.048">
     </testcase>
-    <testcase classname="OnlineIndicator" name="should use default size of 12" time="0.004">
+    <testcase classname="ConfirmModal" name="should use default button text when not provided" time="0.044">
     </testcase>
-    <testcase classname="OnlineIndicator" name="should use custom size when provided" time="0.004">
+    <testcase classname="ConfirmModal" name="should call onConfirm when confirm button is pressed" time="0.047">
     </testcase>
-    <testcase classname="OnlineIndicator" name="should position indicator at bottom-right by default" time="0.005">
+    <testcase classname="ConfirmModal" name="should call onCancel when cancel button is pressed" time="0.041">
     </testcase>
-    <testcase classname="OnlineIndicator" name="should position indicator at top-right when specified" time="0.004">
+    <testcase classname="ConfirmModal" name="should show loading state when isLoading is true" time="0.04">
     </testcase>
-    <testcase classname="OnlineIndicator" name="should call isUserOnline with correct userId" time="0.005">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\auth\FormInput.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:57" time="4.498" tests="9">
-    <testcase classname="FormInput" name="should render with label" time="0.301">
-    </testcase>
-    <testcase classname="FormInput" name="should render with placeholder" time="0.006">
-    </testcase>
-    <testcase classname="FormInput" name="should display value when provided" time="0.007">
-    </testcase>
-    <testcase classname="FormInput" name="should display error message when error prop is provided" time="0.006">
-    </testcase>
-    <testcase classname="FormInput" name="should not display error message when error prop is not provided" time="0.005">
-    </testcase>
-    <testcase classname="FormInput" name="should render without icon by default" time="0.006">
-    </testcase>
-    <testcase classname="FormInput" name="should pass through TextInput props" time="0.07">
-    </testcase>
-    <testcase classname="FormInput" name="should handle onChangeText callback" time="0.006">
-    </testcase>
-    <testcase classname="FormInput" name="should toggle password visibility when secureTextEntry is enabled" time="0.051">
+    <testcase classname="ConfirmModal" name="should render AlertTriangle icon" time="0.032">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\profile\MenuItem.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:57" time="4.557" tests="7">
-    <testcase classname="MenuItem" name="should render title" time="0.364">
+  <testsuite name="features\messaging\presentation\store\__tests__\messagingStore.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:20" time="0.861" tests="6">
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="chuẩn hoá về CŨ → MỚI dù API trả DESC" time="0.004">
     </testcase>
-    <testcase classname="MenuItem" name="should render subtitle when provided" time="0.026">
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="giữ nguyên CŨ → MỚI khi input đã đúng thứ tự" time="0.001">
     </testcase>
-    <testcase classname="MenuItem" name="should not render subtitle when not provided" time="0.024">
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="không làm biến đổi mảng gốc của caller" time="0.001">
     </testcase>
-    <testcase classname="MenuItem" name="should call onPress when pressed" time="0.026">
+    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="tin nhắn cũ nhất đứng đầu, mới nhất đứng cuối" time="0.003">
     </testcase>
-    <testcase classname="MenuItem" name="should show chevron by default" time="0.046">
+    <testcase classname="messagingStore — thứ tự tin nhắn › addMessage" name="tin nhắn mới được nối vào CUỐI (dưới đáy màn chat)" time="0.017">
     </testcase>
-    <testcase classname="MenuItem" name="should show chevron when showChevron is true" time="0.019">
-    </testcase>
-    <testcase classname="MenuItem" name="should hide chevron when showChevron is false" time="0.012">
+    <testcase classname="messagingStore — thứ tự tin nhắn › addMessage" name="bỏ qua tin nhắn trùng id" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\collabApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:59" time="3.264" tests="6">
-    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /my-submissions - should respond (endpoint alive)" time="0.769">
+  <testsuite name="__tests__\components\auth\FormInput.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:13" time="7.681" tests="9">
+    <testcase classname="FormInput" name="should render with label" time="0.597">
     </testcase>
-    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /posts/me - should respond (endpoint alive)" time="0.416">
+    <testcase classname="FormInput" name="should render with placeholder" time="0.007">
     </testcase>
-    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /posts/:id/submissions - should respond (endpoint alive)" time="0.305">
+    <testcase classname="FormInput" name="should display value when provided" time="0.004">
     </testcase>
-    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /my-posts/submissions - should respond (endpoint alive)" time="0.384">
+    <testcase classname="FormInput" name="should display error message when error prop is provided" time="0.007">
     </testcase>
-    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /submissions/:id/withdraw - should respond (endpoint alive)" time="0.337">
+    <testcase classname="FormInput" name="should not display error message when error prop is not provided" time="0.006">
     </testcase>
-    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /submissions/:id/review - should respond (endpoint alive)" time="0.317">
+    <testcase classname="FormInput" name="should render without icon by default" time="0.004">
     </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\common\ChatItem.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:01" time="1.462" tests="8">
-    <testcase classname="ChatItem" name="should render name and preview" time="0.422">
+    <testcase classname="FormInput" name="should pass through TextInput props" time="0.092">
     </testcase>
-    <testcase classname="ChatItem" name="should render time when provided" time="0.009">
+    <testcase classname="FormInput" name="should handle onChangeText callback" time="0.005">
     </testcase>
-    <testcase classname="ChatItem" name="should not render time when not provided" time="0.009">
-    </testcase>
-    <testcase classname="ChatItem" name="should render unread badge with count" time="0.022">
-    </testcase>
-    <testcase classname="ChatItem" name="should render 99+ for counts over 99" time="0.016">
-    </testcase>
-    <testcase classname="ChatItem" name="should render small dot when unread is true without count" time="0.011">
-    </testcase>
-    <testcase classname="ChatItem" name="should call onPress when pressed" time="0.01">
-    </testcase>
-    <testcase classname="ChatItem" name="should render OnlineIndicator when userId is provided" time="0.008">
+    <testcase classname="FormInput" name="should toggle password visibility when secureTextEntry is enabled" time="0.065">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\messagingApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:57" time="5.439" tests="11">
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /conversations - should respond with 401 without token" time="0.94">
+  <testsuite name="__tests__\features\jobs\jobRepositoryHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:21" time="1.125" tests="5">
+    <testcase classname="jobRepositoryHelpers" name="returns public job from GET /posts/:id when available" time="0.007">
     </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /conversations/:id - should respond with 401 without token" time="0.739">
+    <testcase classname="jobRepositoryHelpers" name="falls back to /posts/me when public GET returns 404" time="0.003">
     </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /messages/conversation/:id - should respond with 401 without token" time="0.543">
+    <testcase classname="jobRepositoryHelpers" name="returns null when owned job is not found in /posts/me" time="0.002">
     </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /messages/conversation/:id/unread-count - should respond with 401 without token" time="0.292">
+    <testcase classname="jobRepositoryHelpers" name="merges partial form overrides into full update payload" time="0.002">
     </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /conversations - should respond with 401 without token" time="0.31">
-    </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /conversations/:id - should respond with 401 without token" time="0.293">
-    </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /messages - should respond with 401 without token" time="0.319">
-    </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /messages/:id - should respond with 401 without token" time="0.39">
-    </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /messages/:id - should respond with 401 without token" time="0.309">
-    </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /messages/:id/read - should respond with 401 without token" time="0.306">
-    </testcase>
-    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /messages/conversation/:id/read - should respond with 401 without token" time="0.306">
+    <testcase classname="jobRepositoryHelpers" name="reopens closed job via PUT with full post body" time="0.005">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\integration\jobApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:58" time="4.725" tests="9">
-    <testcase classname="Job API Integration Tests › Public Endpoints (Check if alive)" name="GET /posts - should respond (endpoint alive)" time="0.806">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Public Endpoints (Check if alive)" name="GET /posts with search param - should respond (endpoint alive)" time="0.304">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Public Endpoints (Check if alive)" name="GET /posts/:id - should respond for job detail request" time="0.456">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="GET /posts/me - should respond with 401 without token" time="0.701">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="POST /posts - should respond with 401 without token" time="0.305">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /posts/:id - should respond with 401 without token" time="0.629">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /posts/:id - should respond with 401 without token" time="0.308">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="POST /posts/:id/submit - should respond with 401 without token" time="0.325">
-    </testcase>
-    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="GET /my-submissions - should respond with 401 without token" time="0.288">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\hooks\useSearchApi.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:02" time="2.303" tests="8">
-    <testcase classname="useSearchApi › useSearchUsers" name="should call searchUsers API with correct params" time="0.104">
-    </testcase>
-    <testcase classname="useSearchApi › useSearchUsers" name="should use query key with params" time="0.006">
-    </testcase>
-    <testcase classname="useSearchApi › useGetGenres" name="should fetch genres from API" time="0.077">
-    </testcase>
-    <testcase classname="useSearchApi › useGetGenres" name="should have long stale time for genres" time="0.009">
-    </testcase>
-    <testcase classname="useSearchApi › useFeaturedUsers" name="should fetch featured users with default limit" time="0.057">
-    </testcase>
-    <testcase classname="useSearchApi › useFeaturedUsers" name="should fetch featured users with custom limit" time="0.079">
-    </testcase>
-    <testcase classname="useSearchApi › useFeaturedJobs" name="should fetch featured jobs with default limit" time="0.085">
-    </testcase>
-    <testcase classname="useSearchApi › useFeaturedJobs" name="should fetch featured jobs with custom limit" time="0.072">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\common\TypingIndicator.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:02" time="2.667" tests="2">
-    <testcase classname="TypingIndicator" name="should render typing indicator" time="1.696">
-    </testcase>
-    <testcase classname="TypingIndicator" name="should render three animated dots" time="0.017">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\profile\SocialList.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:40:59" time="6.089" tests="7">
-    <testcase classname="SocialList" name="should render &quot;Kết nối&quot; title when socials exist" time="1.476">
-    </testcase>
-    <testcase classname="SocialList" name="should render facebook icon when facebook is provided" time="0.015">
-    </testcase>
-    <testcase classname="SocialList" name="should render instagram icon when instagram is provided" time="0.016">
-    </testcase>
-    <testcase classname="SocialList" name="should render youtube icon when youtube is provided" time="0.014">
-    </testcase>
-    <testcase classname="SocialList" name="should render website icon when website is provided" time="0.015">
-    </testcase>
-    <testcase classname="SocialList" name="should render all social icons when all are provided" time="0.05">
-    </testcase>
-    <testcase classname="SocialList" name="should return null when no socials are provided" time="0.006">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\auth\OTPInput.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:02" time="3.15" tests="10">
-    <testcase classname="OTPInput" name="should render 6 input boxes by default" time="0.599">
-    </testcase>
-    <testcase classname="OTPInput" name="should render custom number of input boxes" time="0.007">
-    </testcase>
-    <testcase classname="OTPInput" name="should display value correctly" time="0.011">
-    </testcase>
-    <testcase classname="OTPInput" name="should call onChange when digit is entered" time="0.009">
-    </testcase>
-    <testcase classname="OTPInput" name="should only allow numeric input" time="0.005">
-    </testcase>
-    <testcase classname="OTPInput" name="should handle empty value" time="0.01">
-    </testcase>
-    <testcase classname="OTPInput" name="should handle partial value" time="0.012">
-    </testcase>
-    <testcase classname="OTPInput" name="should not auto focus when autoFocus is false" time="0.007">
-    </testcase>
-    <testcase classname="OTPInput" name="should use default active color" time="0.01">
-    </testcase>
-    <testcase classname="OTPInput" name="should use custom active color" time="0.008">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\auth\AuthButton.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:02" time="3.157" tests="6">
-    <testcase classname="AuthButton" name="should render with children text" time="0.706">
-    </testcase>
-    <testcase classname="AuthButton" name="should call onPress when pressed" time="0.014">
-    </testcase>
-    <testcase classname="AuthButton" name="should not call onPress when disabled" time="0.016">
-    </testcase>
-    <testcase classname="AuthButton" name="should render with primary variant by default" time="0.01">
-    </testcase>
-    <testcase classname="AuthButton" name="should render with outlined variant" time="0.072">
-    </testcase>
-    <testcase classname="AuthButton" name="should render children text correctly" time="0.009">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\auth\LogoHeader.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:03" time="3.121" tests="2">
-    <testcase classname="LogoHeader" name="should render Soundspal text" time="0.714">
-    </testcase>
-    <testcase classname="LogoHeader" name="should render logo image" time="0.018">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\explore\FilterChips.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:03" time="3.264" tests="5">
-    <testcase classname="FilterChips" name="should render &quot;Tất cả&quot; chip" time="0.683">
-    </testcase>
-    <testcase classname="FilterChips" name="should render genre chips from API" time="0.028">
-    </testcase>
-    <testcase classname="FilterChips" name="should highlight selected genre" time="0.021">
-    </testcase>
-    <testcase classname="FilterChips" name="should call onSelectGenre when chip is pressed" time="0.021">
-    </testcase>
-    <testcase classname="FilterChips" name="should call onSelectGenre with empty string when &quot;Tất cả&quot; is pressed" time="0.023">
-    </testcase>
-  </testsuite>
-  <testsuite name="features\notifications\presentation\hooks\__tests__\useDevicePayload.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:05" time="1.561" tests="10">
-    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="xin POST_NOTIFICATIONS và đính token khi user đồng ý" time="0.102">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="KHÔNG dùng requestPermission() của RNFirebase trên Android (no-op luôn trả AUTHORIZED)" time="0.011">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="fcm_token = null khi user từ chối quyền" time="0.004">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="fcm_token = null khi user chọn &quot;không hỏi lại&quot;" time="0.003">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › Android &lt; 13 (quyền cấp sẵn lúc cài)" name="không xin runtime permission, vẫn lấy được token" time="0.007">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › iOS" name="dùng requestPermission của RNFirebase và đính token khi được cấp" time="0.004">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › iOS" name="fcm_token = null khi user từ chối" time="0.003">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="fcm_token = null khi getToken ném lỗi (không chặn login)" time="0.003">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="dùng lại device_id đã lưu giữa các lần gọi" time="0.006">
-    </testcase>
-    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="timeout 5s → fcm_token null nếu native call bị treo (không treo login)" time="0.01">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\features\auth\resolveAuthErrorMessage.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:06" time="0.983" tests="15">
-    <testcase classname="resolveAuthErrorCode" name="maps the backend `error` field to a business error code" time="0.002">
-    </testcase>
-    <testcase classname="resolveAuthErrorCode" name="prioritises network errors over any other code" time="0.008">
-    </testcase>
-    <testcase classname="resolveAuthErrorCode" name="falls back to HTTP status when no backend code is present" time="0.001">
-    </testcase>
-    <testcase classname="resolveAuthErrorCode" name="returns Unknown when nothing can be inferred" time="0">
-    </testcase>
-    <testcase classname="resolveUnverifiedEmail" name="reads the email from details.email" time="0">
-    </testcase>
-    <testcase classname="resolveUnverifiedEmail" name="falls back to the identifier when it is an email" time="0">
-    </testcase>
-    <testcase classname="resolveUnverifiedEmail" name="returns null when the identifier is a username and backend sent no email" time="0.001">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="maps the email_not_verified body to the canonical message" time="0.001">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="never leaks the raw &quot;Request failed with status code&quot; message" time="0.001">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="keeps the backend message when no error code matches" time="0.003">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="maps invalid credentials backend message" time="0">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="maps email already exists from HTTP 409" time="0.003">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="maps invalid verification code message" time="0.001">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="returns context fallback for unknown errors" time="0.001">
-    </testcase>
-    <testcase classname="resolveAuthErrorMessage" name="returns network error message" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\navigation\TabScreenWrapper.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:04" time="2.46" tests="4">
-    <testcase classname="TabScreenWrapper" name="should render children" time="0.604">
-    </testcase>
-    <testcase classname="TabScreenWrapper" name="should render with scrollable by default" time="0.01">
-    </testcase>
-    <testcase classname="TabScreenWrapper" name="should render without scroll when scrollable is false" time="0.004">
-    </testcase>
-    <testcase classname="TabScreenWrapper" name="should apply custom className" time="0.006">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\components\collab\CollabTabs.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:04" time="2.667" tests="5">
-    <testcase classname="CollabTabs" name="should render both tabs" time="0.607">
-    </testcase>
-    <testcase classname="CollabTabs" name="should highlight active tab" time="0.022">
-    </testcase>
-    <testcase classname="CollabTabs" name="should call onTabChange when sent tab is pressed" time="0.014">
-    </testcase>
-    <testcase classname="CollabTabs" name="should call onTabChange when received tab is pressed" time="0.012">
-    </testcase>
-    <testcase classname="CollabTabs" name="should render with received tab active" time="0.011">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\hooks\useToast.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:06" time="1.159" tests="4">
-    <testcase classname="useToast" name="should return toast functions" time="0.01">
-    </testcase>
-    <testcase classname="useToast › showSuccess" name="should call Toast.show with success type" time="0.004">
-    </testcase>
-    <testcase classname="useToast › showError" name="should call Toast.show with error type" time="0.006">
-    </testcase>
-    <testcase classname="useToast › showInfo" name="should call Toast.show with info type" time="0.005">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\utils\jobFormatters.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:06" time="1.143" tests="28">
-    <testcase classname="jobFormatters › formatBudget" name="should format VND budget with triệu for values &gt;= 1M" time="0.003">
-    </testcase>
-    <testcase classname="jobFormatters › formatBudget" name="should format VND budget with k for values &lt; 1M" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatBudget" name="should format budget with min only" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatBudget" name="should format budget with max only" time="0">
-    </testcase>
-    <testcase classname="jobFormatters › formatBudget" name="should return &quot;Thỏa thuận&quot; when no min or max" time="0">
-    </testcase>
-    <testcase classname="jobFormatters › formatBudget" name="should format non-VND currency as-is" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatDate" name="should format date to dd-MM-yyyy format" time="0.003">
-    </testcase>
-    <testcase classname="jobFormatters › formatDate" name="should pad single digit day and month with zero" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatDate" name="should handle ISO datetime strings" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatDate" name="should return &quot;N/A&quot; for empty or invalid dates" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatDaysAgo" name="should return &quot;Hôm nay&quot; for today" time="0.005">
-    </testcase>
-    <testcase classname="jobFormatters › formatDaysAgo" name="should return &quot;Hôm qua&quot; for yesterday" time="0.002">
-    </testcase>
-    <testcase classname="jobFormatters › formatDaysAgo" name="should return days ago for &lt; 7 days" time="0.003">
-    </testcase>
-    <testcase classname="jobFormatters › formatDaysAgo" name="should return weeks ago for &gt;= 7 days and &lt; 30 days" time="0.004">
-    </testcase>
-    <testcase classname="jobFormatters › formatDaysAgo" name="should return months ago for &gt;= 30 days" time="0.003">
-    </testcase>
-    <testcase classname="jobFormatters › formatDaysAgo" name="should return &quot;N/A&quot; for empty date" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatJobType" name="should format known job types" time="0.002">
-    </testcase>
-    <testcase classname="jobFormatters › formatJobType" name="should handle case-insensitive input" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatJobType" name="should return original value for unknown types" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatJobType" name="should return &quot;N/A&quot; for empty or null input" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatRecruitmentType" name="should format known recruitment types" time="0.003">
-    </testcase>
-    <testcase classname="jobFormatters › formatRecruitmentType" name="should handle case-insensitive input" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatRecruitmentType" name="should return original value for unknown types" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatRecruitmentType" name="should return &quot;N/A&quot; for empty or null input" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatLocationType" name="should format known location types" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatLocationType" name="should handle case-insensitive input" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatLocationType" name="should return original value for unknown types" time="0.001">
-    </testcase>
-    <testcase classname="jobFormatters › formatLocationType" name="should return &quot;N/A&quot; for empty or null input" time="0.001">
-    </testcase>
-  </testsuite>
-  <testsuite name="features\notifications\presentation\hooks\__tests__\usePushNotifications.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:05" time="1.591" tests="6">
-    <testcase classname="usePushNotifications" name="foreground: hiện toast với title/body của thông báo" time="0.032">
-    </testcase>
-    <testcase classname="usePushNotifications" name="foreground: fallback title khi payload thiếu notification block" time="0.005">
-    </testcase>
-    <testcase classname="usePushNotifications" name="bấm thông báo (background) new_application → mở màn ứng viên của job" time="0.004">
-    </testcase>
-    <testcase classname="usePushNotifications" name="bấm thông báo (background) application_status_changed → mở &quot;Đơn của tôi&quot;" time="0.004">
-    </testcase>
-    <testcase classname="usePushNotifications" name="không điều hướng khi payload không suy ra được route" time="0.004">
-    </testcase>
-    <testcase classname="usePushNotifications" name="mở app từ trạng thái killed do bấm thông báo → điều hướng theo payload" time="0.073">
-    </testcase>
-  </testsuite>
-  <testsuite name="__tests__\utils\jwt.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:07" time="4.732" tests="12">
-    <testcase classname="jwt › decodeJWT" name="should decode a valid JWT token" time="0.008">
+  <testsuite name="__tests__\utils\jwt.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:21" time="1.019" tests="12">
+    <testcase classname="jwt › decodeJWT" name="should decode a valid JWT token" time="0.004">
     </testcase>
     <testcase classname="jwt › decodeJWT" name="should return null for invalid token format" time="0.002">
     </testcase>
@@ -1299,11 +909,11 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     </testcase>
     <testcase classname="jwt › isTokenValid" name="should return false for expired token" time="0.001">
     </testcase>
-    <testcase classname="jwt › isTokenValid" name="should return false for invalid token" time="0.006">
+    <testcase classname="jwt › isTokenValid" name="should return false for invalid token" time="0.001">
     </testcase>
     <testcase classname="jwt › isTokenValid" name="should return false for token without exp claim" time="0.001">
     </testcase>
-    <testcase classname="jwt › getUserFromToken" name="should extract user data from valid token" time="0.004">
+    <testcase classname="jwt › getUserFromToken" name="should extract user data from valid token" time="0.003">
     </testcase>
     <testcase classname="jwt › getUserFromToken" name="should return null for invalid token" time="0.001">
     </testcase>
@@ -1312,18 +922,18 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     <testcase classname="jwt › getUserFromToken" name="should convert is_verified to boolean" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="features\notifications\domain\utils\__tests__\resolvePushRoute.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:07" time="4.729" tests="19">
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data undefined" time="0.001">
+  <testsuite name="features\notifications\domain\utils\__tests__\resolvePushRoute.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:22" time="0.779" tests="19">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data undefined" time="0.002">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data null" time="0.001">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi type không xác định" time="0.001">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi type không xác định" time="0.002">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › no data / không suy ra được" name="trả null khi data rỗng (không type, không route)" time="0.001">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_application → gửi tới venue" name="mở danh sách ứng viên của đúng job khi có job_id" time="0.001">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_application → gửi tới venue" name="trả null khi thiếu job_id (không đủ dữ liệu để điều hướng)" time="0.002">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_application → gửi tới venue" name="trả null khi thiếu job_id (không đủ dữ liệu để điều hướng)" time="0">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › application_status_changed → gửi tới artist" name="mở màn &quot;Đơn của tôi&quot;" time="0.001">
     </testcase>
@@ -1335,61 +945,451 @@ Received: &quot;https://api.soundspal.com/api/v1/users/me/avatar&quot;
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › new_message → gửi tới người nhận tin nhắn" name="không sinh route dạng /(messages)/&lt;id&gt; (route không tồn tại)" time="0.002">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › payload THẬT của messaging-service (regression Bug A)" name="bỏ qua route chết, dựng đúng route chat từ conversationId (camelCase)" time="0.007">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › payload THẬT của messaging-service (regression Bug A)" name="bỏ qua route chết, dựng đúng route chat từ conversationId (camelCase)" time="0.001">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › payload THẬT của messaging-service (regression Bug A)" name="không bao giờ trả về route chết /(messages)/&lt;id&gt;" time="0">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › payload THẬT của messaging-service (regression Bug A)" name="không bao giờ trả về route chết /(messages)/&lt;id&gt;" time="0.002">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › payload THẬT của messaging-service (regression Bug A)" name="nhận diện chat qua conversationId kể cả khi thiếu type" time="0.001">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="route suy từ type thắng route tường minh do producer gửi" time="0.001">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="route suy từ type thắng route tường minh do producer gửi" time="0">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="dùng route tường minh khi không suy ra được từ data" time="0.001">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="dùng path khi không có route" time="0.001">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="dùng path khi không có route" time="0.003">
     </testcase>
     <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="type lạ nhưng có route tường minh → dùng route" time="0.001">
     </testcase>
-    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="route rỗng thì bỏ qua, rơi về nhánh type" time="0">
+    <testcase classname="resolvePushRoute (push deep-link: job + tin nhắn) › route/path tường minh chỉ là FALLBACK" name="route rỗng thì bỏ qua, rơi về nhánh type" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\features\jobs\jobRepositoryHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:07" time="4.744" tests="5">
-    <testcase classname="jobRepositoryHelpers" name="returns public job from GET /posts/:id when available" time="0.004">
-    </testcase>
-    <testcase classname="jobRepositoryHelpers" name="falls back to /posts/me when public GET returns 404" time="0.002">
-    </testcase>
-    <testcase classname="jobRepositoryHelpers" name="returns null when owned job is not found in /posts/me" time="0.004">
-    </testcase>
-    <testcase classname="jobRepositoryHelpers" name="merges partial form overrides into full update payload" time="0.004">
-    </testcase>
-    <testcase classname="jobRepositoryHelpers" name="reopens closed job via PUT with full post body" time="0.004">
-    </testcase>
-  </testsuite>
-  <testsuite name="features\notifications\data\__tests__\deviceInfo.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:07" time="4.727" tests="6">
-    <testcase classname="deviceInfo › getOrCreateDeviceId" name="tạo device_id dạng UUID v4 hợp lệ trong lần gọi đầu" time="0.01">
+  <testsuite name="features\notifications\data\__tests__\deviceInfo.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:22" time="0.654" tests="6">
+    <testcase classname="deviceInfo › getOrCreateDeviceId" name="tạo device_id dạng UUID v4 hợp lệ trong lần gọi đầu" time="0.003">
     </testcase>
     <testcase classname="deviceInfo › getOrCreateDeviceId" name="lưu lại và trả cùng một id ở các lần gọi sau (ổn định theo lần cài)" time="0.001">
     </testcase>
     <testcase classname="deviceInfo › getOrCreateDeviceId" name="đọc lại id đã có sẵn trong storage thay vì tạo mới" time="0.001">
     </testcase>
-    <testcase classname="deviceInfo › resolvePlatform" name="trả ANDROID trên Android" time="0.001">
+    <testcase classname="deviceInfo › resolvePlatform" name="trả ANDROID trên Android" time="0.002">
     </testcase>
     <testcase classname="deviceInfo › resolvePlatform" name="trả IOS trên iOS" time="0.001">
     </testcase>
     <testcase classname="deviceInfo › resolvePlatform" name="trả WEB cho nền tảng còn lại" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="features\messaging\presentation\store\__tests__\messagingStore.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-17T12:41:07" time="4.778" tests="6">
-    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="chuẩn hoá về CŨ → MỚI dù API trả DESC" time="0.003">
+  <testsuite name="__tests__\components\collab\CollabStatusBadge.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:19" time="5.635" tests="7">
+    <testcase classname="CollabStatusBadge" name="should render pending_review status" time="0.351">
     </testcase>
-    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="giữ nguyên CŨ → MỚI khi input đã đúng thứ tự" time="0.001">
+    <testcase classname="CollabStatusBadge" name="should render accepted status" time="0.012">
     </testcase>
-    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="không làm biến đổi mảng gốc của caller" time="0.001">
+    <testcase classname="CollabStatusBadge" name="should render rejected status" time="0.016">
     </testcase>
-    <testcase classname="messagingStore — thứ tự tin nhắn › setMessages" name="tin nhắn cũ nhất đứng đầu, mới nhất đứng cuối" time="0.001">
+    <testcase classname="CollabStatusBadge" name="should render withdrawn status" time="0.015">
     </testcase>
-    <testcase classname="messagingStore — thứ tự tin nhắn › addMessage" name="tin nhắn mới được nối vào CUỐI (dưới đáy màn chat)" time="0.002">
+    <testcase classname="CollabStatusBadge" name="should render with small size" time="0.014">
     </testcase>
-    <testcase classname="messagingStore — thứ tự tin nhắn › addMessage" name="bỏ qua tin nhắn trùng id" time="0.001">
+    <testcase classname="CollabStatusBadge" name="should render with medium size (default)" time="0.025">
+    </testcase>
+    <testcase classname="CollabStatusBadge" name="should render with large size" time="0.011">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\profile\MenuItem.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:19" time="5.579" tests="7">
+    <testcase classname="MenuItem" name="should render title" time="0.398">
+    </testcase>
+    <testcase classname="MenuItem" name="should render subtitle when provided" time="0.026">
+    </testcase>
+    <testcase classname="MenuItem" name="should not render subtitle when not provided" time="0.035">
+    </testcase>
+    <testcase classname="MenuItem" name="should call onPress when pressed" time="0.025">
+    </testcase>
+    <testcase classname="MenuItem" name="should show chevron by default" time="0.022">
+    </testcase>
+    <testcase classname="MenuItem" name="should show chevron when showChevron is true" time="0.022">
+    </testcase>
+    <testcase classname="MenuItem" name="should hide chevron when showChevron is false" time="0.015">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\common\TypingIndicator.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:23" time="2.136" tests="2">
+    <testcase classname="TypingIndicator" name="should render typing indicator" time="1.209">
+    </testcase>
+    <testcase classname="TypingIndicator" name="should render three animated dots" time="0.017">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\integration\authApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:20" time="6.177" tests="11">
+    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/login - should respond (endpoint alive)" time="1.186">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/signup - should respond (endpoint alive)" time="0.707">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/reset-password-request - should respond (endpoint alive)" time="0.58">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/verify-email - should respond (endpoint alive)" time="0.307">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Public Endpoints (No Auth Required)" name="POST /auth/verification-email-resend - should respond (endpoint alive)" time="0.525">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Protected Endpoints (Auth Required)" name="POST /auth/logout - should respond with 401 without token" time="0.336">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Protected Endpoints (Auth Required)" name="POST /auth/mobile-oauth - should respond (endpoint alive)" time="0.311">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Protected Endpoints (Auth Required)" name="POST /auth/complete-oauth - should respond (endpoint alive)" time="0.294">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Password Reset Flow" name="POST /auth/confirm-reset-password-request - should respond (endpoint alive)" time="0.318">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Password Reset Flow" name="POST /auth/reset-password - should respond (endpoint alive)" time="0.286">
+    </testcase>
+    <testcase classname="Auth API Integration Tests › Password Reset Flow" name="POST /auth/reset-password-request-resend - should respond (endpoint alive)" time="0.322">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\auth\LogoHeader.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:25" time="1.361" tests="2">
+    <testcase classname="LogoHeader" name="should render Soundspal text" time="0.378">
+    </testcase>
+    <testcase classname="LogoHeader" name="should render logo image" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\integration\messagingApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:20" time="6.462" tests="11">
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /conversations - should respond with 401 without token" time="1.07">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /conversations/:id - should respond with 401 without token" time="0.65">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /messages/conversation/:id - should respond with 401 without token" time="0.298">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="GET /messages/conversation/:id/unread-count - should respond with 401 without token" time="0.559">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /conversations - should respond with 401 without token" time="0.576">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /conversations/:id - should respond with 401 without token" time="0.504">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /messages - should respond with 401 without token" time="0.294">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /messages/:id - should respond with 401 without token" time="0.587">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /messages/:id - should respond with 401 without token" time="0.302">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /messages/:id/read - should respond with 401 without token" time="0.298">
+    </testcase>
+    <testcase classname="Messaging API Integration Tests › Protected Endpoints (Auth Required)" name="POST /messages/conversation/:id/read - should respond with 401 without token" time="0.305">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\collab\CollabTabs.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:25" time="1.617" tests="5">
+    <testcase classname="CollabTabs" name="should render both tabs" time="0.6">
+    </testcase>
+    <testcase classname="CollabTabs" name="should highlight active tab" time="0.017">
+    </testcase>
+    <testcase classname="CollabTabs" name="should call onTabChange when sent tab is pressed" time="0.019">
+    </testcase>
+    <testcase classname="CollabTabs" name="should call onTabChange when received tab is pressed" time="0.019">
+    </testcase>
+    <testcase classname="CollabTabs" name="should render with received tab active" time="0.017">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\integration\userApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:20" time="7.406" tests="15">
+    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/:username - should respond for user profile request" time="1.087">
+    </testcase>
+    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/media/:username - should respond for user media request" time="0.556">
+    </testcase>
+    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/videos/all/:username - should respond for user videos request" time="0.333">
+    </testcase>
+    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/genres - should respond for all genres request" time="0.327">
+    </testcase>
+    <testcase classname="User API Integration Tests › Public Endpoints (Check if alive)" name="GET /users/genres/:username - should respond for user genres request" time="0.294">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="GET /users/me - should respond with 401 without token" time="0.319">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="GET /users/me/media - should respond with 401 without token" time="0.641">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/me/basic - should respond with 401 without token" time="0.305">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/me/contact - should respond with 401 without token" time="0.585">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/me/social - should respond with 401 without token" time="0.297">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="POST /users/me/avatar - should respond with 401 without token" time="0.314">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="POST /users/me/media - should respond with 401 without token" time="0.31">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /users/me/media/:id - should respond with 401 without token" time="0.28">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="POST /users/videos - should respond with 401 without token" time="0.292">
+    </testcase>
+    <testcase classname="User API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /users/genres/:username - should respond with 401 without token" time="0.289">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\integration\jobApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:23" time="4.462" tests="9">
+    <testcase classname="Job API Integration Tests › Public Endpoints (Check if alive)" name="GET /posts - should respond (endpoint alive)" time="0.881">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Public Endpoints (Check if alive)" name="GET /posts with search param - should respond (endpoint alive)" time="0.542">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Public Endpoints (Check if alive)" name="GET /posts/:id - should respond for job detail request" time="0.359">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="GET /posts/me - should respond with 401 without token" time="0.458">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="POST /posts - should respond with 401 without token" time="0.314">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /posts/:id - should respond with 401 without token" time="0.312">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="DELETE /posts/:id - should respond with 401 without token" time="0.288">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="POST /posts/:id/submit - should respond with 401 without token" time="0.3">
+    </testcase>
+    <testcase classname="Job API Integration Tests › Protected Endpoints (Auth Required)" name="GET /my-submissions - should respond with 401 without token" time="0.328">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\auth\OTPInput.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:26" time="1.63" tests="10">
+    <testcase classname="OTPInput" name="should render 6 input boxes by default" time="0.437">
+    </testcase>
+    <testcase classname="OTPInput" name="should render custom number of input boxes" time="0.009">
+    </testcase>
+    <testcase classname="OTPInput" name="should display value correctly" time="0.013">
+    </testcase>
+    <testcase classname="OTPInput" name="should call onChange when digit is entered" time="0.008">
+    </testcase>
+    <testcase classname="OTPInput" name="should only allow numeric input" time="0.011">
+    </testcase>
+    <testcase classname="OTPInput" name="should handle empty value" time="0.008">
+    </testcase>
+    <testcase classname="OTPInput" name="should handle partial value" time="0.012">
+    </testcase>
+    <testcase classname="OTPInput" name="should not auto focus when autoFocus is false" time="0.011">
+    </testcase>
+    <testcase classname="OTPInput" name="should use default active color" time="0.007">
+    </testcase>
+    <testcase classname="OTPInput" name="should use custom active color" time="0.01">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\explore\FilterChips.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:26" time="1.941" tests="5">
+    <testcase classname="FilterChips" name="should render &quot;Tất cả&quot; chip" time="0.521">
+    </testcase>
+    <testcase classname="FilterChips" name="should render genre chips from API" time="0.027">
+    </testcase>
+    <testcase classname="FilterChips" name="should highlight selected genre" time="0.021">
+    </testcase>
+    <testcase classname="FilterChips" name="should call onSelectGenre when chip is pressed" time="0.023">
+    </testcase>
+    <testcase classname="FilterChips" name="should call onSelectGenre with empty string when &quot;Tất cả&quot; is pressed" time="0.024">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\integration\collabApi.integration.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:24" time="4.073" tests="6">
+    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /my-submissions - should respond (endpoint alive)" time="1.002">
+    </testcase>
+    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /posts/me - should respond (endpoint alive)" time="0.384">
+    </testcase>
+    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /posts/:id/submissions - should respond (endpoint alive)" time="0.6">
+    </testcase>
+    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="GET /my-posts/submissions - should respond (endpoint alive)" time="0.318">
+    </testcase>
+    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /submissions/:id/withdraw - should respond (endpoint alive)" time="0.407">
+    </testcase>
+    <testcase classname="Collaboration API Integration Tests › Protected Endpoints (Auth Required)" name="PUT /submissions/:id/review - should respond (endpoint alive)" time="0.292">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\navigation\TabScreenWrapper.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:26" time="2.064" tests="4">
+    <testcase classname="TabScreenWrapper" name="should render children" time="0.819">
+    </testcase>
+    <testcase classname="TabScreenWrapper" name="should render with scrollable by default" time="0.008">
+    </testcase>
+    <testcase classname="TabScreenWrapper" name="should render without scroll when scrollable is false" time="0.004">
+    </testcase>
+    <testcase classname="TabScreenWrapper" name="should apply custom className" time="0.011">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\auth\AuthButton.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:27" time="1.997" tests="6">
+    <testcase classname="AuthButton" name="should render with children text" time="0.816">
+    </testcase>
+    <testcase classname="AuthButton" name="should call onPress when pressed" time="0.017">
+    </testcase>
+    <testcase classname="AuthButton" name="should not call onPress when disabled" time="0.007">
+    </testcase>
+    <testcase classname="AuthButton" name="should render with primary variant by default" time="0.009">
+    </testcase>
+    <testcase classname="AuthButton" name="should render with outlined variant" time="0.007">
+    </testcase>
+    <testcase classname="AuthButton" name="should render children text correctly" time="0.01">
+    </testcase>
+  </testsuite>
+  <testsuite name="features\notifications\presentation\hooks\__tests__\usePushNotifications.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:28" time="1.32" tests="6">
+    <testcase classname="usePushNotifications" name="foreground: hiện toast với title/body của thông báo" time="0.011">
+    </testcase>
+    <testcase classname="usePushNotifications" name="foreground: fallback title khi payload thiếu notification block" time="0.005">
+    </testcase>
+    <testcase classname="usePushNotifications" name="bấm thông báo (background) new_application → mở màn ứng viên của job" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="bấm thông báo (background) application_status_changed → mở &quot;Đơn của tôi&quot;" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="không điều hướng khi payload không suy ra được route" time="0.003">
+    </testcase>
+    <testcase classname="usePushNotifications" name="mở app từ trạng thái killed do bấm thông báo → điều hướng theo payload" time="0.067">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\common\ChatItem.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:27" time="2.437" tests="8">
+    <testcase classname="ChatItem" name="should render name and preview" time="0.538">
+    </testcase>
+    <testcase classname="ChatItem" name="should render time when provided" time="0.022">
+    </testcase>
+    <testcase classname="ChatItem" name="should not render time when not provided" time="0.013">
+    </testcase>
+    <testcase classname="ChatItem" name="should render unread badge with count" time="0.014">
+    </testcase>
+    <testcase classname="ChatItem" name="should render 99+ for counts over 99" time="0.01">
+    </testcase>
+    <testcase classname="ChatItem" name="should render small dot when unread is true without count" time="0.031">
+    </testcase>
+    <testcase classname="ChatItem" name="should call onPress when pressed" time="0.009">
+    </testcase>
+    <testcase classname="ChatItem" name="should render OnlineIndicator when userId is provided" time="0.009">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\hooks\useSearchApi.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:27" time="2.076" tests="8">
+    <testcase classname="useSearchApi › useSearchUsers" name="should call searchUsers API with correct params" time="0.103">
+    </testcase>
+    <testcase classname="useSearchApi › useSearchUsers" name="should use query key with params" time="0.006">
+    </testcase>
+    <testcase classname="useSearchApi › useGetGenres" name="should fetch genres from API" time="0.077">
+    </testcase>
+    <testcase classname="useSearchApi › useGetGenres" name="should have long stale time for genres" time="0.007">
+    </testcase>
+    <testcase classname="useSearchApi › useFeaturedUsers" name="should fetch featured users with default limit" time="0.064">
+    </testcase>
+    <testcase classname="useSearchApi › useFeaturedUsers" name="should fetch featured users with custom limit" time="0.062">
+    </testcase>
+    <testcase classname="useSearchApi › useFeaturedJobs" name="should fetch featured jobs with default limit" time="0.078">
+    </testcase>
+    <testcase classname="useSearchApi › useFeaturedJobs" name="should fetch featured jobs with custom limit" time="0.062">
+    </testcase>
+  </testsuite>
+  <testsuite name="features\notifications\presentation\hooks\__tests__\useDevicePayload.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:28" time="1.175" tests="10">
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="xin POST_NOTIFICATIONS và đính token khi user đồng ý" time="0.079">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="KHÔNG dùng requestPermission() của RNFirebase trên Android (no-op luôn trả AUTHORIZED)" time="0.005">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="fcm_token = null khi user từ chối quyền" time="0.005">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android 13+ (API 33+)" name="fcm_token = null khi user chọn &quot;không hỏi lại&quot;" time="0.007">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › Android &lt; 13 (quyền cấp sẵn lúc cài)" name="không xin runtime permission, vẫn lấy được token" time="0.003">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › iOS" name="dùng requestPermission của RNFirebase và đính token khi được cấp" time="0.005">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › iOS" name="fcm_token = null khi user từ chối" time="0.004">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="fcm_token = null khi getToken ném lỗi (không chặn login)" time="0.004">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="dùng lại device_id đã lưu giữa các lần gọi" time="0.004">
+    </testcase>
+    <testcase classname="useDevicePayload.getDevicePayload › chung (không phụ thuộc nền tảng)" name="timeout 5s → fcm_token null nếu native call bị treo (không treo login)" time="0.011">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\hooks\useToast.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:28" time="1.3" tests="4">
+    <testcase classname="useToast" name="should return toast functions" time="0.008">
+    </testcase>
+    <testcase classname="useToast › showSuccess" name="should call Toast.show with success type" time="0.004">
+    </testcase>
+    <testcase classname="useToast › showError" name="should call Toast.show with error type" time="0.003">
+    </testcase>
+    <testcase classname="useToast › showInfo" name="should call Toast.show with info type" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\components\common\OnlineIndicator.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:28" time="1.972" tests="7">
+    <testcase classname="OnlineIndicator" name="should render when user is online" time="0.531">
+    </testcase>
+    <testcase classname="OnlineIndicator" name="should not render when user is offline" time="0.014">
+    </testcase>
+    <testcase classname="OnlineIndicator" name="should use default size of 12" time="0.013">
+    </testcase>
+    <testcase classname="OnlineIndicator" name="should use custom size when provided" time="0.003">
+    </testcase>
+    <testcase classname="OnlineIndicator" name="should position indicator at bottom-right by default" time="0.003">
+    </testcase>
+    <testcase classname="OnlineIndicator" name="should position indicator at top-right when specified" time="0.005">
+    </testcase>
+    <testcase classname="OnlineIndicator" name="should call isUserOnline with correct userId" time="0.005">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\utils\jobFormatters.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:29" time="1.004" tests="28">
+    <testcase classname="jobFormatters › formatBudget" name="should format VND budget with triệu for values &gt;= 1M" time="0.002">
+    </testcase>
+    <testcase classname="jobFormatters › formatBudget" name="should format VND budget with k for values &lt; 1M" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatBudget" name="should format budget with min only" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatBudget" name="should format budget with max only" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatBudget" name="should return &quot;Thỏa thuận&quot; when no min or max" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatBudget" name="should format non-VND currency as-is" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatDate" name="should format date to dd-MM-yyyy format" time="0.003">
+    </testcase>
+    <testcase classname="jobFormatters › formatDate" name="should pad single digit day and month with zero" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatDate" name="should handle ISO datetime strings" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatDate" name="should return &quot;N/A&quot; for empty or invalid dates" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatDaysAgo" name="should return &quot;Hôm nay&quot; for today" time="0.003">
+    </testcase>
+    <testcase classname="jobFormatters › formatDaysAgo" name="should return &quot;Hôm qua&quot; for yesterday" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatDaysAgo" name="should return days ago for &lt; 7 days" time="0.002">
+    </testcase>
+    <testcase classname="jobFormatters › formatDaysAgo" name="should return weeks ago for &gt;= 7 days and &lt; 30 days" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatDaysAgo" name="should return months ago for &gt;= 30 days" time="0.002">
+    </testcase>
+    <testcase classname="jobFormatters › formatDaysAgo" name="should return &quot;N/A&quot; for empty date" time="0.002">
+    </testcase>
+    <testcase classname="jobFormatters › formatJobType" name="should format known job types" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatJobType" name="should handle case-insensitive input" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatJobType" name="should return original value for unknown types" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatJobType" name="should return &quot;N/A&quot; for empty or null input" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatRecruitmentType" name="should format known recruitment types" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatRecruitmentType" name="should handle case-insensitive input" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatRecruitmentType" name="should return original value for unknown types" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatRecruitmentType" name="should return &quot;N/A&quot; for empty or null input" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatLocationType" name="should format known location types" time="0.001">
+    </testcase>
+    <testcase classname="jobFormatters › formatLocationType" name="should handle case-insensitive input" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatLocationType" name="should return original value for unknown types" time="0">
+    </testcase>
+    <testcase classname="jobFormatters › formatLocationType" name="should return &quot;N/A&quot; for empty or null input" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="__tests__\features\auth\resolveAuthErrorMessage.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-18T01:41:29" time="0.751" tests="15">
+    <testcase classname="resolveAuthErrorCode" name="maps the backend `error` field to a business error code" time="0.002">
+    </testcase>
+    <testcase classname="resolveAuthErrorCode" name="prioritises network errors over any other code" time="0.002">
+    </testcase>
+    <testcase classname="resolveAuthErrorCode" name="falls back to HTTP status when no backend code is present" time="0.001">
+    </testcase>
+    <testcase classname="resolveAuthErrorCode" name="returns Unknown when nothing can be inferred" time="0">
+    </testcase>
+    <testcase classname="resolveUnverifiedEmail" name="reads the email from details.email" time="0">
+    </testcase>
+    <testcase classname="resolveUnverifiedEmail" name="falls back to the identifier when it is an email" time="0.001">
+    </testcase>
+    <testcase classname="resolveUnverifiedEmail" name="returns null when the identifier is a username and backend sent no email" time="0.001">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="maps the email_not_verified body to the canonical message" time="0.001">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="never leaks the raw &quot;Request failed with status code&quot; message" time="0">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="keeps the backend message when no error code matches" time="0.003">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="maps invalid credentials backend message" time="0">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="maps email already exists from HTTP 409" time="0.002">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="maps invalid verification code message" time="0">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="returns context fallback for unknown errors" time="0">
+    </testcase>
+    <testcase classname="resolveAuthErrorMessage" name="returns network error message" time="0">
     </testcase>
   </testsuite>
 </testsuites>

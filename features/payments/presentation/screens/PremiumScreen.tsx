@@ -31,17 +31,20 @@ import {
 } from 'lucide-react-native';
 import {
     buildPremiumUpgradeCheckoutRequest,
+    paymentKeys,
     resolvePaymentOrderCodeFromHistory,
     useCreatePaymentCheckout,
+    useGetPaymentHistory,
     useGetPaymentStatus,
 } from '@/features/payments/presentation/hooks/usePaymentApi';
 import { useGetCurrentUser, userKeys } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import {
+    DEFAULT_BILLING_PERIOD,
+    PAYMENT_STATUS_MAX_POLLS,
     PAYMENT_STATUS_POLL_INTERVAL_MS,
-    PREMIUM_UPGRADE_DURATION_DAYS,
-    PREMIUM_UPGRADE_PAYMENT,
+    PREMIUM_PLANS,
 } from '@/features/payments/domain/constants/payment';
 import {
     formatVnd,
@@ -49,31 +52,44 @@ import {
     getPaymentStatusDescription,
     getPaymentStatusLabel,
     isPaymentTerminal,
+    isPremiumActive,
+    normalizePaymentStatus,
     normalizePayOSOrderCode,
+    parsePaymentHistoryItems,
     parsePayOSReturnUrl,
 } from '@/features/payments/domain/utils/payment';
 import type {
+    BillingPeriod,
     NormalizedPaymentStatus,
     PaymentCheckoutResult,
 } from '@/features/payments/domain/entities/payment.type';
 
-const premiumBenefits = [
-    {
-        title: 'Ứng tuyển không giới hạn',
-        description: 'Không bị giới hạn số lượt ứng tuyển vào cơ hội phù hợp.',
-        icon: Sparkles,
-    },
-    {
-        title: 'Bộ lọc tìm kiếm nâng cao',
-        description: 'Mở khóa các bộ lọc sâu hơn khi khám phá nghệ sĩ, producer và venue.',
-        icon: ShieldCheck,
-    },
-    {
-        title: 'Ưu tiên hiển thị hồ sơ',
-        description: 'Tăng khả năng xuất hiện trong kết quả tìm kiếm và đề xuất.',
-        icon: Crown,
-    },
-];
+// Quyền lợi theo doc Premium Upgrade: badge Crown + ưu tiên Khám phá cho mọi role;
+// venue có thêm quota đăng tin 5 → 100 bài/tháng.
+function getPremiumBenefits(role?: string) {
+    const benefits = [
+        {
+            title: 'Huy hiệu uy tín (Crown)',
+            description: 'Huy hiệu Premium hiển thị trên hồ sơ và mọi thẻ của bạn.',
+            icon: Crown,
+        },
+        {
+            title: 'Ưu tiên đầu trang Khám phá',
+            description: 'Hồ sơ của bạn được xếp trên cùng trong mục Khám phá.',
+            icon: Sparkles,
+        },
+    ];
+
+    if (role === 'venue') {
+        benefits.push({
+            title: 'Đăng 100 tin tuyển dụng/tháng',
+            description: 'Nâng hạn mức đăng tin tuyển dụng từ 5 lên 100 bài mỗi tháng.',
+            icon: ShieldCheck,
+        });
+    }
+
+    return benefits;
+}
 
 function formatDate(value?: string | null): string | null {
     if (!value) return null;
@@ -163,6 +179,12 @@ export default function PremiumPaymentScreen() {
         null,
     );
     const [isOpeningCheckout, setIsOpeningCheckout] = useState(false);
+    // Gói năm là mặc định được đề xuất (2 tháng miễn phí) — giống web /pricing.
+    const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>(DEFAULT_BILLING_PERIOD);
+    // Poll ngân sách: 2s × 10 lần (~20s); hết ngân sách mà vẫn pending → màn "đang xử lý"
+    // (premium vẫn có thể kích hoạt qua webhook ngay sau đó).
+    const [pollBudgetExhausted, setPollBudgetExhausted] = useState(false);
+    const pollCount = useRef(0);
     const handledTerminalStatus = useRef<NormalizedPaymentStatus | null>(null);
     const appState = useRef(AppState.currentState);
 
@@ -177,16 +199,34 @@ export default function PremiumPaymentScreen() {
     const statusTone = useMemo(() => getStatusTone(paymentStatus), [paymentStatus]);
     const isTerminalStatus = isPaymentTerminal(paymentStatus);
 
+    const selectedPlan = PREMIUM_PLANS[billingPeriod];
+    const premiumBenefits = useMemo(() => getPremiumBenefits(user?.role), [user?.role]);
+
+    // Trạng thái Premium đọc từ profile (is_premium + premium_expired_at — nguồn chuẩn
+    // theo doc). Fallback về tier cũ khi backend chưa trả 2 field mới.
     const tier = String(currentUser?.tier || user?.tier || 'free').toLowerCase();
-    const isPremium = tier === 'premium';
+    const hasPremiumFlags = currentUser?.is_premium !== undefined;
+    const isPremium = hasPremiumFlags
+        ? isPremiumActive(currentUser?.is_premium, currentUser?.premium_expired_at)
+        : tier === 'premium';
+    // is_premium=true nhưng đã quá hạn → hết hạn, hiện CTA gia hạn.
+    const isPremiumExpired = hasPremiumFlags ? !!currentUser?.is_premium && !isPremium : false;
     const expiresAt = formatDate(
-        currentUser?.subscription_expires_at || currentUser?.expires_at || null,
+        currentUser?.premium_expired_at ||
+            currentUser?.subscription_expires_at ||
+            currentUser?.expires_at ||
+            null,
     );
     const paymentReturnUrl = useMemo(() => ExpoLinking.createURL('/(payments)/premium'), []);
-    const ctaLabel = isPremium ? 'Gia hạn Premium' : 'Nâng cấp Premium';
+    const ctaLabel = isPremium || isPremiumExpired ? 'Gia hạn Premium' : 'Nâng cấp Premium';
 
-    const canCreateCheckout =
-        !isCreatingCheckout && !isOpeningCheckout && PREMIUM_UPGRADE_PAYMENT.amount > 0;
+    const historyQuery = useGetPaymentHistory({ limit: 20, offset: 0 });
+    const historyItems = useMemo(
+        () => parsePaymentHistoryItems(historyQuery.data?.data),
+        [historyQuery.data],
+    );
+
+    const canCreateCheckout = !isCreatingCheckout && !isOpeningCheckout && selectedPlan.amount > 0;
     const hasActiveCheckout = !!checkout && !isTerminalStatus;
     const primaryButtonLabel = hasActiveCheckout ? 'Tiếp tục thanh toán' : ctaLabel;
     const canUsePrimaryButton = hasActiveCheckout ? !isOpeningCheckout : canCreateCheckout;
@@ -214,19 +254,22 @@ export default function PremiumPaymentScreen() {
             return;
         }
 
-        if (PREMIUM_UPGRADE_PAYMENT.amount <= 0) {
+        if (selectedPlan.amount <= 0) {
             showError('Chưa cấu hình giá', 'Giá Premium chưa hợp lệ. Vui lòng kiểm tra cấu hình.');
             return;
         }
 
         try {
+            // PayOS đính orderCode/id vào redirect_url, và cancel=1 vào cancel_url.
             const result = await createCheckout(
-                buildPremiumUpgradeCheckoutRequest(user.id, {
+                buildPremiumUpgradeCheckoutRequest(user.id, billingPeriod, {
                     redirect_url: paymentReturnUrl,
-                    cancel_url: paymentReturnUrl,
+                    cancel_url: `${paymentReturnUrl}?cancel=1`,
                 }),
             );
             handledTerminalStatus.current = null;
+            pollCount.current = 0;
+            setPollBudgetExhausted(false);
             setPayosReturnStatus(null);
             setCheckout(result);
 
@@ -323,6 +366,8 @@ export default function PremiumPaymentScreen() {
 
     useEffect(() => {
         handledTerminalStatus.current = null;
+        pollCount.current = 0;
+        setPollBudgetExhausted(false);
     }, [orderCode]);
 
     useEffect(() => {
@@ -349,14 +394,21 @@ export default function PremiumPaymentScreen() {
     }, [isTerminalStatus, orderCode, refetchPaymentStatus]);
 
     useEffect(() => {
-        if (!orderCode || isTerminalStatus) return;
+        if (!orderCode || isTerminalStatus || pollBudgetExhausted) return;
 
+        // Recipe của web: poll mỗi 2s, tối đa 10 lần (~20s). Hết ngân sách mà vẫn
+        // PENDING → dừng poll, hiện "đang xử lý" (webhook có thể kích hoạt trễ hơn).
         const intervalId = setInterval(() => {
+            pollCount.current += 1;
+            if (pollCount.current > PAYMENT_STATUS_MAX_POLLS) {
+                setPollBudgetExhausted(true);
+                return;
+            }
             void refetchPaymentStatus();
         }, PAYMENT_STATUS_POLL_INTERVAL_MS);
 
         return () => clearInterval(intervalId);
-    }, [isTerminalStatus, orderCode, refetchPaymentStatus]);
+    }, [isTerminalStatus, orderCode, pollBudgetExhausted, refetchPaymentStatus]);
 
     useEffect(() => {
         if (!paymentStatus || !isPaymentTerminal(paymentStatus)) return;
@@ -369,7 +421,10 @@ export default function PremiumPaymentScreen() {
                 'Thanh toán thành công',
                 'Hệ thống đang kích hoạt Premium cho tài khoản của bạn.',
             );
+            // Re-fetch profile để nhận is_premium/premium_expired_at mới (webhook set
+            // bất đồng bộ) + làm mới lịch sử giao dịch.
             queryClient.invalidateQueries({ queryKey: userKeys.current() });
+            queryClient.invalidateQueries({ queryKey: paymentKeys.all });
             void refetchCurrentUser();
             return;
         }
@@ -422,24 +477,80 @@ export default function PremiumPaymentScreen() {
                         <View className="flex-row items-center justify-between">
                             <View className="bg-white/15 px-3 py-1.5 rounded-full">
                                 <Text className="text-white text-xs font-bold">
-                                    {isPremium ? 'PREMIUM ACTIVE' : 'FREE PLAN'}
+                                    {isPremium
+                                        ? 'PREMIUM ACTIVE'
+                                        : isPremiumExpired
+                                          ? 'PREMIUM HẾT HẠN'
+                                          : 'FREE PLAN'}
                                 </Text>
                             </View>
                             <Text className="text-white/80 text-sm">
-                                {PREMIUM_UPGRADE_DURATION_DAYS} ngày
+                                {selectedPlan.durationDays} ngày
                             </Text>
                         </View>
 
-                        <View className="mt-8">
+                        {/* Toggle tháng / năm — gói năm được đề xuất (2 tháng miễn phí) */}
+                        <View className="flex-row gap-2 mt-6">
+                            {(['yearly', 'monthly'] as BillingPeriod[]).map((period) => {
+                                const plan = PREMIUM_PLANS[period];
+                                const isSelected = billingPeriod === period;
+                                return (
+                                    <TouchableOpacity
+                                        key={period}
+                                        onPress={() => setBillingPeriod(period)}
+                                        activeOpacity={0.85}
+                                        className={`flex-1 rounded-2xl px-3 py-3 border ${
+                                            isSelected
+                                                ? 'bg-white border-white'
+                                                : 'bg-white/10 border-white/25'
+                                        }`}
+                                    >
+                                        <Text
+                                            className={`text-sm font-black ${
+                                                isSelected ? 'text-purple-700' : 'text-white'
+                                            }`}
+                                        >
+                                            {plan.label}
+                                        </Text>
+                                        <Text
+                                            className={`text-xs mt-0.5 font-semibold ${
+                                                isSelected ? 'text-gray-600' : 'text-white/75'
+                                            }`}
+                                        >
+                                            {formatVnd(plan.amount)}
+                                        </Text>
+                                        {plan.promo && (
+                                            <View
+                                                className={`self-start mt-1.5 px-2 py-0.5 rounded-full ${
+                                                    isSelected ? 'bg-amber-100' : 'bg-white/20'
+                                                }`}
+                                            >
+                                                <Text
+                                                    className={`text-[10px] font-bold ${
+                                                        isSelected ? 'text-amber-700' : 'text-white'
+                                                    }`}
+                                                >
+                                                    {plan.promo}
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        <View className="mt-6">
                             <Text className="text-white/75 text-sm font-semibold">
-                                Soundspal Premium
+                                Soundspal Premium · {selectedPlan.label.toLowerCase()}
                             </Text>
                             <Text className="text-white text-4xl font-black mt-1">
-                                {formatVnd(PREMIUM_UPGRADE_PAYMENT.amount)}
+                                {formatVnd(selectedPlan.amount)}
                             </Text>
                             {expiresAt && (
                                 <Text className="text-white/70 mt-2">
-                                    Premium hiện tại hết hạn ngày {expiresAt}
+                                    {isPremiumExpired
+                                        ? `Premium đã hết hạn ngày ${expiresAt} — gia hạn để tiếp tục quyền lợi`
+                                        : `Premium hiện tại hết hạn ngày ${expiresAt}`}
                                 </Text>
                             )}
                         </View>
@@ -509,6 +620,12 @@ export default function PremiumPaymentScreen() {
                                 <Text className={`text-sm mt-1 leading-5 ${statusTone.body}`}>
                                     {getPaymentStatusDescription(paymentStatus || 'pending')}
                                 </Text>
+                                {pollBudgetExhausted && !isTerminalStatus && (
+                                    <Text className="text-xs text-gray-600 mt-2 leading-4">
+                                        Giao dịch đang được xử lý — Premium có thể kích hoạt sau ít
+                                        phút. Kéo để làm mới hoặc bấm nút tải lại.
+                                    </Text>
+                                )}
                                 {orderCode && (
                                     <Text className="text-xs text-gray-500 mt-3">
                                         Mã đơn PayOS: {orderCode}
@@ -572,6 +689,48 @@ export default function PremiumPaymentScreen() {
                         )}
                     </View>
                 )}
+
+                {/* Lịch sử thanh toán (billing) — GET /payments/history */}
+                <View className="mx-5 mt-5 bg-white rounded-2xl p-5" style={styles.sectionCard}>
+                    <Text className="text-lg font-black text-gray-900">Lịch sử thanh toán</Text>
+                    {historyQuery.isLoading ? (
+                        <View className="py-6 items-center">
+                            <ActivityIndicator color="#7C3BED" />
+                        </View>
+                    ) : historyItems.length === 0 ? (
+                        <Text className="text-sm text-gray-500 mt-3">Chưa có giao dịch nào.</Text>
+                    ) : (
+                        <View className="mt-3">
+                            {historyItems.map((item, index) => {
+                                const itemTone = getStatusTone(normalizePaymentStatus(item.status));
+                                return (
+                                    <View
+                                        key={item.id}
+                                        className={`flex-row items-center gap-3 py-3 ${
+                                            index > 0 ? 'border-t border-gray-100' : ''
+                                        }`}
+                                    >
+                                        <View className="mt-0.5">{itemTone.icon}</View>
+                                        <View className="flex-1">
+                                            <Text
+                                                className="text-sm font-bold text-gray-900"
+                                                numberOfLines={1}
+                                            >
+                                                {item.description || 'Soundspal Premium'}
+                                            </Text>
+                                            <Text className="text-xs text-gray-500 mt-0.5">
+                                                {formatDate(item.created_at) || item.created_at}
+                                            </Text>
+                                        </View>
+                                        <Text className="text-sm font-black text-gray-900">
+                                            {formatVnd(item.amount)}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    )}
+                </View>
 
                 <View
                     className="mx-5 mt-5 mb-10 bg-white rounded-2xl p-5"

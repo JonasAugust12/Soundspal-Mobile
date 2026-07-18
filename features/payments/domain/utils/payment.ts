@@ -1,6 +1,7 @@
 import type {
     NormalizedPaymentStatus,
     PayOSReturnInfo,
+    PaymentHistoryItem,
     PaymentStatusData,
     PaymentStatusResult,
 } from '@/features/payments/domain/entities/payment.type';
@@ -177,7 +178,9 @@ export function parsePayOSReturnUrl(url: string): PayOSReturnInfo {
             rawStatus = 'PAID';
         }
 
-        if (!rawStatus && parsedUrl.searchParams.get('cancel') === 'true') {
+        // PayOS đính `cancel=1` vào cancel_url (web đôi khi thấy `cancel=true`).
+        const cancelParam = parsedUrl.searchParams.get('cancel');
+        if (!rawStatus && (cancelParam === 'true' || cancelParam === '1')) {
             rawStatus = 'CANCELLED';
         }
     } catch {
@@ -198,6 +201,58 @@ export function parsePayOSReturnUrl(url: string): PayOSReturnInfo {
     }
 
     return { orderCode, rawStatus, normalizedStatus };
+}
+
+/**
+ * Premium chỉ ACTIVE khi is_premium=true VÀ premium_expired_at còn ở tương lai.
+ * is_premium=true nhưng đã quá hạn → coi như hết hạn (hiện CTA gia hạn).
+ */
+export function isPremiumActive(
+    isPremium: boolean | undefined,
+    premiumExpiredAt: string | null | undefined,
+): boolean {
+    if (!isPremium || !premiumExpiredAt) return false;
+
+    const expires = new Date(premiumExpiredAt);
+    return !Number.isNaN(expires.getTime()) && expires.getTime() > Date.now();
+}
+
+/** Chuẩn hoá payload GET /payments/history (mảng trần hoặc bọc trong items/transactions). */
+export function parsePaymentHistoryItems(data: unknown): PaymentHistoryItem[] {
+    if (!data) return [];
+
+    let rows: unknown[] = [];
+    if (Array.isArray(data)) {
+        rows = data;
+    } else if (typeof data === 'object') {
+        const record = data as Record<string, unknown>;
+        const nested = ['items', 'transactions', 'payments', 'records'].find((key) =>
+            Array.isArray(record[key]),
+        );
+        if (nested) rows = record[nested] as unknown[];
+    }
+
+    const items: PaymentHistoryItem[] = [];
+    for (const row of rows) {
+        if (!row || typeof row !== 'object') continue;
+        const record = row as Record<string, unknown>;
+        if (record.id === undefined || record.id === null) continue;
+
+        items.push({
+            id: String(record.id),
+            amount: Number(record.amount) || 0,
+            currency: String(record.currency || 'VND'),
+            status: String(record.status || ''),
+            purpose: String(record.purpose || ''),
+            description: String(record.description || ''),
+            created_at: String(record.created_at || record.createdAt || ''),
+            order_code:
+                record.order_code !== undefined && record.order_code !== null
+                    ? String(record.order_code)
+                    : undefined,
+        });
+    }
+    return items;
 }
 
 export function extractLatestOrderCodeFromHistory(data: unknown): string | null {

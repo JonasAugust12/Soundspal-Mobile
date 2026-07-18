@@ -40,6 +40,10 @@ export interface BaseUser {
     subscription_status?: 'active' | 'expired' | 'cancelled' | string;
     subscription_expires_at?: string | null;
     expires_at?: string | null;
+    // Premium flags từ user-service (nguồn chuẩn cho trạng thái Premium — xem docs
+    // Premium Upgrade): active = is_premium && premium_expired_at còn ở tương lai.
+    is_premium?: boolean;
+    premium_expired_at?: string | null;
     // Social links
     facebook_url?: string;
     instagram_url?: string;

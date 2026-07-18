@@ -9,7 +9,6 @@ import {
     BlogDetailContent,
     BlogQuote,
     RelatedArticles,
-    VoiceCommentButton,
     CommentsModal,
 } from '@/features/blog/presentation/components';
 import {
@@ -166,6 +165,7 @@ export default function BlogDetailScreen() {
                 onBackPress={handleBackPress}
                 onBookmarkPress={handleBookmarkPress}
                 onNotificationPress={handleNotificationPress}
+                onCommentPress={handleOpenComments}
                 isBookmarked={isArticleBookmarked}
             />
 
@@ -173,6 +173,7 @@ export default function BlogDetailScreen() {
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
                 className="flex-1"
+                contentContainerStyle={{ paddingBottom: 24 }}
             >
                 <BlogDetailContent article={article} />
 
@@ -258,8 +259,6 @@ export default function BlogDetailScreen() {
                     onArticlePress={handleRelatedArticlePress}
                 />
             </ScrollView>
-
-            <VoiceCommentButton onPress={handleOpenComments} />
 
             <CommentsModal
                 visible={showCommentsModal}

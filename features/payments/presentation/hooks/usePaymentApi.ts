@@ -1,10 +1,11 @@
 import type { AxiosError } from 'axios';
 import { skipToken, useMutation, useQuery } from '@tanstack/react-query';
 import {
-    PREMIUM_UPGRADE_PAYMENT,
+    PREMIUM_PLANS,
     PAYMENT_STATUS_STALE_TIME_MS,
 } from '@/features/payments/domain/constants/payment';
 import type {
+    BillingPeriod,
     CheckoutRequest,
     PaymentHistoryParams,
 } from '@/features/payments/domain/entities/payment.type';
@@ -40,10 +41,15 @@ export const paymentKeys = {
 
 export function buildPremiumUpgradeCheckoutRequest(
     userId: string,
+    billingPeriod: BillingPeriod,
     urls: { redirect_url: string; cancel_url: string },
 ): CheckoutRequest {
+    const plan = PREMIUM_PLANS[billingPeriod];
     return {
-        ...PREMIUM_UPGRADE_PAYMENT,
+        purpose: 'ACCOUNT_UPGRADE',
+        amount: plan.amount,
+        billing_period: plan.billing_period,
+        description: plan.description,
         reference_id: userId,
         redirect_url: urls.redirect_url,
         cancel_url: urls.cancel_url,

@@ -418,7 +418,9 @@ export default function BlogScreen() {
                         tintColor={isDark ? '#E2E8F0' : '#1F2937'}
                     />
                 }
-                contentContainerStyle={{ paddingBottom: 16 }}
+                // Chừa chỗ cho nút "+" nổi (FloatingCreateButton: 60px + bottom 20) để
+                // card cuối cùng không bị nút che phần meta ("x min read").
+                contentContainerStyle={{ paddingBottom: 104 }}
             />
 
             <FloatingCreateButton onPress={() => setShowCreateModal(true)} />
