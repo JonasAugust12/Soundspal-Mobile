@@ -7,7 +7,6 @@ import type { LoginRequest } from '@/features/auth/domain/entities/auth.type';
 
 const loginUseCase = new LoginUseCase(authRepository);
 
-// Login Hook
 export const useLogin = () => {
     const { setCredentials } = useAuthStore();
     const queryClient = useQueryClient();
@@ -25,7 +24,6 @@ export const useLogin = () => {
                         refreshToken: refresh_token,
                         user,
                     });
-                    // Clear all cache on login
                     queryClient.clear();
                 }
             }
@@ -33,14 +31,12 @@ export const useLogin = () => {
     });
 };
 
-// Signup Hook
 export const useSignup = () => {
     return useMutation({
         mutationFn: authRepository.signup,
     });
 };
 
-// Logout Hook
 export const useLogout = () => {
     const { logout, refreshToken } = useAuthStore();
     const queryClient = useQueryClient();
@@ -55,7 +51,6 @@ export const useLogout = () => {
     });
 };
 
-// Verify Email Hook
 export const useVerifyEmail = () => {
     const { setCredentials } = useAuthStore();
 
@@ -75,42 +70,36 @@ export const useVerifyEmail = () => {
     });
 };
 
-// Resend Verification Code Hook
 export const useResendVerificationCode = () => {
     return useMutation({
         mutationFn: authRepository.resendVerification,
     });
 };
 
-// Request Password Reset Hook
 export const useRequestPasswordReset = () => {
     return useMutation({
         mutationFn: authRepository.requestPasswordReset,
     });
 };
 
-// Confirm Reset Password Request Hook
 export const useConfirmResetPasswordRequest = () => {
     return useMutation({
         mutationFn: authRepository.confirmResetPassword,
     });
 };
 
-// Resend Reset Password Code Hook
 export const useResendResetPasswordCode = () => {
     return useMutation({
         mutationFn: authRepository.resendResetPasswordCode,
     });
 };
 
-// Reset Password Hook
 export const useResetPassword = () => {
     return useMutation({
         mutationFn: authRepository.resetPassword,
     });
 };
 
-// Mobile OAuth Hook
 export const useMobileOAuth = () => {
     const { setCredentials } = useAuthStore();
     const queryClient = useQueryClient();
@@ -147,7 +136,6 @@ export const useVerifyEmailChange = () => {
     });
 };
 
-// Complete OAuth Hook
 export const useCompleteOAuth = () => {
     const { setCredentials } = useAuthStore();
     const queryClient = useQueryClient();

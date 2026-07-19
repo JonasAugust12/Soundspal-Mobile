@@ -21,7 +21,6 @@ export const collabRemoteDataSource = {
         )();
     },
 
-    // Get my posted jobs
     getMyPosts: (params: { page?: number; pageSize?: number }) => {
         const searchParams = new URLSearchParams({
             page: (params.page || 1).toString(),
@@ -55,7 +54,6 @@ export const collabRemoteDataSource = {
         )();
     },
 
-    // Get all submissions for my posted jobs
     getMyPostedJobsSubmissions: (params: { page?: number; pageSize?: number }) => {
         const searchParams = new URLSearchParams({
             page: (params.page || 1).toString(),
@@ -67,7 +65,6 @@ export const collabRemoteDataSource = {
         )();
     },
 
-    // Withdraw my submission
     withdrawSubmission: (id: string, body: WithdrawSubmissionRequest) => {
         return createApiCall<{ message: string }, WithdrawSubmissionRequest>(
             'PUT',

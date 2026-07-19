@@ -30,7 +30,6 @@ export default function MessagesScreen() {
     const [isSearching, setIsSearching] = React.useState(false);
     const [searchText, setSearchText] = React.useState('');
 
-    // Read from store
     const {
         conversationOrder,
         unreadCounts,
@@ -41,7 +40,6 @@ export default function MessagesScreen() {
         removeConversation,
     } = useMessagingStore();
 
-    // Fetch conversations on mount
     useEffect(() => {
         const fetchConversations = async () => {
             setLoadingConversations(true);
@@ -123,11 +121,9 @@ export default function MessagesScreen() {
 
     const totalUnread = Object.values(unreadCounts).reduce((sum, count) => sum + count, 0);
     const sortedConversations = getSortedConversations().filter((conv) => {
-        // Tab filter
         const isUnreadTab = activeTab === 'all' || (unreadCounts[conv.id] || 0) > 0;
         if (!isUnreadTab) return false;
 
-        // Search filter
         if (isSearching && searchText.trim()) {
             const participant = getOtherParticipant(conv);
             return participant.name.toLowerCase().includes(searchText.toLowerCase());

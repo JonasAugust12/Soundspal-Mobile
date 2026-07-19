@@ -26,7 +26,6 @@ type Props = {
 const MAX_VISIBLE_SKILLS = 3;
 
 export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, onPress }: Props) {
-    // Get role badge config
     const getRoleBadge = () => {
         switch (item.role) {
             case 'singer':

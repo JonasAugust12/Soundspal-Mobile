@@ -71,7 +71,6 @@ function CommentModalContent({
     const modalHeight = screenHeight * 0.7;
     const modalWidth = screenWidth * 0.9;
 
-    // Animation values
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
 

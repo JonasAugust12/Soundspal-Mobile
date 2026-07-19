@@ -74,7 +74,6 @@ export default function VenueEditProfileScreen() {
     const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>();
     const [selectedCover, setSelectedCover] = useState<string | undefined>();
 
-    // Form states
     const [displayName, setDisplayName] = useState('');
     const [briefBio, setBriefBio] = useState('');
     const [capacity, setCapacity] = useState('');
@@ -94,7 +93,6 @@ export default function VenueEditProfileScreen() {
     const [isAvailable, setIsAvailable] = useState(false);
     const [savingAvailability, setSavingAvailability] = useState(false);
 
-    // Queries & Mutations
     const { data: userData, isLoading: isLoadingUser, refetch } = useGetCurrentUser();
     const updateBasic = useUpdateVenueBasic();
     const updateMyProfile = useUpdateMyProfile();
@@ -103,7 +101,6 @@ export default function VenueEditProfileScreen() {
     const uploadAvatar = useUploadUserAvatar();
     const uploadCover = useUploadUserCover();
 
-    // Load initial data
     useEffect(() => {
         if (userData) {
             setSelectedAvatar(userData.avatar_url);

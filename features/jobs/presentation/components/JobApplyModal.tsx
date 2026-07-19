@@ -35,7 +35,6 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
     const { mutate: submitApplication, isPending: isLoading } = useSubmitJobApplication();
     const insets = useSafeAreaInsets();
 
-    // Reset form when modal closes
     useEffect(() => {
         if (!visible) {
             setFullName('');
@@ -48,13 +47,11 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
     }, [visible]);
 
     const handleSubmit = () => {
-        // Validation
         if (!fullName || fullName.trim().length < 2) {
             showAppDialog('Lỗi', 'Họ và tên phải có ít nhất 2 ký tự');
             return;
         }
 
-        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !emailRegex.test(email)) {
             showAppDialog('Lỗi', 'Email không hợp lệ');
@@ -73,13 +70,11 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
             return;
         }
 
-        // Parse portfolio links
         const parsedLinks = portfolioLinks
             .split(/[\n,\s]+/)
             .map((link) => link.trim())
             .filter((link) => link.length > 0);
 
-        // Validate URLs if provided
         if (parsedLinks.length > 0) {
             const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
             const invalidLinks = parsedLinks.filter((link) => !urlRegex.test(link));
@@ -89,7 +84,6 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
             }
         }
 
-        // Build request body
         const requestBody = {
             full_name: fullName.trim(),
             email: email.trim().toLowerCase(),

@@ -44,7 +44,6 @@ export const useSearchUsersInfinite = (params: SearchUsersPageParams) => {
     });
 };
 
-// Get Genres Hook
 export const useGetGenres = () => {
     return useQuery({
         queryKey: ['genres'],
@@ -53,7 +52,6 @@ export const useGetGenres = () => {
     });
 };
 
-// Featured Users Hook
 export const useFeaturedUsers = (limit: number = 10) => {
     return useQuery({
         queryKey: ['featured-users', limit],
@@ -63,7 +61,6 @@ export const useFeaturedUsers = (limit: number = 10) => {
     });
 };
 
-// Featured Jobs Hook
 export const useFeaturedJobs = (limit: number = 10) => {
     return useQuery({
         queryKey: ['featured-jobs', limit],

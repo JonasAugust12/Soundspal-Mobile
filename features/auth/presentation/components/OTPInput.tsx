@@ -28,7 +28,6 @@ export function OTPInput({
     const inputRefs = useRef<(TextInput | null)[]>([]);
     const [focusedIndex, setFocusedIndex] = React.useState<number | null>(null);
 
-    // Auto focus first input on mount
     useEffect(() => {
         if (autoFocus && inputRefs.current[0]) {
             setTimeout(() => {
@@ -38,7 +37,6 @@ export function OTPInput({
     }, [autoFocus]);
 
     const handleChange = (text: string, index: number) => {
-        // Only allow numbers
         const sanitized = text.replace(/[^0-9]/g, '');
 
         if (sanitized.length > 1) {
@@ -55,21 +53,17 @@ export function OTPInput({
             const result = newValue.join('').slice(0, length);
             onChange(result);
 
-            // Focus appropriate input after paste
             const nextIndex = Math.min(index + digits.length, length - 1);
             inputRefs.current[nextIndex]?.focus();
         } else if (sanitized.length === 1) {
-            // Single digit input
             const newValue = value.split('');
             newValue[index] = sanitized;
             onChange(newValue.join(''));
 
-            // Move to next input
             if (index < length - 1) {
                 inputRefs.current[index + 1]?.focus();
             }
         } else {
-            // Empty - clear this position
             const newValue = value.split('');
             newValue[index] = '';
             onChange(newValue.join(''));
@@ -79,7 +73,6 @@ export function OTPInput({
     const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
         if (e.nativeEvent.key === 'Backspace') {
             if (!value[index] && index > 0) {
-                // If current is empty, go back and clear previous
                 const newValue = value.split('');
                 newValue[index - 1] = '';
                 onChange(newValue.join(''));
@@ -90,7 +83,6 @@ export function OTPInput({
 
     const handleFocus = (index: number) => {
         setFocusedIndex(index);
-        // Select input content on focus
         inputRefs.current[index]?.setNativeProps({ selection: { start: 0, end: 1 } });
     };
 

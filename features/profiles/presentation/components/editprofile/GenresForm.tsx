@@ -31,7 +31,6 @@ export function GenresForm({ onSaveSuccess }: GenresFormProps) {
 
     const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
-    // Initialize selected genres from user data
     useEffect(() => {
         if (userGenresData?.genres) {
             setSelectedGenres(userGenresData.genres.map((g) => g.name));

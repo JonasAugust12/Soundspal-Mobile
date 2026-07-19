@@ -1,4 +1,3 @@
-// Media types
 export interface Media {
     id: string;
     file_name: string;

@@ -89,7 +89,6 @@ export default function EditProfileScreen() {
     const [selectedAvatar, setSelectedAvatar] = useState<string | undefined>();
     const [selectedCover, setSelectedCover] = useState<string | undefined>();
 
-    // Queries
     const { data: userData, isLoading: isLoadingUser, refetch } = useGetCurrentUser();
     const username = userData?.username || '';
     const isArtist = userData?.role === 'singer' || userData?.role === 'producer';
@@ -102,14 +101,12 @@ export default function EditProfileScreen() {
         enabled: !!username && isArtist,
     });
 
-    // Mutations
     const updateMyProfile = useUpdateMyProfile();
     const updateContactInfo = useUpdateContactInfo();
     const updateSocialLinks = useUpdateSocialLinks();
     const uploadAvatar = useUploadUserAvatar();
     const uploadCover = useUploadUserCover();
 
-    // Load initial data
     useEffect(() => {
         if (userData) {
             setSelectedAvatar(userData.avatar_url);
@@ -117,7 +114,6 @@ export default function EditProfileScreen() {
         }
     }, [userData]);
 
-    // Pick Avatar
     const pickAvatar = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: 'images',
@@ -150,7 +146,6 @@ export default function EditProfileScreen() {
         }
     };
 
-    // Pick Cover
     const pickCover = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: 'images',
@@ -182,7 +177,6 @@ export default function EditProfileScreen() {
         }
     };
 
-    // Form Submit Handlers
     //eslint-disable-next-line
     const handleSaveBasicInfo = async (data: any) => {
         await updateMyProfile.mutateAsync(data);

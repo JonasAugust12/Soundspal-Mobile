@@ -14,5 +14,4 @@ export const mmkvStorage: StateStorage = {
     },
 };
 
-// Re-export storage for direct use if needed
 export { storage };

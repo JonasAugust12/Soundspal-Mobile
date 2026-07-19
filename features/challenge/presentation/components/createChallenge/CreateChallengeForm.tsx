@@ -25,7 +25,6 @@ export function CreateChallengeForm() {
     const [keySig, setKeySig] = useState('C');
     const [selectedGenre, setSelectedGenre] = useState('');
 
-    // Media States
     const [audio, setAudio] = useState<{ uri: string; name: string; type: string } | null>(null);
     const [image, setImage] = useState<{ uri: string; name: string; type: string } | null>(null);
 
@@ -50,7 +49,6 @@ export function CreateChallengeForm() {
             formData.append('key_signature', keySig);
             formData.append('genre', selectedGenre);
 
-            // Note: Some backends have specific keys for files
             formData.append('audio', {
                 uri: audio.uri,
                 name: audio.name,
@@ -73,7 +71,6 @@ export function CreateChallengeForm() {
                 text2: 'Beat của bạn đã được đưa lên Cộng đồng.',
             });
 
-            // Go back
             setTimeout(() => {
                 router.back();
             }, 1500);
@@ -82,7 +79,7 @@ export function CreateChallengeForm() {
             Toast.show({
                 type: 'error',
                 text1: 'Tạo thử thách thất bại',
-                text2: 'Vui lòng kiểm tra lại kết nối mạng hoặc server.', // Dummy fallback success for UI Mock
+                text2: 'Vui lòng kiểm tra lại kết nối mạng hoặc server.',
             });
         } finally {
             setIsSubmitting(false);

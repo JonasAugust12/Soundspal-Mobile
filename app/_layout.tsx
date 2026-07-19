@@ -24,7 +24,6 @@ function RootLayoutNav() {
     // Xác thực token + làm mới user (/users/me) khi mở app
     useAuthInitialize();
 
-    // Handle auth redirects
     useProtectedRoute();
 
     // Push notification: nhận thông báo (foreground/tap) + đồng bộ token khi xoay vòng

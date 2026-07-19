@@ -41,7 +41,6 @@ export default function VenueProfile() {
 
     const isMe = !params.username || params.username === currentUser?.username;
 
-    // Fetch data
     const { data: currentUserData, isLoading: isLoadingCurrentUser } = useGetCurrentUser({
         enabled: isMe,
     });
@@ -68,7 +67,6 @@ export default function VenueProfile() {
 
     const { data: allGenresData } = useGetAllGenres();
 
-    // Venue specific data
     const venueData = userData as unknown as VenueUser;
     const businessTypes = venueData?.business_types || [];
     const facilities = venueData?.convenient_facilities || [];

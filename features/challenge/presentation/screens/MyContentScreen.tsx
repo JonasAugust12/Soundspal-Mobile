@@ -41,8 +41,6 @@ import { MiniPlayer } from '@/features/explore/presentation/components';
 
 type Tab = 'beats' | 'entries';
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
 function formatDuration(seconds: number): string {
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
@@ -70,8 +68,6 @@ function scoringStatusLabel(status?: string): { label: string; color: string; bg
             return { label: 'Đang xử lý', color: '#6B7280', bg: '#F3F4F6' };
     }
 }
-
-// ── Beat Card ──────────────────────────────────────────────────────────────────
 
 interface BeatCardProps {
     beat: Beat;
@@ -172,8 +168,6 @@ function BeatCard({ beat, onDelete, deleting }: BeatCardProps) {
     );
 }
 
-// ── Entry Card ─────────────────────────────────────────────────────────────────
-
 interface EntryCardProps {
     entry: BeatEntry;
     onDelete: (entry: BeatEntry) => void;
@@ -241,8 +235,6 @@ function EntryCard({ entry, onDelete, onPress, deleting }: EntryCardProps) {
     );
 }
 
-// ── Empty State ────────────────────────────────────────────────────────────────
-
 function EmptyState({ tab }: { tab: Tab }) {
     return (
         <View style={styles.emptyContainer}>
@@ -264,8 +256,6 @@ function EmptyState({ tab }: { tab: Tab }) {
         </View>
     );
 }
-
-// ── Skeleton ────────────────────────────────────────────────────────────────────
 
 function SkeletonCard() {
     return (
@@ -302,8 +292,6 @@ function SkeletonCard() {
     );
 }
 
-// ── Main Screen ────────────────────────────────────────────────────────────────
-
 export default function MyContentScreen() {
     const router = useRouter();
     const { user } = useAuthStore();
@@ -334,8 +322,6 @@ export default function MyContentScreen() {
 
     const avatarUrl = user?.avatar_url;
     const displayName = user?.display_name || user?.username || 'Người dùng';
-
-    // ── Delete handlers ──────────────────────────────────────────────────────────
 
     const handleDeleteBeat = (beat: Beat) => {
         showAppDialog(
@@ -541,8 +527,6 @@ export default function MyContentScreen() {
         </View>
     );
 }
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
     // Header

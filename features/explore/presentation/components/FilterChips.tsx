@@ -13,7 +13,6 @@ export function FilterChips({ selectedGenre, onSelectGenre }: FilterChipsProps) 
     const { data } = useGetAllGenres();
     const genresContent = data?.genres || [];
 
-    // Prefix "All" item and map actual genres
     const allGenres = [
         { id: '', name: 'Tất cả' },
         ...genresContent.map((g: Genre) => ({ id: g.name, name: g.name })),

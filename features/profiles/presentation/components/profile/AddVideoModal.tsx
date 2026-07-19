@@ -84,17 +84,14 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
         try {
             const formData = new FormData();
 
-            // Add video file
             formData.append('file', {
                 uri: videoAsset.uri,
                 type: videoAsset.mimeType || 'video/mp4',
                 name: videoAsset.fileName || 'video.mp4',
             } as unknown as Blob);
 
-            // Add title
             formData.append('title', title.trim());
 
-            // Add thumbnail if exists
             if (thumbnailAsset) {
                 formData.append('thumbnail', {
                     uri: thumbnailAsset.uri,

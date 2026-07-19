@@ -88,7 +88,6 @@ export function CreateBlogModal({
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isMediaWorking, setIsMediaWorking] = useState(false);
-    // Animation
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
 

@@ -20,7 +20,6 @@ export function ArtistCardSearch({ item, width = 160 }: Props) {
     const handlePress = () => {
         if (!item.username) return;
 
-        // Navigate based on role
         if (item.role === 'venue') {
             router.push({
                 pathname: '/(profiles)/venueProfile',

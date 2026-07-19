@@ -2,8 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { messagingRepository } from '@/features/messaging/data/repositories/MessagingRepositoryImpl';
 import type { EditMessageRequest } from '@/features/messaging/domain/entities/messaging.type';
 
-// API Calls
-// Query Keys
 export const messagingKeys = {
     all: ['messaging'] as const,
     conversations: () => [...messagingKeys.all, 'conversations'] as const,
@@ -15,7 +13,6 @@ export const messagingKeys = {
         [...messagingKeys.all, 'unread', conversationId] as const,
 };
 
-// Get Conversations Hook
 export const useGetConversations = () => {
     return useQuery({
         queryKey: messagingKeys.conversations(),
@@ -24,7 +21,6 @@ export const useGetConversations = () => {
     });
 };
 
-// Get Conversation By ID Hook
 export const useGetConversation = (conversationId: string) => {
     return useQuery({
         queryKey: messagingKeys.conversation(conversationId),
@@ -34,7 +30,6 @@ export const useGetConversation = (conversationId: string) => {
     });
 };
 
-// Get Messages Hook
 export const useGetMessages = (conversationId: string) => {
     return useQuery({
         queryKey: messagingKeys.messages(conversationId),
@@ -44,7 +39,6 @@ export const useGetMessages = (conversationId: string) => {
     });
 };
 
-// Get Unread Count Hook
 export const useGetUnreadCount = (conversationId: string) => {
     return useQuery({
         queryKey: messagingKeys.unreadCount(conversationId),
@@ -53,18 +47,15 @@ export const useGetUnreadCount = (conversationId: string) => {
     });
 };
 
-// Send Message Hook
 export const useSendMessage = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: messagingRepository.sendMessage,
         onSuccess: (data) => {
-            // Invalidate messages for this conversation
             queryClient.invalidateQueries({
                 queryKey: messagingKeys.messages(data.conversationId),
             });
-            // Invalidate conversations list
             queryClient.invalidateQueries({
                 queryKey: messagingKeys.conversations(),
             });
@@ -72,7 +63,6 @@ export const useSendMessage = () => {
     });
 };
 
-// Edit Message Hook
 export const useEditMessage = () => {
     const queryClient = useQueryClient();
 
@@ -87,7 +77,6 @@ export const useEditMessage = () => {
     });
 };
 
-// Delete Message Hook
 export const useDeleteMessage = () => {
     const queryClient = useQueryClient();
 
@@ -110,7 +99,6 @@ export const useDeleteMessage = () => {
     });
 };
 
-// Mark Message As Read Hook
 export const useMarkMessageAsRead = () => {
     const queryClient = useQueryClient();
 
@@ -133,7 +121,6 @@ export const useMarkMessageAsRead = () => {
     });
 };
 
-// Mark Conversation As Read Hook
 export const useMarkConversationAsRead = () => {
     const queryClient = useQueryClient();
 
@@ -150,7 +137,6 @@ export const useMarkConversationAsRead = () => {
     });
 };
 
-// Get Or Create Conversation Hook
 export const useGetOrCreateConversation = () => {
     const queryClient = useQueryClient();
 
@@ -165,7 +151,6 @@ export const useGetOrCreateConversation = () => {
     });
 };
 
-// Delete Conversation Hook
 export const useDeleteConversation = () => {
     const queryClient = useQueryClient();
 

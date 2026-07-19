@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { userRepository } from '@/features/profiles/data/repositories/UserRepositoryImpl';
 
-// Query Keys
 export const userKeys = {
     all: ['users'] as const,
     current: () => [...userKeys.all, 'current'] as const,
@@ -18,7 +17,6 @@ export const userKeys = {
     userExperiences: (username: string) => [...userKeys.experiences(), username] as const,
 };
 
-// Get Current User Hook
 export const useGetCurrentUser = (options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.current(),
@@ -28,7 +26,6 @@ export const useGetCurrentUser = (options?: { enabled?: boolean }) => {
     });
 };
 
-// Get User By Username Hook
 export const useGetUserByUsername = (username: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.byUsername(username),
@@ -38,7 +35,6 @@ export const useGetUserByUsername = (username: string, options?: { enabled?: boo
     });
 };
 
-// Get Current User Media Hook
 export const useGetCurrentUserMedia = (options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.currentMedia(),
@@ -48,7 +44,6 @@ export const useGetCurrentUserMedia = (options?: { enabled?: boolean }) => {
     });
 };
 
-// Get User Media Hook
 export const useGetUserMedia = (username: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.userMedia(username),
@@ -58,7 +53,6 @@ export const useGetUserMedia = (username: string, options?: { enabled?: boolean 
     });
 };
 
-// Get User Videos Hook
 export const useGetUserVideos = (username: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.userVideos(username),
@@ -68,7 +62,6 @@ export const useGetUserVideos = (username: string, options?: { enabled?: boolean
     });
 };
 
-// Update Basic Info Hook
 export const useUpdateBasicInfo = () => {
     const queryClient = useQueryClient();
 
@@ -80,7 +73,6 @@ export const useUpdateBasicInfo = () => {
     });
 };
 
-// Update Contact Info Hook
 export const useUpdateContactInfo = () => {
     const queryClient = useQueryClient();
 
@@ -92,7 +84,6 @@ export const useUpdateContactInfo = () => {
     });
 };
 
-// Update Social Links Hook
 export const useUpdateSocialLinks = () => {
     const queryClient = useQueryClient();
 
@@ -104,7 +95,6 @@ export const useUpdateSocialLinks = () => {
     });
 };
 
-// Upload User Avatar Hook
 export const useUploadUserAvatar = () => {
     const queryClient = useQueryClient();
 
@@ -116,7 +106,6 @@ export const useUploadUserAvatar = () => {
     });
 };
 
-// Upload User Cover Hook
 export const useUploadUserCover = () => {
     const queryClient = useQueryClient();
 
@@ -128,7 +117,6 @@ export const useUploadUserCover = () => {
     });
 };
 
-// Upload User Media Hook
 export const useUploadUserMedia = () => {
     const queryClient = useQueryClient();
 
@@ -140,7 +128,6 @@ export const useUploadUserMedia = () => {
     });
 };
 
-// Delete User Media Hook
 export const useDeleteUserMedia = () => {
     const queryClient = useQueryClient();
 
@@ -152,7 +139,6 @@ export const useDeleteUserMedia = () => {
     });
 };
 
-// Upload User Video Hook
 export const useUploadUserVideo = () => {
     const queryClient = useQueryClient();
 
@@ -164,7 +150,6 @@ export const useUploadUserVideo = () => {
     });
 };
 
-// Delete User Video Hook
 export const useDeleteUserVideo = () => {
     const queryClient = useQueryClient();
 
@@ -176,7 +161,6 @@ export const useDeleteUserVideo = () => {
     });
 };
 
-// Update Featured Releases Hook
 export const useUpdateFeaturedReleases = () => {
     const queryClient = useQueryClient();
 
@@ -188,7 +172,6 @@ export const useUpdateFeaturedReleases = () => {
     });
 };
 
-// Get All Genres Hook
 export const useGetAllGenres = (options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.allGenres(),
@@ -197,7 +180,6 @@ export const useGetAllGenres = (options?: { enabled?: boolean }) => {
     });
 };
 
-// Get User Genres Hook
 export const useGetUserGenres = (username: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.userGenres(username),
@@ -207,7 +189,6 @@ export const useGetUserGenres = (username: string, options?: { enabled?: boolean
     });
 };
 
-// Update User Genres Hook
 export const useUpdateUserGenres = () => {
     const queryClient = useQueryClient();
 
@@ -221,7 +202,6 @@ export const useUpdateUserGenres = () => {
     });
 };
 
-// Update User Services Hook
 export const useUpdateUserServices = () => {
     const queryClient = useQueryClient();
 
@@ -233,7 +213,6 @@ export const useUpdateUserServices = () => {
     });
 };
 
-// Update Venue Basic Hook
 export const useUpdateVenueBasic = () => {
     const queryClient = useQueryClient();
 
@@ -245,7 +224,6 @@ export const useUpdateVenueBasic = () => {
     });
 };
 
-// Update Venue Contact Hook
 export const useUpdateVenueContact = () => {
     const queryClient = useQueryClient();
 
@@ -257,7 +235,6 @@ export const useUpdateVenueContact = () => {
     });
 };
 
-// Update Venue Additional Hook
 export const useUpdateVenueAdditional = () => {
     const queryClient = useQueryClient();
 
@@ -295,7 +272,6 @@ export const useUpdateVenueRequirements = () => {
 
 // ---- Experience (kinh nghiệm) ----
 
-// Get User Experiences Hook
 export const useGetUserExperiences = (username: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: userKeys.userExperiences(username),
@@ -305,7 +281,6 @@ export const useGetUserExperiences = (username: string, options?: { enabled?: bo
     });
 };
 
-// Create Experience Hook
 export const useCreateExperience = (username: string) => {
     const queryClient = useQueryClient();
 
@@ -317,7 +292,6 @@ export const useCreateExperience = (username: string) => {
     });
 };
 
-// Update Experience Hook
 export const useUpdateExperience = (username: string) => {
     const queryClient = useQueryClient();
 
@@ -335,7 +309,6 @@ export const useUpdateExperience = (username: string) => {
     });
 };
 
-// Update Experience Genres Hook
 export const useUpdateExperienceGenres = (username: string) => {
     const queryClient = useQueryClient();
 
@@ -348,7 +321,6 @@ export const useUpdateExperienceGenres = (username: string) => {
     });
 };
 
-// Delete Experience Hook
 export const useDeleteExperience = (username: string) => {
     const queryClient = useQueryClient();
 

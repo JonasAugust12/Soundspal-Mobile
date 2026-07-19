@@ -50,7 +50,6 @@ export default function ExploreScreen() {
 
     const { filters, setQuery, setRole } = useSearchStore();
 
-    // Set initial search text from params
     useEffect(() => {
         if (params.query) {
             setSearchText(params.query);
@@ -118,7 +117,6 @@ export default function ExploreScreen() {
         return () => clearTimeout(timer);
     }, [searchText, filters.query, setQuery]);
 
-    // Handle role change
     const handleRoleChange = (role: 'singer' | 'producer' | 'venue' | 'all') => {
         setSelectedRole(role);
         setRole(role === 'all' ? undefined : role);

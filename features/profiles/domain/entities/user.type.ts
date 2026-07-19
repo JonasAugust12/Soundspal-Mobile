@@ -18,7 +18,6 @@ export interface UserService {
     is_negotiable: boolean;
 }
 
-// Common fields for all user types
 export interface BaseUser {
     id: string;
     username: string;
@@ -67,7 +66,6 @@ export interface BaseUser {
     artist_requirements_note?: string;
 }
 
-// Singer/Producer specific fields
 export interface ArtistUser extends BaseUser {
     role: Role.SINGER | Role.PRODUCER;
     featured_release_links?: string[];
@@ -77,7 +75,6 @@ export interface ArtistUser extends BaseUser {
     youtube_url?: string;
 }
 
-// Venue specific fields
 export interface VenueUser extends BaseUser {
     role: Role.VENUE;
     genres?: string[];
@@ -90,7 +87,6 @@ export interface VenueUser extends BaseUser {
     rent_price?: string;
 }
 
-// Union type for all user types
 export type User = ArtistUser | VenueUser | BaseUser;
 
 // PATCH /users/me — cập nhật gộp (basic + location + offering + availability)

@@ -40,7 +40,6 @@ export const useThemeStore = create<ThemeState>()((set, get) => ({
     },
 }));
 
-// Listen to system theme changes
 Appearance.addChangeListener(() => {
     const state = useThemeStore.getState();
     if (state.colorScheme === 'auto') {

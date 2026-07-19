@@ -6,7 +6,6 @@ interface YoutubeEmbedProps {
     url: string;
 }
 
-// Extract YouTube video ID from URL
 function getYoutubeVideoId(url: string): string | null {
     const regex =
         /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/;

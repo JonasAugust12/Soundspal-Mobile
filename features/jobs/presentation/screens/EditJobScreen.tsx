@@ -335,7 +335,6 @@ export default function EditJobScreen() {
         );
     };
 
-    // Loading state
     if (isLoading) {
         return (
             <SafeAreaView
@@ -352,7 +351,6 @@ export default function EditJobScreen() {
 
     const isNotFound = isApiNotFound(error);
 
-    // Error or not owned
     if (error || !job || !isOwned) {
         return (
             <SafeAreaView

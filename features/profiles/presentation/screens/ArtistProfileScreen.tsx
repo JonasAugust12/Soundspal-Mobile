@@ -48,11 +48,9 @@ export default function ArtistProfile() {
     const params = useLocalSearchParams<{ username?: string }>();
     const { user: currentUser } = useAuthStore();
 
-    // Check if viewing own profile
     const isMe = !params.username || params.username === currentUser?.username;
     const [isRefetching, setIsRefetching] = React.useState(false);
 
-    // Fetch data based on isMe
     const { data: currentUserData, isLoading: isLoadingCurrentUser } = useGetCurrentUser({
         enabled: isMe,
     });
@@ -72,19 +70,16 @@ export default function ArtistProfile() {
 
     const getOrCreateConversation = useGetOrCreateConversation();
 
-    // Use appropriate data
     const userData = isMe ? currentUserData : otherUserData;
     const userMedia = isMe ? currentUserMedia : otherUserMedia;
     const isLoadingUser = isMe ? isLoadingCurrentUser : isLoadingOtherUser;
     const isLoadingMedia = isMe ? isLoadingCurrentMedia : isLoadingOtherMedia;
 
-    // Get videos
     const username = userData?.username || '';
     const { data: userVideos, isLoading: isLoadingVideos } = useGetUserVideos(username, {
         enabled: !!username,
     });
 
-    // Get user genres
     const { data: userGenresData } = useGetUserGenres(username, {
         enabled: !!username,
     });
@@ -99,15 +94,9 @@ export default function ArtistProfile() {
 
     const onRefresh = async () => {
         setIsRefetching(true);
-        // React Query's refetch is handled within hooks if needed,
-        // but for simplicity we can trigger a global state update or wait for queries to invalidate
-        // In this case, useQuery's refetch is not directly exposed here for all,
-        // but it will refresh on mount/focus if configured.
-        // To be explicit, we could pass refetch from the hooks.
         setIsRefetching(false);
     };
 
-    // Filter portfolio images
     const portfolioImages = userMedia?.media?.filter((m) => m.media_type === 'portfolio') || [];
 
     const handleSendMessage = async () => {

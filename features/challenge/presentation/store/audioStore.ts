@@ -49,16 +49,13 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     playBeat: async (beat: Beat) => {
         const { currentBeat, soundObject, stop, stopEntry } = get();
 
-        // Stop any entry preview first
         await stopEntry();
 
-        // If clicking the same beat, just toggle play
         if (currentBeat?.id === beat.id && soundObject) {
             await get().togglePlay();
             return;
         }
 
-        // Stop current before starting new
         if (soundObject) {
             await stop();
         }
@@ -152,7 +149,6 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             set({ isPlaying: false });
         }
 
-        // Toggle if same entry
         if (currentEntry?.id === entry.id && entrySound) {
             const status = await entrySound.getStatusAsync();
             if (status.isLoaded && status.isPlaying) {
@@ -165,7 +161,6 @@ export const useAudioStore = create<AudioState>((set, get) => ({
             return;
         }
 
-        // Stop old entry
         await stopEntry();
 
         if (!entry.audio_url) return;

@@ -15,7 +15,6 @@ export default function ExploreScreen() {
     // Fetch global beats to find the trending one
     const { data } = useGetBeats({ page_size: 20 });
 
-    // Find the beat with the max entry_count
     const trendingBeat = data?.beats?.reduce((prev, current) => {
         return (prev.entry_count || 0) > (current.entry_count || 0) ? prev : current;
     }, data?.beats[0]);

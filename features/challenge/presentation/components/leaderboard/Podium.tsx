@@ -69,9 +69,7 @@ export function Podium({ topEntries, onEntryPress }: PodiumProps) {
 
     const getAvatar = (entry?: BeatEntry) =>
         entry?.avatar_url ||
-        (entry?.username
-            ? `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.username}`
-            : 'https://i.pravatar.cc/150');
+        `https://api.dicebear.com/7.x/avataaars/png?seed=${entry?.username || entry?.id || 'user'}`;
 
     const PlayButton = ({ entry, size = 18 }: { entry: BeatEntry; size?: number }) => {
         const isThis = currentEntry?.id === entry.id;

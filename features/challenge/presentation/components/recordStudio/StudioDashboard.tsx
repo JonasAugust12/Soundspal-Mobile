@@ -41,7 +41,6 @@ export const StudioDashboard = memo(function StudioDashboard({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPreparingRecord, setIsPreparingRecord] = useState(false);
 
-    // Recording States
     const [recordURI, setRecordURI] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
 
@@ -50,7 +49,6 @@ export const StudioDashboard = memo(function StudioDashboard({
     const recordingRef = useRef<Audio.Recording | null>(null);
     const isProcessing = useRef(false);
 
-    // Preview playback states
     const [previewSound, setPreviewSound] = useState<Audio.Sound | null>(null);
     const [isPlayingPreview, setIsPlayingPreview] = useState(false);
 
@@ -69,7 +67,6 @@ export const StudioDashboard = memo(function StudioDashboard({
         })();
 
         return () => {
-            // Cleanup on unmount
             if (recordingRef.current) recordingRef.current.stopAndUnloadAsync();
             if (previewSound) previewSound.unloadAsync();
             if (backgroundSoundRef.current) backgroundSoundRef.current.unloadAsync();
@@ -262,7 +259,6 @@ export const StudioDashboard = memo(function StudioDashboard({
         try {
             const formData = new FormData();
 
-            // Extract filename from URI
             const uriParts = recordURI.split('/');
             const fileName = uriParts[uriParts.length - 1] || 'recording.m4a';
 
@@ -281,7 +277,6 @@ export const StudioDashboard = memo(function StudioDashboard({
             });
             resetRecording();
 
-            // Navigate to result screen with entry data
             router.push({
                 pathname: '/(challenge)/result',
                 params: { data: JSON.stringify(entry), beatId: beat.id },

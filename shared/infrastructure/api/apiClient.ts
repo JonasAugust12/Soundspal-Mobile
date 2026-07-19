@@ -138,14 +138,12 @@ apiClient.interceptors.response.use(
                     const user = getUserFromToken(access_token);
 
                     if (user) {
-                        // Update store
                         useAuthStore.getState().setCredentials({
                             accessToken: access_token,
                             refreshToken: refresh_token,
                             user,
                         });
 
-                        // Process queue with new token
                         processQueue(null, access_token);
 
                         // Retry original request (multipart cannot be replayed — see isFormDataBody)

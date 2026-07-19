@@ -12,7 +12,6 @@ class SocketService {
     private hasAttemptedTokenRefresh = false;
     private queryClient: unknown = null;
 
-    // Set query client from provider
     setQueryClient(client: unknown) {
         this.queryClient = client;
     }
@@ -30,7 +29,6 @@ class SocketService {
             return null;
         }
 
-        // Already connected
         if (this.socket?.connected) {
             console.warn('✅ Socket already connected');
             return this.socket;
@@ -113,10 +111,8 @@ class SocketService {
 
             const store = useMessagingStore.getState();
 
-            // Append message to store
             store.addMessage(message.conversationId, message);
 
-            // Increment unread if not active conversation
             if (store.activeConversationId !== message.conversationId) {
                 store.incrementUnread(message.conversationId);
             }
@@ -218,7 +214,6 @@ class SocketService {
     }
 
     private handleDisconnect() {
-        // Attempt to reconnect
         setTimeout(() => {
             this.disconnect();
             this.connect();
@@ -291,5 +286,4 @@ class SocketService {
     }
 }
 
-// Export singleton instance
 export const socketService = new SocketService();

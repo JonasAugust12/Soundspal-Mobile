@@ -53,7 +53,6 @@ export default function DetailMessageScreen() {
     const { user: currentUser } = useAuthStore();
     const currentUserId = currentUser?.id;
 
-    // Read from store
     const {
         typingUsers,
         loadingMessages,
@@ -86,7 +85,6 @@ export default function DetailMessageScreen() {
     const scrollViewRef = useRef<ScrollView>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Fetch conversation details
     useEffect(() => {
         if (!conversationId) return;
 
@@ -144,7 +142,6 @@ export default function DetailMessageScreen() {
         return () => subscription.remove();
     }, [fetchMessages]);
 
-    // Initialize socket and clear unread
     useEffect(() => {
         if (conversationId) {
             setActiveConversation(conversationId);
@@ -166,7 +163,6 @@ export default function DetailMessageScreen() {
         };
     }, [conversationId, setActiveConversation, clearUnread]);
 
-    // Auto-scroll to bottom
     useEffect(() => {
         if (messages.length > 0) {
             setTimeout(() => {
@@ -411,7 +407,6 @@ export default function DetailMessageScreen() {
         router.back();
     };
 
-    // Get other user from conversation
     const otherUser = useMemo(() => {
         if (!conversation?.participants) return null;
         return conversation.participants.find((p) => p.id !== currentUserId) || null;
@@ -419,7 +414,6 @@ export default function DetailMessageScreen() {
 
     const isOtherUserOnline = otherUser?.id ? isUserOnline(otherUser.id) : false;
 
-    // Transform messages for display
     const chatMessages: ChatMessage[] = useMemo(() => {
         return messages.map((msg) => ({
             id: msg.id,

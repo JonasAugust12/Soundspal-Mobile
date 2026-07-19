@@ -59,7 +59,6 @@ export default function PortfolioGalleryScreen() {
     const userMedia = isMe ? currentMedia : otherMedia;
     const isLoading = isMe ? isLoadingCurrent : isLoadingOther;
 
-    // Filter portfolio images
     const portfolioImages = userMedia?.media?.filter((m) => m.media_type === 'portfolio') || [];
 
     const handlePickImage = async () => {
@@ -74,7 +73,6 @@ export default function PortfolioGalleryScreen() {
             if (!result.canceled && result.assets[0]) {
                 const asset = result.assets[0];
 
-                // Create FormData
                 const formData = new FormData();
                 formData.append('file', {
                     uri: asset.uri,

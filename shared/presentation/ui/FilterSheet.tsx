@@ -133,7 +133,6 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
         resetFilters,
     } = useSearchStore();
 
-    // Fetch genres
     const { data: genresData, isLoading: isLoadingGenres } = useGetGenres();
     const genres = genresData?.data?.genres || [];
 

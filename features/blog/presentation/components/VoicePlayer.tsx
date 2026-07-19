@@ -24,7 +24,6 @@ export function VoicePlayer({ duration, onPress }: VoicePlayerProps) {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Generate waveform bars
     const bars = Array.from({ length: 20 }, (_, i) => {
         const random = Math.sin(i * 0.5) * 0.5 + 0.5;
         return {

@@ -75,25 +75,10 @@ export function HeroSection({ trendingBeat }: HeroSectionProps) {
                         </LinearGradient>
                     </TouchableOpacity>
 
-                    {/* Avatars */}
-                    <View className="flex-row -space-x-3 shrink-0">
-                        <View className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
-                            <Image
-                                source={{ uri: 'https://i.pravatar.cc/150?img=5' }}
-                                className="w-full h-full"
-                            />
-                        </View>
-                        <View className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 overflow-hidden shadow-sm">
-                            <Image
-                                source={{ uri: 'https://i.pravatar.cc/150?img=8' }}
-                                className="w-full h-full"
-                            />
-                        </View>
-                        <View className="w-8 h-8 rounded-full border-2 border-white bg-gray-50 items-center justify-center shadow-sm">
-                            <Text className="text-[9px] font-bold text-primary">
-                                {formatCount(trendingBeat.entry_count)}
-                            </Text>
-                        </View>
+                    <View className="shrink-0 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+                        <Text className="text-[10px] font-bold text-primary">
+                            {formatCount(trendingBeat.entry_count)} bài dự thi
+                        </Text>
                     </View>
                 </View>
             </View>

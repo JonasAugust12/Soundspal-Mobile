@@ -184,7 +184,6 @@ export default function JobDetailScreen() {
         });
     };
 
-    // Loading state
     if (isLoading) {
         return (
             <SafeAreaView
@@ -199,7 +198,6 @@ export default function JobDetailScreen() {
         );
     }
 
-    // Error state
     if (error || !job) {
         return (
             <SafeAreaView

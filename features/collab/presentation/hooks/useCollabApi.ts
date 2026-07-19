@@ -6,8 +6,6 @@ import type {
 } from '@/features/collab/domain/entities/collaboration.type';
 import { collabRepository } from '@/features/collab/data/repositories/CollabRepositoryImpl';
 
-// API Calls
-// Query Keys
 export const collabKeys = {
     all: ['collab'] as const,
     mySubmissions: () => [...collabKeys.all, 'mySubmissions'] as const,
@@ -29,7 +27,6 @@ export const collabKeys = {
         [...collabKeys.myPostedJobsSubmissions(), params] as const,
 };
 
-// Hooks - Get my submissions
 export const useGetMySubmissions = (params: { page?: number; pageSize?: number } = {}) => {
     return useQuery({
         queryKey: collabKeys.mySubmissionsList(params),
@@ -38,7 +35,6 @@ export const useGetMySubmissions = (params: { page?: number; pageSize?: number }
     });
 };
 
-// Hooks - Get my posts (jobs)
 export const useGetMyPosts = (params: { page?: number; pageSize?: number } = {}) => {
     return useQuery({
         queryKey: ['collab', 'myPosts', params],
@@ -47,7 +43,6 @@ export const useGetMyPosts = (params: { page?: number; pageSize?: number } = {})
     });
 };
 
-// Hooks - Get opportunity submissions
 export const useGetOpportunitySubmissions = (
     opportunityId: string,
     params: {
@@ -66,14 +61,11 @@ export const useGetOpportunitySubmissions = (
     });
 };
 
-// Hooks - Get my posted jobs submissions (aggregate from all my jobs)
 export const useGetMyPostedJobsSubmissions = (
     params: { page?: number; pageSize?: number } = {},
 ) => {
-    // First get my posts
     const { data: postsData } = useGetMyPosts();
 
-    // Then query opportunity submissions based on posts data
     const firstJobId = postsData?.posts?.[0]?.id;
 
     return useQuery({
@@ -106,7 +98,6 @@ export const useGetMyPostedJobsSubmissions = (
     });
 };
 
-// Hooks - Withdraw submission
 export const useWithdrawSubmission = () => {
     const queryClient = useQueryClient();
 
@@ -114,13 +105,11 @@ export const useWithdrawSubmission = () => {
         mutationFn: ({ id, body }: { id: string; body: WithdrawSubmissionRequest }) =>
             collabRepository.withdrawSubmission(id, body),
         onSuccess: () => {
-            // Invalidate my submissions list
             queryClient.invalidateQueries({ queryKey: collabKeys.mySubmissions() });
         },
     });
 };
 
-// Hooks - Review submission
 export const useReviewSubmission = () => {
     const queryClient = useQueryClient();
 
@@ -128,7 +117,6 @@ export const useReviewSubmission = () => {
         mutationFn: ({ id, body }: { id: string; body: ReviewSubmissionRequest }) =>
             collabRepository.reviewSubmission(id, body),
         onSuccess: (_, _variables) => {
-            // Invalidate opportunity submissions
             queryClient.invalidateQueries({
                 queryKey: collabKeys.opportunitySubmissions(),
             });
