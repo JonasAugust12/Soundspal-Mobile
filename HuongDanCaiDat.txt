@@ -191,6 +191,9 @@ toàn bộ thư viện trước khi biên dịch.
        npm cache clean --force
        npm install --legacy-peer-deps
 
+   SAU BƯỚC NÀY: chuyển sang Mục V để tạo file cấu hình .env. Đây là bước bắt
+   buộc, thiếu nó ứng dụng sẽ không kết nối được máy chủ.
+
 
 --------------------------------------------------------------------------------
 V. TẠO FILE CẤU HÌNH .env  (BƯỚC BẮT BUỘC)
@@ -343,8 +346,9 @@ VII. LƯU Ý RẤT QUAN TRỌNG: KHÔNG CHẠY ĐƯỢC BẰNG "EXPO GO"
    - react-native-mmkv 4 (Nitro Modules)
    - @react-native-google-signin/google-signin
 
-=> BẮT BUỘC phải tự biên dịch bản "development build" theo 3 lệnh sau:
+=> BẮT BUỘC phải tự biên dịch bản "development build" theo trình tự sau:
        npm install
+       (tạo file .env theo Mục V — bắt buộc, nếu không sẽ không gọi được máy chủ)
        npx expo prebuild --platform android
        npx expo run:android
    (trên macOS thay 2 lệnh cuối bằng --platform ios và npx expo run:ios)
@@ -398,7 +402,11 @@ GHI CHÚ VỀ KẾT QUẢ KIỂM THỬ:
          Đây là lỗi do môi trường mạng, KHÔNG phải lỗi của mã nguồn.
 
    Tóm lại, khi chạy "npm test" trong điều kiện có Internet đầy đủ, kết quả
-   mong đợi là 341 đạt / 17 chưa đạt.
+   mong đợi là 340 đạt / 18 chưa đạt.
+
+   GHI CHÚ: bộ kiểm thử KHÔNG đọc file .env (đây là cơ chế riêng của Expo lúc
+   biên dịch ứng dụng). Vì vậy kết quả kiểm thử không phụ thuộc vào việc đã tạo
+   file .env hay chưa.
 
 
 --------------------------------------------------------------------------------
@@ -433,7 +441,14 @@ IX. XỬ LÝ MỘT SỐ LỖI THƯỜNG GẶP
                  kiểm tra lại cáp USB, bật "USB debugging" và chấp nhận hộp
                  thoại xác nhận hiện trên điện thoại.
 
-7. Đã sửa file .env nhưng ứng dụng vẫn dùng địa chỉ máy chủ cũ
+7. Ứng dụng chạy được nhưng mọi màn hình đều báo lỗi kết nối / không tải dữ liệu
+   Nguyên nhân : chưa tạo file .env, hoặc tên biến trong .env bị sai chính tả
+                 nên ứng dụng không có địa chỉ máy chủ để gọi.
+   Cách xử lý  : tạo lại file .env đúng theo Mục V, kiểm tra kỹ tiền tố
+                 EXPO_PUBLIC_ của từng dòng, rồi chạy
+                     npm run start:clear
+
+8. Đã sửa file .env nhưng ứng dụng vẫn dùng địa chỉ máy chủ cũ
    Nguyên nhân : Expo nhúng giá trị biến môi trường vào gói mã nguồn lúc biên
                  dịch và lưu lại trong bộ nhớ đệm của Metro.
    Cách xử lý  : dừng Metro, khởi động lại kèm xoá bộ nhớ đệm
@@ -441,11 +456,11 @@ IX. XỬ LÝ MỘT SỐ LỖI THƯỜNG GẶP
                  Nếu vẫn chưa được, biên dịch lại ứng dụng
                      npm run android
 
-8. Lỗi "Exceeded timeout of 10000 ms" khi chạy npm test
+9. Lỗi "Exceeded timeout of 10000 ms" khi chạy npm test
    Nguyên nhân : các kiểm thử tích hợp trong __tests__/integration/ gọi máy chủ
                  thật, máy đang không có Internet hoặc máy chủ tạm ngừng.
-   Cách xử lý  : bỏ qua nhóm kiểm thử này, chỉ chạy kiểm thử cục bộ
-                     npx jest --testPathIgnorePatterns "/node_modules/" "__tests__/integration/"
+   Cách xử lý  : đây là lỗi môi trường mạng, không phải lỗi mã nguồn. Kiểm tra
+                 lại kết nối Internet rồi chạy lại "npm test".
 
 
 ================================================================================

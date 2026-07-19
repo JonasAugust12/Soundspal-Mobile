@@ -30,19 +30,24 @@ Trước khi biên dịch lần đầu còn một bước nữa: mã nguồn n�
 mục native ("android" và "ios") vì đây là các thư mục được sinh tự động từ file
 cấu hình app.json. Cần chạy lệnh "prebuild" để sinh ra chúng.
 
+Ngoài ra còn một bước bắt buộc nữa: địa chỉ máy chủ và mã định danh dịch vụ nằm
+trong file cấu hình ".env", file này không kèm theo mã nguồn nộp nên phải tự tạo.
+
 Tóm tắt quy trình đầy đủ cho lần chạy đầu tiên:
 
        npm install                            (tải thư viện)
+       tạo file .env                          (xem Mục V, HuongDanCaiDat.txt)
        npx expo prebuild --platform android   (sinh thư mục native)
        npx expo run:android                   (biên dịch và chạy)
 
-VỀ CẤU HÌNH MÁY CHỦ (file .env):
-   KHÔNG cần tạo file .env. Mọi cấu hình (địa chỉ REST API, Socket.IO, mã OAuth
-   Google) đã có sẵn giá trị mặc định trong file shared/config/env.ts, trỏ đến
-   máy chủ chính thức đang hoạt động.
+VỀ FILE .env:
+   BẮT BUỘC phải tạo trước khi chạy. Thiếu file này, ứng dụng vẫn biên dịch và
+   mở lên được nhưng mọi màn hình sẽ báo lỗi kết nối vì không có địa chỉ máy chủ.
 
-   Chỉ khi muốn trỏ ứng dụng sang một máy chủ khác mới cần tạo file .env — xem
-   Mục V của file HuongDanCaiDat.txt.
+   Nội dung đầy đủ cần điền vào file .env: xem Mục V của file HuongDanCaiDat.txt.
+
+   Mỗi lần sửa file .env phải khởi động lại kèm xoá bộ nhớ đệm:
+       npm run start:clear
 
 NHẮC LẠI LƯU Ý QUAN TRỌNG:
    Ứng dụng dùng nhiều thư viện native (Firebase, MMKV, Google Sign-In) nên
@@ -76,7 +81,19 @@ BƯỚC 3: Cài thư viện (chỉ cần chạy 1 lần duy nhất ở lần đ�
 
        npm install
 
-BƯỚC 4: Sinh thư mục native cho Android (chỉ cần chạy 1 lần ở lần đầu)
+BƯỚC 4: Tạo file cấu hình .env (BẮT BUỘC, chỉ cần làm 1 lần ở lần đầu)
+
+   Địa chỉ máy chủ và mã định danh dịch vụ nằm trong file ".env" ở thư mục gốc.
+   File này KHÔNG kèm theo mã nguồn nộp nên phải tự tạo, nếu không ứng dụng sẽ
+   mở lên được nhưng không tải được dữ liệu.
+
+       (Windows)      copy .env.example .env
+       (macOS/Linux)  cp .env.example .env
+
+   Sau đó mở file .env và thay các giá trị bị che (dạng xxxxx) bằng giá trị thật.
+   Nội dung đầy đủ cần điền: xem Mục V của file HuongDanCaiDat.txt.
+
+BƯỚC 5: Sinh thư mục native cho Android (chỉ cần chạy 1 lần ở lần đầu)
 
        npx expo prebuild --platform android
 
@@ -87,7 +104,7 @@ BƯỚC 4: Sinh thư mục native cho Android (chỉ cần chạy 1 lần ở l�
    Có thể dùng lệnh rút gọn tương đương đã khai báo sẵn trong package.json:
        npm run prebuild:android
 
-BƯỚC 5: Biên dịch và cài ứng dụng lên thiết bị
+BƯỚC 6: Biên dịch và cài ứng dụng lên thiết bị
 
        npx expo run:android
 
@@ -103,7 +120,7 @@ BƯỚC 5: Biên dịch và cài ứng dụng lên thiết bị
    THỜI GIAN: Lần biên dịch ĐẦU TIÊN mất khoảng 10 - 25 phút do Gradle phải
    tải các thành phần phụ thuộc. Các lần sau chỉ mất khoảng 1 - 3 phút.
 
-BƯỚC 6: Các lần chạy tiếp theo
+BƯỚC 7: Các lần chạy tiếp theo
    Sau khi ứng dụng đã được cài lên thiết bị, KHÔNG cần biên dịch lại. Chỉ cần
    khởi động Metro Bundler rồi mở ứng dụng trên thiết bị:
 
@@ -123,13 +140,18 @@ vậy cần tạo lại trước khi biên dịch lần đầu:
 BƯỚC 1: Cài thư viện
        npm install
 
-BƯỚC 2: Sinh thư mục native cho iOS
+BƯỚC 2: Tạo file cấu hình .env (BẮT BUỘC)
+       cp .env.example .env
+   Sau đó thay các giá trị bị che (dạng xxxxx) bằng giá trị thật.
+   Nội dung đầy đủ: xem Mục V của file HuongDanCaiDat.txt.
+
+BƯỚC 3: Sinh thư mục native cho iOS
        npx expo prebuild --platform ios
 
-BƯỚC 3: Cài các pod của iOS
+BƯỚC 4: Cài các pod của iOS
        cd ios && pod install && cd ..
 
-BƯỚC 4: Biên dịch và chạy
+BƯỚC 5: Biên dịch và chạy
        npx expo run:ios
 
    Hoặc dùng lệnh rút gọn tương đương:
