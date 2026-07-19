@@ -29,7 +29,7 @@ export const useGoogleSignIn = () => {
             // client_secret cặp với nó) — lệch nhau là 401 oauth_failed.
             // Đây là project RIÊNG cho đăng nhập, khác project FCM (talentlink-22clc
             // trong google-services.json) — hai thứ độc lập, đừng đồng bộ nhầm.
-            webClientId: '419154220948-58io8pdnh0e0ngcd7v94cf4icprgpf4l.apps.googleusercontent.com',
+            webClientId: `${process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID}`,
             offlineAccess: true,
             forceCodeForRefreshToken: true,
         });

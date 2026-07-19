@@ -1,0 +1,470 @@
+﻿================================================================================
+                            HƯỚNG DẪN SỬ DỤNG
+      ỨNG DỤNG DI ĐỘNG SOUNDSPAL (TalentLink Mobile) - React Native / Expo
+================================================================================
+
+Tài liệu này mô tả cách biên dịch, chạy chương trình và cách sử dụng các chức
+năng chính của ứng dụng.
+
+ĐIỀU KIỆN TIÊN QUYẾT: Phải hoàn tất toàn bộ các bước trong file
+HuongDanCaiDat.txt trước khi thực hiện các hướng dẫn dưới đây.
+
+
+================================================================================
+                    PHẦN A - BIÊN DỊCH VÀ CHẠY CHƯƠNG TRÌNH
+================================================================================
+
+--------------------------------------------------------------------------------
+A.I. GIỚI THIỆU CHUNG VỀ CÁCH BIÊN DỊCH
+--------------------------------------------------------------------------------
+
+Đây là ứng dụng React Native, không phải ứng dụng chạy trên trình duyệt. Quá
+trình biên dịch gồm 2 thành phần chạy song song:
+
+   1. Metro Bundler : máy chủ đóng gói mã JavaScript/TypeScript, chạy trên máy
+                      tính, cổng mặc định 8081
+   2. Ứng dụng native: bản .apk (Android) hoặc .app (iOS) được cài lên thiết bị,
+                      tải mã JavaScript từ Metro Bundler
+
+Trước khi biên dịch lần đầu còn một bước nữa: mã nguồn nộp không kèm sẵn thư
+mục native ("android" và "ios") vì đây là các thư mục được sinh tự động từ file
+cấu hình app.json. Cần chạy lệnh "prebuild" để sinh ra chúng.
+
+Tóm tắt quy trình đầy đủ cho lần chạy đầu tiên:
+
+       npm install                            (tải thư viện)
+       npx expo prebuild --platform android   (sinh thư mục native)
+       npx expo run:android                   (biên dịch và chạy)
+
+VỀ CẤU HÌNH MÁY CHỦ (file .env):
+   KHÔNG cần tạo file .env. Mọi cấu hình (địa chỉ REST API, Socket.IO, mã OAuth
+   Google) đã có sẵn giá trị mặc định trong file shared/config/env.ts, trỏ đến
+   máy chủ chính thức đang hoạt động.
+
+   Chỉ khi muốn trỏ ứng dụng sang một máy chủ khác mới cần tạo file .env — xem
+   Mục V của file HuongDanCaiDat.txt.
+
+NHẮC LẠI LƯU Ý QUAN TRỌNG:
+   Ứng dụng dùng nhiều thư viện native (Firebase, MMKV, Google Sign-In) nên
+   KHÔNG chạy được bằng ứng dụng Expo Go. Bắt buộc phải biên dịch bản
+   development build theo hướng dẫn bên dưới.
+
+
+--------------------------------------------------------------------------------
+A.II. BIÊN DỊCH VÀ CHẠY TRÊN ANDROID (CÁCH CHÍNH, KHUYẾN NGHỊ)
+--------------------------------------------------------------------------------
+
+BƯỚC 1: Chuẩn bị thiết bị
+   Cách 1 - Dùng điện thoại Android thật:
+       - Bật "Developer options" và "USB debugging" trên điện thoại
+       - Kết nối điện thoại với máy tính bằng cáp USB
+       - Chấp nhận hộp thoại "Allow USB debugging" hiện trên điện thoại
+       - Kiểm tra máy tính đã nhận thiết bị:
+             adb devices
+         Kết quả mong đợi: hiện mã thiết bị kèm chữ "device"
+
+   Cách 2 - Dùng máy ảo Android:
+       - Mở Android Studio > Device Manager > tạo và khởi động một máy ảo
+         (API 28 trở lên)
+       - Kiểm tra bằng lệnh: adb devices
+
+BƯỚC 2: Mở Terminal / CMD tại thư mục mã nguồn (thư mục "src")
+
+       cd đường/dẫn/đến/src
+
+BƯỚC 3: Cài thư viện (chỉ cần chạy 1 lần duy nhất ở lần đầu)
+
+       npm install
+
+BƯỚC 4: Sinh thư mục native cho Android (chỉ cần chạy 1 lần ở lần đầu)
+
+       npx expo prebuild --platform android
+
+   Mã nguồn nộp KHÔNG kèm sẵn thư mục "android" vì đây là thư mục được sinh
+   tự động từ file cấu hình app.json. Lệnh trên đọc app.json và tạo ra toàn
+   bộ dự án Android native (Gradle, AndroidManifest, thư mục app...).
+
+   Có thể dùng lệnh rút gọn tương đương đã khai báo sẵn trong package.json:
+       npm run prebuild:android
+
+BƯỚC 5: Biên dịch và cài ứng dụng lên thiết bị
+
+       npx expo run:android
+
+   Hoặc dùng lệnh rút gọn tương đương:
+       npm run android
+
+   Lệnh này sẽ tự động:
+       - Biên dịch mã native Android bằng Gradle
+       - Cài file .apk lên thiết bị / máy ảo đang kết nối
+       - Khởi động Metro Bundler
+       - Tự động mở ứng dụng trên thiết bị
+
+   THỜI GIAN: Lần biên dịch ĐẦU TIÊN mất khoảng 10 - 25 phút do Gradle phải
+   tải các thành phần phụ thuộc. Các lần sau chỉ mất khoảng 1 - 3 phút.
+
+BƯỚC 6: Các lần chạy tiếp theo
+   Sau khi ứng dụng đã được cài lên thiết bị, KHÔNG cần biên dịch lại. Chỉ cần
+   khởi động Metro Bundler rồi mở ứng dụng trên thiết bị:
+
+       npm start
+
+   Chỉ cần biên dịch lại (npm run android) khi có thay đổi mã native hoặc thay
+   đổi thư viện.
+
+
+--------------------------------------------------------------------------------
+A.III. BIÊN DỊCH VÀ CHẠY TRÊN iOS (CHỈ TRÊN macOS)
+--------------------------------------------------------------------------------
+
+Mã nguồn nộp không kèm sẵn thư mục "ios" (thư mục này được sinh tự động), vì
+vậy cần tạo lại trước khi biên dịch lần đầu:
+
+BƯỚC 1: Cài thư viện
+       npm install
+
+BƯỚC 2: Sinh thư mục native cho iOS
+       npx expo prebuild --platform ios
+
+BƯỚC 3: Cài các pod của iOS
+       cd ios && pod install && cd ..
+
+BƯỚC 4: Biên dịch và chạy
+       npx expo run:ios
+
+   Hoặc dùng lệnh rút gọn tương đương:
+       npm run ios
+
+LƯU Ý: Chạy trên thiết bị iPhone thật cần tài khoản Apple Developer để ký ứng
+dụng. Chạy trên máy ảo iOS Simulator thì không cần.
+
+
+--------------------------------------------------------------------------------
+A.IV. ĐÓNG GÓI FILE CÀI ĐẶT (.APK) ĐỂ CHẠY ĐỘC LẬP
+--------------------------------------------------------------------------------
+
+Dùng khi cần một file .apk cài trực tiếp lên điện thoại mà không cần máy tính.
+
+CÁCH 1 - Biên dịch cục bộ bằng Gradle (không cần tài khoản, khuyến nghị):
+
+       npx expo prebuild --platform android
+       cd android
+       gradlew assembleRelease            (trên Windows)
+       ./gradlew assembleRelease          (trên macOS / Linux)
+
+   File .apk được tạo tại đường dẫn:
+       android/app/build/outputs/apk/release/app-release.apk
+
+   Cài file .apk lên điện thoại đang kết nối:
+       adb install -r android/app/build/outputs/apk/release/app-release.apk
+
+CÁCH 2 - Biên dịch trên máy chủ EAS của Expo (cần tài khoản Expo và Internet):
+
+       npm install -g eas-cli
+       eas login
+       npm run build:android:preview
+
+   Sau khi biên dịch xong, EAS trả về đường dẫn tải file .apk.
+
+
+--------------------------------------------------------------------------------
+A.V. CÁC LỆNH HỖ TRỢ KHÁC
+--------------------------------------------------------------------------------
+
+   npm start                  Khởi động Metro Bundler
+   npm run start:clear        Khởi động Metro và xóa bộ nhớ đệm. Dùng khi gặp
+                              lỗi "Unable to resolve module", HOẶC BẮT BUỘC
+                              dùng sau mỗi lần sửa file .env (nếu không, giá
+                              trị cấu hình cũ vẫn còn trong bộ nhớ đệm)
+
+   npm run prebuild           Sinh thư mục native cho cả Android và iOS
+   npm run prebuild:android   Sinh thư mục native cho riêng Android
+   npm run prebuild:ios       Sinh thư mục native cho riêng iOS
+   npm run prebuild:clean     Xóa và sinh lại toàn bộ thư mục native
+
+   npm run android            Biên dịch và chạy trên Android
+                              (tương đương: npx expo run:android)
+   npm run ios                Biên dịch và chạy trên iOS, chỉ macOS
+                              (tương đương: npx expo run:ios)
+
+   npm run typecheck          Kiểm tra kiểu dữ liệu TypeScript
+   npm run lint               Kiểm tra quy chuẩn mã nguồn
+   npm run lint:fix           Tự động sửa các lỗi quy chuẩn có thể sửa được
+   npm run format             Tự động định dạng lại mã nguồn
+
+   npm test                   Chạy toàn bộ bộ kiểm thử tự động
+   npm run test:watch         Chạy kiểm thử ở chế độ theo dõi thay đổi
+   npm run test:coverage      Chạy kiểm thử kèm báo cáo độ phủ
+
+   npx expo prebuild --clean  Tạo lại toàn bộ thư mục native (khi lỗi biên dịch)
+
+
+--------------------------------------------------------------------------------
+A.VI. THAO TÁC TRONG QUÁ TRÌNH PHÁT TRIỂN
+--------------------------------------------------------------------------------
+
+Khi Metro Bundler đang chạy, nhấn các phím sau trong cửa sổ Terminal:
+
+   a    Mở lại ứng dụng trên thiết bị Android
+   i    Mở lại ứng dụng trên máy ảo iOS
+   r    Tải lại (reload) ứng dụng
+   j    Mở công cụ gỡ lỗi (debugger)
+   m    Mở menu phát triển trên thiết bị
+   ?    Xem toàn bộ danh sách phím tắt
+
+Ứng dụng hỗ trợ Fast Refresh: khi lưu file mã nguồn, giao diện trên thiết bị
+tự động cập nhật mà không cần biên dịch lại.
+
+
+================================================================================
+                  PHẦN B - HƯỚNG DẪN SỬ DỤNG ỨNG DỤNG
+================================================================================
+
+--------------------------------------------------------------------------------
+B.I. GIỚI THIỆU ỨNG DỤNG
+--------------------------------------------------------------------------------
+
+Soundspal là nền tảng kết nối cộng đồng âm nhạc, hỗ trợ 3 nhóm người dùng:
+
+   - Ca sĩ (singer)     : tìm cơ hội biểu diễn, tham gia thử thách hát
+   - Producer (producer): đăng beat, tìm ca sĩ cộng tác
+   - Địa điểm (venue)   : đăng tin tuyển dụng, tìm nghệ sĩ biểu diễn
+
+Ứng dụng có 5 thẻ (tab) chính ở thanh điều hướng dưới cùng:
+   Trang chủ - Khám phá - Công việc - Tin nhắn - Cá nhân
+
+
+--------------------------------------------------------------------------------
+B.II. ĐĂNG KÝ VÀ ĐĂNG NHẬP
+--------------------------------------------------------------------------------
+
+1. Đăng ký tài khoản mới
+   - Tại màn hình đăng nhập, chọn "Đăng ký"
+   - Nhập email, mật khẩu, tên người dùng và chọn vai trò
+     (Ca sĩ / Producer / Địa điểm)
+   - Hệ thống gửi mã xác thực (OTP) về email đã đăng ký
+   - Nhập mã OTP để kích hoạt tài khoản
+
+   LƯU Ý: Bắt buộc phải xác thực email mới sử dụng được đầy đủ chức năng.
+
+2. Đăng nhập
+   - Nhập email và mật khẩu đã đăng ký, chọn "Đăng nhập"
+
+3. Đăng nhập bằng Google
+   - Chọn nút "Đăng nhập với Google" và chọn tài khoản Google
+   - Nếu là lần đầu, ứng dụng yêu cầu bổ sung thông tin hồ sơ và chọn vai trò
+   - LƯU Ý: chức năng này chỉ hoạt động trên bản build được ký đúng chứng chỉ
+     đã đăng ký với Firebase (xem Mục VI file HuongDanCaiDat.txt)
+
+4. Quên mật khẩu
+   - Chọn "Quên mật khẩu" > nhập email > nhận mã OTP qua email
+   - Nhập mã OTP để xác minh, sau đó đặt lại mật khẩu mới
+
+5. TÀI KHOẢN DÙNG THỬ ĐỂ CHẤM ĐIỂM
+
+       Email    : dientran18012004@gmail.com
+       Mật khẩu : Diendien1801@
+
+   Tài khoản này đã xác thực email, đăng nhập được ngay bằng chức năng
+   "Đăng nhập" bằng email và mật khẩu (mục B.II.2), không cần đăng ký mới.
+
+   Nếu muốn xem giao diện của vai trò khác (Ca sĩ / Producer / Địa điểm),
+   có thể tự đăng ký tài khoản mới theo hướng dẫn ở mục B.II.1 và chọn vai
+   trò tương ứng khi đăng ký.
+
+
+--------------------------------------------------------------------------------
+B.III. THẺ "TRANG CHỦ"
+--------------------------------------------------------------------------------
+
+Hiển thị tổng quan nội dung nổi bật của nền tảng:
+   - Danh sách nghệ sĩ nổi bật (dạng thẻ trượt ngang)
+   - Tin tuyển dụng mới nhất
+   - Bài viết blog mới nhất
+
+Thao tác: chạm vào thẻ bất kỳ để xem chi tiết. Vuốt xuống để làm mới nội dung.
+
+
+--------------------------------------------------------------------------------
+B.IV. THẺ "KHÁM PHÁ"
+--------------------------------------------------------------------------------
+
+1. Tìm kiếm nghệ sĩ
+   - Nhập từ khóa vào ô tìm kiếm ở đầu màn hình
+   - Lọc theo vai trò bằng các nút: Tất cả / Ca sĩ / Producer / Địa điểm
+   - Chạm vào thẻ nghệ sĩ để xem hồ sơ chi tiết
+
+2. Thử thách âm nhạc (Beat Challenge)
+   - Xem danh sách beat do các Producer đăng tải
+   - Lọc beat theo thể loại (genre)
+   - Chạm vào một beat để xem chi tiết, nghe thử và xem bảng xếp hạng
+
+3. Tham gia thử thách - thu âm
+   - Tại màn hình chi tiết beat, chọn "Thu âm"
+   - Cấp quyền truy cập micro khi ứng dụng hỏi
+   - Nhấn nút thu để bắt đầu, nhấn lần nữa để dừng
+   - Nghe lại bản thu, chọn "Gửi" để nộp bài dự thi
+   - Bài dự thi được cộng đồng bình chọn và xếp hạng
+
+4. Đăng beat mới (dành cho Producer)
+   - Chọn nút tạo thử thách
+   - Nhập tên thử thách, thể loại, BPM
+   - Tải lên file âm thanh (beat) và ảnh bìa
+   - Chọn "Tạo" để đăng lên cộng đồng
+
+5. Bảng xếp hạng
+   - Xem thứ hạng các bài dự thi theo số lượt bình chọn
+   - Chạm vào một bài để nghe và xem điểm chi tiết
+
+
+--------------------------------------------------------------------------------
+B.V. THẺ "CÔNG VIỆC"
+--------------------------------------------------------------------------------
+
+1. Xem và tìm tin tuyển dụng
+   - Duyệt danh sách tin tuyển dụng, lọc theo loại công việc và địa điểm
+   - Chạm vào tin để xem chi tiết: mô tả, mức thù lao, yêu cầu, hạn nộp
+
+2. Ứng tuyển (dành cho Ca sĩ / Producer)
+   - Tại màn hình chi tiết tin, chọn "Ứng tuyển"
+   - Điền thông tin liên hệ, lời giới thiệu và đường dẫn portfolio (nếu có)
+   - Chọn "Gửi" để nộp hồ sơ
+
+3. Đăng tin tuyển dụng (dành cho Địa điểm)
+   - Chọn nút tạo tin tuyển dụng
+   - Nhập tiêu đề, mô tả, loại hình, thù lao, địa điểm và thời hạn
+   - Chọn "Đăng tin"
+   - LƯU Ý: tài khoản thường giới hạn 5 tin/tháng, tài khoản Premium được
+     100 tin/tháng
+
+4. Quản lý hồ sơ ứng tuyển
+   - Xem danh sách người đã ứng tuyển vào tin của mình
+   - Chấp nhận hoặc từ chối từng hồ sơ
+   - Người ứng tuyển xem được trạng thái hồ sơ đã nộp và có thể rút hồ sơ
+
+
+--------------------------------------------------------------------------------
+B.VI. THẺ "TIN NHẮN"
+--------------------------------------------------------------------------------
+
+1. Danh sách hội thoại
+   - Hiển thị toàn bộ cuộc trò chuyện, sắp xếp theo tin nhắn mới nhất
+   - Có huy hiệu số tin nhắn chưa đọc
+   - Dùng ô tìm kiếm để lọc theo tên người dùng
+
+2. Trò chuyện
+   - Chạm vào một hội thoại để mở màn hình chat
+   - Nhập nội dung và chọn nút gửi
+   - Tin nhắn được gửi/nhận theo thời gian thực qua Socket.IO
+   - Hiển thị trạng thái "Đang nhập..." và "Đã xem"
+
+3. Gửi tệp đính kèm
+   - Chọn biểu tượng đính kèm để gửi ảnh hoặc tài liệu
+   - LƯU Ý: dung lượng tối đa mỗi tệp là 10 MB
+
+4. Thao tác trên tin nhắn
+   - Nhấn giữ vào tin nhắn để hiện menu: Sửa / Xóa / Sao chép
+   - LƯU Ý: tin nhắn kèm thông tin công việc và tệp đính kèm không sửa được
+
+5. Nhắn tin từ tin tuyển dụng
+   - Tại màn hình chi tiết tin tuyển dụng, chọn "Nhắn tin"
+   - Tin nhắn đầu tiên tự động kèm thẻ thông tin công việc
+
+
+--------------------------------------------------------------------------------
+B.VII. THẺ "CÁ NHÂN"
+--------------------------------------------------------------------------------
+
+1. Xem và chỉnh sửa hồ sơ
+   - Cập nhật ảnh đại diện, ảnh bìa, tên hiển thị, giới thiệu bản thân
+   - Cập nhật thông tin liên hệ, liên kết mạng xã hội
+   - Chọn thể loại nhạc sở trường
+   - Với tài khoản Địa điểm: cập nhật thêm loại hình, sức chứa, tiện ích
+
+2. Quản lý portfolio
+   - Tải lên ảnh, video giới thiệu năng lực
+   - Thêm liên kết bài hát tiêu biểu
+   - Thêm kinh nghiệm biểu diễn (tên, thời gian, mô tả)
+
+3. Nội dung của tôi
+   - Xem danh sách beat đã đăng và bài dự thi đã gửi
+   - Xóa nội dung không còn muốn hiển thị
+
+4. Nâng cấp tài khoản Premium
+   - Chọn mục nâng cấp Premium
+   - Chọn gói thanh toán: theo tháng hoặc theo năm (gói năm được tặng 2 tháng)
+   - Quét mã QR hoặc chuyển khoản theo hướng dẫn của cổng thanh toán PayOS
+   - Sau khi thanh toán thành công, ứng dụng tự động cập nhật trạng thái
+     Premium (có thể mất tới khoảng 20 giây)
+   - Quyền lợi Premium: huy hiệu vương miện, ưu tiên hiển thị ở mục Khám phá,
+     và tăng hạn mức đăng tin đối với tài khoản Địa điểm
+
+5. Cài đặt tài khoản
+   - Đổi email: chọn "Đổi email", nhập email mới và xác thực bằng mã OTP
+     gửi về hộp thư. LƯU Ý: sau khi đổi email thành công, phiên đăng nhập
+     hiện tại sẽ hết hiệu lực, cần đăng nhập lại bằng email mới.
+   - Đăng xuất: chọn "Đăng xuất" ở cuối màn hình
+
+   GHI CHÚ VỀ PHẠM VI ĐÃ HOÀN THÀNH:
+   Hai mục "Tài khoản và bảo mật" và "Quyền riêng tư" hiện đã có sẵn trên
+   giao diện nhưng chưa được cài đặt chức năng, nằm ngoài phạm vi của đề tài.
+   Chạm vào hai mục này sẽ không mở màn hình nào.
+
+
+--------------------------------------------------------------------------------
+B.VIII. BLOG
+--------------------------------------------------------------------------------
+
+   - Đọc bài viết chia sẻ kiến thức âm nhạc
+   - Lọc bài viết theo chủ đề
+   - Bình luận và lưu bài viết vào mục đã lưu
+   - Người dùng có thể tự viết và đăng bài (kèm ảnh minh họa)
+
+
+--------------------------------------------------------------------------------
+B.IX. THÔNG BÁO ĐẨY
+--------------------------------------------------------------------------------
+
+Ứng dụng gửi thông báo đẩy qua Firebase Cloud Messaging trong 3 trường hợp:
+   - Tin nhắn mới                          (new_message)
+   - Có người ứng tuyển vào tin của mình   (new_application)
+   - Hồ sơ ứng tuyển đổi trạng thái        (application_status_changed)
+
+Lần đầu mở ứng dụng, cần chọn "Cho phép" khi được hỏi quyền gửi thông báo.
+Nếu đã từ chối, có thể bật lại tại: Cài đặt hệ điều hành > Ứng dụng >
+Soundspal > Thông báo.
+
+
+--------------------------------------------------------------------------------
+B.X. XỬ LÝ SỰ CỐ KHI SỬ DỤNG
+--------------------------------------------------------------------------------
+
+1. Ứng dụng hiện màn hình trắng hoặc báo lỗi kết nối
+   - Kiểm tra thiết bị đã kết nối Internet
+   - Kiểm tra máy chủ https://api.soundspal.com đang hoạt động
+   - Nếu đang chạy chế độ phát triển, kiểm tra Metro Bundler còn chạy không
+   - Nếu đã tự tạo file .env: kiểm tra lại địa chỉ trong đó có đúng không.
+     Khi chạy trên máy ảo Android phải dùng 10.0.2.2 thay cho "localhost";
+     khi chạy trên điện thoại thật phải dùng IP thật của máy tính trong mạng
+     LAN. Sau khi sửa .env phải chạy lại: npm run start:clear
+
+2. Không nhận được email xác thực (OTP)
+   - Kiểm tra thư mục Spam / Quảng cáo trong hộp thư
+   - Dùng chức năng "Gửi lại mã" trên màn hình xác thực
+
+3. Không gửi/nhận được tin nhắn theo thời gian thực
+   - Thoát hẳn ứng dụng và mở lại để kết nối lại Socket.IO
+   - Kiểm tra kết nối mạng
+
+4. Thu âm không hoạt động
+   - Kiểm tra đã cấp quyền truy cập micro cho ứng dụng
+   - Vào Cài đặt hệ điều hành > Ứng dụng > Soundspal > Quyền > Micro
+
+5. Không tải được ảnh
+   - Ảnh được tải từ Internet, cần kết nối mạng ổn định
+
+
+================================================================================
+                              HẾT TÀI LIỆU
+        Yêu cầu về công cụ và môi trường: xem file HuongDanCaiDat.txt
+================================================================================

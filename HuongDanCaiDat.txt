@@ -1,0 +1,454 @@
+﻿================================================================================
+                             HƯỚNG DẪN CÀI ĐẶT
+      ỨNG DỤNG DI ĐỘNG SOUNDSPAL (TalentLink Mobile) - React Native / Expo
+================================================================================
+
+Tài liệu này mô tả đầy đủ công cụ, môi trường phát triển và thư viện cần thiết
+để biên dịch và chạy mã nguồn của đề tài.
+
+LƯU Ý QUAN TRỌNG: Theo quy định nộp đề tài, thư mục "node_modules" (toàn bộ thư
+viện bên thứ ba) ĐÃ ĐƯỢC LOẠI BỎ khỏi mã nguồn nộp. Bắt buộc phải thực hiện
+Mục IV (cài đặt thư viện) trước khi biên dịch chương trình.
+
+
+--------------------------------------------------------------------------------
+I. THÔNG TIN CHUNG VỀ CÔNG NGHỆ SỬ DỤNG
+--------------------------------------------------------------------------------
+
+  - Nền tảng        : React Native 0.81.5 + Expo SDK 54 (~54.0.31)
+  - Ngôn ngữ        : TypeScript 5.9 (chế độ strict)
+  - React           : 19.1.0
+  - Định tuyến      : Expo Router 6 (định tuyến theo cấu trúc thư mục)
+  - Giao diện       : NativeWind 4 (TailwindCSS 3.3 cho React Native)
+  - Quản lý state   : Zustand 5 + TanStack React Query 5
+  - Giao tiếp API   : Axios 1.13 + Socket.IO Client 4.8 (chat thời gian thực)
+  - Lưu trữ cục bộ  : react-native-mmkv 4
+  - Thông báo đẩy   : React Native Firebase (Cloud Messaging) 25
+  - Kiến trúc       : Clean Architecture theo từng feature
+                      (domain / data / presentation)
+
+
+--------------------------------------------------------------------------------
+II. YÊU CẦU HỆ THỐNG
+--------------------------------------------------------------------------------
+
+1. Hệ điều hành
+   - Windows 10/11 (64-bit)  : biên dịch và chạy được bản Android
+   - macOS 13 trở lên        : biên dịch và chạy được cả Android và iOS
+   - Linux (Ubuntu 22.04+)   : biên dịch và chạy được bản Android
+
+   LƯU Ý: Chỉ có thể biên dịch bản iOS trên macOS (yêu cầu bắt buộc của Apple).
+
+2. Phần cứng tối thiểu đề xuất
+   - CPU    : 4 nhân trở lên
+   - RAM    : 8 GB (khuyến nghị 16 GB khi chạy máy ảo Android)
+   - Ổ cứng : còn trống tối thiểu 20 GB
+              (Android SDK + Gradle cache + node_modules chiếm nhiều dung lượng)
+
+3. Thiết bị chạy ứng dụng (chọn 1 trong 2)
+   - Điện thoại Android thật (Android 9.0 / API 28 trở lên), có bật
+     "Developer options" và "USB debugging"
+   - Hoặc máy ảo Android (AVD) tạo từ Android Studio, API 28 trở lên
+
+
+--------------------------------------------------------------------------------
+III. CÁC CÔNG CỤ CẦN CÀI ĐẶT
+--------------------------------------------------------------------------------
+
+BƯỚC 1: Node.js và npm  (BẮT BUỘC)
+--------------------------------------------------
+   Phiên bản yêu cầu  : Node.js 20 LTS trở lên
+   Đã kiểm chứng trên : Node.js v20.13.1 - npm v10.5.2
+   Tải tại địa chỉ    : https://nodejs.org/en/download
+
+   npm được cài kèm sẵn theo Node.js, không cần cài riêng.
+
+   Kiểm tra sau khi cài (mở Terminal / CMD / PowerShell):
+       node --version
+       npm --version
+
+   Kết quả mong đợi: hiện ra số phiên bản, ví dụ v20.13.1 và 10.5.2
+
+
+BƯỚC 2: Git  (BẮT BUỘC)
+--------------------------------------------------
+   Dùng để tải mã nguồn và để một số thư viện npm hoạt động đúng.
+   Tải tại địa chỉ: https://git-scm.com/downloads
+
+   Kiểm tra:
+       git --version
+
+
+BƯỚC 3: Java Development Kit (JDK) 17  (BẮT BUỘC cho Android)
+--------------------------------------------------
+   Yêu cầu tối thiểu: JDK 17. KHÔNG dùng JDK 8 hoặc JDK 11 - sẽ báo lỗi
+   "Unsupported class file major version" khi biên dịch Gradle.
+
+   Nên dùng bản nào:
+   - JDK 17: là bản React Native khuyến nghị chính thức. Tài liệu React Native
+     ghi rõ "we recommend JDK 17. You may encounter problems using higher JDK
+     versions". Chọn bản này nếu muốn an toàn nhất.
+   - JDK 21: đề tài này được phát triển và biên dịch trên JDK 21
+     (Eclipse Temurin 21.0.8) với Gradle 8.14.3, hoạt động bình thường.
+
+   Cách 1 (khuyến nghị): Cài Android Studio, sau đó dùng JDK đi kèm
+       Android Studio > Settings > Build, Execution, Deployment
+       > Build Tools > Gradle > Gradle JDK > chọn "jbr-17"
+
+   Cách 2: Cài riêng Eclipse Temurin JDK 17
+       https://adoptium.net/temurin/releases/?version=17
+
+   Sau khi cài, tạo biến môi trường hệ thống JAVA_HOME trỏ tới thư mục JDK.
+   Ví dụ trên Windows:
+       JAVA_HOME = C:\Program Files\Eclipse Adoptium\jdk-17.0.x-hotspot
+
+   Kiểm tra:
+       java -version
+
+   Kết quả mong đợi: dòng chữ có chứa "17." hoặc "21."
+
+
+BƯỚC 4: Android Studio + Android SDK  (BẮT BUỘC cho Android)
+--------------------------------------------------
+   Tải tại địa chỉ: https://developer.android.com/studio
+
+   Sau khi cài Android Studio, mở:
+       Settings (hoặc Preferences) > Languages & Frameworks > Android SDK
+
+   Tại tab "SDK Platforms", tích chọn và cài:
+       - Android 15.0 (API Level 35)     <- compileSdk / targetSdk của dự án
+       - Android 9.0  (API Level 28)     <- minSdk của dự án
+
+   Tại tab "SDK Tools", tích chọn và cài:
+       - Android SDK Build-Tools 35.0.0  <- đúng phiên bản 35.0.0
+       - Android SDK Platform-Tools
+       - Android SDK Command-line Tools (latest)
+       - Android Emulator                (nếu dùng máy ảo)
+
+   Tạo biến môi trường ANDROID_HOME trỏ tới thư mục SDK.
+   Ví dụ trên Windows:
+       ANDROID_HOME = C:\Users\<TenNguoiDung>\AppData\Local\Android\Sdk
+   Ví dụ trên macOS / Linux:
+       ANDROID_HOME = $HOME/Library/Android/sdk   (macOS)
+       ANDROID_HOME = $HOME/Android/Sdk           (Linux)
+
+   Bổ sung vào biến PATH các đường dẫn sau:
+       %ANDROID_HOME%\platform-tools
+       %ANDROID_HOME%\emulator
+
+   Kiểm tra (khởi động lại Terminal sau khi đổi biến môi trường):
+       adb --version
+
+
+BƯỚC 5: Xcode  (CHỈ BẮT BUỘC nếu cần chạy bản iOS - chỉ trên macOS)
+--------------------------------------------------
+   - Cài Xcode 15 trở lên từ Mac App Store
+   - Cài Command Line Tools:
+         xcode-select --install
+   - Cài CocoaPods:
+         sudo gem install cocoapods
+
+   Kiểm tra:
+         pod --version
+
+
+BƯỚC 6: Trình soạn thảo mã nguồn  (KHUYẾN NGHỊ, không bắt buộc)
+--------------------------------------------------
+   Visual Studio Code: https://code.visualstudio.com
+
+   Các extension nên cài thêm:
+       - ESLint
+       - Prettier - Code formatter
+       - Tailwind CSS IntelliSense
+       - React Native Tools
+
+
+--------------------------------------------------------------------------------
+IV. CÀI ĐẶT THƯ VIỆN CỦA DỰ ÁN  (BƯỚC BẮT BUỘC)
+--------------------------------------------------------------------------------
+
+Do thư mục "node_modules" đã được loại bỏ theo quy định nộp đề tài, cần tải lại
+toàn bộ thư viện trước khi biên dịch.
+
+   Bước 1: Mở Terminal / CMD, di chuyển vào thư mục chứa mã nguồn
+           (thư mục "src", là thư mục có chứa file package.json)
+
+       cd đường/dẫn/đến/src
+
+   Bước 2: Chạy lệnh cài đặt thư viện
+
+       npm install
+
+   Lệnh này đọc file "package-lock.json" đã kèm theo trong mã nguồn và tải về
+   đúng phiên bản thư viện đã sử dụng khi phát triển, đảm bảo tái lập được
+   kết quả.
+
+   Thời gian cài đặt : khoảng 3 - 10 phút tùy tốc độ mạng
+
+   Yêu cầu: máy tính phải có kết nối Internet trong bước này.
+
+   Nếu gặp lỗi trong quá trình cài, thử lần lượt:
+       npm cache clean --force
+       npm install --legacy-peer-deps
+
+
+--------------------------------------------------------------------------------
+V. TẠO FILE CẤU HÌNH .env  (BƯỚC BẮT BUỘC)
+--------------------------------------------------------------------------------
+
+Ứng dụng kết nối đến máy chủ đã triển khai sẵn trên Internet, KHÔNG cần cài đặt
+backend hay cơ sở dữ liệu trên máy cục bộ.
+
+Toàn bộ địa chỉ máy chủ và mã định danh dịch vụ được đặt trong file cấu hình
+".env" ở thư mục gốc, KHÔNG nằm trong mã nguồn. File này là cấu hình riêng của
+từng máy nên không được kèm theo mã nguồn nộp (đã khai báo trong .gitignore).
+
+=> BẮT BUỘC phải tự tạo file .env trước khi biên dịch. Thiếu file này, ứng dụng
+   sẽ biên dịch được nhưng không kết nối được máy chủ.
+
+
+BƯỚC 1: Tạo file .env
+--------------------------------------------------
+   Tạo file tên ".env" tại thư mục gốc mã nguồn (cùng cấp với file package.json).
+
+   Cách nhanh nhất là chép từ file mẫu ".env.example" có sẵn:
+       (Windows)      copy .env.example .env
+       (macOS/Linux)  cp .env.example .env
+
+   File mẫu chỉ ghi giá trị che dạng "xxxxx", cần thay bằng giá trị thật ở Bước 2.
+
+
+BƯỚC 2: Điền nội dung cho file .env
+--------------------------------------------------
+   Mở file .env vừa tạo, xoá hết nội dung cũ và dán nguyên khối dưới đây vào:
+
+# ---- API ----
+EXPO_PUBLIC_API_BASE_URL=https://api.soundspal.com/api/v1
+EXPO_PUBLIC_AUTH_REFRESH_URL=https://talentlink.io.vn/api/v1/auth/refresh
+
+# ---- Realtime ----
+EXPO_PUBLIC_SOCKET_URL=https://api.soundspal.com
+EXPO_PUBLIC_SOCKET_PATH=/socket.io
+
+# ---- Google Sign-In ----
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=419154220948-58io8pdnh0e0ngcd7v94cf4icprgpf4l.apps.googleusercontent.com
+
+# ---- Local storage (MMKV) ----
+EXPO_PUBLIC_STORAGE_ID=soundspal-storage
+EXPO_PUBLIC_STORAGE_ENCRYPTION_KEY=soundspal-secret-key
+
+   LƯU Ý KHI DÁN:
+   - Mỗi biến phải nằm trọn trên MỘT dòng. Dòng GOOGLE_WEB_CLIENT_ID rất dài,
+     kiểm tra kỹ xem trình soạn thảo có tự xuống dòng làm hỏng giá trị không.
+   - Không thêm dấu nháy, không thêm dấu cách quanh dấu "=".
+   - Lưu file với bảng mã UTF-8.
+
+
+BƯỚC 3: Ý nghĩa từng biến và nơi sử dụng
+--------------------------------------------------
+   EXPO_PUBLIC_API_BASE_URL
+       Địa chỉ gốc của REST API.
+       Dùng tại: shared/infrastructure/api/apiClient.ts
+
+   EXPO_PUBLIC_AUTH_REFRESH_URL
+       Địa chỉ làm mới phiên đăng nhập khi token hết hạn. Tách riêng vì hiện
+       đang trỏ tên miền khác với API_BASE_URL.
+       Dùng tại: shared/infrastructure/api/apiClient.ts
+
+   EXPO_PUBLIC_SOCKET_URL, EXPO_PUBLIC_SOCKET_PATH
+       Địa chỉ và đường dẫn máy chủ Socket.IO, phục vụ nhắn tin thời gian thực.
+       Dùng tại: shared/infrastructure/socket/socketService.ts
+
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID
+       Mã định danh OAuth để đăng nhập bằng Google (xem thêm Mục VI).
+       Dùng tại: features/auth/presentation/hooks/useGoogleSignIn.ts
+
+   EXPO_PUBLIC_STORAGE_ID, EXPO_PUBLIC_STORAGE_ENCRYPTION_KEY
+       Định danh và khoá mã hoá vùng lưu trữ cục bộ MMKV (lưu token đăng nhập).
+       Dùng tại: shared/infrastructure/storage/storage.ts
+
+
+BƯỚC 4: Áp dụng thay đổi
+--------------------------------------------------
+   Expo chỉ đọc file .env khi khởi động. Sau mỗi lần tạo mới hoặc sửa file .env,
+   BẮT BUỘC khởi động lại kèm xoá bộ nhớ đệm, nếu không giá trị cũ vẫn còn:
+
+       npm run start:clear
+
+
+ĐỔI SANG MÁY CHỦ KHÁC (TUỲ CHỌN)
+--------------------------------------------------
+   Nếu cần trỏ ứng dụng về một backend chạy cục bộ, sửa 2 dòng sau trong .env:
+
+       EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8000/api/v1
+       EXPO_PUBLIC_SOCKET_URL=http://10.0.2.2:8000
+
+   GHI CHÚ: khi chạy trên MÁY ẢO Android, phải dùng 10.0.2.2 — đây mới là địa
+   chỉ trỏ về "localhost" của máy tính, ghi "localhost" sẽ không kết nối được.
+   Khi chạy trên ĐIỆN THOẠI THẬT, phải dùng địa chỉ IP thật của máy tính trong
+   mạng LAN (ví dụ 192.168.1.10) và điện thoại phải cùng mạng Wi-Fi.
+
+
+LƯU Ý QUAN TRỌNG VỀ BẢO MẬT
+--------------------------------------------------
+   - Tiền tố EXPO_PUBLIC_ khiến giá trị bị nhúng thẳng vào file .apk lúc biên
+     dịch, ai giải nén file cài đặt cũng đọc được. Đây là cơ chế tách môi trường
+     phát triển / chính thức, KHÔNG phải cơ chế bảo mật. Tuyệt đối KHÔNG đặt mật
+     khẩu, client_secret hay khoá riêng tư vào file .env — những giá trị bí mật
+     đó phải nằm ở phía máy chủ.
+
+   - Hai biến EXPO_PUBLIC_STORAGE_* là định danh và khoá mã hoá vùng lưu trữ cục
+     bộ. Đổi giá trị trên bản đã phát hành sẽ khiến ứng dụng không giải mã được
+     dữ liệu đã lưu trước đó, người dùng bị đăng xuất và mất dữ liệu cục bộ.
+     Chỉ đổi khi thực sự cần tách riêng môi trường.
+
+
+--------------------------------------------------------------------------------
+VI. CẤU HÌNH DỊCH VỤ BÊN THỨ BA (ĐÃ KÈM SẴN TRONG MÃ NGUỒN)
+--------------------------------------------------------------------------------
+
+1. Firebase Cloud Messaging (thông báo đẩy)
+   File cấu hình "google-services.json" đã được đặt sẵn tại thư mục gốc của
+   mã nguồn và được khai báo trong app.json. Không cần thao tác thêm.
+
+2. Đăng nhập bằng tài khoản Google
+   Mã định danh OAuth (webClientId) được khai báo qua biến môi trường
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID trong file .env (xem Mục V).
+
+   Nơi sử dụng giá trị này:
+       features/auth/presentation/hooks/useGoogleSignIn.ts
+
+   Mã này BẮT BUỘC phải trùng với client_id mà máy chủ dùng để đổi mã xác thực,
+   lệch nhau sẽ báo lỗi 401 oauth_failed. Đây là mã của một project Google RIÊNG
+   cho chức năng đăng nhập, khác với project Firebase dùng cho thông báo đẩy ở
+   mục 1 — hai thứ độc lập, không đồng bộ nhầm.
+
+   LƯU Ý: Chức năng đăng nhập Google chỉ hoạt động trên bản build được ký đúng
+   chứng chỉ đã đăng ký với Firebase. Khi chấm điểm bằng bản build tự biên dịch
+   từ mã nguồn với chứng chỉ debug khác, chức năng này có thể báo lỗi. Vẫn có
+   thể đăng nhập bình thường bằng email và mật khẩu.
+
+3. Định danh ứng dụng
+   - Tên ứng dụng    : Soundspal
+   - Package Android : com.jonasaugust12.talent_link
+   - URL scheme      : soundspal
+
+
+--------------------------------------------------------------------------------
+VII. LƯU Ý RẤT QUAN TRỌNG: KHÔNG CHẠY ĐƯỢC BẰNG "EXPO GO"
+--------------------------------------------------------------------------------
+
+Ứng dụng sử dụng các thư viện native không có sẵn trong ứng dụng Expo Go:
+   - @react-native-firebase/app và @react-native-firebase/messaging
+   - react-native-mmkv 4 (Nitro Modules)
+   - @react-native-google-signin/google-signin
+
+=> BẮT BUỘC phải tự biên dịch bản "development build" theo 3 lệnh sau:
+       npm install
+       npx expo prebuild --platform android
+       npx expo run:android
+   (trên macOS thay 2 lệnh cuối bằng --platform ios và npx expo run:ios)
+
+=> KHÔNG được quét mã QR bằng ứng dụng Expo Go để chạy chương trình.
+   Cách làm này sẽ báo lỗi thiếu native module.
+
+Chi tiết các lệnh biên dịch và chạy: xem file HuongDanSuDung.txt
+
+
+--------------------------------------------------------------------------------
+VIII. KIỂM TRA CÀI ĐẶT THÀNH CÔNG
+--------------------------------------------------------------------------------
+
+Sau khi hoàn tất các bước trên, chạy lần lượt các lệnh sau trong thư mục "src":
+
+   1. Kiểm tra kiểu dữ liệu TypeScript (không được báo lỗi):
+          npm run typecheck
+
+   2. Kiểm tra quy chuẩn mã nguồn (cho phép có cảnh báo "warning"):
+          npm run lint
+
+   3. Chạy bộ kiểm thử tự động:
+          npm test
+
+   4. Kiểm tra môi trường Expo và các phiên bản thư viện:
+          npx expo-doctor
+
+Nếu cả 4 lệnh trên chạy được, môi trường đã sẵn sàng để biên dịch ứng dụng.
+
+GHI CHÚ VỀ KẾT QUẢ KIỂM THỬ:
+
+   Bộ kiểm thử gồm 42 nhóm kiểm thử (test suite) với 358 trường hợp kiểm thử,
+   chia làm 2 loại:
+
+   a) Kiểm thử đơn vị và giao diện — 37 nhóm, 306 trường hợp
+      Chạy hoàn toàn cục bộ, KHÔNG cần Internet.
+      Kết quả: 288 đạt, 18 chưa đạt, tập trung ở 3 nhóm sau:
+          - __tests__/utils/multipartUpload.test.ts
+          - __tests__/hooks/useProtectedRoute.test.ts
+          - __tests__/components/jobs/JobApplyModal.test.tsx
+      Đây là các trường hợp kiểm thử chưa hoàn thiện liên quan đến việc giả lập
+      môi trường native, KHÔNG ảnh hưởng đến biên dịch và vận hành ứng dụng.
+
+   b) Kiểm thử tích hợp — 5 nhóm, 52 trường hợp
+      Nằm trong thư mục __tests__/integration/, gọi trực tiếp đến máy chủ thật
+      qua Internet để kiểm tra hợp đồng API.
+      => BẮT BUỘC phải có kết nối Internet và máy chủ phải đang hoạt động.
+         Nếu không, toàn bộ 52 trường hợp này sẽ báo lỗi "Exceeded timeout of
+         10000 ms" và tổng số trường hợp chưa đạt tăng lên khoảng 69.
+         Đây là lỗi do môi trường mạng, KHÔNG phải lỗi của mã nguồn.
+
+   Tóm lại, khi chạy "npm test" trong điều kiện có Internet đầy đủ, kết quả
+   mong đợi là 341 đạt / 17 chưa đạt.
+
+
+--------------------------------------------------------------------------------
+IX. XỬ LÝ MỘT SỐ LỖI THƯỜNG GẶP
+--------------------------------------------------------------------------------
+
+1. Lỗi: "SDK location not found" hoặc "Failed to install the app"
+   Nguyên nhân : chưa đặt biến môi trường ANDROID_HOME.
+   Cách xử lý  : đặt lại biến môi trường theo Bước 4, khởi động lại Terminal.
+
+2. Lỗi: "Unsupported class file major version" hoặc lỗi Gradle khi biên dịch
+   Nguyên nhân : đang dùng JDK quá cũ (JDK 8 hoặc 11).
+   Cách xử lý  : cài và trỏ JAVA_HOME tới JDK 17 (hoặc 21) theo Bước 3.
+
+3. Lỗi: "Unable to resolve module ..." khi khởi động
+   Cách xử lý  : xóa bộ nhớ đệm của Metro và khởi động lại
+                     npm run start:clear
+
+4. Lỗi kéo dài không rõ nguyên nhân sau khi đổi thư viện
+   Cách xử lý  : cài lại toàn bộ thư viện
+                     (Windows)      rmdir /s /q node_modules
+                     (macOS/Linux)  rm -rf node_modules
+                     npm install
+
+5. Lỗi biên dịch Android sau khi đổi cấu hình native
+   Cách xử lý  : tạo lại thư mục native rồi biên dịch lại
+                     npx expo prebuild --clean
+                     npm run android
+
+6. Máy tính không nhận diện được điện thoại Android
+   Cách xử lý  : kiểm tra bằng lệnh "adb devices". Nếu không thấy thiết bị,
+                 kiểm tra lại cáp USB, bật "USB debugging" và chấp nhận hộp
+                 thoại xác nhận hiện trên điện thoại.
+
+7. Đã sửa file .env nhưng ứng dụng vẫn dùng địa chỉ máy chủ cũ
+   Nguyên nhân : Expo nhúng giá trị biến môi trường vào gói mã nguồn lúc biên
+                 dịch và lưu lại trong bộ nhớ đệm của Metro.
+   Cách xử lý  : dừng Metro, khởi động lại kèm xoá bộ nhớ đệm
+                     npm run start:clear
+                 Nếu vẫn chưa được, biên dịch lại ứng dụng
+                     npm run android
+
+8. Lỗi "Exceeded timeout of 10000 ms" khi chạy npm test
+   Nguyên nhân : các kiểm thử tích hợp trong __tests__/integration/ gọi máy chủ
+                 thật, máy đang không có Internet hoặc máy chủ tạm ngừng.
+   Cách xử lý  : bỏ qua nhóm kiểm thử này, chỉ chạy kiểm thử cục bộ
+                     npx jest --testPathIgnorePatterns "/node_modules/" "__tests__/integration/"
+
+
+================================================================================
+                             HẾT TÀI LIỆU CÀI ĐẶT
+      Cách biên dịch và sử dụng chương trình: xem file HuongDanSuDung.txt
+================================================================================

@@ -43,8 +43,8 @@ class SocketService {
 
         this.isConnecting = true;
 
-        this.socket = io('https://api.soundspal.com', {
-            path: '/socket.io',
+        this.socket = io(`${process.env.EXPO_PUBLIC_SOCKET_URL}`, {
+            path: process.env.EXPO_PUBLIC_SOCKET_PATH,
             auth: {
                 token: accessToken,
             },

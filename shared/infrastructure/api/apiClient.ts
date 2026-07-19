@@ -10,8 +10,7 @@ import type { RefreshTokenResponse } from '@/features/auth/domain/entities/auth.
 
 // Tạo axios instance
 export const apiClient = axios.create({
-    //baseURL: 'https://talentlink.io.vn/api/v1',
-    baseURL: 'https://api.soundspal.com/api/v1',
+    baseURL: process.env.EXPO_PUBLIC_API_BASE_URL,
     // headers: {
     //   accept: "application/json",
     //   "User-Agent":
@@ -121,7 +120,7 @@ apiClient.interceptors.response.use(
             try {
                 // Gọi API refresh token
                 const response = await axios.post<RefreshTokenResponse>(
-                    'https://talentlink.io.vn/api/v1/auth/refresh',
+                    `${process.env.EXPO_PUBLIC_AUTH_REFRESH_URL}`,
                     { refresh_token: refreshToken },
                     {
                         headers: {
