@@ -56,7 +56,9 @@ export function mapBookmarkRowToBlogPost(row: ApiBookmarkedPost | BlogItem): Blo
     ) {
         return mapBlogItemToBlogPost(row.post as BlogItem);
     }
-    if (row && typeof row === 'object' && 'id' in row && 'title' in row) {
+    // Bài viết trả thẳng trong danh sách bookmark (giống web dùng normalizePost cho từng
+    // hàng): chỉ cần có `id` — các field khác đã có default trong mapBlogItemToBlogPost.
+    if (row && typeof row === 'object' && 'id' in row) {
         return mapBlogItemToBlogPost(row as BlogItem);
     }
     return null;

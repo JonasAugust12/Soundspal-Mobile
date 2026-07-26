@@ -38,6 +38,27 @@ import {
 
 const EMPTY_BOOKMARK_BODY: BookmarkPostRequest = {};
 
+function extractBookmarkRows(body: unknown): unknown[] {
+    let current: unknown = body;
+    for (let depth = 0; depth < 3; depth += 1) {
+        if (Array.isArray(current)) return current;
+        if (!current || typeof current !== 'object') break;
+
+        const obj = current as Record<string, unknown>;
+        const nested = [obj.items, obj.data, obj.posts, obj.bookmarks, obj.records].find(
+            Array.isArray,
+        );
+        if (Array.isArray(nested)) return nested;
+
+        if ('data' in obj) {
+            current = obj.data;
+            continue;
+        }
+        break;
+    }
+    return [];
+}
+
 export const blogRemoteDataSource = {
     async fetchBlogPosts(filters?: BlogPostFilters): Promise<BlogPost[]> {
         const response = await apiClient.get<BlogsResponse>('/blogs', {
@@ -182,8 +203,8 @@ export const blogRemoteDataSource = {
         const { data: body } = await apiClient.get<{ data?: unknown }>('/bookmarks', {
             params: listId ? { list_id: listId } : undefined,
         });
-        const raw = unwrapBlogData<unknown[]>(body, 'bookmarks');
-        if (!Array.isArray(raw)) return [];
+        // Bóc envelope linh hoạt: mảng trần, {data:[...]}, {data:{items|data|posts:[...]}}, ...
+        const raw = extractBookmarkRows(body);
         const out: BlogPost[] = [];
         for (const item of raw) {
             if (!item || typeof item !== 'object') continue;

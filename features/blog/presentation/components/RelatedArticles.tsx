@@ -65,18 +65,12 @@ export function RelatedArticles({ articles, onArticlePress }: RelatedArticlesPro
                                 </Text>
 
                                 <Text
-                                    className={`text-sm font-bold mb-2 ${
+                                    className={`text-sm font-bold ${
                                         isDark ? 'text-white' : 'text-slate-900'
                                     }`}
                                     numberOfLines={2}
                                 >
                                     {article.title}
-                                </Text>
-
-                                <Text
-                                    className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
-                                >
-                                    {article.readTime} phút đọc
                                 </Text>
                             </View>
                         </TouchableOpacity>

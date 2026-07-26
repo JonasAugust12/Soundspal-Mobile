@@ -94,21 +94,14 @@ export function BlogCard({
                 <View className="flex-row gap-4">
                     {/* Left side - Content */}
                     <View className="flex-1">
-                        {/* Ngày đăng bài + thời lượng đọc (thay cho hiển thị id topic) */}
-                        <View className="flex-row items-center justify-between mb-3">
+                        {/* Ngày đăng bài (thay cho hiển thị id topic) */}
+                        <View className="flex-row items-center mb-3">
                             <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100">
                                 <CalendarDays size={12} color="#7E22CE" strokeWidth={2} />
                                 <Text className="text-purple-700 text-xs font-bold">
                                     {article.publishedAt}
                                 </Text>
                             </View>
-                            {article.readTime ? (
-                                <Text
-                                    className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}
-                                >
-                                    {article.readTime} phút đọc
-                                </Text>
-                            ) : null}
                         </View>
 
                         {/* Title - Larger */}

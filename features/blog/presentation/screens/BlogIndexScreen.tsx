@@ -41,14 +41,17 @@ export default function BlogScreen() {
     const [searchDraft, setSearchDraft] = useState('');
     const [committedSearch, setCommittedSearch] = useState('');
     const [bookmarkPendingId, setBookmarkPendingId] = useState<string | null>(null);
+    // Cập nhật lạc quan trạng thái lưu để icon đổi ngay khi bấm (không chờ refetch list).
+    const [bookmarkOverrides, setBookmarkOverrides] = useState<Record<string, boolean>>({});
 
     const commitSearch = useCallback(() => {
         setCommittedSearch(searchDraft.trim());
     }, [searchDraft]);
 
-    const clearSearch = useCallback(() => {
-        setSearchDraft('');
-        setCommittedSearch('');
+    // Không có nút xoá riêng (giống thanh tìm ở Khám phá): xoá hết chữ thì thoát tìm kiếm.
+    const handleSearchChange = useCallback((text: string) => {
+        setSearchDraft(text);
+        if (text.trim().length === 0) setCommittedSearch('');
     }, []);
 
     const isSearchMode = committedSearch.trim().length > 0;
@@ -212,9 +215,8 @@ export default function BlogScreen() {
             <BlogHeader />
             <BlogSearchBar
                 value={searchDraft}
-                onChangeText={setSearchDraft}
+                onChangeText={handleSearchChange}
                 onSubmitSearch={commitSearch}
-                onClear={clearSearch}
                 isSearching={isSearchMode && (searchFetching || searchLoading)}
             />
             <BlogLibraryRow activeTab={activeTab} onTabChange={setActiveTab} />

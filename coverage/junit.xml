@@ -1,43 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="20" failures="0" errors="0" time="2.932">
-  <testsuite name="__tests__\features\challenge\recordingHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-26T15:08:52" time="1.473" tests="8">
-    <testcase classname="formatRecordingTime" name="formats MM:SS and pads" time="0.016">
+<testsuites name="jest tests" tests="20" failures="0" errors="0" time="3.029">
+  <testsuite name="__tests__\features\challenge\recordingHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-26T15:36:18" time="1.556" tests="8">
+    <testcase classname="formatRecordingTime" name="formats MM:SS and pads" time="0.017">
     </testcase>
-    <testcase classname="formatRecordingTime" name="adds hours only when needed" time="0.001">
+    <testcase classname="formatRecordingTime" name="adds hours only when needed" time="0">
     </testcase>
     <testcase classname="formatRecordingTime" name="guards non-finite / negative input" time="0.001">
     </testcase>
-    <testcase classname="upload extension helpers" name="extracts lowercase extension" time="0.007">
+    <testcase classname="upload extension helpers" name="extracts lowercase extension" time="0.001">
     </testcase>
     <testcase classname="upload extension helpers" name="accepts only whitelisted audio extensions" time="0.002">
     </testcase>
-    <testcase classname="recording / download file names" name="builds a stable recording file name" time="0">
+    <testcase classname="recording / download file names" name="builds a stable recording file name" time="0.001">
     </testcase>
-    <testcase classname="recording / download file names" name="derives beat audio extension with mp3 fallback" time="0">
+    <testcase classname="recording / download file names" name="derives beat audio extension with mp3 fallback" time="0.003">
     </testcase>
-    <testcase classname="recording / download file names" name="slugifies title for the download file name and falls back to id" time="0.002">
+    <testcase classname="recording / download file names" name="slugifies title for the download file name and falls back to id" time="0.001">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\features\challenge\challengeHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-26T15:08:52" time="1.487" tests="12">
-    <testcase classname="multi-genre helpers" name="normalizeBeatGenres trims and dedupes case-insensitively, keeping order" time="0.022">
+  <testsuite name="__tests__\features\challenge\challengeHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-26T15:36:18" time="1.569" tests="12">
+    <testcase classname="multi-genre helpers" name="normalizeBeatGenres trims and dedupes case-insensitively, keeping order" time="0.017">
     </testcase>
-    <testcase classname="multi-genre helpers" name="getBeatGenres prefers genres[] and falls back to genre" time="0.001">
+    <testcase classname="multi-genre helpers" name="getBeatGenres prefers genres[] and falls back to genre" time="0.005">
     </testcase>
-    <testcase classname="multi-genre helpers" name="formatBeatGenreFilter joins with comma or returns undefined" time="0.004">
+    <testcase classname="multi-genre helpers" name="formatBeatGenreFilter joins with comma or returns undefined" time="0.001">
     </testcase>
-    <testcase classname="multi-genre helpers" name="toggleSelectedGenre adds and removes case-insensitively" time="0.003">
+    <testcase classname="multi-genre helpers" name="toggleSelectedGenre adds and removes case-insensitively" time="0.001">
     </testcase>
     <testcase classname="multi-genre helpers" name="getBeatCreatorDisplayName prefers display name" time="0.001">
     </testcase>
     <testcase classname="multi-genre helpers" name="getHeroBeat returns the beat with the most entries" time="0.001">
     </testcase>
-    <testcase classname="bookmark helpers" name="isBeatBookmarked is strict === true" time="0.002">
+    <testcase classname="bookmark helpers" name="isBeatBookmarked is strict === true" time="0.001">
     </testcase>
     <testcase classname="bookmark helpers" name="applyBeatBookmarkToggle updates only the target beat immutably" time="0.001">
     </testcase>
-    <testcase classname="leaderboard vote helpers" name="isEntryLiked is strict === true" time="0">
+    <testcase classname="leaderboard vote helpers" name="isEntryLiked is strict === true" time="0.001">
     </testcase>
-    <testcase classname="leaderboard vote helpers" name="applyEntryLikeToggle syncs vote_count and is idempotent per state" time="0.001">
+    <testcase classname="leaderboard vote helpers" name="applyEntryLikeToggle syncs vote_count and is idempotent per state" time="0.002">
     </testcase>
     <testcase classname="leaderboard vote helpers" name="applyEntryLikeToggle never drops vote_count below zero" time="0.001">
     </testcase>

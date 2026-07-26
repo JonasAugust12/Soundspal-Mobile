@@ -148,17 +148,12 @@ export function BlogDetailContent({ article }: BlogDetailContentProps) {
 
     return (
         <View>
-            {/* Ngày đăng bài + thời lượng đọc (thay cho hiển thị id topic) */}
-            <View className="px-4 pt-4 pb-3 flex-row items-center justify-between gap-3">
+            {/* Ngày đăng bài (thay cho hiển thị id topic) */}
+            <View className="px-4 pt-4 pb-3 flex-row items-center gap-3">
                 <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full border-2 border-purple-600">
                     <CalendarDays size={12} color="#9333EA" strokeWidth={2} />
                     <Text className="text-purple-600 text-xs font-bold">{article.publishedAt}</Text>
                 </View>
-                {article.readTime ? (
-                    <Text className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                        {article.readTime} phút đọc
-                    </Text>
-                ) : null}
             </View>
 
             {/* Title */}
