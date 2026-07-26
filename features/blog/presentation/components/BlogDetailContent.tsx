@@ -1,12 +1,27 @@
 import React, { useMemo } from 'react';
 import { View, Text, Image, useWindowDimensions } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { CalendarDays } from 'lucide-react-native';
 import RenderHTML from 'react-native-render-html';
 import type { MixedStyleDeclaration } from 'react-native-render-html';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 interface BlogDetailContentProps {
     article: BlogPost;
+}
+
+/** Nhãn vai trò tác giả bằng tiếng Việt (giữ nguyên các vai trò chuyên ngành đã Việt hoá). */
+function creatorRoleLabel(role?: string): string {
+    switch (role) {
+        case 'artist':
+            return 'Nghệ sĩ';
+        case 'producer':
+            return 'Nhà sản xuất';
+        case 'venue':
+            return 'Địa điểm';
+        default:
+            return 'Tác giả';
+    }
 }
 
 /** Decode common entities and strip tags so we can compare CMS title vs opening &lt;h1&gt;. */
@@ -133,16 +148,17 @@ export function BlogDetailContent({ article }: BlogDetailContentProps) {
 
     return (
         <View>
-            {/* Category and metadata */}
+            {/* Ngày đăng bài + thời lượng đọc (thay cho hiển thị id topic) */}
             <View className="px-4 pt-4 pb-3 flex-row items-center justify-between gap-3">
-                <View className="px-3 py-1 rounded-full border-2 border-purple-600">
-                    <Text className="text-purple-600 text-xs font-bold uppercase tracking-wider">
-                        {article.category}
-                    </Text>
+                <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full border-2 border-purple-600">
+                    <CalendarDays size={12} color="#9333EA" strokeWidth={2} />
+                    <Text className="text-purple-600 text-xs font-bold">{article.publishedAt}</Text>
                 </View>
-                <Text className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                    {article.readTime} min read • {article.publishedAt}
-                </Text>
+                {article.readTime ? (
+                    <Text className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                        {article.readTime} phút đọc
+                    </Text>
+                ) : null}
             </View>
 
             {/* Title */}
@@ -164,7 +180,7 @@ export function BlogDetailContent({ article }: BlogDetailContentProps) {
                         {authorName}
                     </Text>
                     <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {article.creator_role || 'Author'}
+                        {creatorRoleLabel(article.creator_role)}
                     </Text>
                 </View>
             </View>

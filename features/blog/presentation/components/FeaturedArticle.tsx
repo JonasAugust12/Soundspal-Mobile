@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LoadingImage } from '@/shared/presentation/ui';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 interface FeaturedArticleProps {
@@ -22,13 +23,7 @@ export function FeaturedArticle({ article, onPress }: FeaturedArticleProps) {
     return (
         <TouchableOpacity onPress={handlePress} className="mx-4 my-4">
             <View className="rounded-2xl overflow-hidden bg-gray-300 relative h-64">
-                {article.thumbnail && (
-                    <Image
-                        source={{ uri: article.thumbnail }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                    />
-                )}
+                <LoadingImage uri={article.thumbnail} style={StyleSheet.absoluteFill} />
 
                 {/* Gradient overlay */}
                 <View className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />

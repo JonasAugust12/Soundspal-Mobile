@@ -9,6 +9,7 @@ import type {
     GetMyBeatsParams,
     GetMyEntriesResponse,
     GetMyEntriesParams,
+    GetBookmarkedBeatsParams,
 } from '@/features/challenge/domain/entities/challenge.type';
 
 export interface IChallengeRepository {
@@ -30,4 +31,7 @@ export interface IChallengeRepository {
     getMyBeats(params?: GetMyBeatsParams): Promise<GetMyBeatsResponse>;
     getMyEntries(params?: GetMyEntriesParams): Promise<GetMyEntriesResponse>;
     deleteEntry(entryId: string): Promise<void>;
+    bookmarkBeat(id: string): Promise<void>;
+    unbookmarkBeat(id: string): Promise<void>;
+    getBookmarkedBeats(params?: GetBookmarkedBeatsParams): Promise<GetBeatsResponse>;
 }

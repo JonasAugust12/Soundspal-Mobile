@@ -234,15 +234,15 @@ export default function BlogScreen() {
                                     isDark ? 'text-slate-300' : 'text-gray-600'
                                 }`}
                             >
-                                Sign in to view your posts
+                                Đăng nhập để xem bài viết của bạn
                             </Text>
                             <Text
                                 className={`mt-2 text-center ${
                                     isDark ? 'text-slate-400' : 'text-gray-500'
                                 }`}
                             >
-                                The My posts tab shows only articles you published, using your
-                                account id.
+                                Mục "Bài viết của tôi" chỉ hiển thị những bài bạn đã đăng bằng tài
+                                khoản này.
                             </Text>
                         </View>
                     }
@@ -271,14 +271,14 @@ export default function BlogScreen() {
                                     isDark ? 'text-slate-300' : 'text-gray-600'
                                 }`}
                             >
-                                Sign in to view your bookmarks
+                                Đăng nhập để xem mục đã lưu
                             </Text>
                             <Text
                                 className={`mt-2 text-center ${
                                     isDark ? 'text-slate-400' : 'text-gray-500'
                                 }`}
                             >
-                                Save posts from the feed with the bookmark icon to see them here.
+                                Lưu bài viết bằng biểu tượng đánh dấu để xem lại tại đây.
                             </Text>
                         </View>
                     }
@@ -295,7 +295,7 @@ export default function BlogScreen() {
             >
                 <ActivityIndicator size="large" color={isDark ? '#E2E8F0' : '#1F2937'} />
                 <Text className={`mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                    Loading posts...
+                    Đang tải bài viết...
                 </Text>
             </SafeAreaView>
         );
@@ -310,24 +310,24 @@ export default function BlogScreen() {
                 <Text
                     className={`text-lg font-semibold ${isDark ? 'text-red-400' : 'text-red-600'}`}
                 >
-                    {isSearchMode ? 'Search failed' : 'Failed to load posts'}
+                    {isSearchMode ? 'Tìm kiếm thất bại' : 'Không tải được bài viết'}
                 </Text>
                 <Text className={`mt-1 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                    {error instanceof Error ? error.message : 'Unknown error'}
+                    {error instanceof Error ? error.message : 'Lỗi không xác định'}
                 </Text>
             </SafeAreaView>
         );
     }
 
     if (filteredArticles.length === 0 && !isLoading) {
-        const emptyTitle = isSearchMode ? 'No results' : 'No posts yet';
+        const emptyTitle = isSearchMode ? 'Không có kết quả' : 'Chưa có bài viết';
         const emptySubtitle = isSearchMode
-            ? 'Try a different search or tab.'
+            ? 'Thử từ khoá hoặc mục khác.'
             : isMyPostsTab
-              ? "You haven't published any posts here yet. Create one with the + button."
+              ? 'Bạn chưa đăng bài nào ở đây. Tạo bài mới bằng nút +.'
               : isBookmarksTab
-                ? "You haven't saved any posts yet. Use the bookmark icon on a post to add it here."
-                : 'Check back later for new stories';
+                ? 'Bạn chưa lưu bài viết nào. Dùng biểu tượng đánh dấu trên bài để lưu tại đây.'
+                : 'Quay lại sau để xem bài viết mới nhé.';
         return (
             <SafeAreaView
                 className={`flex-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}
@@ -404,7 +404,7 @@ export default function BlogScreen() {
                                     isDark ? 'text-slate-400' : 'text-gray-500'
                                 }`}
                             >
-                                Searching…
+                                Đang tìm…
                             </Text>
                         </View>
                     ) : null
@@ -418,9 +418,9 @@ export default function BlogScreen() {
                         tintColor={isDark ? '#E2E8F0' : '#1F2937'}
                     />
                 }
-                // Chừa chỗ cho nút "+" nổi (FloatingCreateButton: 60px + bottom 20) để
-                // card cuối cùng không bị nút che phần meta ("x min read").
-                contentContainerStyle={{ paddingBottom: 104 }}
+                // Chừa chỗ cho nút "+" nổi (đã nâng lên trên vạch home) để card cuối cùng
+                // không bị nút che phần meta ngày đăng / thời lượng đọc.
+                contentContainerStyle={{ paddingBottom: 140 }}
             />
 
             <FloatingCreateButton onPress={() => setShowCreateModal(true)} />

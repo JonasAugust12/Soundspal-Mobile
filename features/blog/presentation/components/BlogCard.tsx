@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { useRouter } from 'expo-router';
-import { ThumbsUp, MessageCircle, Pencil, Bookmark } from 'lucide-react-native';
+import { ThumbsUp, MessageCircle, Pencil, Bookmark, CalendarDays } from 'lucide-react-native';
+import { LoadingImage } from '@/shared/presentation/ui';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 interface BlogCardProps {
@@ -69,7 +70,7 @@ export function BlogCard({
                         className="flex-row items-center gap-1.5 rounded-full border border-purple-500/50 bg-purple-500/10 px-3 py-1.5"
                     >
                         <Pencil size={14} color="#A855F7" strokeWidth={2} />
-                        <Text className="text-sm font-semibold text-purple-600">Edit</Text>
+                        <Text className="text-sm font-semibold text-purple-600">Sửa</Text>
                     </TouchableOpacity>
                 </View>
             ) : showBookmark && onBookmarkPress ? (
@@ -93,18 +94,21 @@ export function BlogCard({
                 <View className="flex-row gap-4">
                     {/* Left side - Content */}
                     <View className="flex-1">
-                        {/* Category tag and metadata row */}
+                        {/* Ngày đăng bài + thời lượng đọc (thay cho hiển thị id topic) */}
                         <View className="flex-row items-center justify-between mb-3">
-                            <View className="px-3 py-1 rounded-full bg-purple-100">
-                                <Text className="text-purple-700 text-xs font-bold uppercase tracking-wider">
-                                    {article.category}
+                            <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full bg-purple-100">
+                                <CalendarDays size={12} color="#7E22CE" strokeWidth={2} />
+                                <Text className="text-purple-700 text-xs font-bold">
+                                    {article.publishedAt}
                                 </Text>
                             </View>
-                            <Text
-                                className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}
-                            >
-                                {article.readTime} min read • {article.publishedAt}
-                            </Text>
+                            {article.readTime ? (
+                                <Text
+                                    className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}
+                                >
+                                    {article.readTime} phút đọc
+                                </Text>
+                            ) : null}
                         </View>
 
                         {/* Title - Larger */}
@@ -131,7 +135,7 @@ export function BlogCard({
                             >
                                 {article.creator_display_name ||
                                     article.creator_username ||
-                                    'TalentLink Author'}
+                                    'Tác giả'}
                             </Text>
 
                             {/* Right: Likes and Comments */}
@@ -169,24 +173,26 @@ export function BlogCard({
                         </View>
                     </View>
 
-                    {/* Right side - Thumbnail */}
-                    {article.thumbnail ? (
-                        <Image
-                            source={{ uri: article.thumbnail }}
-                            className="w-24 h-24 rounded-lg"
-                            resizeMode="cover"
-                        />
-                    ) : (
-                        <View
-                            className={`w-24 h-24 rounded-lg ${
-                                isDark ? 'bg-slate-800' : 'bg-gray-100'
-                            } justify-center items-center`}
-                        >
-                            <Text className={isDark ? 'text-slate-500' : 'text-gray-400'}>
-                                No image
-                            </Text>
-                        </View>
-                    )}
+                    {/* Right side - Thumbnail (shimmer khi ảnh đang tải) */}
+                    <LoadingImage
+                        uri={article.thumbnail}
+                        style={{ width: 96, height: 96 }}
+                        borderRadius={8}
+                        shimmerBase={isDark ? '#1E293B' : '#E5E7EB'}
+                        fallback={
+                            <View
+                                className={`flex-1 ${
+                                    isDark ? 'bg-slate-800' : 'bg-gray-100'
+                                } justify-center items-center`}
+                            >
+                                <Text
+                                    className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}
+                                >
+                                    Chưa có ảnh
+                                </Text>
+                            </View>
+                        }
+                    />
                 </View>
             </TouchableOpacity>
         </View>

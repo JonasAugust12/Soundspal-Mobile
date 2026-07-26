@@ -58,7 +58,7 @@ export default function BlogDetailScreen() {
 
     const handleBookmarkPress = useCallback(() => {
         if (!user?.id || !postId) {
-            showAppDialog('Sign in required', 'Log in to save posts to your bookmarks.');
+            showAppDialog('Cần đăng nhập', 'Đăng nhập để lưu bài viết vào mục đã lưu.');
             return;
         }
         if (isArticleBookmarked) {

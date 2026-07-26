@@ -15,6 +15,7 @@ import {
 } from '@/features/challenge/presentation/hooks/useChallengeApi';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { filterLeaderboardEntries } from '@/features/challenge/domain/utils/challenge';
 import { type BeatEntry } from '@/features/challenge/domain/entities/challenge.type';
 
 export default function LeaderboardScreen() {
@@ -32,7 +33,8 @@ export default function LeaderboardScreen() {
     }, [stopEntry]);
 
     const beat = beatData;
-    const entries = leaderboardData?.entries || [];
+    // Ẩn entry chấm điểm lỗi (scoring_status === 'failed') khỏi BXH — giống web.
+    const entries = filterLeaderboardEntries(leaderboardData?.entries || []);
 
     return (
         <View className="flex-1 bg-white">

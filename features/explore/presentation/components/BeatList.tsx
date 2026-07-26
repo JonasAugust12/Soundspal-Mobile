@@ -7,6 +7,7 @@ import {
     useGetBeats,
     useDeleteBeat,
 } from '@/features/challenge/presentation/hooks/useChallengeApi';
+import { BeatBookmarkButton } from '@/features/challenge/presentation/components/BeatBookmarkButton';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { ConfirmModal } from '@/shared/presentation/ui/ConfirmModal';
@@ -113,6 +114,7 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
                             }
                             showDelete={isOwner}
                             onDelete={() => setConfirmTarget(beat)}
+                            bookmarkSlot={<BeatBookmarkButton beat={beat} />}
                         />
                     );
                 })}

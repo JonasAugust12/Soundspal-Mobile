@@ -5,19 +5,20 @@ import type {
     ApiBookmarkedPost,
 } from '@/features/blog/domain/entities/blog.type';
 
-function formatPublishedLabel(publishedAt?: string): string {
-    if (!publishedAt) return 'Recently';
-    const date = new Date(publishedAt);
-    if (Number.isNaN(date.getTime())) return 'Recently';
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return `${Math.floor(diffDays / 30)} months ago`;
+/**
+ * Ngày đăng bài dạng tuyệt đối "dd/MM/yyyy" (vi-VN). Thay cho việc hiển thị id/topic_id
+ * thô trên thẻ — người dùng cần biết bài đăng ngày nào.
+ */
+function formatPublishedLabel(publishedAt?: string, createdAt?: string): string {
+    const source = publishedAt || createdAt;
+    if (!source) return 'Chưa xuất bản';
+    const date = new Date(source);
+    if (Number.isNaN(date.getTime())) return 'Chưa xuất bản';
+    return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
 }
 
 export function mapBlogItemToBlogPost(item: BlogItem): BlogPost {
@@ -33,14 +34,14 @@ export function mapBlogItemToBlogPost(item: BlogItem): BlogPost {
         ...item,
         media,
         excerpt: item.short_description,
-        category: item.topic_id?.toUpperCase() || 'BLOG',
+        category: 'BÀI VIẾT',
         thumbnail,
         readTime: item.read_time,
-        publishedAt: formatPublishedLabel(item.published_at),
+        publishedAt: formatPublishedLabel(item.published_at, item.created_at),
         likes: item.upvote_count,
         comments: item.comment_count,
         creator_username: item.author_id,
-        creator_display_name: 'Author',
+        creator_display_name: 'Tác giả',
         creator_role: 'user',
     };
 }

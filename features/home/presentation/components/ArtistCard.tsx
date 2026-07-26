@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ImageSourcePropType, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ImageSourcePropType, StyleSheet } from 'react-native';
 import { MapPin, Mic2, Disc2, Building2 } from 'lucide-react-native';
 import type { UserRole } from '@/features/explore/domain/entities/search.type';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
+import { LoadingImage } from '@/shared/presentation/ui';
 
 export type ArtistItem = {
     id: string;
@@ -31,7 +32,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
             case 'singer':
                 return {
                     icon: Mic2,
-                    text: 'Singer',
+                    text: 'Ca sĩ',
                     className: 'bg-purple-100',
                     textColor: 'text-purple-600',
                     iconColor: '#7C3AED',
@@ -39,7 +40,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
             case 'producer':
                 return {
                     icon: Disc2,
-                    text: 'Producer',
+                    text: 'Nhà sản xuất',
                     className: 'bg-blue-100',
                     textColor: 'text-blue-600',
                     iconColor: '#2563EB',
@@ -47,7 +48,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
             case 'venue':
                 return {
                     icon: Building2,
-                    text: 'Venue',
+                    text: 'Địa điểm',
                     className: 'bg-red-100',
                     textColor: 'text-red-600',
                     iconColor: '#DC2626',
@@ -75,7 +76,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
             >
                 {/* Artist Image */}
                 <View className="w-full h-[140px] relative">
-                    <Image source={item.image} className="w-full h-full" resizeMode="cover" />
+                    <LoadingImage source={item.image} style={StyleSheet.absoluteFill} />
 
                     {/* Role Badge on Image */}
                     {roleBadge && (

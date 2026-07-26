@@ -10,13 +10,10 @@ import {
 } from 'react-native';
 import { ThumbsUp, Play, Square, Clock, Trash2 } from 'lucide-react-native';
 import { type BeatEntry } from '@/features/challenge/domain/entities/challenge.type';
-import {
-    challengeApi,
-    useDeleteEntry,
-} from '@/features/challenge/presentation/hooks/useChallengeApi';
+import { useDeleteEntry } from '@/features/challenge/presentation/hooks/useChallengeApi';
+import { useEntryVotes } from '@/features/challenge/presentation/hooks/useEntryVotes';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
 import { ConfirmModal } from '@/shared/presentation/ui/ConfirmModal';
-import Toast from 'react-native-toast-message';
 
 interface RankListProps {
     remainingEntries: BeatEntry[];
@@ -31,8 +28,7 @@ export function RankList({ remainingEntries, onEntryPress, currentUserId }: Rank
     const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
     const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
 
-    const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
-    const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+    const { isLiked, voteCount, toggle: handleVote } = useEntryVotes();
     const [confirmTarget, setConfirmTarget] = useState<BeatEntry | null>(null);
 
     const deleteEntryMutation = useDeleteEntry();
@@ -43,33 +39,6 @@ export function RankList({ remainingEntries, onEntryPress, currentUserId }: Rank
             stopEntry();
         };
     }, [stopEntry]);
-
-    const handleVote = async (entry: BeatEntry) => {
-        const alreadyVoted = votedIds.has(entry.id);
-        try {
-            if (alreadyVoted) {
-                await challengeApi.removeVote(entry.id);
-                setVotedIds((prev) => {
-                    const s = new Set(prev);
-                    s.delete(entry.id);
-                    return s;
-                });
-                setVoteCounts((prev) => ({
-                    ...prev,
-                    [entry.id]: (prev[entry.id] ?? entry.vote_count) - 1,
-                }));
-            } else {
-                await challengeApi.voteEntry(entry.id, 'up');
-                setVotedIds((prev) => new Set(prev).add(entry.id));
-                setVoteCounts((prev) => ({
-                    ...prev,
-                    [entry.id]: (prev[entry.id] ?? entry.vote_count) + 1,
-                }));
-            }
-        } catch {
-            Toast.show({ type: 'error', text1: 'Lỗi', text2: 'Không thể bình chọn.' });
-        }
-    };
 
     const handleDeleteConfirm = async () => {
         if (!confirmTarget) return;
@@ -94,8 +63,8 @@ export function RankList({ remainingEntries, onEntryPress, currentUserId }: Rank
                     const isFailed = item.scoring_status === 'failed';
                     const isScored =
                         item.scoring_status === 'scored' || item.scoring_status === 'completed';
-                    const isVoted = votedIds.has(item.id);
-                    const voteCount = voteCounts[item.id] ?? item.vote_count;
+                    const isVoted = isLiked(item);
+                    const itemVoteCount = voteCount(item);
                     const isThisPlaying = currentEntry?.id === item.id && isEntryPlaying;
                     const isThisLoading = currentEntry?.id === item.id && isEntryLoading;
                     const isOwner = !!currentUserId && item.user_id === currentUserId;
@@ -229,7 +198,7 @@ export function RankList({ remainingEntries, onEntryPress, currentUserId }: Rank
                                             <Text
                                                 className={`text-[9px] font-black mt-0.5 ${isVoted ? 'text-[#f471b7]' : 'text-gray-500'}`}
                                             >
-                                                {voteCount}
+                                                {itemVoteCount}
                                             </Text>
                                         </TouchableOpacity>
                                     )}

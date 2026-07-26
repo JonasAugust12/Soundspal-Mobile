@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useColorScheme } from 'nativewind';
+import { LoadingImage } from '@/shared/presentation/ui';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 interface RelatedArticlesProps {
@@ -19,7 +20,7 @@ export function RelatedArticles({ articles, onArticlePress }: RelatedArticlesPro
             <Text
                 className={`text-lg font-bold mb-4 px-4 ${isDark ? 'text-white' : 'text-slate-900'}`}
             >
-                Continue Learning
+                Bài viết liên quan
             </Text>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4">
@@ -34,23 +35,24 @@ export function RelatedArticles({ articles, onArticlePress }: RelatedArticlesPro
                                     : 'bg-white border-gray-200'
                             }`}
                         >
-                            {article.thumbnail ? (
-                                <Image
-                                    source={{ uri: article.thumbnail }}
-                                    className="w-full h-32"
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <View
-                                    className={`w-full h-32 items-center justify-center ${
-                                        isDark ? 'bg-slate-700' : 'bg-gray-100'
-                                    }`}
-                                >
-                                    <Text className={isDark ? 'text-slate-500' : 'text-gray-400'}>
-                                        No image
-                                    </Text>
-                                </View>
-                            )}
+                            <LoadingImage
+                                uri={article.thumbnail}
+                                style={{ width: 256, height: 128 }}
+                                shimmerBase={isDark ? '#334155' : '#E5E7EB'}
+                                fallback={
+                                    <View
+                                        className={`flex-1 items-center justify-center ${
+                                            isDark ? 'bg-slate-700' : 'bg-gray-100'
+                                        }`}
+                                    >
+                                        <Text
+                                            className={isDark ? 'text-slate-500' : 'text-gray-400'}
+                                        >
+                                            Chưa có ảnh
+                                        </Text>
+                                    </View>
+                                }
+                            />
 
                             {/* Content */}
                             <View className="p-3">
@@ -74,7 +76,7 @@ export function RelatedArticles({ articles, onArticlePress }: RelatedArticlesPro
                                 <Text
                                     className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
                                 >
-                                    {article.readTime} min read
+                                    {article.readTime} phút đọc
                                 </Text>
                             </View>
                         </TouchableOpacity>

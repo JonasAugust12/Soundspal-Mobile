@@ -40,6 +40,8 @@ import {
 import { useGetCurrentUser, userKeys } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
+import { PremiumBadge } from '@/shared/presentation/ui';
+import { getPremiumState } from '@/shared/domain/utils/premium';
 import {
     DEFAULT_BILLING_PERIOD,
     PAYMENT_STATUS_MAX_POLLS,
@@ -52,7 +54,6 @@ import {
     getPaymentStatusDescription,
     getPaymentStatusLabel,
     isPaymentTerminal,
-    isPremiumActive,
     normalizePaymentStatus,
     normalizePayOSOrderCode,
     parsePaymentHistoryItems,
@@ -206,11 +207,14 @@ export default function PremiumPaymentScreen() {
     // theo doc). Fallback về tier cũ khi backend chưa trả 2 field mới.
     const tier = String(currentUser?.tier || user?.tier || 'free').toLowerCase();
     const hasPremiumFlags = currentUser?.is_premium !== undefined;
-    const isPremium = hasPremiumFlags
-        ? isPremiumActive(currentUser?.is_premium, currentUser?.premium_expired_at)
-        : tier === 'premium';
+    const premiumState = hasPremiumFlags
+        ? getPremiumState(currentUser)
+        : tier === 'premium'
+          ? 'active'
+          : 'none';
+    const isPremium = premiumState === 'active';
     // is_premium=true nhưng đã quá hạn → hết hạn, hiện CTA gia hạn.
-    const isPremiumExpired = hasPremiumFlags ? !!currentUser?.is_premium && !isPremium : false;
+    const isPremiumExpired = premiumState === 'expired';
     const expiresAt = formatDate(
         currentUser?.premium_expired_at ||
             currentUser?.subscription_expires_at ||
@@ -422,8 +426,9 @@ export default function PremiumPaymentScreen() {
                 'Hệ thống đang kích hoạt Premium cho tài khoản của bạn.',
             );
             // Re-fetch profile để nhận is_premium/premium_expired_at mới (webhook set
-            // bất đồng bộ) + làm mới lịch sử giao dịch.
-            queryClient.invalidateQueries({ queryKey: userKeys.current() });
+            // bất đồng bộ) + làm mới lịch sử giao dịch. Invalidate cả nhánh `users` vì
+            // huy hiệu Premium còn đọc từ cache hồ sơ theo username, không chỉ /users/me.
+            queryClient.invalidateQueries({ queryKey: userKeys.all });
             queryClient.invalidateQueries({ queryKey: paymentKeys.all });
             void refetchCurrentUser();
             return;
@@ -475,14 +480,18 @@ export default function PremiumPaymentScreen() {
                         style={styles.heroGradient}
                     >
                         <View className="flex-row items-center justify-between">
-                            <View className="bg-white/15 px-3 py-1.5 rounded-full">
-                                <Text className="text-white text-xs font-bold">
-                                    {isPremium
-                                        ? 'PREMIUM ACTIVE'
-                                        : isPremiumExpired
-                                          ? 'PREMIUM HẾT HẠN'
-                                          : 'FREE PLAN'}
-                                </Text>
+                            <View className="flex-row items-center gap-2">
+                                <View className="bg-white/15 px-3 py-1.5 rounded-full">
+                                    <Text className="text-white text-xs font-bold">
+                                        {isPremium
+                                            ? 'PREMIUM ACTIVE'
+                                            : isPremiumExpired
+                                              ? 'PREMIUM HẾT HẠN'
+                                              : 'FREE PLAN'}
+                                    </Text>
+                                </View>
+                                {/* Huy hiệu thật — đúng thứ sẽ hiện trên hồ sơ và thẻ tìm kiếm. */}
+                                {isPremium && <PremiumBadge size="sm" />}
                             </View>
                             <Text className="text-white/80 text-sm">
                                 {selectedPlan.durationDays} ngày
@@ -585,6 +594,11 @@ export default function PremiumPaymentScreen() {
 
                 <View className="mx-5 mt-5 bg-white rounded-2xl p-5" style={styles.sectionCard}>
                     <Text className="text-lg font-black text-gray-900">Quyền lợi Premium</Text>
+                    {isPremiumExpired && (
+                        <Text className="text-sm text-amber-700 mt-1 leading-5">
+                            Gói đã hết hạn nên các quyền lợi dưới đây đang tắt — gia hạn để bật lại.
+                        </Text>
+                    )}
                     <View className="mt-4 gap-4">
                         {premiumBenefits.map((benefit) => {
                             const Icon = benefit.icon;
@@ -594,9 +608,20 @@ export default function PremiumPaymentScreen() {
                                         <Icon size={20} color="#7C3BED" />
                                     </View>
                                     <View className="flex-1">
-                                        <Text className="text-base font-bold text-gray-900">
-                                            {benefit.title}
-                                        </Text>
+                                        <View className="flex-row items-center gap-2 flex-wrap">
+                                            <Text className="text-base font-bold text-gray-900">
+                                                {benefit.title}
+                                            </Text>
+                                            {/* Gói còn hạn → quyền lợi đã bật thật, giống thẻ /billing của web. */}
+                                            {isPremium && (
+                                                <View className="flex-row items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full">
+                                                    <CheckCircle2 size={12} color="#059669" />
+                                                    <Text className="text-[10px] font-bold text-emerald-700">
+                                                        Đang bật
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </View>
                                         <Text className="text-sm text-gray-600 mt-0.5 leading-5">
                                             {benefit.description}
                                         </Text>

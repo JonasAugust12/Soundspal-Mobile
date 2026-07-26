@@ -8,6 +8,7 @@ import {
 } from '@/features/challenge/presentation/hooks/useChallengeApi';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
 import { ConfirmModal } from '@/shared/presentation/ui/ConfirmModal';
+import { filterLeaderboardEntries } from '@/features/challenge/domain/utils/challenge';
 import { type BeatEntry } from '@/features/challenge/domain/entities/challenge.type';
 
 interface TopEntriesProps {
@@ -18,9 +19,9 @@ interface TopEntriesProps {
 
 export function TopEntries({ beatId, currentUserId, onEntryPress }: TopEntriesProps) {
     const router = useRouter();
-    // Fetch top 5 including unscored entries
+    // Fetch top 5 including unscored entries; ẩn entry chấm điểm lỗi khỏi preview.
     const { data } = useGetLeaderboard(beatId, 5, 0, true);
-    const entries = data?.entries || [];
+    const entries = filterLeaderboardEntries(data?.entries || []);
 
     const playEntry = useAudioStore((s) => s.playEntry);
     const stopEntry = useAudioStore((s) => s.stopEntry);

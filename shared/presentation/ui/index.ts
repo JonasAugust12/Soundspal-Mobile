@@ -14,6 +14,8 @@ export type { AppDialogProps } from './AppDialog';
 export { showAppDialog, AppDialogHost } from './appDialogService';
 export type { AppDialogButton } from './appDialogService';
 export { Shimmer } from './Shimmer';
+export { LoadingImage } from './LoadingImage';
+export { PremiumBadge } from './PremiumBadge';
 export { InitialsAvatar } from './InitialsAvatar';
 export { LoadingOverlay } from './LoadingOverlay';
 export { KeyboardAwareModalOverlay } from './KeyboardAwareModal';

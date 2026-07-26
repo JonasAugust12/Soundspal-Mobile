@@ -110,6 +110,10 @@ export interface UserProfile {
     is_featured: boolean;
     created_at: string;
     updated_at: string;
+    // Premium — search-service trả kèm để thẻ kết quả gắn huy hiệu (giống web).
+    // Chỉ hiện huy hiệu khi is_premium && premium_expired_at còn ở tương lai.
+    is_premium?: boolean;
+    premium_expired_at?: string | null;
 }
 
 export interface SearchUsersRequest {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
     View,
     Text,
@@ -12,8 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ThumbsUp, Play, Square } from 'lucide-react-native';
 import { type BeatEntry } from '@/features/challenge/domain/entities/challenge.type';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
-import { challengeApi } from '@/features/challenge/presentation/hooks/useChallengeApi';
-import Toast from 'react-native-toast-message';
+import { useEntryVotes } from '@/features/challenge/presentation/hooks/useEntryVotes';
 
 interface PodiumProps {
     topEntries: BeatEntry[];
@@ -31,41 +30,13 @@ export function Podium({ topEntries, onEntryPress }: PodiumProps) {
     const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
     const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
 
-    const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
-    const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+    const { isLiked, voteCount, toggle: handleVote } = useEntryVotes();
 
     useEffect(() => {
         return () => {
             stopEntry();
         };
     }, [stopEntry]);
-
-    const handleVote = async (entry: BeatEntry) => {
-        const alreadyVoted = votedIds.has(entry.id);
-        try {
-            if (alreadyVoted) {
-                await challengeApi.removeVote(entry.id);
-                setVotedIds((prev) => {
-                    const s = new Set(prev);
-                    s.delete(entry.id);
-                    return s;
-                });
-                setVoteCounts((prev) => ({
-                    ...prev,
-                    [entry.id]: (prev[entry.id] ?? entry.vote_count) - 1,
-                }));
-            } else {
-                await challengeApi.voteEntry(entry.id, 'up');
-                setVotedIds((prev) => new Set(prev).add(entry.id));
-                setVoteCounts((prev) => ({
-                    ...prev,
-                    [entry.id]: (prev[entry.id] ?? entry.vote_count) + 1,
-                }));
-            }
-        } catch {
-            Toast.show({ type: 'error', text1: 'Lỗi', text2: 'Không thể bình chọn.' });
-        }
-    };
 
     const getAvatar = (entry?: BeatEntry) =>
         entry?.avatar_url ||
@@ -98,8 +69,8 @@ export function Podium({ topEntries, onEntryPress }: PodiumProps) {
     };
 
     const VoteChip = ({ entry, light = false }: { entry: BeatEntry; light?: boolean }) => {
-        const isVoted = votedIds.has(entry.id);
-        const count = voteCounts[entry.id] ?? entry.vote_count;
+        const isVoted = isLiked(entry);
+        const count = voteCount(entry);
         return (
             <TouchableOpacity
                 onPress={() => handleVote(entry)}

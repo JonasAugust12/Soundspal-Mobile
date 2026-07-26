@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, User, Activity, Clock, Plus, Trash2 } from 'lucide-react-native';
+import { LoadingImage } from '@/shared/presentation/ui';
 
 export type BeatCardProps = {
     title: string;
@@ -18,6 +19,8 @@ export type BeatCardProps = {
     onRecord?: () => void;
     onDelete?: () => void;
     showDelete?: boolean;
+    /** Nút lưu/bỏ lưu (overlay góc phải ảnh) — truyền từ list để giữ card thuần trình bày. */
+    bookmarkSlot?: React.ReactNode;
 };
 
 export function BeatCard({
@@ -35,6 +38,7 @@ export function BeatCard({
     onRecord,
     onDelete,
     showDelete = false,
+    bookmarkSlot,
 }: BeatCardProps) {
     const getTagColorInfo = () => {
         switch (tagColorType) {
@@ -69,10 +73,10 @@ export function BeatCard({
                     activeOpacity={0.9}
                     onPress={onPlayAudio}
                 >
-                    <Image
-                        source={{ uri: imageUrl }}
-                        className="w-full h-full"
-                        resizeMode="cover"
+                    <LoadingImage
+                        uri={imageUrl}
+                        style={{ width: 128, height: 128 }}
+                        borderRadius={12}
                     />
                     {/* Play Icon Overlay */}
                     <View className="absolute inset-0 bg-black/20 items-center justify-center">
@@ -85,6 +89,11 @@ export function BeatCard({
                             />
                         </View>
                     </View>
+
+                    {/* Nút lưu — góc phải trên ảnh */}
+                    {bookmarkSlot ? (
+                        <View className="absolute top-1.5 right-1.5">{bookmarkSlot}</View>
+                    ) : null}
                 </TouchableOpacity>
 
                 {/* Info Container */}

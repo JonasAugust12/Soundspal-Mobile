@@ -26,6 +26,7 @@ import {
     TrendingUp,
     Play,
     Pause,
+    Bookmark,
 } from 'lucide-react-native';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
@@ -34,12 +35,14 @@ import {
     useGetMyEntries,
     useDeleteBeat,
     useDeleteEntry,
+    useGetBookmarkedBeats,
 } from '@/features/challenge/presentation/hooks/useChallengeApi';
 import type { Beat, BeatEntry } from '@/features/challenge/domain/entities/challenge.type';
 import { ScoreDetailModal } from '@/features/challenge/presentation/components/leaderboard';
+import { BeatBookmarkButton } from '@/features/challenge/presentation/components/BeatBookmarkButton';
 import { MiniPlayer } from '@/features/explore/presentation/components';
 
-type Tab = 'beats' | 'entries';
+type Tab = 'beats' | 'entries' | 'saved';
 
 function formatDuration(seconds: number): string {
     const m = Math.floor(seconds / 60);
@@ -235,24 +238,102 @@ function EntryCard({ entry, onDelete, onPress, deleting }: EntryCardProps) {
     );
 }
 
+interface SavedBeatCardProps {
+    beat: Beat;
+    onPress: (beat: Beat) => void;
+}
+
+/** Thẻ beat đã lưu — bấm mở chi tiết; nút tim để bỏ lưu (refetch tự xoá khỏi list). */
+function SavedBeatCard({ beat, onPress }: SavedBeatCardProps) {
+    const playBeat = useAudioStore((s) => s.playBeat);
+    const togglePlay = useAudioStore((s) => s.togglePlay);
+    const currentBeat = useAudioStore((s) => s.currentBeat);
+    const isPlaying = useAudioStore((s) => s.isPlaying);
+    const isLoading = useAudioStore((s) => s.isLoading);
+
+    const isCurrent = currentBeat?.id === beat.id && !useAudioStore.getState().currentEntry;
+
+    const handlePlay = () => {
+        if (isCurrent) {
+            togglePlay();
+        } else {
+            playBeat(beat);
+        }
+    };
+
+    return (
+        <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => onPress(beat)}>
+            <TouchableOpacity style={styles.cardCover} activeOpacity={0.9} onPress={handlePlay}>
+                {beat.cover_image_url ? (
+                    <Image source={{ uri: beat.cover_image_url }} style={styles.coverImage} />
+                ) : (
+                    <View style={styles.coverFallback}>
+                        <Music4 size={28} color="#7C3AED" />
+                    </View>
+                )}
+                <View style={styles.playOverlay}>
+                    {isCurrent && isLoading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : isCurrent && isPlaying ? (
+                        <Pause size={18} color="#fff" fill="#fff" />
+                    ) : (
+                        <Play size={18} color="#fff" fill="#fff" style={{ marginLeft: 2 }} />
+                    )}
+                </View>
+                {beat.genre ? (
+                    <View style={styles.genreBadge}>
+                        <Text style={styles.genreBadgeText}>{beat.genre}</Text>
+                    </View>
+                ) : null}
+            </TouchableOpacity>
+
+            <View style={styles.cardBody}>
+                <Text style={styles.cardTitle} numberOfLines={1}>
+                    {beat.title}
+                </Text>
+                <Text style={styles.pendingText} numberOfLines={1}>
+                    {beat.creator_display_name || beat.creator_username}
+                </Text>
+                <View style={styles.cardFooter}>
+                    <View style={styles.entryCountBadge}>
+                        <Mic2 size={11} color="#7C3AED" />
+                        <Text style={styles.entryCountText}>{beat.entry_count} bản thu</Text>
+                    </View>
+                    <Text style={styles.dateText}>{formatDate(beat.created_at)}</Text>
+                </View>
+            </View>
+
+            <View style={styles.savedAction}>
+                <BeatBookmarkButton beat={beat} />
+            </View>
+        </TouchableOpacity>
+    );
+}
+
 function EmptyState({ tab }: { tab: Tab }) {
+    const config = {
+        beats: {
+            icon: <Music4 size={36} color="#C4B5FD" />,
+            title: 'Chưa có beat nào',
+            subtitle: 'Tạo beat đầu tiên của bạn để bắt đầu!',
+        },
+        entries: {
+            icon: <MicVocal size={36} color="#C4B5FD" />,
+            title: 'Chưa có entry nào',
+            subtitle: 'Tham gia thử thách để ghi lại entry đầu tiên!',
+        },
+        saved: {
+            icon: <Bookmark size={36} color="#C4B5FD" />,
+            title: 'Chưa có thử thách đã lưu',
+            subtitle: 'Nhấn biểu tượng lưu trên thử thách để lưu và xem lại tại đây.',
+        },
+    }[tab];
+
     return (
         <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconWrap}>
-                {tab === 'beats' ? (
-                    <Music4 size={36} color="#C4B5FD" />
-                ) : (
-                    <MicVocal size={36} color="#C4B5FD" />
-                )}
-            </View>
-            <Text style={styles.emptyTitle}>
-                {tab === 'beats' ? 'Chưa có beat nào' : 'Chưa có entry nào'}
-            </Text>
-            <Text style={styles.emptySubtitle}>
-                {tab === 'beats'
-                    ? 'Tạo beat đầu tiên của bạn để bắt đầu!'
-                    : 'Tham gia thử thách để ghi lại entry đầu tiên!'}
-            </Text>
+            <View style={styles.emptyIconWrap}>{config.icon}</View>
+            <Text style={styles.emptyTitle}>{config.title}</Text>
+            <Text style={styles.emptySubtitle}>{config.subtitle}</Text>
         </View>
     );
 }
@@ -314,11 +395,22 @@ export default function MyContentScreen() {
         isRefetching: refetchingEntries,
     } = useGetMyEntries({ page_size: 50 });
 
+    const {
+        data: savedBeatsData,
+        isLoading: loadingSaved,
+        refetch: refetchSaved,
+        isRefetching: refetchingSaved,
+    } = useGetBookmarkedBeats({ page_size: 50 });
+
     const deleteBeatMutation = useDeleteBeat();
     const deleteEntryMutation = useDeleteEntry();
 
     const beats = myBeatsData?.beats || [];
     const entries = myEntriesData?.entries || [];
+    const savedBeats = savedBeatsData?.beats || [];
+
+    const openBeatDetail = (beat: Beat) =>
+        router.push({ pathname: '/(challenge)/beat-detail', params: { id: beat.id } });
 
     const avatarUrl = user?.avatar_url;
     const displayName = user?.display_name || user?.username || 'Người dùng';
@@ -371,9 +463,24 @@ export default function MyContentScreen() {
         );
     };
 
-    const isLoading = activeTab === 'beats' ? loadingBeats : loadingEntries;
-    const isRefreshing = activeTab === 'beats' ? refetchingBeats : refetchingEntries;
-    const onRefresh = activeTab === 'beats' ? refetchBeats : refetchEntries;
+    const isLoading =
+        activeTab === 'beats'
+            ? loadingBeats
+            : activeTab === 'entries'
+              ? loadingEntries
+              : loadingSaved;
+    const isRefreshing =
+        activeTab === 'beats'
+            ? refetchingBeats
+            : activeTab === 'entries'
+              ? refetchingEntries
+              : refetchingSaved;
+    const onRefresh =
+        activeTab === 'beats'
+            ? refetchBeats
+            : activeTab === 'entries'
+              ? refetchEntries
+              : refetchSaved;
 
     return (
         <View style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -464,7 +571,20 @@ export default function MyContentScreen() {
                                 activeTab === 'entries' && styles.tabTextActive,
                             ]}
                         >
-                            Bản thu của tôi
+                            Bản thu
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === 'saved' && styles.tabActive]}
+                        onPress={() => setActiveTab('saved')}
+                        activeOpacity={0.8}
+                    >
+                        <Bookmark size={16} color={activeTab === 'saved' ? '#7C3AED' : '#9CA3AF'} />
+                        <Text
+                            style={[styles.tabText, activeTab === 'saved' && styles.tabTextActive]}
+                        >
+                            Đã lưu
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -502,17 +622,25 @@ export default function MyContentScreen() {
                             />
                         ))
                     )
-                ) : entries.length === 0 ? (
-                    <EmptyState tab="entries" />
+                ) : activeTab === 'entries' ? (
+                    entries.length === 0 ? (
+                        <EmptyState tab="entries" />
+                    ) : (
+                        entries.map((entry) => (
+                            <EntryCard
+                                key={entry.id}
+                                entry={entry}
+                                onDelete={handleDeleteEntry}
+                                onPress={setSelectedEntry}
+                                deleting={deletingEntryId === entry.id}
+                            />
+                        ))
+                    )
+                ) : savedBeats.length === 0 ? (
+                    <EmptyState tab="saved" />
                 ) : (
-                    entries.map((entry) => (
-                        <EntryCard
-                            key={entry.id}
-                            entry={entry}
-                            onDelete={handleDeleteEntry}
-                            onPress={setSelectedEntry}
-                            deleting={deletingEntryId === entry.id}
-                        />
+                    savedBeats.map((beat) => (
+                        <SavedBeatCard key={beat.id} beat={beat} onPress={openBeatDetail} />
                     ))
                 )}
             </ScrollView>
@@ -808,6 +936,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF5F5',
         borderLeftWidth: 1,
         borderLeftColor: '#FEE2E2',
+    },
+    // Saved (unbookmark) action column
+    savedAction: {
+        width: 56,
+        height: 80,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
     // Empty

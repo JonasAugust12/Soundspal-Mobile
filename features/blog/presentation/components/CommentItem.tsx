@@ -115,7 +115,7 @@ function CommentItemComponent({
                                 onPress={saveEdit}
                                 className="px-3 py-1.5 bg-purple-600 rounded-lg"
                             >
-                                <Text className="text-white text-sm font-semibold">Save</Text>
+                                <Text className="text-white text-sm font-semibold">Lưu</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => setEditing(false)}
@@ -124,7 +124,7 @@ function CommentItemComponent({
                                 <Text
                                     className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
                                 >
-                                    Cancel
+                                    Huỷ
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -161,7 +161,7 @@ function CommentItemComponent({
                                 isDark ? 'text-gray-400' : 'text-gray-600'
                             }`}
                         >
-                            Reply
+                            Trả lời
                         </Text>
                     </TouchableOpacity>
 
@@ -178,7 +178,7 @@ function CommentItemComponent({
                                         isDark ? 'text-slate-400' : 'text-slate-600'
                                     }`}
                                 >
-                                    Edit
+                                    Sửa
                                 </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
@@ -187,7 +187,7 @@ function CommentItemComponent({
                                 hitSlop={8}
                             >
                                 <Trash2 size={16} color="#DC2626" />
-                                <Text className="text-sm text-red-600">Delete</Text>
+                                <Text className="text-sm text-red-600">Xoá</Text>
                             </TouchableOpacity>
                         </>
                     ) : null}

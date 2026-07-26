@@ -5,13 +5,19 @@ export interface Beat {
     cover_image_url: string;
     created_at: string;
     creator_avatar_url?: string;
+    creator_display_name?: string;
     creator_id: string;
     creator_username: string;
     description: string;
     duration_seconds: number;
     entry_count: number;
     genre: string;
+    // Multi-genre: ưu tiên dùng cho tag UI, fallback về `genre` (legacy = genres[0]).
+    genres?: string[];
     is_active: boolean;
+    // Chỉ có khi request kèm Bearer token; thiếu field = coi như chưa đăng nhập
+    // (KHÔNG suy ra false). Xem CHALLENGE_BOOKMARK_API §is_bookmarked behavior.
+    is_bookmarked?: boolean;
     key_signature: string;
     title: string;
     updated_at: string;
@@ -56,6 +62,25 @@ export interface BeatEntry {
     username: string;
     avatar_url?: string;
     vote_count: number;
+    // Chỉ có khi đã đăng nhập — thiếu field = chưa đăng nhập (giống is_bookmarked).
+    is_liked?: boolean;
+}
+
+export interface Genre {
+    id: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface GetGenresResponse {
+    genres: Genre[];
+    total: number;
+}
+
+export interface GetBookmarkedBeatsParams {
+    page?: number;
+    page_size?: number;
 }
 
 export interface GetLeaderboardResponse {

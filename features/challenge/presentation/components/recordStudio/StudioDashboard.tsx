@@ -6,29 +6,47 @@ import {
     StyleSheet,
     Platform,
     ActivityIndicator,
+    Linking,
 } from 'react-native';
-import {
-    RotateCcw,
-    Check,
-    BarChart2,
-    Clock,
-    FileText,
-    Play,
-    Square,
-    Mic,
-} from 'lucide-react-native';
+import { RotateCcw, Check, Play, Square, Mic, Music2, Upload, Download } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { challengeApi } from '@/features/challenge/presentation/hooks/useChallengeApi';
-import Toast from 'react-native-toast-message';
 import { Audio } from 'expo-av';
+import * as DocumentPicker from 'expo-document-picker';
+import Toast from 'react-native-toast-message';
 import { useRouter } from 'expo-router';
-import type { Beat } from '@/features/challenge/domain/entities/challenge.type';
+import { challengeApi } from '@/features/challenge/presentation/hooks/useChallengeApi';
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
+import type { Beat } from '@/features/challenge/domain/entities/challenge.type';
+import {
+    getRecordingFileName,
+    getUploadAudioExtension,
+    isAcceptedUploadAudioFile,
+    type RecordingMode,
+} from '@/features/challenge/domain/utils/recording';
 
 interface StudioDashboardProps {
     beat?: Beat;
     onDurationUpdate?: (durationMillis: number) => void;
     onRecordingStateChange?: (isRecording: boolean) => void;
+}
+
+/** MIME đoán theo đuôi file để đính vào FormData (backend đọc bằng đuôi, không bắt buộc chuẩn). */
+function guessAudioMime(extension: string): string {
+    switch (extension) {
+        case 'mp3':
+            return 'audio/mpeg';
+        case 'wav':
+            return 'audio/wav';
+        case 'flac':
+            return 'audio/flac';
+        case 'ogg':
+            return 'audio/ogg';
+        case 'aac':
+            return 'audio/aac';
+        case 'm4a':
+        default:
+            return 'audio/m4a';
+    }
 }
 
 export const StudioDashboard = memo(function StudioDashboard({
@@ -41,10 +59,13 @@ export const StudioDashboard = memo(function StudioDashboard({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPreparingRecord, setIsPreparingRecord] = useState(false);
 
-    const [recordURI, setRecordURI] = useState<string | null>(null);
+    // Chế độ thu: hát trên nền beat vs hát chay — giống toggle with-beat/no-beat của web.
+    const [mode, setMode] = useState<RecordingMode>('with-beat');
+    // Bản thu/lên hiện tại: uri + tên file + mime để nộp. Có thể đến từ mic hoặc upload.
+    const [take, setTake] = useState<{ uri: string; name: string; type: string } | null>(null);
     const [isRecording, setIsRecording] = useState(false);
 
-    // Audio Ref Management to prevent overlaps
+    // Audio refs để tránh chồng tiếng
     const backgroundSoundRef = useRef<Audio.Sound | null>(null);
     const recordingRef = useRef<Audio.Recording | null>(null);
     const isProcessing = useRef(false);
@@ -52,7 +73,7 @@ export const StudioDashboard = memo(function StudioDashboard({
     const [previewSound, setPreviewSound] = useState<Audio.Sound | null>(null);
     const [isPlayingPreview, setIsPlayingPreview] = useState(false);
 
-    // Request permissions on mount; stop any entry preview from leaderboard
+    // Xin quyền micro khi mở màn; dừng preview entry còn sót từ bảng xếp hạng.
     useEffect(() => {
         stopEntry();
         (async () => {
@@ -109,7 +130,7 @@ export const StudioDashboard = memo(function StudioDashboard({
 
         try {
             await safeUnloadAll();
-            setRecordURI(null);
+            setTake(null);
 
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
@@ -117,17 +138,17 @@ export const StudioDashboard = memo(function StudioDashboard({
                 playThroughEarpieceAndroid: false,
             });
 
-            // Prepare background beat first if exists
+            // Chỉ nạp beat nền khi chọn chế độ "hát có beat".
             let bgSoundInstance: Audio.Sound | null = null;
-            if (beat?.audio_url) {
+            if (mode === 'with-beat' && beat?.audio_url) {
                 const { sound } = await Audio.Sound.createAsync(
                     { uri: beat.audio_url },
-                    { shouldPlay: false, isLooping: true },
+                    { shouldPlay: false, isLooping: true, volume: 0.7 },
                 );
                 bgSoundInstance = sound;
             }
 
-            // check if user interrupted during loading
+            // Người dùng có thể huỷ trong lúc đang nạp.
             if (!isProcessing.current) {
                 if (bgSoundInstance) await bgSoundInstance.unloadAsync();
                 setIsPreparingRecord(false);
@@ -172,14 +193,19 @@ export const StudioDashboard = memo(function StudioDashboard({
             setIsRecording(false);
             onRecordingStateChange?.(false);
 
-            // Stop background beat quickly
             if (backgroundSoundRef.current) {
                 await backgroundSoundRef.current.stopAsync();
             }
 
             await recordingRef.current.stopAndUnloadAsync();
             const uri = recordingRef.current.getURI();
-            setRecordURI(uri);
+            if (uri) {
+                setTake({
+                    uri,
+                    name: getRecordingFileName(beat?.id || 'beat', 'm4a'),
+                    type: 'audio/m4a',
+                });
+            }
             recordingRef.current = null;
 
             if (backgroundSoundRef.current) {
@@ -195,32 +221,87 @@ export const StudioDashboard = memo(function StudioDashboard({
         }
     };
 
+    // Chọn file audio có sẵn để nộp thay cho thu trực tiếp — tương đương nút "Tải lên" của web.
+    const handleUpload = async () => {
+        if (isRecording) return;
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'audio/*',
+                copyToCacheDirectory: true,
+                multiple: false,
+            });
+            if (result.canceled) return;
+
+            const asset = result.assets?.[0];
+            if (!asset) return;
+
+            const name = asset.name || `upload-${beat?.id || 'beat'}.m4a`;
+            if (!isAcceptedUploadAudioFile({ name })) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Định dạng không hỗ trợ',
+                    text2: 'Chỉ chấp nhận mp3, wav, flac, m4a, ogg, aac.',
+                });
+                return;
+            }
+
+            await safeUnloadAll();
+            const extension = getUploadAudioExtension(name);
+            setTake({
+                uri: asset.uri,
+                name,
+                type: asset.mimeType || guessAudioMime(extension),
+            });
+            onDurationUpdate?.(0);
+        } catch (err) {
+            console.error('Upload pick failed', err);
+            Toast.show({ type: 'error', text1: 'Lỗi', text2: 'Không thể chọn file âm thanh.' });
+        }
+    };
+
+    // Tải beat gốc về máy — mở URL công khai của beat bằng trình duyệt hệ thống để lưu/nghe.
+    const handleDownloadBeat = async () => {
+        if (!beat?.audio_url) {
+            Toast.show({ type: 'error', text1: 'Không có beat', text2: 'Beat này chưa có audio.' });
+            return;
+        }
+        try {
+            const canOpen = await Linking.canOpenURL(beat.audio_url);
+            if (!canOpen) throw new Error('cannot open url');
+            await Linking.openURL(beat.audio_url);
+        } catch {
+            Toast.show({
+                type: 'error',
+                text1: 'Không thể tải beat',
+                text2: 'Vui lòng thử lại sau.',
+            });
+        }
+    };
+
     const togglePreview = async () => {
-        if (isProcessing.current || !recordURI) return;
+        if (isProcessing.current || !take) return;
         isProcessing.current = true;
 
         try {
             if (isPlayingPreview && previewSound) {
                 await previewSound.pauseAsync();
                 setIsPlayingPreview(false);
+            } else if (previewSound) {
+                await previewSound.playAsync();
+                setIsPlayingPreview(true);
             } else {
-                if (previewSound) {
-                    await previewSound.playAsync();
-                    setIsPlayingPreview(true);
-                } else {
-                    const { sound } = await Audio.Sound.createAsync(
-                        { uri: recordURI },
-                        { shouldPlay: true },
-                        (status) => {
-                            if (status.isLoaded && status.didJustFinish) {
-                                setIsPlayingPreview(false);
-                                sound.stopAsync();
-                            }
-                        },
-                    );
-                    setPreviewSound(sound);
-                    setIsPlayingPreview(true);
-                }
+                const { sound } = await Audio.Sound.createAsync(
+                    { uri: take.uri },
+                    { shouldPlay: true },
+                    (status) => {
+                        if (status.isLoaded && status.didJustFinish) {
+                            setIsPlayingPreview(false);
+                            sound.stopAsync();
+                        }
+                    },
+                );
+                setPreviewSound(sound);
+                setIsPlayingPreview(true);
             }
         } catch (err) {
             console.error('Playback failed', err);
@@ -234,7 +315,7 @@ export const StudioDashboard = memo(function StudioDashboard({
         isProcessing.current = true;
         try {
             await safeUnloadAll();
-            setRecordURI(null);
+            setTake(null);
             recordingRef.current = null;
             setIsRecording(false);
             onRecordingStateChange?.(false);
@@ -246,11 +327,11 @@ export const StudioDashboard = memo(function StudioDashboard({
 
     const handleSubmit = async () => {
         if (!beat) return;
-        if (!recordURI) {
+        if (!take) {
             Toast.show({
                 type: 'error',
                 text1: 'Khoan đã!',
-                text2: 'Vui lòng thu âm trước khi nộp.',
+                text2: 'Vui lòng thu âm hoặc tải lên trước khi nộp.',
             });
             return;
         }
@@ -258,16 +339,11 @@ export const StudioDashboard = memo(function StudioDashboard({
         setIsSubmitting(true);
         try {
             const formData = new FormData();
-
-            const uriParts = recordURI.split('/');
-            const fileName = uriParts[uriParts.length - 1] || 'recording.m4a';
-
             formData.append('audio', {
-                uri: recordURI,
-                name: fileName,
-                type: 'audio/m4a', // Standard expo-av recording MIME type
+                uri: take.uri,
+                name: take.name,
+                type: take.type,
             } as unknown as Blob);
-            formData.append('explanation', 'Recorded using Sonic Pulse Studio');
 
             const entry = await challengeApi.submitEntry(beat.id, formData);
             Toast.show({
@@ -275,7 +351,7 @@ export const StudioDashboard = memo(function StudioDashboard({
                 text1: 'Thành công',
                 text2: 'Bài dự thi của bạn đã được gửi.',
             });
-            resetRecording();
+            await resetRecording();
 
             router.push({
                 pathname: '/(challenge)/result',
@@ -293,44 +369,91 @@ export const StudioDashboard = memo(function StudioDashboard({
         }
     };
 
+    const statusLabel = isRecording ? 'ĐANG THU...' : take ? 'ĐÃ THU' : 'SẴN SÀNG';
+
     return (
         <View className="px-6 mb-8">
             <View
                 className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm"
                 style={styles.cardShadow}
             >
-                {/* Sliders Mockup */}
-                <View className="flex-row gap-6 mb-8">
-                    <View className="flex-1 space-y-2">
-                        <View className="flex-row justify-between items-center mb-2">
-                            <Text className="text-[10px] font-body uppercase tracking-widest text-gray-500 font-bold">
-                                Trạng thái
-                            </Text>
-                            <Text className="text-xs font-mono text-primary font-bold">
-                                {isRecording ? 'ĐANG THU...' : recordURI ? 'ĐÃ THU' : 'SẴN SÀNG'}
-                            </Text>
-                        </View>
-                        <View className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                            <LinearGradient
-                                colors={['#7d3bed', '#f471b7']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                className={`h-full ${isRecording ? 'opacity-100 w-full' : recordURI ? 'opacity-50 w-full' : 'w-0'}`}
-                            />
-                        </View>
+                {/* Trạng thái */}
+                <View className="mb-6">
+                    <View className="flex-row justify-between items-center mb-2">
+                        <Text className="text-[10px] font-body uppercase tracking-widest text-gray-500 font-bold">
+                            Trạng thái
+                        </Text>
+                        <Text className="text-xs font-mono text-primary font-bold">
+                            {statusLabel}
+                        </Text>
+                    </View>
+                    <View className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <LinearGradient
+                            colors={['#7d3bed', '#f471b7']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            className={`h-full ${isRecording ? 'opacity-100 w-full' : take ? 'opacity-50 w-full' : 'w-0'}`}
+                        />
                     </View>
                 </View>
 
-                {/* Main Action Hub */}
-                <View className="flex-row items-center justify-between px-2 mb-6 mt-4">
+                {/* Chọn chế độ thu — ẩn khi đã có bản thu để tập trung vào nghe lại/nộp. */}
+                {!take && (
+                    <View className="flex-row gap-3 mb-6">
+                        <TouchableOpacity
+                            activeOpacity={0.85}
+                            disabled={isRecording}
+                            onPress={() => setMode('with-beat')}
+                            className={`flex-1 rounded-2xl py-3 px-3 border flex-row items-center justify-center gap-2 ${
+                                mode === 'with-beat'
+                                    ? 'bg-primary/10 border-primary/40'
+                                    : 'bg-gray-50 border-gray-200'
+                            } ${isRecording ? 'opacity-50' : ''}`}
+                        >
+                            <Music2
+                                size={16}
+                                color={mode === 'with-beat' ? '#7d3bed' : '#6b7280'}
+                            />
+                            <Text
+                                className={`text-xs font-bold font-body ${
+                                    mode === 'with-beat' ? 'text-primary' : 'text-gray-600'
+                                }`}
+                            >
+                                Hát có beat
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            activeOpacity={0.85}
+                            disabled={isRecording}
+                            onPress={() => setMode('vocal-only')}
+                            className={`flex-1 rounded-2xl py-3 px-3 border flex-row items-center justify-center gap-2 ${
+                                mode === 'vocal-only'
+                                    ? 'bg-primary/10 border-primary/40'
+                                    : 'bg-gray-50 border-gray-200'
+                            } ${isRecording ? 'opacity-50' : ''}`}
+                        >
+                            <Mic size={16} color={mode === 'vocal-only' ? '#7d3bed' : '#6b7280'} />
+                            <Text
+                                className={`text-xs font-bold font-body ${
+                                    mode === 'vocal-only' ? 'text-primary' : 'text-gray-600'
+                                }`}
+                            >
+                                Hát chay
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Hub thao tác chính: Nghe lại/Làm mới · Thu âm · Nộp bài */}
+                <View className="flex-row items-center justify-between px-2 mb-6 mt-2">
                     <View className="items-center gap-2">
                         <TouchableOpacity
                             activeOpacity={0.7}
                             className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 shadow-sm"
-                            onPress={recordURI && !isRecording ? togglePreview : resetRecording}
+                            onPress={take && !isRecording ? togglePreview : resetRecording}
                             disabled={isPreparingRecord}
                         >
-                            {recordURI && !isRecording ? (
+                            {take && !isRecording ? (
                                 isPlayingPreview ? (
                                     <Square size={24} color="#7d3bed" fill="#7d3bed" />
                                 ) : (
@@ -346,7 +469,7 @@ export const StudioDashboard = memo(function StudioDashboard({
                             )}
                         </TouchableOpacity>
                         <Text className="text-[10px] font-bold font-body uppercase text-gray-500 tracking-wider">
-                            {recordURI && !isRecording ? 'Nghe Lại' : 'Làm mới'}
+                            {take && !isRecording ? 'Nghe Lại' : 'Làm mới'}
                         </Text>
                     </View>
 
@@ -376,7 +499,7 @@ export const StudioDashboard = memo(function StudioDashboard({
                                         <ActivityIndicator size={'large'} color="#ffffff" />
                                     ) : isRecording ? (
                                         <View className="w-8 h-8 bg-white rounded-[4px]" />
-                                    ) : recordURI ? (
+                                    ) : take ? (
                                         <RotateCcw size={32} color="#ffffff" />
                                     ) : (
                                         <Mic size={32} color="white" />
@@ -389,7 +512,7 @@ export const StudioDashboard = memo(function StudioDashboard({
                                 ? 'Đang Tải'
                                 : isRecording
                                   ? 'Dừng Thu'
-                                  : recordURI
+                                  : take
                                     ? 'Thu Lại'
                                     : 'Thu Âm'}
                         </Text>
@@ -398,44 +521,47 @@ export const StudioDashboard = memo(function StudioDashboard({
                     <View className="items-center gap-2">
                         <TouchableOpacity
                             activeOpacity={0.7}
-                            className={`w-14 h-14 rounded-full flex items-center justify-center border shadow-sm ${recordURI && !isSubmitting ? 'bg-primary/10 border-primary/30' : 'bg-gray-50 border-gray-100'}`}
+                            className={`w-14 h-14 rounded-full flex items-center justify-center border shadow-sm ${take && !isSubmitting ? 'bg-primary/10 border-primary/30' : 'bg-gray-50 border-gray-100'}`}
                             onPress={handleSubmit}
-                            disabled={isSubmitting || !recordURI}
+                            disabled={isSubmitting || !take}
                         >
                             {isSubmitting ? (
                                 <ActivityIndicator color="#7d3bed" />
                             ) : (
-                                <Check size={28} color={recordURI ? '#7d3bed' : '#d1d5db'} />
+                                <Check size={28} color={take ? '#7d3bed' : '#d1d5db'} />
                             )}
                         </TouchableOpacity>
                         <Text
-                            className={`text-[10px] font-bold font-body uppercase tracking-wider ${recordURI ? 'text-primary' : 'text-gray-400'}`}
+                            className={`text-[10px] font-bold font-body uppercase tracking-wider ${take ? 'text-primary' : 'text-gray-400'}`}
                         >
                             Nộp bài
                         </Text>
                     </View>
                 </View>
 
-                {/* Secondary Controls */}
-                <View className="flex-row justify-center gap-10 items-center">
-                    <TouchableOpacity className="flex items-center gap-1.5" activeOpacity={0.7}>
-                        <BarChart2 size={22} color="#6b7280" />
-                        <Text className="text-[10px] uppercase font-bold tracking-widest font-body text-gray-500">
-                            Hiệu ứng
+                {/* Thao tác phụ thật sự: Tải lên file · Tải beat về */}
+                <View className="flex-row gap-3 pt-4 border-t border-gray-100">
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        disabled={isRecording}
+                        onPress={handleUpload}
+                        className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl bg-gray-50 border border-gray-200 ${isRecording ? 'opacity-50' : ''}`}
+                    >
+                        <Upload size={17} color="#7d3bed" />
+                        <Text className="text-xs font-bold font-body text-gray-700 uppercase tracking-wide">
+                            Tải lên file
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity className="flex items-center gap-1.5" activeOpacity={0.7}>
-                        <Clock size={22} color="#6b7280" />
-                        <Text className="text-[10px] uppercase font-bold tracking-widest font-body text-gray-500">
-                            Nhịp độ
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity className="flex items-center gap-1.5" activeOpacity={0.7}>
-                        <FileText size={22} color="#6b7280" />
-                        <Text className="text-[10px] uppercase font-bold tracking-widest font-body text-gray-500">
-                            Lời bài hát
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        disabled={!beat?.audio_url}
+                        onPress={handleDownloadBeat}
+                        className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl bg-gray-50 border border-gray-200 ${!beat?.audio_url ? 'opacity-50' : ''}`}
+                    >
+                        <Download size={17} color="#7d3bed" />
+                        <Text className="text-xs font-bold font-body text-gray-700 uppercase tracking-wide">
+                            Tải beat về
                         </Text>
                     </TouchableOpacity>
                 </View>

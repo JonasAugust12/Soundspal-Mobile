@@ -2,10 +2,10 @@ import type { BlogTab } from '@/features/blog/domain/entities/blog.type';
 
 /** Feed + topic chips only — “My posts” / “Bookmarks” use a separate `BlogLibraryRow` UI. */
 export const BLOG_FEED_TABS: BlogTab[] = [
-    { id: '1', label: 'For You', value: 'for-you' },
-    { id: '2', label: 'Music Trend', value: 'music-trend' },
-    { id: '3', label: 'Collaborations', value: 'collaborations' },
-    { id: '4', label: 'Production', value: 'production' },
+    { id: '1', label: 'Dành cho bạn', value: 'for-you' },
+    { id: '2', label: 'Xu hướng âm nhạc', value: 'music-trend' },
+    { id: '3', label: 'Hợp tác', value: 'collaborations' },
+    { id: '4', label: 'Sản xuất', value: 'production' },
 ];
 
 /** @deprecated Use `BLOG_FEED_TABS` — name kept for older imports. */

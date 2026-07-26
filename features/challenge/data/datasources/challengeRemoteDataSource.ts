@@ -10,6 +10,7 @@ import type {
     GetMyBeatsParams,
     GetMyEntriesResponse,
     GetMyEntriesParams,
+    GetBookmarkedBeatsParams,
 } from '@/features/challenge/domain/entities/challenge.type';
 
 export const challengeRemoteDataSource = {
@@ -81,6 +82,20 @@ export const challengeRemoteDataSource = {
     },
 
     deleteEntry: (entryId: string) => createApiCall<void>('DELETE', `/beats/entries/${entryId}`)(),
+
+    // Bookmark (challenge) — idempotent 204, cần Bearer token. Xem CHALLENGE_BOOKMARK_API.
+    bookmarkBeat: (id: string) => createApiCall<void>('POST', `/beats/${id}/bookmark`)(),
+
+    unbookmarkBeat: (id: string) => createApiCall<void>('DELETE', `/beats/${id}/bookmark`)(),
+
+    // GET /beats/bookmarked — sort mới bookmark trước; mọi item có is_bookmarked=true.
+    getBookmarkedBeats: (params: GetBookmarkedBeatsParams = {}) => {
+        const queryParts: string[] = [];
+        if (params.page !== undefined) queryParts.push(`page=${params.page}`);
+        if (params.page_size !== undefined) queryParts.push(`page_size=${params.page_size}`);
+        const qs = queryParts.length > 0 ? '?' + queryParts.join('&') : '';
+        return createApiCall<GetBeatsResponse>('GET', `/beats/bookmarked${qs}`)();
+    },
 };
 
 /** @deprecated Use challengeRepository instead */

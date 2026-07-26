@@ -135,21 +135,21 @@ export default function CompleteOAuthProfileScreen() {
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-pink-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Producer:</Text>{' '}
+                                        <Text className="font-semibold">Nhà sản xuất:</Text>{' '}
                                         {AUTH_OAUTH_UI.producerDesc}
                                     </Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-purple-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Singer:</Text>{' '}
+                                        <Text className="font-semibold">Ca sĩ:</Text>{' '}
                                         {AUTH_OAUTH_UI.singerDesc}
                                     </Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-violet-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Venue:</Text>{' '}
+                                        <Text className="font-semibold">Địa điểm:</Text>{' '}
                                         {AUTH_OAUTH_UI.venueDesc}
                                     </Text>
                                 </View>

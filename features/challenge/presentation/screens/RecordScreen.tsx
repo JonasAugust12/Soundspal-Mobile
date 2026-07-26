@@ -6,7 +6,6 @@ import {
     HeaderInfo,
     WaveformCanvas,
     StudioDashboard,
-    EffectsBento,
 } from '@/features/challenge/presentation/components/recordStudio';
 import { CommonHeader } from '@/shared/presentation/ui';
 
@@ -47,7 +46,6 @@ export default function RecordStudioScreen() {
                             onDurationUpdate={setDurationMillis}
                             onRecordingStateChange={setIsRecording}
                         />
-                        <EffectsBento />
                     </>
                 )}
             </ScrollView>

@@ -35,7 +35,7 @@ export function BlogLibraryRow({ activeTab, onTabChange }: BlogLibraryRowProps) 
                     isDark ? 'text-slate-500' : 'text-slate-400'
                 }`}
             >
-                Your library
+                Thư viện của tôi
             </Text>
             <View className="flex-row gap-3">
                 <TouchableOpacity
@@ -63,7 +63,7 @@ export function BlogLibraryRow({ activeTab, onTabChange }: BlogLibraryRowProps) 
                                   : 'text-slate-700'
                         }`}
                     >
-                        My posts
+                        Bài viết của tôi
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -92,7 +92,7 @@ export function BlogLibraryRow({ activeTab, onTabChange }: BlogLibraryRowProps) 
                                   : 'text-slate-700'
                         }`}
                     >
-                        Bookmarks
+                        Đã lưu
                     </Text>
                 </TouchableOpacity>
             </View>

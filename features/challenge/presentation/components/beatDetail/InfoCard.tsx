@@ -1,9 +1,15 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { Mic, Trophy } from 'lucide-react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Platform, Linking } from 'react-native';
+import { Mic, Trophy, Download } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 import type { Beat } from '@/features/challenge/domain/entities/challenge.type';
+import { BeatBookmarkButton } from '@/features/challenge/presentation/components/BeatBookmarkButton';
+import {
+    getBeatCreatorDisplayName,
+    getBeatGenres,
+} from '@/features/challenge/domain/utils/challenge';
 
 interface InfoCardProps {
     beat?: Beat;
@@ -12,6 +18,27 @@ interface InfoCardProps {
 
 export function InfoCard({ beat, isLoading }: InfoCardProps) {
     const router = useRouter();
+
+    const genres = beat ? getBeatGenres(beat) : [];
+    const creatorName = beat ? getBeatCreatorDisplayName(beat) : '';
+
+    const handleDownloadBeat = async () => {
+        if (!beat?.audio_url) {
+            Toast.show({ type: 'error', text1: 'Không có beat', text2: 'Beat này chưa có audio.' });
+            return;
+        }
+        try {
+            const canOpen = await Linking.canOpenURL(beat.audio_url);
+            if (!canOpen) throw new Error('cannot open url');
+            await Linking.openURL(beat.audio_url);
+        } catch {
+            Toast.show({
+                type: 'error',
+                text1: 'Không thể tải beat',
+                text2: 'Vui lòng thử lại sau.',
+            });
+        }
+    };
 
     if (isLoading || !beat) {
         return (
@@ -122,9 +149,11 @@ export function InfoCard({ beat, isLoading }: InfoCardProps) {
                         >
                             Sản xuất bởi{' '}
                             <Text className="text-gray-900 font-bold">
-                                {beat?.creator_username || 'VNDR_WAVE'}
+                                {creatorName || 'VNDR_WAVE'}
                             </Text>
                         </Text>
+                        {/* Lưu thử thách — chỉ nút tim, cạnh tên creator */}
+                        <BeatBookmarkButton beat={beat} />
                     </View>
                 </View>
 
@@ -172,12 +201,17 @@ export function InfoCard({ beat, isLoading }: InfoCardProps) {
                         {beat?.description ||
                             'Một bản trap mang đậm chất điện ảnh với dải synth mượt mà và tiếng 808 mạnh mẽ...'}
                     </Text>
-                    <View className="flex-row gap-2">
-                        <View className="bg-gray-100 px-3 py-1.5 rounded-full">
-                            <Text className="text-[10px] font-bold text-gray-700 uppercase tracking-wider font-body">
-                                #{beat?.genre?.toUpperCase() || 'DARK_TRAP'}
-                            </Text>
-                        </View>
+                    <View className="flex-row flex-wrap gap-2">
+                        {(genres.length > 0 ? genres : ['DARK_TRAP']).map((g) => (
+                            <View
+                                key={g}
+                                className="bg-primary/10 border border-primary/25 px-3 py-1.5 rounded-full"
+                            >
+                                <Text className="text-[10px] font-bold text-primary uppercase tracking-wider font-body">
+                                    #{g.toUpperCase()}
+                                </Text>
+                            </View>
+                        ))}
                     </View>
                 </View>
 
@@ -232,21 +266,34 @@ export function InfoCard({ beat, isLoading }: InfoCardProps) {
                         </LinearGradient>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        activeOpacity={0.7}
-                        className="bg-primary/5 h-14 rounded-full flex-row items-center justify-center gap-3 border border-primary/20"
-                        onPress={() =>
-                            router.push({
-                                pathname: '/(challenge)/leaderboard',
-                                params: { id: beat?.id },
-                            })
-                        }
-                    >
-                        <Trophy size={20} color="#7d3bed" />
-                        <Text className="text-primary font-heading font-bold text-base">
-                            Bảng xếp hạng
-                        </Text>
-                    </TouchableOpacity>
+                    <View className="flex-row gap-3">
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            className="flex-1 bg-primary/5 h-14 rounded-full flex-row items-center justify-center gap-2 border border-primary/20"
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/(challenge)/leaderboard',
+                                    params: { id: beat?.id },
+                                })
+                            }
+                        >
+                            <Trophy size={20} color="#7d3bed" />
+                            <Text className="text-primary font-heading font-bold text-base">
+                                Bảng xếp hạng
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            activeOpacity={0.7}
+                            className="flex-1 bg-white h-14 rounded-full flex-row items-center justify-center gap-2 border border-gray-200"
+                            onPress={handleDownloadBeat}
+                        >
+                            <Download size={20} color="#7d3bed" />
+                            <Text className="text-gray-800 font-heading font-bold text-base">
+                                Tải beat về
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         </View>

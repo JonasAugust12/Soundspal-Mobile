@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ImageSourcePropType, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ImageSourcePropType, StyleSheet } from 'react-native';
 import { MapPin, Clock, DollarSign, Briefcase } from 'lucide-react-native';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
+import { LoadingImage } from '@/shared/presentation/ui';
 
 export const JOB_CARD_HEIGHT = 268;
 
@@ -77,10 +78,10 @@ export const JobCard = React.memo(function JobCard({ item, width = 220, onPress 
                 className="rounded-2xl bg-white border border-gray-100"
             >
                 <View className="flex-row items-center gap-2 p-3 border-b border-gray-100">
-                    <Image
+                    <LoadingImage
                         source={item.creatorAvatar || require('@/assets/images/user_profile.png')}
-                        className="w-8 h-8 rounded-full"
-                        resizeMode="cover"
+                        style={{ width: 32, height: 32 }}
+                        borderRadius={16}
                     />
                     <View className="flex-1">
                         <Text className="text-xs font-semibold text-gray-900" numberOfLines={1}>

@@ -20,7 +20,7 @@ export function BlogTabBar({ tabs, activeTab, onTabChange }: BlogTabBarProps) {
                     isDark ? 'text-slate-500' : 'text-slate-400'
                 }`}
             >
-                Discover
+                Chủ đề
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
                 <View className="flex-row px-4 py-2 pb-3 gap-2">

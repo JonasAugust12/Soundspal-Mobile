@@ -32,6 +32,7 @@ import {
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { isPremiumActive } from '@/shared/domain/utils/premium';
 import { VenueUser } from '@/features/profiles/domain/entities/user.type';
 
 export default function VenueProfile() {
@@ -133,6 +134,7 @@ export default function VenueProfile() {
                     }
                     backgroundSource={userData?.cover_url ? { uri: userData.cover_url } : undefined}
                     role="venue"
+                    isPremium={isPremiumActive(userData)}
                 />
 
                 <View className="px-4 gap-6 pt-4 pb-8">

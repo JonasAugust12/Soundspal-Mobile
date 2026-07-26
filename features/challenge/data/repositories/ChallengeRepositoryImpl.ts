@@ -15,6 +15,9 @@ export class ChallengeRepositoryImpl implements IChallengeRepository {
     getMyBeats = challengeRemoteDataSource.getMyBeats;
     getMyEntries = challengeRemoteDataSource.getMyEntries;
     deleteEntry = challengeRemoteDataSource.deleteEntry;
+    bookmarkBeat = challengeRemoteDataSource.bookmarkBeat;
+    unbookmarkBeat = challengeRemoteDataSource.unbookmarkBeat;
+    getBookmarkedBeats = challengeRemoteDataSource.getBookmarkedBeats;
 }
 
 export const challengeRepository = new ChallengeRepositoryImpl();

@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import React from 'react';
 import { View, Text, Image, Pressable, ImageSourcePropType } from 'react-native';
+import { LoadingImage } from '@/shared/presentation/ui/LoadingImage';
 
 export type UserRole = 'singer' | 'producer' | 'venue';
 
@@ -41,11 +42,10 @@ export function ArtistCardSearch({ item, width = 160 }: Props) {
             style={{ width }}
         >
             <View className="relative">
-                <Image
+                <LoadingImage
                     source={item.image}
-                    className="w-full rounded-2xl"
-                    style={{ height: 400 }}
-                    resizeMode="cover"
+                    style={{ width: '100%', height: 400 }}
+                    borderRadius={16}
                 />
 
                 {/* Overlay info */}

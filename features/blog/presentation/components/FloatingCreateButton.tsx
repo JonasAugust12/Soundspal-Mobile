@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
 
 interface FloatingCreateButtonProps {
@@ -7,11 +8,15 @@ interface FloatingCreateButtonProps {
 }
 
 export function FloatingCreateButton({ onPress }: FloatingCreateButtonProps) {
+    // Nâng nút lên trên vạch home / viền dưới của máy để không bị che khuất.
+    const insets = useSafeAreaInsets();
+    const bottom = Math.max(insets.bottom, 12) + 24;
+
     return (
         <View
             style={{
                 position: 'absolute',
-                bottom: 20,
+                bottom,
                 left: '50%',
                 marginLeft: -30,
                 zIndex: 100,

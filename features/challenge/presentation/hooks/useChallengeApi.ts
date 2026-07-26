@@ -3,6 +3,7 @@ import type {
     GetBeatsParams,
     GetMyBeatsParams,
     GetMyEntriesParams,
+    GetBookmarkedBeatsParams,
 } from '@/features/challenge/domain/entities/challenge.type';
 import { challengeRepository } from '@/features/challenge/data/repositories/ChallengeRepositoryImpl';
 
@@ -78,6 +79,58 @@ export const useDeleteEntry = () => {
         mutationFn: (entryId: string) => challengeRepository.deleteEntry(entryId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-entries'] });
+        },
+    });
+};
+
+/** GET /beats/bookmarked — danh sách beat user đã lưu (tab "Đã lưu"). */
+export const useGetBookmarkedBeats = (
+    params: GetBookmarkedBeatsParams = {},
+    options?: { enabled?: boolean },
+) => {
+    return useQuery({
+        queryKey: ['bookmarked-beats', params],
+        queryFn: () => challengeRepository.getBookmarkedBeats(params),
+        enabled: options?.enabled !== false,
+        staleTime: 30000,
+    });
+};
+
+/**
+ * Toggle bookmark cho một beat. Recipe của web: gọi API TRƯỚC, thành công mới cập
+ * nhật local (không optimistic trước API). Invalidate mọi query beat để cờ
+ * is_bookmarked đồng bộ ở landing/detail/my/saved.
+ */
+export const useToggleBeatBookmark = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, isBookmarked }: { id: string; isBookmarked: boolean }) =>
+            isBookmarked
+                ? challengeRepository.unbookmarkBeat(id)
+                : challengeRepository.bookmarkBeat(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bookmarked-beats'] });
+            queryClient.invalidateQueries({ queryKey: ['beats'] });
+            queryClient.invalidateQueries({ queryKey: ['beat'] });
+            queryClient.invalidateQueries({ queryKey: ['my-beats'] });
+        },
+    });
+};
+
+/**
+ * Toggle vote (like/unlike) cho một entry. is_liked=true → DELETE unvote, ngược lại
+ * → POST vote {vote_type:'up'}. Trả về trạng thái đã like sau toggle để UI đồng bộ
+ * vote_count. Không invalidate leaderboard để tránh nháy — UI tự cập nhật local.
+ */
+export const useToggleEntryVote = () => {
+    return useMutation({
+        mutationFn: async ({ entryId, isLiked }: { entryId: string; isLiked: boolean }) => {
+            if (isLiked) {
+                await challengeRepository.removeVote(entryId);
+            } else {
+                await challengeRepository.voteEntry(entryId, 'up');
+            }
+            return !isLiked;
         },
     });
 };

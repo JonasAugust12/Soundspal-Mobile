@@ -4,7 +4,8 @@ import { MapPin, BadgeCheck, MicVocal, Disc2, Building2, Music2 } from 'lucide-r
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
-import { Shimmer } from '@/shared/presentation/ui';
+import { Shimmer, PremiumBadge } from '@/shared/presentation/ui';
+import { isPremiumActive } from '@/shared/domain/utils/premium';
 import { getDefaultCoverUrl } from '@/features/explore/domain/constants/defaultCoverImages';
 import type { UserProfile } from '@/features/explore/domain/entities/search.type';
 
@@ -62,6 +63,7 @@ export const ExploreUserCard = React.memo(function ExploreUserCard({ item, onPre
         Icon: Music2,
     };
     const RoleIcon = role.Icon;
+    const isPremium = isPremiumActive(item);
 
     // Chưa có ảnh bìa thật thì mượn ảnh mock theo role; gradient chỉ dùng khi ảnh tải lỗi.
     const coverUrl =
@@ -135,9 +137,15 @@ export const ExploreUserCard = React.memo(function ExploreUserCard({ item, onPre
                 <View className="pt-10 px-4 pb-4">
                     <View className="flex-row items-center justify-between">
                         <View style={styles.nameCol}>
-                            <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
-                                {item.display_name}
-                            </Text>
+                            <View className="flex-row items-center gap-1.5">
+                                <Text
+                                    className="text-base font-bold text-gray-900 shrink"
+                                    numberOfLines={1}
+                                >
+                                    {item.display_name}
+                                </Text>
+                                {isPremium && <PremiumBadge size="sm" showLabel={false} />}
+                            </View>
                             <Text className="text-xs text-gray-600" numberOfLines={1}>
                                 @{item.username}
                             </Text>

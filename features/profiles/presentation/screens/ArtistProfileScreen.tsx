@@ -31,6 +31,7 @@ import {
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { isPremiumActive } from '@/shared/domain/utils/premium';
 import {
     feeRangeLabel,
     serviceTypeLabel,
@@ -165,6 +166,7 @@ export default function ArtistProfile() {
                     }
                     backgroundSource={userData?.cover_url ? { uri: userData.cover_url } : undefined}
                     role={userData?.role?.toLowerCase() as 'singer' | 'producer' | 'venue'}
+                    isPremium={isPremiumActive(userData)}
                 />
 
                 <View className="px-4 gap-6 pt-4 pb-8">
@@ -325,7 +327,7 @@ export default function ArtistProfile() {
                                     <Music4 size={18} color="#7C3AED" />
                                 </View>
                                 <Text className="text-lg font-bold text-foreground">
-                                    Featured Releases
+                                    Sản phẩm nổi bật
                                 </Text>
                             </View>
                             {(isMe || (userData?.featured_release_links?.length || 0) > 3) && (

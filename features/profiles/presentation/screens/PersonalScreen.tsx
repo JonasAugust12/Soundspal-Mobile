@@ -34,6 +34,8 @@ import { useLogout } from '@/features/auth/presentation/hooks/useAuthApi';
 import { useGetCurrentUser } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
+import { PremiumBadge } from '@/shared/presentation/ui';
+import { getPremiumState } from '@/shared/domain/utils/premium';
 import { useRouter } from 'expo-router';
 import {
     MenuItem,
@@ -77,6 +79,49 @@ const DEFAULT_ACCENT: RoleAccent = {
     label: 'Người dùng',
 };
 
+/**
+ * Copy của mục Premium theo từng trạng thái gói — bám sát thẻ "Gói của tôi" bên web
+ * (/billing): chưa mua → mời nâng cấp, còn hạn → nhắc hạn, hết hạn → cảnh báo mất
+ * quyền lợi và mời gia hạn.
+ */
+function getPremiumMenuCopy(state: 'none' | 'active' | 'expired', expiresAt: string | null) {
+    if (state === 'active') {
+        return {
+            title: 'Premium đang hoạt động',
+            subtitle: expiresAt
+                ? `Có hiệu lực đến ${expiresAt} — huy hiệu và ưu tiên hiển thị đang bật`
+                : 'Huy hiệu và ưu tiên hiển thị đang bật',
+        };
+    }
+
+    if (state === 'expired') {
+        return {
+            title: 'Premium đã hết hạn',
+            subtitle: expiresAt
+                ? `Hết hạn ngày ${expiresAt} — gia hạn để bật lại huy hiệu và ưu tiên hiển thị`
+                : 'Gia hạn để bật lại huy hiệu và ưu tiên hiển thị',
+        };
+    }
+
+    return {
+        title: 'Nâng cấp Premium',
+        subtitle: 'Nhận huy hiệu Premium và luôn xuất hiện ở đầu trang Khám phá',
+    };
+}
+
+function formatDate(value?: string | null): string | null {
+    if (!value) return null;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+}
+
 export default function PersonalScreen() {
     const { mutateAsync: logoutApi, isPending: isLoggingOut } = useLogout();
     const { user } = useAuthStore();
@@ -84,8 +129,20 @@ export default function PersonalScreen() {
     const { showSuccess, showError } = useToast();
     const router = useRouter();
     const [coverFailed, setCoverFailed] = useState(false);
+    // Trạng thái Premium đọc từ is_premium + premium_expired_at (nguồn chuẩn, giống web);
+    // chỉ fallback về `tier` khi backend chưa trả 2 field mới.
     const currentTier = String(currentUser?.tier || user?.tier || 'free').toLowerCase();
-    const isPremium = currentTier === 'premium';
+    const premiumState =
+        currentUser?.is_premium !== undefined
+            ? getPremiumState(currentUser)
+            : currentTier === 'premium'
+              ? 'active'
+              : 'none';
+    const isPremium = premiumState === 'active';
+    const premiumExpiresAt = formatDate(
+        currentUser?.premium_expired_at || currentUser?.subscription_expires_at || null,
+    );
+    const premiumMenuCopy = getPremiumMenuCopy(premiumState, premiumExpiresAt);
 
     const accent = ROLE_ACCENT[user?.role ?? ''] ?? DEFAULT_ACCENT;
     const RoleIcon = accent.Icon;
@@ -239,9 +296,12 @@ export default function PersonalScreen() {
                                     </Text>
                                 </View>
                             </View>
-                            <Text className="text-white/80 text-sm mt-1" numberOfLines={1}>
-                                @{user?.username || 'username'}
-                            </Text>
+                            <View className="flex-row items-center gap-2 mt-1">
+                                <Text className="text-white/80 text-sm shrink" numberOfLines={1}>
+                                    @{user?.username || 'username'}
+                                </Text>
+                                {isPremium && <PremiumBadge size="sm" />}
+                            </View>
                         </View>
 
                         {/* Arrow */}
@@ -286,12 +346,8 @@ export default function PersonalScreen() {
                     <GlassCard>
                         <MenuItem
                             icon={<GradientIcon Icon={Crown} />}
-                            title={isPremium ? 'Premium đang hoạt động' : 'Nâng cấp Premium'}
-                            subtitle={
-                                isPremium
-                                    ? 'Gia hạn gói để tiếp tục dùng đầy đủ quyền lợi'
-                                    : 'Mở khóa ứng tuyển không giới hạn và ưu tiên hiển thị'
-                            }
+                            title={premiumMenuCopy.title}
+                            subtitle={premiumMenuCopy.subtitle}
                             onPress={handlePremiumPayment}
                         />
                     </GlassCard>

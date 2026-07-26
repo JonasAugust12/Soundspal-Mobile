@@ -102,7 +102,7 @@ export default function FeaturedReleasesScreen() {
                     <ChevronLeft size={24} color="#09090b" />
                 </Pressable>
                 <Text className="text-lg font-bold text-foreground flex-1 ml-2">
-                    Featured Releases
+                    Sản phẩm nổi bật
                 </Text>
             </View>
 

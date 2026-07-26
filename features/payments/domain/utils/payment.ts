@@ -203,20 +203,6 @@ export function parsePayOSReturnUrl(url: string): PayOSReturnInfo {
     return { orderCode, rawStatus, normalizedStatus };
 }
 
-/**
- * Premium chỉ ACTIVE khi is_premium=true VÀ premium_expired_at còn ở tương lai.
- * is_premium=true nhưng đã quá hạn → coi như hết hạn (hiện CTA gia hạn).
- */
-export function isPremiumActive(
-    isPremium: boolean | undefined,
-    premiumExpiredAt: string | null | undefined,
-): boolean {
-    if (!isPremium || !premiumExpiredAt) return false;
-
-    const expires = new Date(premiumExpiredAt);
-    return !Number.isNaN(expires.getTime()) && expires.getTime() > Date.now();
-}
-
 /** Chuẩn hoá payload GET /payments/history (mảng trần hoặc bọc trong items/transactions). */
 export function parsePaymentHistoryItems(data: unknown): PaymentHistoryItem[] {
     if (!data) return [];
