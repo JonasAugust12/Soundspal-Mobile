@@ -18,7 +18,7 @@ function creatorRoleLabel(role?: string): string {
         case 'producer':
             return 'Nhà sản xuất';
         case 'venue':
-            return 'Địa điểm';
+            return 'Nhà tuyển dụng';
         default:
             return 'Tác giả';
     }

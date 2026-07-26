@@ -103,7 +103,7 @@ describe('jobFormatters', () => {
 
     describe('formatJobType', () => {
         it('should format known job types', () => {
-            expect(formatJobType('venue')).toBe('Venue');
+            expect(formatJobType('venue')).toBe('Nhà tuyển dụng');
             expect(formatJobType('producer')).toBe('Nhà sản xuất');
             expect(formatJobType('singer')).toBe('Ca sĩ');
             expect(formatJobType('musician')).toBe('Nhạc công');
@@ -112,7 +112,7 @@ describe('jobFormatters', () => {
         });
 
         it('should handle case-insensitive input', () => {
-            expect(formatJobType('VENUE')).toBe('Venue');
+            expect(formatJobType('VENUE')).toBe('Nhà tuyển dụng');
             expect(formatJobType('Singer')).toBe('Ca sĩ');
             expect(formatJobType('DJ')).toBe('DJ');
         });

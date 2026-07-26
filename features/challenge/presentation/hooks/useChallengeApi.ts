@@ -116,21 +116,3 @@ export const useToggleBeatBookmark = () => {
         },
     });
 };
-
-/**
- * Toggle vote (like/unlike) cho một entry. is_liked=true → DELETE unvote, ngược lại
- * → POST vote {vote_type:'up'}. Trả về trạng thái đã like sau toggle để UI đồng bộ
- * vote_count. Không invalidate leaderboard để tránh nháy — UI tự cập nhật local.
- */
-export const useToggleEntryVote = () => {
-    return useMutation({
-        mutationFn: async ({ entryId, isLiked }: { entryId: string; isLiked: boolean }) => {
-            if (isLiked) {
-                await challengeRepository.removeVote(entryId);
-            } else {
-                await challengeRepository.voteEntry(entryId, 'up');
-            }
-            return !isLiked;
-        },
-    });
-};

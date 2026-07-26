@@ -12,8 +12,7 @@ import {
 } from 'react-native';
 import { useColorScheme } from 'nativewind';
 import { X, Save } from 'lucide-react-native';
-import { useUpdateBlogPost } from '@/features/blog/presentation/hooks/useBlogApi';
-import { BLOG_CREATE_TOPIC_OPTIONS } from '@/features/blog/domain/constants/blog';
+import { useUpdateBlogPost, useBlogTopics } from '@/features/blog/presentation/hooks/useBlogApi';
 import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
 import type { BlogPost, UpdatePostRequest } from '@/features/blog/domain/entities/blog.type';
 import type { BlogNoticePayload } from './BlogSlidingNotice';
@@ -55,6 +54,7 @@ export function EditBlogModal({
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const updateMutation = useUpdateBlogPost();
+    const { data: topics = [], isLoading: topicsLoading } = useBlogTopics({ enabled: visible });
 
     const [title, setTitle] = useState('');
     const [shortDescription, setShortDescription] = useState('');
@@ -360,39 +360,43 @@ export function EditBlogModal({
                                 <Text
                                     className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Topic *
+                                    Chủ đề *
                                 </Text>
-                                <View className="flex-row flex-wrap gap-2">
-                                    {BLOG_CREATE_TOPIC_OPTIONS.map((tab) => {
-                                        const active = selectedTopic === tab.value;
-                                        return (
-                                            <TouchableOpacity
-                                                key={tab.value}
-                                                onPress={() => setSelectedTopic(tab.value)}
-                                                disabled={isSubmitting}
-                                                className={`rounded-full px-3 py-2 border ${
-                                                    active
-                                                        ? 'bg-purple-600 border-purple-500'
-                                                        : isDark
-                                                          ? 'border-slate-600 bg-slate-800'
-                                                          : 'border-gray-300 bg-white'
-                                                }`}
-                                            >
-                                                <Text
-                                                    className={`text-xs font-medium ${
+                                {topicsLoading && topics.length === 0 ? (
+                                    <ActivityIndicator color={isDark ? '#A78BFA' : '#7C3AED'} />
+                                ) : (
+                                    <View className="flex-row flex-wrap gap-2">
+                                        {topics.map((topic) => {
+                                            const active = selectedTopic === topic.id;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={topic.id}
+                                                    onPress={() => setSelectedTopic(topic.id)}
+                                                    disabled={isSubmitting}
+                                                    className={`rounded-full px-3 py-2 border ${
                                                         active
-                                                            ? 'text-white'
+                                                            ? 'bg-purple-600 border-purple-500'
                                                             : isDark
-                                                              ? 'text-gray-200'
-                                                              : 'text-gray-800'
+                                                              ? 'border-slate-600 bg-slate-800'
+                                                              : 'border-gray-300 bg-white'
                                                     }`}
                                                 >
-                                                    {tab.label}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
+                                                    <Text
+                                                        className={`text-xs font-medium ${
+                                                            active
+                                                                ? 'text-white'
+                                                                : isDark
+                                                                  ? 'text-gray-200'
+                                                                  : 'text-gray-800'
+                                                        }`}
+                                                    >
+                                                        {topic.name}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                )}
                             </View>
 
                             <View>

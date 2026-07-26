@@ -19,7 +19,7 @@ interface BlogPreviewCardProps {
  * Compact, fixed-size blog card for horizontal carousels (e.g. the Home screen
  * "Blog · Tin tức" section). For the full-width list card see `BlogCard`.
  */
-export function BlogPreviewCard({
+export const BlogPreviewCard = React.memo(function BlogPreviewCard({
     article,
     width = BLOG_PREVIEW_CARD_WIDTH,
     onPress,
@@ -29,7 +29,7 @@ export function BlogPreviewCard({
     const router = useRouter();
 
     const summary = article.short_description || article.brief_description || article.excerpt || '';
-    const author = article.creator_display_name || article.creator_username || 'TalentLink Author';
+    const author = article.creator_display_name || article.creator_username || 'Tác giả';
 
     const handlePress = () => {
         onPress?.();
@@ -140,7 +140,7 @@ export function BlogPreviewCard({
             </TouchableOpacity>
         </View>
     );
-}
+});
 
 /** Loading placeholder matching BlogPreviewCard dimensions. */
 export function BlogPreviewCardSkeleton({ width = BLOG_PREVIEW_CARD_WIDTH }: { width?: number }) {

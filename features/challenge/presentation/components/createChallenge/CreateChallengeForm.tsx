@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MediaUploader } from './MediaUploader';
 import { useGetAllGenres } from '@/features/profiles/presentation/hooks/useUserApi';
 import { challengeApi } from '@/features/challenge/presentation/hooks/useChallengeApi';
+import { MAX_BEAT_GENRES, toggleSelectedGenre } from '@/features/challenge/domain/utils/challenge';
 import Toast from 'react-native-toast-message';
 import { useRouter } from 'expo-router';
 
@@ -23,7 +24,24 @@ export function CreateChallengeForm() {
     const [description, setDescription] = useState('');
     const [bpm, setBpm] = useState('120');
     const [keySig, setKeySig] = useState('C');
-    const [selectedGenre, setSelectedGenre] = useState('');
+    // Nhiều thể loại (tối đa MAX_BEAT_GENRES) — gửi lặp field `genres` cho backend.
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+
+    const handleToggleGenre = (name: string) => {
+        setSelectedGenres((prev) => {
+            const alreadySelected = prev.some((g) => g.toLowerCase() === name.toLowerCase());
+            // Chặn vượt quá giới hạn khi thêm mới (bỏ chọn thì luôn cho phép).
+            if (!alreadySelected && prev.length >= MAX_BEAT_GENRES) {
+                Toast.show({
+                    type: 'info',
+                    text1: 'Đã đạt giới hạn',
+                    text2: `Chỉ chọn tối đa ${MAX_BEAT_GENRES} thể loại.`,
+                });
+                return prev;
+            }
+            return toggleSelectedGenre(prev, name);
+        });
+    };
 
     const [audio, setAudio] = useState<{ uri: string; name: string; type: string } | null>(null);
     const [image, setImage] = useState<{ uri: string; name: string; type: string } | null>(null);
@@ -31,11 +49,11 @@ export function CreateChallengeForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async () => {
-        if (!title || !selectedGenre || !audio) {
+        if (!title || selectedGenres.length === 0 || !audio) {
             Toast.show({
                 type: 'error',
                 text1: 'Thiếu thông tin',
-                text2: 'Vui lòng điền đủ Tên Beat, Thể loại và Ảnh bìa/File Âm thanh.',
+                text2: 'Vui lòng điền đủ Tên Beat, Thể loại và File Âm thanh.',
             });
             return;
         }
@@ -47,7 +65,8 @@ export function CreateChallengeForm() {
             formData.append('description', description);
             formData.append('bpm', bpm);
             formData.append('key_signature', keySig);
-            formData.append('genre', selectedGenre);
+            // Lặp field `genres` cho từng thể loại (backend match OR) — xem swagger POST /beats.
+            selectedGenres.forEach((g) => formData.append('genres', g));
 
             formData.append('audio', {
                 uri: audio.uri,
@@ -144,9 +163,14 @@ export function CreateChallengeForm() {
             </View>
 
             <View className="mb-6">
-                <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 font-body ml-1">
-                    Thể loại
-                </Text>
+                <View className="flex-row items-center justify-between mb-2 ml-1">
+                    <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest font-body">
+                        Thể loại (chọn nhiều)
+                    </Text>
+                    <Text className="text-[10px] font-bold text-gray-400 font-body">
+                        {selectedGenres.length}/{MAX_BEAT_GENRES}
+                    </Text>
+                </View>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -156,12 +180,14 @@ export function CreateChallengeForm() {
                         <ActivityIndicator color="#7d3bed" className="ml-4" />
                     ) : (
                         genres.map((genre) => {
-                            const isSelected = selectedGenre === genre.name;
+                            const isSelected = selectedGenres.some(
+                                (g) => g.toLowerCase() === genre.name.toLowerCase(),
+                            );
                             return (
                                 <TouchableOpacity
                                     key={genre.id}
                                     activeOpacity={0.7}
-                                    onPress={() => setSelectedGenre(genre.name)}
+                                    onPress={() => handleToggleGenre(genre.name)}
                                     className={`px-5 py-2.5 rounded-full mr-3 border ${
                                         isSelected
                                             ? 'bg-primary/10 border-primary'

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
     ChevronLeft,
     Music2,
@@ -373,10 +373,15 @@ function SkeletonCard() {
     );
 }
 
+const VALID_TABS: Tab[] = ['beats', 'entries', 'saved'];
+
 export default function MyContentScreen() {
     const router = useRouter();
     const { user } = useAuthStore();
-    const [activeTab, setActiveTab] = useState<Tab>('beats');
+    // Cho phép mở sẵn một tab qua param (vd từ trang Cá nhân: ?tab=saved).
+    const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
+    const initialTab: Tab = VALID_TABS.includes(tabParam as Tab) ? (tabParam as Tab) : 'beats';
+    const [activeTab, setActiveTab] = useState<Tab>(initialTab);
     const [deletingBeatId, setDeletingBeatId] = useState<string | null>(null);
     const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
     const [selectedEntry, setSelectedEntry] = useState<BeatEntry | null>(null);

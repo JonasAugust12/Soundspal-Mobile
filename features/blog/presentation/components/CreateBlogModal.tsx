@@ -19,8 +19,8 @@ import {
     publishBlogPost,
     addBlogPostMedia,
     logBlogUploadFailure,
+    useBlogTopics,
 } from '@/features/blog/presentation/hooks/useBlogApi';
-import { BLOG_CREATE_TOPIC_OPTIONS } from '@/features/blog/domain/constants/blog';
 import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
 import type { CreatePostRequest } from '@/features/blog/domain/entities/blog.type';
 import type { BlogNoticePayload } from './BlogSlidingNotice';
@@ -35,7 +35,7 @@ function formatBlogFlowError(error: unknown, fallback: string): string {
             return error.message;
         }
         if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-            return 'Cannot reach the server. Check your connection and try again.';
+            return 'Không kết nối được máy chủ. Kiểm tra mạng và thử lại.';
         }
         const data = error.response?.data as { message?: string; error?: string } | undefined;
         const serverMsg = data?.message ?? data?.error;
@@ -78,6 +78,7 @@ export function CreateBlogModal({
 }: CreateBlogModalProps) {
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
+    const { data: topics = [], isLoading: topicsLoading } = useBlogTopics({ enabled: visible });
 
     const [title, setTitle] = useState('');
     const [shortDescription, setShortDescription] = useState('');
@@ -116,19 +117,19 @@ export function CreateBlogModal({
         const c = content.trim();
         const s = shortDescription.trim();
         if (t.length < TITLE_MIN_LEN) {
-            return `Title must be at least ${TITLE_MIN_LEN} characters`;
+            return `Tiêu đề cần ít nhất ${TITLE_MIN_LEN} ký tự`;
         }
         if (c.length < CONTENT_MIN_LEN) {
-            return `Content must be at least ${CONTENT_MIN_LEN} characters`;
+            return `Nội dung cần ít nhất ${CONTENT_MIN_LEN} ký tự`;
         }
         if (!selectedTopic) {
-            return 'Select a topic for this post';
+            return 'Chọn chủ đề cho bài viết';
         }
         if (selectedTags.length < 1) {
-            return 'Select at least one tag';
+            return 'Chọn ít nhất một thẻ';
         }
         if (s.length > SHORT_DESC_MAX) {
-            return `Short description may be at most ${SHORT_DESC_MAX} characters`;
+            return `Mô tả ngắn tối đa ${SHORT_DESC_MAX} ký tự`;
         }
         return null;
     }, [title, content, shortDescription, selectedTopic, selectedTags]);
@@ -157,8 +158,8 @@ export function CreateBlogModal({
         if (!isFormValid) {
             notify({
                 variant: 'error',
-                title: 'Missing information',
-                message: formError ?? 'Fill in all required fields before adding a cover image.',
+                title: 'Thiếu thông tin',
+                message: formError ?? 'Điền đủ các trường bắt buộc trước khi thêm ảnh bìa.',
             });
             return;
         }
@@ -191,8 +192,8 @@ export function CreateBlogModal({
             setSelectedImage(asset.uri);
         } catch (error) {
             logBlogUploadFailure('CreateBlogModal.handlePickImage', error);
-            const msg = formatBlogFlowError(error, 'Could not add the image');
-            notify({ variant: 'error', title: "Couldn't add image", message: msg });
+            const msg = formatBlogFlowError(error, 'Không thể thêm ảnh');
+            notify({ variant: 'error', title: 'Không thêm được ảnh', message: msg });
         } finally {
             setIsMediaWorking(false);
         }
@@ -202,8 +203,8 @@ export function CreateBlogModal({
         if (!isFormValid) {
             notify({
                 variant: 'error',
-                title: 'Missing information',
-                message: formError ?? 'Please check the form and try again.',
+                title: 'Thiếu thông tin',
+                message: formError ?? 'Vui lòng kiểm tra lại biểu mẫu.',
             });
             return;
         }
@@ -221,7 +222,7 @@ export function CreateBlogModal({
             }
 
             if (!postId) {
-                throw new Error('Could not create the post');
+                throw new Error('Không thể tạo bài viết');
             }
 
             await publishBlogPost(postId);
@@ -230,13 +231,13 @@ export function CreateBlogModal({
             onSuccess?.();
             notify({
                 variant: 'success',
-                title: 'Post published',
-                message: 'Your blog post is live. Thanks for sharing!',
+                title: 'Đã đăng bài',
+                message: 'Bài viết của bạn đã được đăng. Cảm ơn bạn đã chia sẻ!',
             });
         } catch (error) {
             logBlogUploadFailure('CreateBlogModal.handleSubmit', error);
-            const msg = formatBlogFlowError(error, 'Could not publish your post');
-            notify({ variant: 'error', title: 'Publish failed', message: msg });
+            const msg = formatBlogFlowError(error, 'Không thể đăng bài');
+            notify({ variant: 'error', title: 'Đăng bài thất bại', message: msg });
         } finally {
             setIsSubmitting(false);
         }
@@ -317,7 +318,7 @@ export function CreateBlogModal({
                             <Text
                                 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}
                             >
-                                Create Blog Post
+                                Tạo bài viết
                             </Text>
                             <TouchableOpacity onPress={handleClose} style={{ zIndex: 2 }}>
                                 <X
@@ -338,12 +339,12 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Title *
+                                    Tiêu đề *
                                 </Text>
                                 <TextInput
                                     value={title}
                                     onChangeText={setTitle}
-                                    placeholder="Enter blog title..."
+                                    placeholder="Nhập tiêu đề bài viết..."
                                     placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                                     style={{
                                         borderWidth: 1,
@@ -359,7 +360,7 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
                                 >
-                                    At least {TITLE_MIN_LEN} characters
+                                    Tối thiểu {TITLE_MIN_LEN} ký tự
                                 </Text>
                             </View>
 
@@ -369,7 +370,7 @@ export function CreateBlogModal({
                                     <Text
                                         className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                     >
-                                        Short description (optional)
+                                        Mô tả ngắn (không bắt buộc)
                                     </Text>
                                     <Text
                                         className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
@@ -386,7 +387,7 @@ export function CreateBlogModal({
                                                 : text.slice(0, SHORT_DESC_MAX),
                                         )
                                     }
-                                    placeholder="Shown on cards; if empty, the start of your content is used"
+                                    placeholder="Hiển thị trên thẻ; để trống sẽ lấy phần đầu nội dung"
                                     placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                                     multiline
                                     numberOfLines={3}
@@ -410,12 +411,12 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Content *
+                                    Nội dung *
                                 </Text>
                                 <TextInput
                                     value={content}
                                     onChangeText={setContent}
-                                    placeholder="Write your blog content here..."
+                                    placeholder="Viết nội dung bài viết ở đây..."
                                     placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                                     multiline
                                     numberOfLines={6}
@@ -434,7 +435,7 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}
                                 >
-                                    At least {CONTENT_MIN_LEN} characters
+                                    Tối thiểu {CONTENT_MIN_LEN} ký tự
                                 </Text>
                             </View>
 
@@ -442,39 +443,43 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Topic *
+                                    Chủ đề *
                                 </Text>
-                                <View className="flex-row flex-wrap gap-2">
-                                    {BLOG_CREATE_TOPIC_OPTIONS.map((tab) => {
-                                        const active = selectedTopic === tab.value;
-                                        return (
-                                            <TouchableOpacity
-                                                key={tab.value}
-                                                onPress={() => setSelectedTopic(tab.value)}
-                                                disabled={isSubmitting || isMediaWorking}
-                                                className={`rounded-full px-3 py-2 border ${
-                                                    active
-                                                        ? 'bg-purple-600 border-purple-500'
-                                                        : isDark
-                                                          ? 'border-slate-600 bg-slate-800'
-                                                          : 'border-gray-300 bg-white'
-                                                }`}
-                                            >
-                                                <Text
-                                                    className={`text-xs font-medium ${
+                                {topicsLoading && topics.length === 0 ? (
+                                    <ActivityIndicator color={isDark ? '#A78BFA' : '#7C3AED'} />
+                                ) : (
+                                    <View className="flex-row flex-wrap gap-2">
+                                        {topics.map((topic) => {
+                                            const active = selectedTopic === topic.id;
+                                            return (
+                                                <TouchableOpacity
+                                                    key={topic.id}
+                                                    onPress={() => setSelectedTopic(topic.id)}
+                                                    disabled={isSubmitting || isMediaWorking}
+                                                    className={`rounded-full px-3 py-2 border ${
                                                         active
-                                                            ? 'text-white'
+                                                            ? 'bg-purple-600 border-purple-500'
                                                             : isDark
-                                                              ? 'text-gray-200'
-                                                              : 'text-gray-800'
+                                                              ? 'border-slate-600 bg-slate-800'
+                                                              : 'border-gray-300 bg-white'
                                                     }`}
                                                 >
-                                                    {tab.label}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
+                                                    <Text
+                                                        className={`text-xs font-medium ${
+                                                            active
+                                                                ? 'text-white'
+                                                                : isDark
+                                                                  ? 'text-gray-200'
+                                                                  : 'text-gray-800'
+                                                        }`}
+                                                    >
+                                                        {topic.name}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+                                )}
                             </View>
 
                             <View>
@@ -482,7 +487,7 @@ export function CreateBlogModal({
                                     <Text
                                         className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                     >
-                                        Tags * (1–5)
+                                        Thẻ * (1–5)
                                     </Text>
                                 </View>
 
@@ -538,14 +543,14 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-sm font-semibold mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Cover image (optional)
+                                    Ảnh bìa (không bắt buộc)
                                 </Text>
                                 {!isFormValid ? (
                                     <Text
                                         className={`text-xs mb-2 ${isDark ? 'text-amber-400/90' : 'text-amber-700'}`}
                                     >
-                                        Complete title, content, topic, and at least one tag before
-                                        adding a cover image.
+                                        Hoàn tất tiêu đề, nội dung, chủ đề và ít nhất một thẻ trước
+                                        khi thêm ảnh bìa.
                                     </Text>
                                 ) : null}
                                 {selectedImage ? (
@@ -576,7 +581,7 @@ export function CreateBlogModal({
                                         <Text
                                             className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
                                         >
-                                            Tap to select image
+                                            Chạm để chọn ảnh
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -608,7 +613,7 @@ export function CreateBlogModal({
                                 <Text
                                     className={`text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                                 >
-                                    Cancel
+                                    Huỷ
                                 </Text>
                             </TouchableOpacity>
 
@@ -649,7 +654,7 @@ export function CreateBlogModal({
                                                     : 'text-white'
                                             }`}
                                         >
-                                            Post Blog
+                                            Đăng bài
                                         </Text>
                                     </>
                                 )}

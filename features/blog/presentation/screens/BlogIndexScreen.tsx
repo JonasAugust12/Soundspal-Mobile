@@ -15,16 +15,17 @@ import {
     FloatingCreateButton,
     type BlogNoticePayload,
 } from '@/features/blog/presentation/components';
-import { BLOG_FEED_TABS } from '@/features/blog/domain/constants/blog';
+import { BLOG_FOR_YOU_TAB } from '@/features/blog/domain/constants/blog';
 import {
     useBlogFeed,
     useBlogSearch,
+    useBlogTopics,
     useBookmarksList,
     useBookmarkPostMutation,
     useUnbookmarkPostMutation,
 } from '@/features/blog/presentation/hooks/useBlogApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
-import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
+import type { BlogPost, BlogTab } from '@/features/blog/domain/entities/blog.type';
 
 type BlogNoticeState = BlogNoticePayload & { key: string };
 
@@ -74,6 +75,13 @@ export default function BlogScreen() {
         refetch: refetchBookmarks,
         isFetching: bookmarksFetching,
     } = useBookmarksList({ enabled: !!user && !isSearchMode });
+
+    // Chủ đề lấy động từ /blogs/topics — tab feed = "Dành cho bạn" + các chủ đề backend.
+    const { data: topics = [] } = useBlogTopics();
+    const feedTabs = useMemo<BlogTab[]>(
+        () => [BLOG_FOR_YOU_TAB, ...topics.map((t) => ({ id: t.id, label: t.name, value: t.id }))],
+        [topics],
+    );
 
     const addBookmarkM = useBookmarkPostMutation();
     const removeBookmarkM = useUnbookmarkPostMutation();
@@ -210,7 +218,7 @@ export default function BlogScreen() {
                 isSearching={isSearchMode && (searchFetching || searchLoading)}
             />
             <BlogLibraryRow activeTab={activeTab} onTabChange={setActiveTab} />
-            <BlogTabBar tabs={BLOG_FEED_TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+            <BlogTabBar tabs={feedTabs} activeTab={activeTab} onTabChange={setActiveTab} />
         </View>
     );
 

@@ -37,30 +37,30 @@ describe('ArtistCard', () => {
     it('should render Singer role badge', () => {
         render(<ArtistCard item={mockItem} />);
 
-        expect(screen.getByText('Singer')).toBeTruthy();
+        expect(screen.getByText('Ca sĩ')).toBeTruthy();
     });
 
     it('should render Producer role badge', () => {
         const producerItem = { ...mockItem, role: 'producer' as const };
         render(<ArtistCard item={producerItem} />);
 
-        expect(screen.getByText('Producer')).toBeTruthy();
+        expect(screen.getByText('Nhà sản xuất')).toBeTruthy();
     });
 
     it('should render Venue role badge', () => {
         const venueItem = { ...mockItem, role: 'venue' as const };
         render(<ArtistCard item={venueItem} />);
 
-        expect(screen.getByText('Venue')).toBeTruthy();
+        expect(screen.getByText('Nhà tuyển dụng')).toBeTruthy();
     });
 
     it('should not render role badge when role is undefined', () => {
         const noRoleItem = { ...mockItem, role: undefined };
         render(<ArtistCard item={noRoleItem} />);
 
-        expect(screen.queryByText('Singer')).toBeNull();
-        expect(screen.queryByText('Producer')).toBeNull();
-        expect(screen.queryByText('Venue')).toBeNull();
+        expect(screen.queryByText('Ca sĩ')).toBeNull();
+        expect(screen.queryByText('Nhà sản xuất')).toBeNull();
+        expect(screen.queryByText('Nhà tuyển dụng')).toBeNull();
     });
 
     it('should call onPress when card is pressed', () => {

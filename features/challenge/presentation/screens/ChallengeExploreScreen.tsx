@@ -8,9 +8,11 @@ import {
 } from '@/features/explore/presentation/components';
 import { CommonHeader } from '@/shared/presentation/ui';
 import { useGetBeats } from '@/features/challenge/presentation/hooks/useChallengeApi';
+import { toggleSelectedGenre } from '@/features/challenge/domain/utils/challenge';
 
 export default function ExploreScreen() {
-    const [selectedGenre, setSelectedGenre] = useState('');
+    // Lọc theo nhiều thể loại (OR) — join bằng dấu phẩy khi gọi API.
+    const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
     // Fetch global beats to find the trending one
     const { data } = useGetBeats({ page_size: 20 });
@@ -34,8 +36,14 @@ export default function ExploreScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <HeroSection trendingBeat={trendingBeat} />
-                <FilterChips selectedGenre={selectedGenre} onSelectGenre={setSelectedGenre} />
-                <BeatList selectedGenre={selectedGenre} />
+                <FilterChips
+                    selectedGenres={selectedGenres}
+                    onToggleGenre={(name) =>
+                        setSelectedGenres((prev) => toggleSelectedGenre(prev, name))
+                    }
+                    onClear={() => setSelectedGenres([])}
+                />
+                <BeatList selectedGenres={selectedGenres} />
             </ScrollView>
 
             <MiniPlayer />

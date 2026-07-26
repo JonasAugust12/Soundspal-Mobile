@@ -10,6 +10,17 @@ export interface BlogTab {
     value: string;
 }
 
+/**
+ * Chủ đề blog lấy động từ GET /blogs/topics (giống web) — không hardcode.
+ * `id` là topic_id backend gắn cho post; `name` là nhãn hiển thị tiếng Việt.
+ */
+export interface BlogTopic {
+    id: string;
+    name: string;
+    slug: string;
+    post_count?: number;
+}
+
 export interface BlogComment {
     id: string;
     author: BlogAuthor;

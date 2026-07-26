@@ -58,7 +58,7 @@ export interface HomeSearchContent {
 
 export const HOME_SEARCH: HomeSearchContent = {
     title: 'Tìm kiếm nghệ sĩ, địa điểm...',
-    subtitle: 'Ca sĩ, Producer, Địa điểm biểu diễn',
+    subtitle: 'Ca sĩ, Nhà sản xuất, Nhà tuyển dụng',
     exploreRoute: '/(tabs)/explore',
     gradientColors: ['#7C3BED', '#EC4899'],
 };

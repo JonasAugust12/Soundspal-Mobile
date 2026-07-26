@@ -29,6 +29,7 @@ import {
     Disc2,
     Building2,
     Music2,
+    Bookmark,
 } from 'lucide-react-native';
 import { useLogout } from '@/features/auth/presentation/hooks/useAuthApi';
 import { useGetCurrentUser } from '@/features/profiles/presentation/hooks/useUserApi';
@@ -69,7 +70,12 @@ const ROLE_ACCENT: Record<string, RoleAccent> = {
         Icon: Disc2,
         label: 'Nhà sản xuất',
     },
-    venue: { gradient: ['#DC2626', '#EF4444'], hex: '#DC2626', Icon: Building2, label: 'Địa điểm' },
+    venue: {
+        gradient: ['#DC2626', '#EF4444'],
+        hex: '#DC2626',
+        Icon: Building2,
+        label: 'Nhà tuyển dụng',
+    },
 };
 
 const DEFAULT_ACCENT: RoleAccent = {
@@ -189,6 +195,14 @@ export default function PersonalScreen() {
 
     const handlePremiumPayment = () => {
         router.push('/(payments)/premium' as `${string}`);
+    };
+
+    const handleSavedChallenges = () => {
+        router.push('/(challenge)/myContent?tab=saved' as `${string}`);
+    };
+
+    const handleMyChallenges = () => {
+        router.push('/(challenge)/myContent' as `${string}`);
     };
 
     return (
@@ -349,6 +363,28 @@ export default function PersonalScreen() {
                             title={premiumMenuCopy.title}
                             subtitle={premiumMenuCopy.subtitle}
                             onPress={handlePremiumPayment}
+                        />
+                    </GlassCard>
+                </View>
+
+                {/* Menu Section - Thử thách */}
+                <View className="mx-5 mt-6">
+                    <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-1">
+                        Thử thách
+                    </Text>
+                    <GlassCard>
+                        <MenuItem
+                            icon={<GradientIcon Icon={Bookmark} />}
+                            title="Thử thách đã lưu"
+                            subtitle="Xem lại các beat bạn đã lưu"
+                            onPress={handleSavedChallenges}
+                        />
+                        <View className="h-px bg-black/5 mx-4" />
+                        <MenuItem
+                            icon={<GradientIcon Icon={Music2} />}
+                            title="Beat & bài dự thi của tôi"
+                            subtitle="Quản lý beat đã đăng và bài dự thi"
+                            onPress={handleMyChallenges}
                         />
                     </GlassCard>
                 </View>

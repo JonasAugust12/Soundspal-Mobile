@@ -1,1 +1,1 @@
-export { BLOG_TABS, BLOG_FEED_TABS, BLOG_CREATE_TOPIC_OPTIONS } from './tabs';
+export { BLOG_FEED_TABS, BLOG_FOR_YOU_TAB, BLOG_FOR_YOU_VALUE } from './tabs';

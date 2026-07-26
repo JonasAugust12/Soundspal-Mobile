@@ -48,7 +48,7 @@ export const ArtistCard = React.memo(function ArtistCard({ item, width = 170, on
             case 'venue':
                 return {
                     icon: Building2,
-                    text: 'Địa điểm',
+                    text: 'Nhà tuyển dụng',
                     className: 'bg-red-100',
                     textColor: 'text-red-600',
                     iconColor: '#DC2626',

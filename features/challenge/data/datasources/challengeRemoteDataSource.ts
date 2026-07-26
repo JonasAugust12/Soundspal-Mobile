@@ -1,4 +1,5 @@
 import { createApiCall } from '@/shared/infrastructure/api/apiClient';
+import { postMultipartWithFetch } from '@/shared/infrastructure/api/multipartUpload';
 import type {
     GetBeatsResponse,
     GetBeatsParams,
@@ -46,8 +47,10 @@ export const challengeRemoteDataSource = {
 
     deleteBeat: (id: string) => createApiCall<void>('DELETE', `/beats/${id}`)(),
 
+    // Multipart QUA fetch: axios 1.x trên RN gửi FormData rỗng → ERR_NETWORK (xem
+    // multipartUpload.ts). Đây là lý do nộp bài/tải beat trước đây thất bại.
     submitEntry: (id: string, formData: FormData) =>
-        createApiCall<BeatEntry, FormData>('POST', `/beats/${id}/entries`)(formData),
+        postMultipartWithFetch<BeatEntry>(`/beats/${id}/entries`, formData),
 
     voteEntry: (entryId: string, voteType: 'up') =>
         createApiCall<void, { vote_type: string }>(
@@ -60,7 +63,7 @@ export const challengeRemoteDataSource = {
 
     getUserStats: (userId: string) => createApiCall<UserStats>('GET', `/beats/stats/${userId}`)(),
 
-    createBeat: (formData: FormData) => createApiCall<Beat, FormData>('POST', '/beats')(formData),
+    createBeat: (formData: FormData) => postMultipartWithFetch<Beat>('/beats', formData),
 
     getMyBeats: (params: GetMyBeatsParams = {}) => {
         const queryParts: string[] = [];

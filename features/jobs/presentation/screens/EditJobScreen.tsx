@@ -26,7 +26,7 @@ import type { UpdateJobRequest } from '@/features/jobs/domain/entities/job.type'
 import { buildUpdatePayloadFromJob } from '@/features/jobs/data/repositories/jobRepositoryHelpers';
 
 const JOB_TYPES = [
-    { label: 'Venue', value: 'venue' },
+    { label: 'Nhà tuyển dụng', value: 'venue' },
     { label: 'Nhà sản xuất', value: 'producer' },
     { label: 'Ca sĩ', value: 'singer' },
 ];

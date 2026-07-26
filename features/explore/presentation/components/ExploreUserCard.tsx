@@ -21,13 +21,13 @@ type RoleConfig = {
 const ROLE_CONFIG: Record<string, RoleConfig> = {
     singer: { label: 'Ca sĩ', color: '#EC4899', gradient: ['#F472B6', '#DB2777'], Icon: MicVocal },
     producer: {
-        label: 'Producer',
+        label: 'Nhà sản xuất',
         color: '#3B82F6',
         gradient: ['#60A5FA', '#4F46E5'],
         Icon: Disc2,
     },
     venue: {
-        label: 'Địa điểm',
+        label: 'Nhà tuyển dụng',
         color: '#F59E0B',
         gradient: ['#FBBF24', '#F97316'],
         Icon: Building2,

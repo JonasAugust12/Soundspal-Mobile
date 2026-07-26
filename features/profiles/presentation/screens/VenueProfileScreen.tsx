@@ -123,7 +123,7 @@ export default function VenueProfile() {
 
                 {/* Profile Info */}
                 <InfoProfile
-                    name={userData?.display_name || 'Địa điểm'}
+                    name={userData?.display_name || 'Nhà tuyển dụng'}
                     location={userData?.city || userData?.country || 'Chưa cập nhật'}
                     rating={4.8}
                     bio={userData?.brief_bio || 'Chưa có thông tin giới thiệu'}

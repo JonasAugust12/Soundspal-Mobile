@@ -1,41 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="17" failures="0" errors="0" time="11.59">
-  <testsuite name="__tests__\components\explore\ExploreUserCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-26T13:49:01" time="9.437" tests="7">
-    <testcase classname="getDefaultCoverUrl" name="picks a cover matching the role" time="0.018">
+<testsuites name="jest tests" tests="20" failures="0" errors="0" time="2.932">
+  <testsuite name="__tests__\features\challenge\recordingHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-26T15:08:52" time="1.473" tests="8">
+    <testcase classname="formatRecordingTime" name="formats MM:SS and pads" time="0.016">
     </testcase>
-    <testcase classname="getDefaultCoverUrl" name="falls back to the artist set when the role is unknown" time="0.002">
+    <testcase classname="formatRecordingTime" name="adds hours only when needed" time="0.001">
     </testcase>
-    <testcase classname="getDefaultCoverUrl" name="is deterministic for the same seed" time="0.001">
+    <testcase classname="formatRecordingTime" name="guards non-finite / negative input" time="0.001">
     </testcase>
-    <testcase classname="getDefaultCoverUrl" name="spreads different seeds across the set" time="0.001">
+    <testcase classname="upload extension helpers" name="extracts lowercase extension" time="0.007">
     </testcase>
-    <testcase classname="ExploreUserCard cover" name="uses the real cover_url when the user has one" time="0.739">
+    <testcase classname="upload extension helpers" name="accepts only whitelisted audio extensions" time="0.002">
     </testcase>
-    <testcase classname="ExploreUserCard cover" name="falls back to a role-matched mock cover when cover_url is missing" time="0.024">
+    <testcase classname="recording / download file names" name="builds a stable recording file name" time="0">
     </testcase>
-    <testcase classname="ExploreUserCard cover" name="treats a blank cover_url as missing" time="0.027">
+    <testcase classname="recording / download file names" name="derives beat audio extension with mp3 fallback" time="0">
+    </testcase>
+    <testcase classname="recording / download file names" name="slugifies title for the download file name and falls back to id" time="0.002">
     </testcase>
   </testsuite>
-  <testsuite name="__tests__\components\explore\BeatCard.test.tsx" errors="0" failures="0" skipped="0" timestamp="2026-07-26T13:49:01" time="10.093" tests="10">
-    <testcase classname="BeatCard" name="should render beat title" time="1.107">
+  <testsuite name="__tests__\features\challenge\challengeHelpers.test.ts" errors="0" failures="0" skipped="0" timestamp="2026-07-26T15:08:52" time="1.487" tests="12">
+    <testcase classname="multi-genre helpers" name="normalizeBeatGenres trims and dedupes case-insensitively, keeping order" time="0.022">
     </testcase>
-    <testcase classname="BeatCard" name="should render producer name" time="0.031">
+    <testcase classname="multi-genre helpers" name="getBeatGenres prefers genres[] and falls back to genre" time="0.001">
     </testcase>
-    <testcase classname="BeatCard" name="should render BPM" time="0.022">
+    <testcase classname="multi-genre helpers" name="formatBeatGenreFilter joins with comma or returns undefined" time="0.004">
     </testcase>
-    <testcase classname="BeatCard" name="should render duration" time="0.024">
+    <testcase classname="multi-genre helpers" name="toggleSelectedGenre adds and removes case-insensitively" time="0.003">
     </testcase>
-    <testcase classname="BeatCard" name="should render entries count" time="0.02">
+    <testcase classname="multi-genre helpers" name="getBeatCreatorDisplayName prefers display name" time="0.001">
     </testcase>
-    <testcase classname="BeatCard" name="should render HOT badge when isHot is true" time="0.023">
+    <testcase classname="multi-genre helpers" name="getHeroBeat returns the beat with the most entries" time="0.001">
     </testcase>
-    <testcase classname="BeatCard" name="should not render HOT badge when isHot is false" time="0.023">
+    <testcase classname="bookmark helpers" name="isBeatBookmarked is strict === true" time="0.002">
     </testcase>
-    <testcase classname="BeatCard" name="should render with onPlayAudio callback" time="0.018">
+    <testcase classname="bookmark helpers" name="applyBeatBookmarkToggle updates only the target beat immutably" time="0.001">
     </testcase>
-    <testcase classname="BeatCard" name="should render with onRecord callback" time="0.021">
+    <testcase classname="leaderboard vote helpers" name="isEntryLiked is strict === true" time="0">
     </testcase>
-    <testcase classname="BeatCard" name="should render delete button when showDelete is true" time="0.028">
+    <testcase classname="leaderboard vote helpers" name="applyEntryLikeToggle syncs vote_count and is idempotent per state" time="0.001">
+    </testcase>
+    <testcase classname="leaderboard vote helpers" name="applyEntryLikeToggle never drops vote_count below zero" time="0.001">
+    </testcase>
+    <testcase classname="leaderboard vote helpers" name="filterLeaderboardEntries removes only failed entries" time="0.001">
     </testcase>
   </testsuite>
 </testsuites>

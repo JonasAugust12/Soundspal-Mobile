@@ -28,7 +28,7 @@ export function RankList({ remainingEntries, onEntryPress, currentUserId }: Rank
     const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
     const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
 
-    const { isLiked, voteCount, toggle: handleVote } = useEntryVotes();
+    const { isLiked, voteCount, toggle: handleVote, isPending: isVotePending } = useEntryVotes();
     const [confirmTarget, setConfirmTarget] = useState<BeatEntry | null>(null);
 
     const deleteEntryMutation = useDeleteEntry();
@@ -188,6 +188,7 @@ export function RankList({ remainingEntries, onEntryPress, currentUserId }: Rank
                                         <TouchableOpacity
                                             className="items-center justify-center min-w-[28px]"
                                             activeOpacity={0.6}
+                                            disabled={isVotePending(item)}
                                             onPress={() => handleVote(item)}
                                         >
                                             <ThumbsUp

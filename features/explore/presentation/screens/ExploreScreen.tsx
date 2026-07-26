@@ -32,8 +32,8 @@ const ROLE_TABS: {
 }[] = [
     { label: 'Tất cả', value: 'all', icon: Users },
     { label: 'Ca sĩ', value: 'singer', icon: MicVocal },
-    { label: 'Producer', value: 'producer', icon: Disc2 },
-    { label: 'Venue', value: 'venue', icon: Building2 },
+    { label: 'Nhà sản xuất', value: 'producer', icon: Disc2 },
+    { label: 'Nhà tuyển dụng', value: 'venue', icon: Building2 },
 ];
 
 /** Gradient chủ đạo cho tab đang chọn. */

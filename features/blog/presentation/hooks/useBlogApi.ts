@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { BLOG_FEED_TABS } from '@/features/blog/domain/constants/blog';
 import { blogRepository } from '@/features/blog/data/repositories/BlogRepositoryImpl';
 import { AddBlogPostMediaUseCase } from '@/features/blog/domain/usecases/AddBlogPostMediaUseCase';
 import type {
@@ -35,11 +34,14 @@ export const createCommentApi = blogRepository.createComment.bind(blogRepository
 export const updateCommentApi = blogRepository.updateComment.bind(blogRepository);
 export const deleteCommentApi = blogRepository.deleteComment.bind(blogRepository);
 
-export function useBlogTabs() {
+/** Danh mục chủ đề blog lấy động từ GET /blogs/topics (không hardcode). */
+export function useBlogTopics(options?: { enabled?: boolean }) {
     return useQuery({
-        queryKey: ['blogTabs'],
-        queryFn: async () => BLOG_FEED_TABS,
+        queryKey: ['blogTopics'],
+        queryFn: () => blogRepository.fetchTopics(),
+        enabled: options?.enabled !== false,
         staleTime: 1000 * 60 * 30,
+        gcTime: 1000 * 60 * 60,
     });
 }
 

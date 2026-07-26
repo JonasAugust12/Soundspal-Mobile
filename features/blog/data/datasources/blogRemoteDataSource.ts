@@ -20,6 +20,7 @@ import {
     mapBlogItemToBlogPost,
     mapBookmarkRowToBlogPost,
 } from '@/features/blog/data/mappers/blogPostMapper';
+import { normalizeBlogTopics } from '@/features/blog/data/mappers/blogTopicMapper';
 import { mapApiCommentToBlogComment } from '@/features/blog/data/mappers/blogCommentMapper';
 import { unwrapBlogData } from '@/features/blog/data/utils/blogResponseUtils';
 import {
@@ -51,6 +52,12 @@ export const blogRemoteDataSource = {
         });
         const items = response.data?.data?.items;
         return Array.isArray(items) ? items.map(mapBlogItemToBlogPost) : [];
+    },
+
+    /** GET /blogs/topics — danh mục chủ đề động (thay cho danh sách hardcode). */
+    async fetchTopics() {
+        const { data: body } = await apiClient.get('/blogs/topics');
+        return normalizeBlogTopics(body);
     },
 
     async createPost(request: CreatePostRequest): Promise<BlogItem> {

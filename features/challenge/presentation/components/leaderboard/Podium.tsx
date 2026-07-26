@@ -30,7 +30,7 @@ export function Podium({ topEntries, onEntryPress }: PodiumProps) {
     const isEntryPlaying = useAudioStore((s) => s.isEntryPlaying);
     const isEntryLoading = useAudioStore((s) => s.isEntryLoading);
 
-    const { isLiked, voteCount, toggle: handleVote } = useEntryVotes();
+    const { isLiked, voteCount, toggle: handleVote, isPending } = useEntryVotes();
 
     useEffect(() => {
         return () => {
@@ -74,6 +74,7 @@ export function Podium({ topEntries, onEntryPress }: PodiumProps) {
         return (
             <TouchableOpacity
                 onPress={() => handleVote(entry)}
+                disabled={isPending(entry)}
                 activeOpacity={0.7}
                 className={`flex-row items-center gap-1.5 px-3 py-1 rounded-full border ${isVoted ? 'bg-pink-50 border-pink-200' : light ? 'bg-gray-50 border-gray-100' : 'border-primary/30'}`}
             >

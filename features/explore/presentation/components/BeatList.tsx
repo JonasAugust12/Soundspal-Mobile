@@ -11,13 +11,19 @@ import { BeatBookmarkButton } from '@/features/challenge/presentation/components
 import { useAudioStore } from '@/features/challenge/presentation/store/audioStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { ConfirmModal } from '@/shared/presentation/ui/ConfirmModal';
+import {
+    formatBeatGenreFilter,
+    getBeatCreatorDisplayName,
+} from '@/features/challenge/domain/utils/challenge';
 import { type Beat } from '@/features/challenge/domain/entities/challenge.type';
 
-export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
+export function BeatList({ selectedGenres = [] }: { selectedGenres?: string[] }) {
     const router = useRouter();
     const { user } = useAuthStore();
 
-    const fetchParams = selectedGenre ? { genre: selectedGenre } : {};
+    // OR filter: join thành "pop,hiphop" đúng như backend GET /beats mong đợi.
+    const genre = formatBeatGenreFilter(selectedGenres);
+    const fetchParams = genre ? { genre } : {};
     const { data: beatsData, isLoading, isError } = useGetBeats(fetchParams);
     const playBeat = useAudioStore((state) => state.playBeat);
     const deleteBeatMutation = useDeleteBeat();
@@ -71,8 +77,8 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
                     Chưa có beat nào
                 </Text>
                 <Text className="font-body text-gray-500 text-sm text-center">
-                    {selectedGenre
-                        ? 'Không có beat nào thuộc thể loại này.'
+                    {selectedGenres.length > 0
+                        ? 'Không có beat nào thuộc thể loại đã chọn.'
                         : 'Hãy là người đầu tiên đăng beat cho cộng đồng!'}
                 </Text>
             </View>
@@ -88,7 +94,7 @@ export function BeatList({ selectedGenre }: { selectedGenre?: string }) {
                         <BeatCard
                             key={beat.id}
                             title={beat.title}
-                            producer={beat.creator_username || 'Unknown'}
+                            producer={getBeatCreatorDisplayName(beat) || 'Ẩn danh'}
                             bpm={beat.bpm || 120}
                             duration={formatDuration(beat.duration_seconds || 0)}
                             genre={beat.genre || 'Beat'}

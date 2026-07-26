@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 interface ShimmerProps {
     style?: StyleProp<ViewStyle>;
@@ -11,58 +10,55 @@ interface ShimmerProps {
 }
 
 /**
- * Hiệu ứng skeleton "quét sáng" cho ảnh đang tải.
- * Dùng làm lớp phủ (absoluteFill) trên vùng ảnh chưa hiển thị để báo cho người dùng biết đang load.
+ * Hiệu ứng skeleton "nhịp sáng" cho ảnh/khối đang tải.
+ *
+ * Cố ý KHÔNG dùng LinearGradient quét ngang: khi có hàng chục ảnh cùng tải (vd trang
+ * chủ / landing) thì mỗi gradient động là một lớp compositor riêng, gây giật khi cuộn.
+ * Ở đây chỉ nhấp nháy `opacity` của một lớp phủ màu bằng native driver — chạy trên
+ * luồng UI, gần như không tốn JS/GPU, mà hiệu ứng "đang tải" vẫn rõ ràng.
  */
 export function Shimmer({
     style,
     baseColor = '#E5E7EB',
-    highlightColor = 'rgba(255,255,255,0.6)',
+    highlightColor = 'rgba(255,255,255,0.65)',
     borderRadius,
 }: ShimmerProps) {
-    const progress = useRef(new Animated.Value(0)).current;
-    const [width, setWidth] = useState(0);
+    // Biên độ nhấp nháy nhẹ (0.2 → 0.6) để giữ màu nhạt, không loé sáng gắt.
+    const opacity = useRef(new Animated.Value(0.2)).current;
 
     useEffect(() => {
         const loop = Animated.loop(
-            Animated.timing(progress, {
-                toValue: 1,
-                duration: 1100,
-                easing: Easing.linear,
-                useNativeDriver: true,
-            }),
+            Animated.sequence([
+                Animated.timing(opacity, {
+                    toValue: 0.6,
+                    duration: 750,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(opacity, {
+                    toValue: 0.2,
+                    duration: 750,
+                    easing: Easing.inOut(Easing.ease),
+                    useNativeDriver: true,
+                }),
+            ]),
         );
         loop.start();
         return () => loop.stop();
-    }, [progress]);
-
-    const translateX = progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [-width, width],
-    });
+    }, [opacity]);
 
     return (
         <View
-            onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
             style={[
                 { backgroundColor: baseColor, overflow: 'hidden' },
                 borderRadius != null ? { borderRadius } : null,
                 style,
             ]}
         >
-            {width > 0 && (
-                <Animated.View
-                    style={[StyleSheet.absoluteFill, { transform: [{ translateX }] }]}
-                    pointerEvents="none"
-                >
-                    <LinearGradient
-                        colors={['transparent', highlightColor, 'transparent']}
-                        start={{ x: 0, y: 0.5 }}
-                        end={{ x: 1, y: 0.5 }}
-                        style={StyleSheet.absoluteFill}
-                    />
-                </Animated.View>
-            )}
+            <Animated.View
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, { backgroundColor: highlightColor, opacity }]}
+            />
         </View>
     );
 }

@@ -348,7 +348,7 @@ export default function VenueEditProfileScreen() {
                                         Đang tuyển nghệ sĩ
                                     </Text>
                                     <Text className="text-xs text-muted-foreground">
-                                        {isAvailable ? 'Địa điểm đang mở tuyển' : 'Tạm ngừng tuyển'}
+                                        {isAvailable ? 'Đang mở tuyển dụng' : 'Tạm ngừng tuyển'}
                                     </Text>
                                 </View>
                                 {savingAvailability && (

@@ -149,7 +149,7 @@ export default function CompleteOAuthProfileScreen() {
                                 <View className="flex-row items-center gap-2">
                                     <View className="w-1.5 h-1.5 rounded-full bg-violet-500" />
                                     <Text className="text-xs text-gray-600">
-                                        <Text className="font-semibold">Địa điểm:</Text>{' '}
+                                        <Text className="font-semibold">Nhà tuyển dụng:</Text>{' '}
                                         {AUTH_OAUTH_UI.venueDesc}
                                     </Text>
                                 </View>

@@ -185,7 +185,7 @@ export const AUTH_OAUTH_UI = {
 } as const;
 
 export const AUTH_USER_ROLES = [
-    { label: 'Producer', value: 'producer' as const },
-    { label: 'Singer', value: 'singer' as const },
-    { label: 'Venue', value: 'venue' as const },
+    { label: 'Nhà sản xuất', value: 'producer' as const },
+    { label: 'Ca sĩ', value: 'singer' as const },
+    { label: 'Nhà tuyển dụng', value: 'venue' as const },
 ] as const;

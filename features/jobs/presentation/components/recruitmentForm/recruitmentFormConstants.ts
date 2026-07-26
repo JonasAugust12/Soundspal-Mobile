@@ -25,7 +25,7 @@ import {
 import type { TagChipOption } from './TagChipPicker';
 
 export const JOB_TYPE_OPTIONS = [
-    { value: 'venue', label: 'Venue', Icon: Landmark },
+    { value: 'venue', label: 'Nhà tuyển dụng', Icon: Landmark },
     { value: 'producer', label: 'Nhà sản xuất', Icon: Headphones },
     { value: 'singer', label: 'Ca sĩ', Icon: Mic },
 ] as const;

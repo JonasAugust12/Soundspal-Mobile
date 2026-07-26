@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import {
     View,
     Text,
-    ScrollView,
+    FlatList,
     TouchableOpacity,
     Image,
     StyleSheet,
@@ -30,6 +30,8 @@ import {
     useFeaturedJobs,
 } from '@/features/explore/presentation/hooks/useSearchApi';
 import { useBlogFeed } from '@/features/blog/presentation/hooks/useBlogApi';
+import { useGetBeats } from '@/features/challenge/presentation/hooks/useChallengeApi';
+import { getHeroBeat } from '@/features/challenge/domain/utils/challenge';
 
 const CAROUSEL_CONTENT_STYLE = {
     paddingHorizontal: 20,
@@ -38,8 +40,27 @@ const CAROUSEL_CONTENT_STYLE = {
     paddingBottom: 10,
 } as const;
 
-const FEATURED_LIMIT = 10;
-const BLOG_PREVIEW_LIMIT = 6;
+/**
+ * Cấu hình chung cho carousel ngang. Dùng FlatList (thay ScrollView) để chỉ giữ các
+ * thẻ đang hiển thị — giảm số ảnh/shimmer mount cùng lúc, nhờ đó cuộn mượt hơn, không
+ * bị khựng (khựng khiến cảm giác "kéo nhiều mà trượt ít"). decelerationRate normal cho
+ * quán tính lướt xa: vuốt nhẹ vẫn trôi được nhiều thẻ.
+ */
+const CAROUSEL_LIST_PROPS = {
+    horizontal: true,
+    showsHorizontalScrollIndicator: false,
+    contentContainerStyle: CAROUSEL_CONTENT_STYLE,
+    removeClippedSubviews: true,
+    initialNumToRender: 3,
+    maxToRenderPerBatch: 3,
+    windowSize: 5,
+    decelerationRate: 'normal',
+    scrollEventThrottle: 16,
+} as const;
+
+// Mỗi mục ở trang chủ chỉ hiển thị tối đa 5 thẻ.
+const FEATURED_LIMIT = 5;
+const BLOG_PREVIEW_LIMIT = 5;
 
 /** Mỗi mục hiển thị spinner khi đang tải, rồi mới tới rỗng — tránh nháy "Chưa có..." lúc đầu. */
 function SectionPlaceholder({
@@ -67,6 +88,7 @@ export default function HomeScreen() {
         useFeaturedUsers(FEATURED_LIMIT);
     const { data: featuredJobsData, isLoading: isLoadingJobs } = useFeaturedJobs(FEATURED_LIMIT);
     const { data: blogFeed, isLoading: isLoadingBlog } = useBlogFeed();
+    const { data: beatsData } = useGetBeats({ page_size: 20 });
 
     const artists = useMemo(
         () => mapFeaturedUsersToArtistItems(featuredUsersData),
@@ -74,6 +96,13 @@ export default function HomeScreen() {
     );
     const jobs = useMemo(() => mapFeaturedJobsToJobItems(featuredJobsData), [featuredJobsData]);
     const blogPosts = blogFeed ?? [];
+
+    // Thử thách nổi bật = beat có nhiều bài dự thi nhất (GET /beats). Dùng tên thật của
+    // thử thách cho hero thay cho tiêu đề cứng "SONIC PULSE / CYBERPUNK".
+    const heroBeat = useMemo(() => getHeroBeat(beatsData?.beats ?? []), [beatsData]);
+    const heroTitle = heroBeat
+        ? heroBeat.title.toUpperCase()
+        : `${hero.titleLine1}\n${hero.titleLine2}`;
 
     return (
         <TabScreenWrapper>
@@ -154,10 +183,11 @@ export default function HomeScreen() {
                             </View>
                         </View>
 
-                        <Text className="text-2xl font-black text-white leading-tight font-heading">
-                            {hero.titleLine1}
-                            {'\n'}
-                            {hero.titleLine2}
+                        <Text
+                            className="text-2xl font-black text-white leading-tight font-heading"
+                            numberOfLines={2}
+                        >
+                            {heroTitle}
                         </Text>
 
                         <Text className="text-white/80 text-sm max-w-[85%] font-body">
@@ -220,14 +250,12 @@ export default function HomeScreen() {
                 </View>
 
                 {artists.length > 0 ? (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
-                    >
-                        {artists.map((artist) => (
+                    <FlatList
+                        {...CAROUSEL_LIST_PROPS}
+                        data={artists.slice(0, FEATURED_LIMIT)}
+                        keyExtractor={(artist) => artist.id}
+                        renderItem={({ item: artist }) => (
                             <ArtistCard
-                                key={artist.id}
                                 item={artist}
                                 width={170}
                                 onPress={() => {
@@ -241,8 +269,8 @@ export default function HomeScreen() {
                                     });
                                 }}
                             />
-                        ))}
-                    </ScrollView>
+                        )}
+                    />
                 ) : (
                     <SectionPlaceholder
                         isLoading={isLoadingArtists}
@@ -281,14 +309,12 @@ export default function HomeScreen() {
                 </View>
 
                 {jobs.length > 0 ? (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
-                    >
-                        {jobs.map((job) => (
+                    <FlatList
+                        {...CAROUSEL_LIST_PROPS}
+                        data={jobs.slice(0, FEATURED_LIMIT)}
+                        keyExtractor={(job) => job.id}
+                        renderItem={({ item: job }) => (
                             <JobCard
-                                key={job.id}
                                 item={job}
                                 width={260}
                                 onPress={() => {
@@ -298,8 +324,8 @@ export default function HomeScreen() {
                                     });
                                 }}
                             />
-                        ))}
-                    </ScrollView>
+                        )}
+                    />
                 ) : (
                     <SectionPlaceholder
                         isLoading={isLoadingJobs}
@@ -331,15 +357,12 @@ export default function HomeScreen() {
                 </View>
 
                 {blogPosts.length > 0 ? (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={CAROUSEL_CONTENT_STYLE}
-                    >
-                        {blogPosts.slice(0, BLOG_PREVIEW_LIMIT).map((post) => (
-                            <BlogPreviewCard key={post.id} article={post} />
-                        ))}
-                    </ScrollView>
+                    <FlatList
+                        {...CAROUSEL_LIST_PROPS}
+                        data={blogPosts.slice(0, BLOG_PREVIEW_LIMIT)}
+                        keyExtractor={(post) => post.id}
+                        renderItem={({ item: post }) => <BlogPreviewCard article={post} />}
+                    />
                 ) : (
                     <SectionPlaceholder
                         isLoading={isLoadingBlog}

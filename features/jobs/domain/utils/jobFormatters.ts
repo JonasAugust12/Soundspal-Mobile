@@ -102,7 +102,7 @@ export function getJobPublishBlockReason(job: {
  */
 export const formatJobType = (type: string): string => {
     const typeMap: { [key: string]: string } = {
-        venue: 'Venue',
+        venue: 'Nhà tuyển dụng',
         producer: 'Nhà sản xuất',
         singer: 'Ca sĩ',
         musician: 'Nhạc công',
