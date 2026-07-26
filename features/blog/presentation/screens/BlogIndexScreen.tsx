@@ -1,7 +1,9 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { View, FlatList, RefreshControl, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColorScheme } from 'nativewind';
+import Toast from 'react-native-toast-message';
+import { useBlogBookmarkStore } from '@/features/blog/presentation/store/blogBookmarkStore';
 import {
     BlogHeader,
     BlogTabBar,
@@ -41,8 +43,12 @@ export default function BlogScreen() {
     const [searchDraft, setSearchDraft] = useState('');
     const [committedSearch, setCommittedSearch] = useState('');
     const [bookmarkPendingId, setBookmarkPendingId] = useState<string | null>(null);
-    // Cập nhật lạc quan trạng thái lưu để icon đổi ngay khi bấm (không chờ refetch list).
-    const [bookmarkOverrides, setBookmarkOverrides] = useState<Record<string, boolean>>({});
+    // Nguồn "đã lưu" bền vững (persist MMKV) — hiển thị được sau khi rời màn / mở lại app.
+    const savedPosts = useBlogBookmarkStore((s) => s.savedPosts);
+    const isBookmarked = useBlogBookmarkStore((s) => s.isBookmarked);
+    const addBookmarkLocal = useBlogBookmarkStore((s) => s.addBookmark);
+    const removeBookmarkLocal = useBlogBookmarkStore((s) => s.removeBookmark);
+    const mergeServerBookmarks = useBlogBookmarkStore((s) => s.mergeServer);
 
     const commitSearch = useCallback(() => {
         setCommittedSearch(searchDraft.trim());
@@ -89,7 +95,10 @@ export default function BlogScreen() {
     const addBookmarkM = useBookmarkPostMutation();
     const removeBookmarkM = useUnbookmarkPostMutation();
 
-    const bookmarkedIdSet = useMemo(() => new Set(bookmarkPosts.map((p) => p.id)), [bookmarkPosts]);
+    // Gộp danh sách /bookmarks (server) vào store bền vững khi có dữ liệu mới.
+    useEffect(() => {
+        if (bookmarkPosts.length) mergeServerBookmarks(bookmarkPosts);
+    }, [bookmarkPosts, mergeServerBookmarks]);
 
     const searchQueryEnabled = isSearchMode && !tabAuthBlockedForSearch;
 
@@ -131,8 +140,13 @@ export default function BlogScreen() {
           ? bookmarksFetching
           : listRefetching;
 
-    /** Full-screen spinner: initial feed/bookmarks only — search keeps list + header visible. */
-    const blockingInitialLoad = !isSearchMode && isLoading && posts.length === 0;
+    /** Full-screen spinner: initial feed/bookmarks only — search keeps list + header visible.
+     *  Bỏ qua khi ở tab "Đã lưu" mà đã có bài lưu sẵn trong store (khỏi che bằng spinner). */
+    const blockingInitialLoad =
+        !isSearchMode &&
+        isLoading &&
+        posts.length === 0 &&
+        !(isBookmarksTab && savedPosts.length > 0);
 
     const onRefresh = useCallback(() => {
         if (isSearchMode) void refetchSearch();
@@ -143,18 +157,40 @@ export default function BlogScreen() {
     const handleToggleBookmark = useCallback(
         async (article: BlogPost) => {
             if (!user?.id) return;
+
+            const currentlyBookmarked = isBookmarked(article.id);
+
             setBookmarkPendingId(article.id);
+            // Cập nhật store bền vững ngay (bài lưu hiện ở tab "Đã lưu" + sống qua điều hướng),
+            // rồi đồng bộ backend; lỗi thì revert.
+            if (currentlyBookmarked) removeBookmarkLocal(article.id);
+            else addBookmarkLocal(article);
             try {
-                if (bookmarkedIdSet.has(article.id)) {
+                if (currentlyBookmarked) {
                     await removeBookmarkM.mutateAsync({ postId: article.id });
                 } else {
                     await addBookmarkM.mutateAsync({ postId: article.id });
                 }
+            } catch {
+                if (currentlyBookmarked) addBookmarkLocal(article);
+                else removeBookmarkLocal(article.id);
+                Toast.show({
+                    type: 'error',
+                    text1: currentlyBookmarked ? 'Không thể bỏ lưu' : 'Không thể lưu bài viết',
+                    text2: 'Vui lòng thử lại.',
+                });
             } finally {
                 setBookmarkPendingId(null);
             }
         },
-        [user?.id, bookmarkedIdSet, addBookmarkM, removeBookmarkM],
+        [
+            user?.id,
+            isBookmarked,
+            addBookmarkLocal,
+            removeBookmarkLocal,
+            addBookmarkM,
+            removeBookmarkM,
+        ],
     );
 
     const isTopicTab = (t: string) => t !== 'for-you' && t !== 'my-posts' && t !== 'bookmarks';
@@ -165,7 +201,7 @@ export default function BlogScreen() {
             if (isMyPostsTab && user?.id) {
                 list = list.filter((a) => a.author_id === user.id);
             } else if (isBookmarksTab && user?.id) {
-                list = list.filter((a) => bookmarkedIdSet.has(a.id));
+                list = list.filter((a) => isBookmarked(a.id));
             } else if (isTopicTab(activeTab)) {
                 list = list.filter((a) => a.topic_id === activeTab);
             }
@@ -178,19 +214,19 @@ export default function BlogScreen() {
         }
         if (activeTab === 'bookmarks') {
             if (!user?.id) return [];
-            return bookmarkPosts;
+            return savedPosts;
         }
         return listPosts.filter((a) => a.topic_id === activeTab);
     }, [
         isSearchMode,
         posts,
         listPosts,
-        bookmarkPosts,
+        savedPosts,
         activeTab,
         isMyPostsTab,
         isBookmarksTab,
         user?.id,
-        bookmarkedIdSet,
+        isBookmarked,
     ]);
 
     /** Large hero only on “For you” (not while searching). Other tabs: all items as standard cards. */
@@ -394,7 +430,7 @@ export default function BlogScreen() {
                         showEdit={isMyPostsTab}
                         onEditPress={(a) => setEditingArticle(a)}
                         showBookmark={!!user && !isSearchMode}
-                        isBookmarked={bookmarkedIdSet.has(item.id)}
+                        isBookmarked={isBookmarked(item.id)}
                         bookmarkLoading={bookmarkPendingId === item.id}
                         onBookmarkPress={handleToggleBookmark}
                     />

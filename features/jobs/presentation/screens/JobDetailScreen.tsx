@@ -141,7 +141,11 @@ export default function JobDetailScreen() {
     const isOwned = interaction?.isOwner ?? false;
 
     // Saved (bookmark) — client-side (dùng store sẵn có jobBookmarkStore)
-    const isSaved = useJobBookmarkStore((s) => (jobId ? s.bookmarkedIds.includes(jobId) : false));
+    const savedJobs = useJobBookmarkStore((s) => s.savedJobs);
+    const isSaved = useMemo(
+        () => (jobId ? savedJobs.some((j) => j.id === jobId) : false),
+        [savedJobs, jobId],
+    );
     const toggleSave = useJobBookmarkStore((s) => s.toggleBookmark);
 
     const handleViewApplication = () => {
@@ -336,7 +340,7 @@ export default function JobDetailScreen() {
                     onViewApplication={handleViewApplication}
                     canSave={interaction?.canSave}
                     isSaved={isSaved}
-                    onToggleSave={() => jobId && toggleSave(jobId)}
+                    onToggleSave={() => job && toggleSave(job)}
                 />
             </View>
 

@@ -67,9 +67,9 @@ function CommentModalContent({
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const screenHeight = Dimensions.get('window').height;
-    const screenWidth = Dimensions.get('window').width;
-    const modalHeight = screenHeight * 0.7;
-    const modalWidth = screenWidth * 0.9;
+    // Bottom sheet chiếm full chiều ngang, cao ~80% — ô nhập nằm đáy nên bàn phím đẩy lên
+    // vừa khít, không bị che (khác thiết kế card ở giữa cũ hay bị bàn phím che ô nhập).
+    const modalHeight = screenHeight * 0.8;
 
     const scaleAnim = useRef(new Animated.Value(0)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -101,8 +101,7 @@ function CommentModalContent({
                 <View
                     style={{
                         flex: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        justifyContent: 'flex-end',
                         backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     }}
                 >
@@ -118,16 +117,17 @@ function CommentModalContent({
                         }}
                     />
 
-                    {/* Animated centered modal container */}
+                    {/* Bottom-sheet container (trượt lên từ đáy) */}
                     <Animated.View
                         style={{
-                            width: modalWidth,
+                            width: '100%',
                             height: modalHeight,
                             backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
-                            borderRadius: 24,
+                            borderTopLeftRadius: 24,
+                            borderTopRightRadius: 24,
                             shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.25,
+                            shadowOffset: { width: 0, height: -4 },
+                            shadowOpacity: 0.2,
                             shadowRadius: 12,
                             elevation: 15,
                             zIndex: 1000,
@@ -136,9 +136,9 @@ function CommentModalContent({
                             flexDirection: 'column',
                             transform: [
                                 {
-                                    scale: scaleAnim.interpolate({
+                                    translateY: scaleAnim.interpolate({
                                         inputRange: [0, 1],
-                                        outputRange: [0.5, 1],
+                                        outputRange: [modalHeight, 0],
                                     }),
                                 },
                             ],
@@ -155,13 +155,13 @@ function CommentModalContent({
                                 <Text
                                     className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}
                                 >
-                                    Comments
+                                    Bình luận
                                 </Text>
                                 <Text
                                     className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
                                     numberOfLines={1}
                                 >
-                                    Discussion on {articleTitle}
+                                    Thảo luận: {articleTitle}
                                 </Text>
                             </View>
                             <TouchableOpacity
@@ -187,6 +187,7 @@ function CommentModalContent({
                             </View>
                         ) : (
                             <FlatList
+                                style={{ flex: 1 }}
                                 data={comments}
                                 extraData={comments.length + (currentUserId ?? '')}
                                 renderItem={({ item }) => (
@@ -222,7 +223,7 @@ function CommentModalContent({
                                                 isDark ? 'text-gray-400' : 'text-gray-600'
                                             }`}
                                         >
-                                            No comments yet. Be the first to share your thoughts.
+                                            Chưa có bình luận. Hãy là người đầu tiên chia sẻ.
                                         </Text>
                                     </View>
                                 }

@@ -9,6 +9,7 @@ import {
     StyleSheet,
     TouchableOpacity,
     AppState,
+    Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
@@ -18,7 +19,8 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import Toast from 'react-native-toast-message';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import {
     MessageBubble,
@@ -49,6 +51,16 @@ export default function DetailMessageScreen() {
     // Màn này là stack screen có ô nhập cố định ở đáy → phải tự chừa chỗ cho thanh điều hướng,
     // nếu không ô nhập sẽ bị nav bar đè (app bật edgeToEdgeEnabled).
     const insets = useSafeAreaInsets();
+
+    // Đẩy ô nhập lên trên bàn phím bằng "khoảng đệm ảo" (fake spacer) — mẫu khuyến nghị của
+    // react-native-keyboard-controller. `height` là shared value (âm khi bàn phím mở), đặt một
+    // View cao đúng bằng chiều cao bàn phím NGAY DƯỚI ô nhập → ScrollView co lại, ô nhập nổi lên
+    // vừa khít trên bàn phím. Đáng tin cậy hơn behavior="padding" của KeyboardAvoidingView vốn
+    // không co được layout flex này trên Android.
+    const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
+    const keyboardSpacerStyle = useAnimatedStyle(() => ({
+        height: Math.abs(keyboardHeight.value),
+    }));
 
     const { user: currentUser } = useAuthStore();
     const currentUserId = currentUser?.id;
@@ -84,6 +96,15 @@ export default function DetailMessageScreen() {
     const [conversation, setConversation] = useState<Conversation | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Khi bàn phím mở, ScrollView co lại (behavior="padding") nên tin nhắn mới nhất có thể
+    // bị đẩy khỏi tầm nhìn — cuộn xuống đáy để luôn thấy tin cuối ngay trên ô nhập.
+    useEffect(() => {
+        const sub = Keyboard.addListener('keyboardDidShow', () => {
+            requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+        });
+        return () => sub.remove();
+    }, []);
 
     useEffect(() => {
         if (!conversationId) return;
@@ -482,177 +503,165 @@ export default function DetailMessageScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50" edges={SCREEN_SAFE_AREA_EDGES}>
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior="padding"
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-            >
-                <View className="flex-1">
-                    {/* Premium Header */}
-                    <View style={styles.header} className="bg-white px-4 py-3">
-                        <View className="flex-row items-center">
-                            {/* Back Button */}
-                            <TouchableOpacity
-                                onPress={goBack}
-                                className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center mr-3"
-                            >
-                                <ChevronLeft size={22} color="#374151" />
-                            </TouchableOpacity>
+            <View className="flex-1">
+                {/* Premium Header */}
+                <View style={styles.header} className="bg-white px-4 py-3">
+                    <View className="flex-row items-center">
+                        {/* Back Button */}
+                        <TouchableOpacity
+                            onPress={goBack}
+                            className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center mr-3"
+                        >
+                            <ChevronLeft size={22} color="#374151" />
+                        </TouchableOpacity>
 
-                            {/* Avatar with Online Indicator */}
-                            <TouchableOpacity className="relative mr-3">
-                                <Image
-                                    source={
-                                        otherUser?.avatarUrl
-                                            ? { uri: otherUser.avatarUrl }
-                                            : require('@/assets/images/user-default.jpg')
-                                    }
-                                    className="w-11 h-11 rounded-full"
-                                />
-                                {otherUser?.id && (
-                                    <OnlineIndicator userId={otherUser.id} size={14} />
-                                )}
-                            </TouchableOpacity>
+                        {/* Avatar with Online Indicator */}
+                        <TouchableOpacity className="relative mr-3">
+                            <Image
+                                source={
+                                    otherUser?.avatarUrl
+                                        ? { uri: otherUser.avatarUrl }
+                                        : require('@/assets/images/user-default.jpg')
+                                }
+                                className="w-11 h-11 rounded-full"
+                            />
+                            {otherUser?.id && <OnlineIndicator userId={otherUser.id} size={14} />}
+                        </TouchableOpacity>
 
-                            {/* User Info */}
-                            <View className="flex-1">
-                                <Text
-                                    className="text-base font-bold text-gray-900"
-                                    numberOfLines={1}
-                                >
-                                    {otherUser?.displayName || 'Unknown User'}
-                                </Text>
-                                <View className="flex-row items-center gap-1">
-                                    {filteredTypingUsers.length > 0 ? (
-                                        <Text className="text-xs font-medium text-purple-600">
-                                            Đang nhập...
+                        {/* User Info */}
+                        <View className="flex-1">
+                            <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
+                                {otherUser?.displayName || 'Unknown User'}
+                            </Text>
+                            <View className="flex-row items-center gap-1">
+                                {filteredTypingUsers.length > 0 ? (
+                                    <Text className="text-xs font-medium text-purple-600">
+                                        Đang nhập...
+                                    </Text>
+                                ) : isOtherUserOnline ? (
+                                    <>
+                                        <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                        <Text className="text-xs text-gray-500">
+                                            Đang hoạt động
                                         </Text>
-                                    ) : isOtherUserOnline ? (
-                                        <>
-                                            <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                            <Text className="text-xs text-gray-500">
-                                                Đang hoạt động
-                                            </Text>
-                                        </>
-                                    ) : (
-                                        <Text className="text-xs text-gray-400">Ngoại tuyến</Text>
-                                    )}
-                                </View>
+                                    </>
+                                ) : (
+                                    <Text className="text-xs text-gray-400">Ngoại tuyến</Text>
+                                )}
                             </View>
                         </View>
                     </View>
+                </View>
 
-                    {/* Messages */}
-                    <ScrollView
-                        ref={scrollViewRef}
-                        className="flex-1"
-                        contentContainerStyle={{ paddingVertical: 16, paddingHorizontal: 12 }}
-                        onContentSizeChange={() =>
-                            scrollViewRef.current?.scrollToEnd({ animated: true })
-                        }
-                        showsVerticalScrollIndicator={false}
-                    >
-                        {/* Date Separator */}
-                        {chatMessages.length > 0 && (
-                            <View className="items-center mb-4">
-                                <View className="bg-gray-200 px-3 py-1 rounded-full">
-                                    <Text className="text-xs text-gray-500 font-medium">
-                                        Hôm nay
-                                    </Text>
-                                </View>
+                {/* Messages */}
+                <ScrollView
+                    ref={scrollViewRef}
+                    className="flex-1"
+                    contentContainerStyle={{ paddingVertical: 16, paddingHorizontal: 12 }}
+                    onContentSizeChange={() =>
+                        scrollViewRef.current?.scrollToEnd({ animated: true })
+                    }
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Date Separator */}
+                    {chatMessages.length > 0 && (
+                        <View className="items-center mb-4">
+                            <View className="bg-gray-200 px-3 py-1 rounded-full">
+                                <Text className="text-xs text-gray-500 font-medium">Hôm nay</Text>
                             </View>
-                        )}
-
-                        <View className="gap-2">
-                            {chatMessages.map((chat) => (
-                                <MessageBubble key={chat.id} {...chat} />
-                            ))}
-
-                            {/* Seen indicator */}
-                            {lastSeenOwnMessageId && otherUser && (
-                                <View className="flex-row items-center justify-end gap-1.5 mt-1 pr-1">
-                                    <Text className="text-[11px] font-medium text-gray-500">
-                                        Đã xem
-                                    </Text>
-                                    <Image
-                                        source={
-                                            otherUser.avatarUrl
-                                                ? { uri: otherUser.avatarUrl }
-                                                : require('@/assets/images/user-default.jpg')
-                                        }
-                                        className="w-4 h-4 rounded-full"
-                                    />
-                                </View>
-                            )}
-
-                            {filteredTypingUsers.length > 0 && <TypingIndicator />}
-                            {isUploading && (
-                                <View className="items-start p-3">
-                                    <View className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-2">
-                                        <ActivityIndicator size="small" color="#7C3BED" />
-                                        <Text className="text-xs text-gray-500">
-                                            Đang tải ảnh...
-                                        </Text>
-                                    </View>
-                                </View>
-                            )}
-                        </View>
-                    </ScrollView>
-
-                    {/* Editing indicator */}
-                    {editingMessageId && (
-                        <View className="flex-row px-4 py-3 bg-purple-50 items-center justify-between border-t border-purple-100">
-                            <View className="flex-row items-center gap-2">
-                                <View className="w-1 h-8 bg-purple-500 rounded-full" />
-                                <View>
-                                    <Text className="text-xs font-semibold text-purple-600">
-                                        Chỉnh sửa tin nhắn
-                                    </Text>
-                                    <Text className="text-xs text-gray-500" numberOfLines={1}>
-                                        {messages.find((m) => m.id === editingMessageId)?.content}
-                                    </Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity onPress={handleCancelEdit}>
-                                <Text className="text-sm text-purple-600 font-bold">Hủy</Text>
-                            </TouchableOpacity>
                         </View>
                     )}
 
-                    {/* Message Input */}
-                    <View
-                        style={[
-                            styles.inputContainer,
-                            // MessageInput đã có sẵn py-2; phần này chỉ chừa thêm chỗ nav bar.
-                            { paddingBottom: Math.max(insets.bottom, 8) },
-                        ]}
-                        className="bg-white border-t border-gray-100"
-                    >
-                        <MessageInput
-                            value={messageText}
-                            onChangeText={handleTextChange}
-                            onSend={handleSendMessage}
-                            onImagePick={handleImagePick}
-                            onFilePick={handleFilePick}
-                            disabled={isUploading}
-                            placeholder={
-                                editingMessageId ? 'Chỉnh sửa tin nhắn...' : 'Nhập tin nhắn...'
-                            }
-                        />
-                    </View>
+                    <View className="gap-2">
+                        {chatMessages.map((chat) => (
+                            <MessageBubble key={chat.id} {...chat} />
+                        ))}
 
-                    {/* Action Sheet */}
-                    <MessageActionSheet
-                        visible={showActionSheet}
-                        onClose={() => setShowActionSheet(false)}
-                        onEdit={handleEditMessage}
-                        onDelete={handleDeleteMessage}
-                        onCopy={handleCopyMessage}
-                        canEdit={canEditSelected ?? false}
-                        canDelete={canDeleteSelected ?? false}
+                        {/* Seen indicator */}
+                        {lastSeenOwnMessageId && otherUser && (
+                            <View className="flex-row items-center justify-end gap-1.5 mt-1 pr-1">
+                                <Text className="text-[11px] font-medium text-gray-500">
+                                    Đã xem
+                                </Text>
+                                <Image
+                                    source={
+                                        otherUser.avatarUrl
+                                            ? { uri: otherUser.avatarUrl }
+                                            : require('@/assets/images/user-default.jpg')
+                                    }
+                                    className="w-4 h-4 rounded-full"
+                                />
+                            </View>
+                        )}
+
+                        {filteredTypingUsers.length > 0 && <TypingIndicator />}
+                        {isUploading && (
+                            <View className="items-start p-3">
+                                <View className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-2">
+                                    <ActivityIndicator size="small" color="#7C3BED" />
+                                    <Text className="text-xs text-gray-500">Đang tải ảnh...</Text>
+                                </View>
+                            </View>
+                        )}
+                    </View>
+                </ScrollView>
+
+                {/* Editing indicator */}
+                {editingMessageId && (
+                    <View className="flex-row px-4 py-3 bg-purple-50 items-center justify-between border-t border-purple-100">
+                        <View className="flex-row items-center gap-2">
+                            <View className="w-1 h-8 bg-purple-500 rounded-full" />
+                            <View>
+                                <Text className="text-xs font-semibold text-purple-600">
+                                    Chỉnh sửa tin nhắn
+                                </Text>
+                                <Text className="text-xs text-gray-500" numberOfLines={1}>
+                                    {messages.find((m) => m.id === editingMessageId)?.content}
+                                </Text>
+                            </View>
+                        </View>
+                        <TouchableOpacity onPress={handleCancelEdit}>
+                            <Text className="text-sm text-purple-600 font-bold">Hủy</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Message Input */}
+                <View
+                    style={[
+                        styles.inputContainer,
+                        // MessageInput đã có sẵn py-2; phần này chỉ chừa thêm chỗ nav bar.
+                        { paddingBottom: Math.max(insets.bottom, 8) },
+                    ]}
+                    className="bg-white border-t border-gray-100"
+                >
+                    <MessageInput
+                        value={messageText}
+                        onChangeText={handleTextChange}
+                        onSend={handleSendMessage}
+                        onImagePick={handleImagePick}
+                        onFilePick={handleFilePick}
+                        disabled={isUploading}
+                        placeholder={
+                            editingMessageId ? 'Chỉnh sửa tin nhắn...' : 'Nhập tin nhắn...'
+                        }
                     />
                 </View>
-            </KeyboardAvoidingView>
+
+                {/* Khoảng đệm ảo: cao bằng bàn phím → đẩy toàn bộ cột (gồm ô nhập) lên trên. */}
+                <Reanimated.View style={keyboardSpacerStyle} />
+
+                {/* Action Sheet */}
+                <MessageActionSheet
+                    visible={showActionSheet}
+                    onClose={() => setShowActionSheet(false)}
+                    onEdit={handleEditMessage}
+                    onDelete={handleDeleteMessage}
+                    onCopy={handleCopyMessage}
+                    canEdit={canEditSelected ?? false}
+                    canDelete={canDeleteSelected ?? false}
+                />
+            </View>
         </SafeAreaView>
     );
 }

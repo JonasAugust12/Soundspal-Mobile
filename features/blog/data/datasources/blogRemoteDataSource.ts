@@ -38,16 +38,24 @@ import {
 
 const EMPTY_BOOKMARK_BODY: BookmarkPostRequest = {};
 
-function extractBookmarkRows(body: unknown): unknown[] {
+// Tolerant array unwrap for list endpoints (bookmarks, comments...): accepts a bare array,
+// {data:[...]}, {data:{items|data|posts|bookmarks|comments|records:[...]}}, etc. Trước đây
+// chỉ bóc 1 lớp `data` nên envelope lồng trả [] (không thấy bookmark / bình luận).
+function extractArrayFromEnvelope(body: unknown): unknown[] {
     let current: unknown = body;
     for (let depth = 0; depth < 3; depth += 1) {
         if (Array.isArray(current)) return current;
         if (!current || typeof current !== 'object') break;
 
         const obj = current as Record<string, unknown>;
-        const nested = [obj.items, obj.data, obj.posts, obj.bookmarks, obj.records].find(
-            Array.isArray,
-        );
+        const nested = [
+            obj.items,
+            obj.data,
+            obj.posts,
+            obj.bookmarks,
+            obj.comments,
+            obj.records,
+        ].find(Array.isArray);
         if (Array.isArray(nested)) return nested;
 
         if ('data' in obj) {
@@ -204,7 +212,7 @@ export const blogRemoteDataSource = {
             params: listId ? { list_id: listId } : undefined,
         });
         // Bóc envelope linh hoạt: mảng trần, {data:[...]}, {data:{items|data|posts:[...]}}, ...
-        const raw = extractBookmarkRows(body);
+        const raw = extractArrayFromEnvelope(body);
         const out: BlogPost[] = [];
         for (const item of raw) {
             if (!item || typeof item !== 'object') continue;
@@ -229,12 +237,12 @@ export const blogRemoteDataSource = {
     },
 
     async fetchComments(postId: string): Promise<BlogComment[]> {
-        const { data: body } = await apiClient.get<BlogApiSuccessEnvelope<BlogApiComment[]>>(
-            `/blogs/${postId}/comments`,
-        );
-        const data = unwrapBlogData<BlogApiComment[]>(body, 'fetchComments');
-        if (!Array.isArray(data)) return [];
-        return data.map(mapApiCommentToBlogComment);
+        const { data: body } = await apiClient.get(`/blogs/${postId}/comments`);
+        // Bóc envelope linh hoạt: mảng trần, {data:[...]}, {data:{items|comments|data:[...]}}…
+        const rows = extractArrayFromEnvelope(body);
+        return rows
+            .filter((r): r is BlogApiComment => !!r && typeof r === 'object')
+            .map(mapApiCommentToBlogComment);
     },
 
     async createComment(postId: string, request: CreateCommentRequest): Promise<BlogApiComment> {

@@ -18,11 +18,11 @@ import {
     useCreateComment,
     useUpdateComment,
     useDeleteComment,
-    useBookmarksList,
     useBookmarkPostMutation,
     useUnbookmarkPostMutation,
 } from '@/features/blog/presentation/hooks/useBlogApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { useBlogBookmarkStore } from '@/features/blog/presentation/store/blogBookmarkStore';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 export default function BlogDetailScreen() {
@@ -39,7 +39,6 @@ export default function BlogDetailScreen() {
 
     const { data: article, isLoading, error } = useBlogArticle(postId);
     const { data: allPosts = [] } = useBlogFeed();
-    const { data: bookmarkList = [] } = useBookmarksList({ enabled: !!user });
     const { data: comments = [], isLoading: commentsLoading } = useBlogComments(postId, {
         enabled: !!postId,
     });
@@ -49,36 +48,50 @@ export default function BlogDetailScreen() {
     const addBookmarkM = useBookmarkPostMutation();
     const removeBookmarkM = useUnbookmarkPostMutation();
 
-    const bookmarkedIds = useMemo(() => new Set(bookmarkList.map((p) => p.id)), [bookmarkList]);
-    const isArticleBookmarked = !!(postId && bookmarkedIds.has(postId));
+    // Trạng thái lưu đọc từ store bền vững (persist) → giữ nguyên khi rời màn / mở lại app.
+    const savedPosts = useBlogBookmarkStore((s) => s.savedPosts);
+    const addBookmarkLocal = useBlogBookmarkStore((s) => s.addBookmark);
+    const removeBookmarkLocal = useBlogBookmarkStore((s) => s.removeBookmark);
+    const isArticleBookmarked = !!(postId && savedPosts.some((p) => p.id === postId));
 
     const handleOpenComments = useCallback(() => {
         setShowCommentsModal(true);
     }, []);
 
     const handleBookmarkPress = useCallback(() => {
-        if (!user?.id || !postId) {
+        if (!user?.id || !postId || !article) {
             showAppDialog('Cần đăng nhập', 'Đăng nhập để lưu bài viết vào mục đã lưu.');
             return;
         }
-        if (isArticleBookmarked) {
-            removeBookmarkM.mutate(
-                { postId },
-                {
-                    onError: (e) =>
-                        showAppDialog('Error', e instanceof Error ? e.message : 'Could not remove'),
-                },
-            );
+        const currentlyBookmarked = savedPosts.some((p) => p.id === postId);
+        // Cập nhật store ngay (icon đổi + hiện ở tab "Đã lưu"), rồi đồng bộ backend.
+        if (currentlyBookmarked) removeBookmarkLocal(postId);
+        else addBookmarkLocal(article);
+        const options = {
+            onError: () => {
+                if (currentlyBookmarked) addBookmarkLocal(article);
+                else removeBookmarkLocal(postId);
+                showAppDialog(
+                    'Lỗi',
+                    currentlyBookmarked ? 'Không thể bỏ lưu.' : 'Không thể lưu bài viết.',
+                );
+            },
+        };
+        if (currentlyBookmarked) {
+            removeBookmarkM.mutate({ postId }, options);
         } else {
-            addBookmarkM.mutate(
-                { postId },
-                {
-                    onError: (e) =>
-                        showAppDialog('Error', e instanceof Error ? e.message : 'Could not save'),
-                },
-            );
+            addBookmarkM.mutate({ postId }, options);
         }
-    }, [user?.id, postId, isArticleBookmarked, addBookmarkM, removeBookmarkM]);
+    }, [
+        user?.id,
+        postId,
+        article,
+        savedPosts,
+        addBookmarkLocal,
+        removeBookmarkLocal,
+        addBookmarkM,
+        removeBookmarkM,
+    ]);
 
     const userAvatar =
         user?.avatar_url ||
@@ -112,10 +125,6 @@ export default function BlogDetailScreen() {
 
     const handleBackPress = () => {
         router.back();
-    };
-
-    const handleNotificationPress = () => {
-        showAppDialog('', 'Notifications enabled for this author');
     };
 
     const handleRelatedArticlePress = (relatedArticle: BlogPost) => {
@@ -164,7 +173,6 @@ export default function BlogDetailScreen() {
             <BlogDetailHeader
                 onBackPress={handleBackPress}
                 onBookmarkPress={handleBookmarkPress}
-                onNotificationPress={handleNotificationPress}
                 onCommentPress={handleOpenComments}
                 isBookmarked={isArticleBookmarked}
             />

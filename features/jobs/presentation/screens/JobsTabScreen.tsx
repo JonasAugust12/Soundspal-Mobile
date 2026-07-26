@@ -35,7 +35,7 @@ export default function JobsScreen() {
     const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [jobTab, setJobTab] = useState<JobTabKey>('others');
-    const bookmarkedIds = useJobBookmarkStore((s) => s.bookmarkedIds);
+    const savedJobs = useJobBookmarkStore((s) => s.savedJobs);
     const [filters, setFilters] = useState<JobFilters>({});
     const [showFilters, setShowFilters] = useState(false);
     const activeFilterCount = countActiveFilters(filters);
@@ -106,22 +106,16 @@ export default function JobsScreen() {
         [myJobs],
     );
 
-    // Tab "Đã lưu" — lọc từ danh sách đã tải theo bookmark (client-side).
-    const savedJobsWithOwnership = useMemo(() => {
-        const savedSet = new Set(bookmarkedIds);
-        const seen = new Set<string>();
-        const result: (Job & { isOwned: boolean })[] = [];
-        for (const job of [...othersJobs, ...myJobs]) {
-            if (savedSet.has(job.id) && !seen.has(job.id)) {
-                seen.add(job.id);
-                result.push({
-                    ...job,
-                    isOwned: String(job.creator_id).trim() === String(currentUserId).trim(),
-                });
-            }
-        }
-        return result;
-    }, [bookmarkedIds, othersJobs, myJobs, currentUserId]);
+    // Tab "Đã lưu" — đọc thẳng job đã lưu trong store (kể cả job lưu từ trang chủ / chi
+    // tiết mà chưa nằm trong danh sách đã tải). Không còn lọc từ list khác.
+    const savedJobsWithOwnership = useMemo(
+        () =>
+            savedJobs.map((job) => ({
+                ...job,
+                isOwned: String(job.creator_id).trim() === String(currentUserId).trim(),
+            })),
+        [savedJobs, currentUserId],
+    );
 
     const handleLoadMoreOthers = useCallback(() => {
         if (allJobsHasNext && !allJobsFetchingNext) {
@@ -163,7 +157,7 @@ export default function JobsScreen() {
                         activeTab={jobTab}
                         onTabChange={handleTabChange}
                         mineBadge={pendingCount}
-                        savedBadge={bookmarkedIds.length}
+                        savedBadge={savedJobs.length}
                     />
                     {jobTab === 'others' && (
                         <View className="flex-row items-center gap-2 pr-4">

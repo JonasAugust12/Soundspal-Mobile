@@ -140,7 +140,7 @@ export const JobCardFull = React.memo(function JobCardFull({
                         </Text>
                         <TouchableOpacity
                             className="w-8 h-8 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/20"
-                            onPress={() => toggleBookmark(job.id)}
+                            onPress={() => toggleBookmark(job)}
                             accessibilityRole="button"
                             accessibilityLabel={isBookmarked ? 'Bỏ lưu công việc' : 'Lưu công việc'}
                         >

@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, ScrollView, Pressable, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
     ChevronLeft,
@@ -17,7 +17,6 @@ import {
     VideoPlayer,
     SocialList,
     YoutubeEmbed,
-    ProfileSkeleton,
     ServicesList,
 } from '@/features/profiles/presentation/components/profile';
 import {
@@ -115,22 +114,30 @@ export default function ArtistProfile() {
     };
 
     const goBack = () => router.back();
+    const insets = useSafeAreaInsets();
+    // Nút back đặt dưới thanh trạng thái (giờ + pin) — ảnh bìa vẫn tràn viền phía trên.
+    const backTop = insets.top + 8;
 
     if (isLoading) {
         return (
-            <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-                <ScrollView className="flex-1">
-                    <Pressable onPress={goBack} className="absolute top-4 left-4 z-10 p-2">
-                        <ChevronLeft size={24} color="#09090b" />
-                    </Pressable>
-                    <ProfileSkeleton />
-                </ScrollView>
+            <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
+                <Pressable
+                    onPress={goBack}
+                    style={{ top: backTop }}
+                    className="absolute left-4 z-10 p-2"
+                >
+                    <ChevronLeft size={24} color="#09090b" />
+                </Pressable>
+                <View className="flex-1 items-center justify-center gap-3">
+                    <ActivityIndicator size="large" color="#7C3BED" />
+                    <Text className="text-sm text-muted-foreground">Đang tải hồ sơ...</Text>
+                </View>
             </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <SafeAreaView className="flex-1 bg-background" edges={['bottom']}>
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
@@ -143,8 +150,8 @@ export default function ArtistProfile() {
                     />
                 }
             >
-                {/* Back Button */}
-                <View className="absolute top-4 left-4 z-10">
+                {/* Back Button — nằm dưới thanh trạng thái */}
+                <View style={{ top: backTop }} className="absolute left-4 z-10">
                     <Pressable
                         onPress={goBack}
                         className="p-2 bg-black/20 dark:bg-white/10 rounded-full backdrop-blur-md border border-white/20"
