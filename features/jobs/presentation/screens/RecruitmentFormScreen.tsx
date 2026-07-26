@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { showAppDialog } from '@/shared/presentation/ui';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import {
+    KeyboardAwareScrollView,
+    KeyboardController,
+    AndroidSoftInputModes,
+} from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,6 +39,14 @@ export default function RecruitmentFormScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { mutate: createJob, isPending } = useCreateJob();
+
+    // Ép adjustNothing khi ở màn này: edge-to-edge chỉ resize cửa sổ MỘT PHẦN khiến phép tính
+    // "chiều cao − bàn phím" của KeyboardAwareScrollView bị sai → cuộn thiếu, ô nhập cuối (Mô tả
+    // chi tiết) bị che. Không resize nữa thì KeyboardAwareScrollView tự cuộn đúng. Khôi phục khi rời.
+    useEffect(() => {
+        KeyboardController.setInputMode(AndroidSoftInputModes.SOFT_INPUT_ADJUST_NOTHING);
+        return () => KeyboardController.setDefaultMode();
+    }, []);
 
     const [step, setStep] = useState<FormStep>('basic');
     const [skillInput, setSkillInput] = useState('');
@@ -460,7 +472,9 @@ export default function RecruitmentFormScreen() {
             <KeyboardAwareScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
-                bottomOffset={24}
+                // Chừa thêm chiều cao thanh điều hướng (edge-to-edge chỉ resize một phần) để ô nhập
+                // được cuộn lên đủ cao, không bị bàn phím che.
+                bottomOffset={insets.bottom + 32}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >

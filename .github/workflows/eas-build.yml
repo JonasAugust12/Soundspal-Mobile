@@ -27,6 +27,20 @@ jobs:
             - name: Setup EAS CLI
               run: npm install -g eas-cli
 
+            # google-services.json bị gitignore nên EAS không có sẵn. Ghi từ secret (base64) ra
+            # workspace; .easignore (đã thêm) cho phép EAS đóng gói file này để prebuild/gradle dùng.
+            - name: Provide google-services.json
+              env:
+                  GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+              run: |
+                  set -euo pipefail
+                  if [ -z "${GOOGLE_SERVICES_JSON:-}" ]; then
+                    echo "❌ Thiếu secret GOOGLE_SERVICES_JSON. Thêm ở Settings → Secrets and variables → Actions (base64 của google-services.json)."
+                    exit 1
+                  fi
+                  echo "$GOOGLE_SERVICES_JSON" | base64 -d > google-services.json
+                  echo "✅ Wrote google-services.json for EAS build."
+
             # JSON is written to stdout (--json redirects normal logs to stderr)
             - name: Build Android Production on EAS
               run: eas build --platform android --profile production --non-interactive --wait --json > eas-build.json

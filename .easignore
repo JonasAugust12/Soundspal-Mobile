@@ -1,0 +1,51 @@
+# EAS dùng file này THAY cho .gitignore khi đóng gói dự án để build.
+# Nội dung giống .gitignore, CHỈ KHÁC: KHÔNG bỏ qua google-services.json
+# (CI ghi file này từ secret trước khi `eas build`, cần được tải lên EAS để prebuild/gradle dùng).
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env*.local
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders (EAS tự chạy prebuild để tạo lại)
+/ios
+/android
+
+.agent/
+.shared/
+.github/prompts/
+
+# LƯU Ý: cố tình KHÔNG liệt kê google-services.json ở đây để EAS đóng gói kèm.

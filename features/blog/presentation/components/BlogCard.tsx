@@ -4,6 +4,7 @@ import { useColorScheme } from 'nativewind';
 import { useRouter } from 'expo-router';
 import { ThumbsUp, MessageCircle, Pencil, Bookmark, CalendarDays } from 'lucide-react-native';
 import { LoadingImage } from '@/shared/presentation/ui';
+import { useBlogAuthorDisplay } from '@/features/blog/presentation/hooks/useBlogAuthorDisplay';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 interface BlogCardProps {
@@ -32,6 +33,8 @@ export function BlogCard({
     const { colorScheme } = useColorScheme();
     const isDark = colorScheme === 'dark';
     const router = useRouter();
+    // Tác giả: "SoundSpal" nếu là tài khoản hệ thống, ngược lại tên thật.
+    const { name: authorName } = useBlogAuthorDisplay(article.author_id);
 
     const handlePress = () => {
         onPress?.();
@@ -126,9 +129,7 @@ export function BlogCard({
                                 }`}
                                 numberOfLines={1}
                             >
-                                {article.creator_display_name ||
-                                    article.creator_username ||
-                                    'Tác giả'}
+                                {authorName}
                             </Text>
 
                             {/* Right: Likes and Comments */}

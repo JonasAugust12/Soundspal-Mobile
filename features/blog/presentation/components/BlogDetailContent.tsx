@@ -4,10 +4,21 @@ import { useColorScheme } from 'nativewind';
 import { CalendarDays } from 'lucide-react-native';
 import RenderHTML from 'react-native-render-html';
 import type { MixedStyleDeclaration } from 'react-native-render-html';
+import { useBlogAuthorDisplay } from '@/features/blog/presentation/hooks/useBlogAuthorDisplay';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 interface BlogDetailContentProps {
     article: BlogPost;
+}
+
+// Avatar thương hiệu SoundSpal (logo app) — dùng khi tác giả là tài khoản hệ thống.
+const SOUNDSPAL_AUTHOR_AVATAR = require('@/assets/images/Soundspal-Logo.png');
+
+/** Avatar mặc định (dicebear PNG) cho tác giả THẬT chưa có ảnh. */
+function defaultAuthorAvatar(seed: string): string {
+    return `https://api.dicebear.com/7.x/avataaars/png?size=128&seed=${encodeURIComponent(
+        seed || 'author',
+    )}`;
 }
 
 /** Nhãn vai trò tác giả bằng tiếng Việt (giữ nguyên các vai trò chuyên ngành đã Việt hoá). */
@@ -56,9 +67,14 @@ export function BlogDetailContent({ article }: BlogDetailContentProps) {
     const { width: windowWidth } = useWindowDimensions();
     const contentWidth = Math.max(0, windowWidth - 32);
 
-    const avatarSeed = article.creator_username || article.creator_display_name || 'author';
-    const authorAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`;
-    const authorName = article.creator_display_name || article.creator_username || 'Anonymous';
+    // Tác giả: tài khoản hệ thống → SoundSpal + logo; ngược lại → tên + avatar thật.
+    const author = useBlogAuthorDisplay(article.author_id);
+    const authorAvatarSource = author.isSoundspal
+        ? SOUNDSPAL_AUTHOR_AVATAR
+        : {
+              uri:
+                  author.avatarUrl?.trim() || defaultAuthorAvatar(article.author_id || author.name),
+          };
 
     const htmlSource = useMemo(() => {
         return stripOpeningH1IfMatchesTitle(article.content ?? '', article.title);
@@ -167,12 +183,12 @@ export function BlogDetailContent({ article }: BlogDetailContentProps) {
                 </Text>
             </View>
 
-            {/* Author info */}
+            {/* Author info — SoundSpal (tài khoản hệ thống) hoặc tác giả thật */}
             <View className="px-4 py-3 flex-row items-center gap-3">
-                <Image source={{ uri: authorAvatar }} className="w-10 h-10 rounded-full" />
+                <Image source={authorAvatarSource} className="w-10 h-10 rounded-full bg-gray-200" />
                 <View className="flex-1">
                     <Text className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        {authorName}
+                        {author.name}
                     </Text>
                     <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                         {creatorRoleLabel(article.creator_role)}

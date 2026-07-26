@@ -16,7 +16,23 @@ type NativeDateTimePickerProps = {
     style?: object;
 };
 
+type AndroidPickerOpenParams = {
+    value: Date;
+    mode?: 'date' | 'time';
+    display?: 'default' | 'spinner' | 'clock' | 'calendar';
+    is24Hour?: boolean;
+    minimumDate?: Date;
+    maximumDate?: Date;
+    onChange?: (event: DateTimePickerEvent, date?: Date) => void;
+};
+
+type AndroidPickerApi = {
+    open: (params: AndroidPickerOpenParams) => void;
+    dismiss: (mode?: 'date' | 'time') => void;
+};
+
 let NativeDateTimePicker: ComponentType<NativeDateTimePickerProps> | null = null;
+let DateTimePickerAndroid: AndroidPickerApi | null = null;
 
 try {
     const dateTimePickerModule = require('@react-native-community/datetimepicker');
@@ -24,13 +40,18 @@ try {
     if (typeof picker === 'function') {
         NativeDateTimePicker = picker;
     }
+    const androidApi = dateTimePickerModule?.DateTimePickerAndroid;
+    if (androidApi && typeof androidApi.open === 'function') {
+        DateTimePickerAndroid = androidApi;
+    }
 } catch {
     NativeDateTimePicker = null;
+    DateTimePickerAndroid = null;
 }
 
 export function isNativeDateTimePickerSupported(): boolean {
     return NativeDateTimePicker != null;
 }
 
-export { NativeDateTimePicker };
+export { NativeDateTimePicker, DateTimePickerAndroid };
 export type { DateTimePickerEvent };

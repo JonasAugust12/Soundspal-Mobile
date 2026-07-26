@@ -4,6 +4,7 @@ import { useColorScheme } from 'nativewind';
 import { useRouter } from 'expo-router';
 import { ThumbsUp, MessageCircle, BookOpen } from 'lucide-react-native';
 import { cardShadow } from '@/shared/presentation/ui/shadows';
+import { useBlogAuthorDisplay } from '@/features/blog/presentation/hooks/useBlogAuthorDisplay';
 import type { BlogPost } from '@/features/blog/domain/entities/blog.type';
 
 export const BLOG_PREVIEW_CARD_WIDTH = 260;
@@ -29,7 +30,8 @@ export const BlogPreviewCard = React.memo(function BlogPreviewCard({
     const router = useRouter();
 
     const summary = article.short_description || article.brief_description || article.excerpt || '';
-    const author = article.creator_display_name || article.creator_username || 'Tác giả';
+    // Tác giả: "SoundSpal" nếu là tài khoản hệ thống, ngược lại tên thật.
+    const { name: author } = useBlogAuthorDisplay(article.author_id);
 
     const handlePress = () => {
         onPress?.();

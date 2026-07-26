@@ -1,16 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Calendar } from 'lucide-react-native';
 import { FormPickerField } from './FormPickerField';
 import { FormTextField } from './FormTextField';
 import { PickerBottomSheet } from './PickerBottomSheet';
-import { DateWheelPicker } from './DateWheelPicker';
 import { formatDeadlineDate, parseDeadlineDate } from './scheduleUtils';
-import {
-    NativeDateTimePicker,
-    isNativeDateTimePickerSupported,
-    type DateTimePickerEvent,
-} from './nativeDateTimePicker';
+import { PrettyDatePicker, isPrettyDatePickerSupported } from './prettyDatePicker';
 import { RECRUITMENT_FORM_COLORS } from './recruitmentFormTheme';
 
 interface DeadlinePickerFieldProps {
@@ -29,7 +24,7 @@ export function DeadlinePickerField({
     hideLabel = false,
 }: DeadlinePickerFieldProps) {
     const [visible, setVisible] = useState(false);
-    const pickerSupported = isNativeDateTimePickerSupported();
+    const pickerSupported = isPrettyDatePickerSupported();
     const initialDate = useMemo(
         () => parseDeadlineDate(value) ?? new Date(minimumDate.getTime() + 7 * 24 * 60 * 60 * 1000),
         [minimumDate, value],
@@ -44,20 +39,11 @@ export function DeadlinePickerField({
         setVisible(true);
     };
 
-    const closePicker = () => {
-        setVisible(false);
-    };
+    const closePicker = () => setVisible(false);
 
     const confirmDate = () => {
         onChange(formatDeadlineDate(draftDate));
         closePicker();
-    };
-
-    const handleIosChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        if (event.type === 'dismissed' || !selectedDate) {
-            return;
-        }
-        setDraftDate(selectedDate);
     };
 
     if (!pickerSupported) {
@@ -70,9 +56,6 @@ export function DeadlinePickerField({
             />
         );
     }
-
-    const useNativeSpinner = Platform.OS === 'ios';
-    const IosDateTimePicker = NativeDateTimePicker;
 
     return (
         <>
@@ -90,34 +73,27 @@ export function DeadlinePickerField({
                 onClose={closePicker}
                 onConfirm={confirmDate}
             >
-                {useNativeSpinner && IosDateTimePicker ? (
-                    <IosDateTimePicker
-                        value={draftDate}
-                        mode="date"
-                        display="spinner"
-                        minimumDate={minimumDate}
-                        onChange={handleIosChange}
-                        locale="vi-VN"
-                        accentColor={RECRUITMENT_FORM_COLORS.primary}
-                        textColor={RECRUITMENT_FORM_COLORS.text}
-                        themeVariant="light"
-                        style={styles.nativePicker}
-                    />
-                ) : (
-                    <DateWheelPicker
-                        value={draftDate}
-                        minimumDate={minimumDate}
-                        onChange={setDraftDate}
-                    />
-                )}
+                {PrettyDatePicker ? (
+                    <View style={styles.pickerWrapper}>
+                        <PrettyDatePicker
+                            date={draftDate}
+                            mode="date"
+                            minimumDate={minimumDate}
+                            locale="vi"
+                            theme="light"
+                            dividerColor={RECRUITMENT_FORM_COLORS.primary}
+                            onDateChange={setDraftDate}
+                        />
+                    </View>
+                ) : null}
             </PickerBottomSheet>
         </>
     );
 }
 
 const styles = StyleSheet.create({
-    nativePicker: {
-        alignSelf: 'center',
-        width: '100%',
+    pickerWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });

@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, Platform, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { Clock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FormPickerField } from './FormPickerField';
 import { FormTextField } from './FormTextField';
 import { TagChipPicker } from './TagChipPicker';
 import { PickerBottomSheet } from './PickerBottomSheet';
-import { TimeWheelPicker } from './TimeWheelPicker';
 import {
     DEFAULT_WORK_TIME_DRAFT,
     WORK_PERIOD_OPTIONS,
@@ -15,12 +14,10 @@ import {
     formatTimeParts,
     formatWorkTimeString,
     parseWorkTimeString,
+    createTimeDate,
+    readTimeParts,
 } from './scheduleUtils';
-import {
-    NativeDateTimePicker,
-    isNativeDateTimePickerSupported,
-    type DateTimePickerEvent,
-} from './nativeDateTimePicker';
+import { PrettyDatePicker, isPrettyDatePickerSupported } from './prettyDatePicker';
 import { PRIMARY_GRADIENT, RECRUITMENT_FORM_COLORS } from './recruitmentFormTheme';
 
 interface WorkTimePickerFieldProps {
@@ -38,11 +35,10 @@ export function WorkTimePickerField({
     onChange,
     hideLabel = false,
 }: WorkTimePickerFieldProps) {
-    const pickerSupported = isNativeDateTimePickerSupported();
+    const pickerSupported = isPrettyDatePickerSupported();
     const [visible, setVisible] = useState(false);
     const [draft, setDraft] = useState<WorkTimeDraft>(DEFAULT_WORK_TIME_DRAFT);
     const [activeTimeField, setActiveTimeField] = useState<ActiveTimeField>('start');
-    const [iosPickerDate, setIosPickerDate] = useState(new Date());
 
     const openSheet = () => {
         const parsed = parseWorkTimeString(value);
@@ -85,44 +81,9 @@ export function WorkTimePickerField({
         }));
     };
 
-    const handleIosTimeChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-        if (event.type === 'dismissed' || !selectedDate) {
-            return;
-        }
-
-        updateActiveTime(selectedDate.getHours(), selectedDate.getMinutes());
-        setIosPickerDate(selectedDate);
-    };
-
     const activeHour = activeTimeField === 'start' ? draft.startHour : draft.endHour;
     const activeMinute = activeTimeField === 'start' ? draft.startMinute : draft.endMinute;
     const canConfirm = draft.days.length > 0;
-
-    const useNativeSpinner = Platform.OS === 'ios';
-    const IosDateTimePicker = NativeDateTimePicker;
-
-    useEffect(() => {
-        if (!visible || !useNativeSpinner) {
-            return;
-        }
-
-        const date = new Date();
-        date.setHours(
-            activeTimeField === 'start' ? draft.startHour : draft.endHour,
-            activeTimeField === 'start' ? draft.startMinute : draft.endMinute,
-            0,
-            0,
-        );
-        setIosPickerDate(date);
-    }, [
-        activeTimeField,
-        draft.endHour,
-        draft.endMinute,
-        draft.startHour,
-        draft.startMinute,
-        useNativeSpinner,
-        visible,
-    ]);
 
     if (!pickerSupported) {
         return (
@@ -246,26 +207,24 @@ export function WorkTimePickerField({
                             })}
                         </View>
 
-                        {useNativeSpinner && IosDateTimePicker ? (
-                            <IosDateTimePicker
-                                value={iosPickerDate}
-                                mode="time"
-                                display="spinner"
-                                is24Hour
-                                onChange={handleIosTimeChange}
-                                locale="vi-VN"
-                                accentColor={RECRUITMENT_FORM_COLORS.primary}
-                                textColor={RECRUITMENT_FORM_COLORS.text}
-                                themeVariant="light"
-                                style={styles.nativePicker}
-                            />
-                        ) : (
-                            <TimeWheelPicker
-                                hour={activeHour}
-                                minute={activeMinute}
-                                onChange={updateActiveTime}
-                            />
-                        )}
+                        {PrettyDatePicker ? (
+                            <View style={styles.pickerWrapper}>
+                                <PrettyDatePicker
+                                    // Remount khi đổi tab để bánh xe nhảy đúng giờ của tab đang chọn.
+                                    key={activeTimeField}
+                                    date={createTimeDate(activeHour, activeMinute)}
+                                    mode="time"
+                                    is24hourSource="locale"
+                                    locale="vi"
+                                    theme="light"
+                                    dividerColor={RECRUITMENT_FORM_COLORS.primary}
+                                    onDateChange={(d) => {
+                                        const parts = readTimeParts(d);
+                                        updateActiveTime(parts.hour, parts.minute);
+                                    }}
+                                />
+                            </View>
+                        ) : null}
                     </View>
 
                     <View style={styles.previewBox}>
@@ -370,9 +329,9 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#FFFFFF',
     },
-    nativePicker: {
-        alignSelf: 'center',
-        width: '100%',
+    pickerWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     previewBox: {
         backgroundColor: RECRUITMENT_FORM_COLORS.surfaceMuted,

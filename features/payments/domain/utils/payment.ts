@@ -212,7 +212,9 @@ export function parsePaymentHistoryItems(data: unknown): PaymentHistoryItem[] {
         rows = data;
     } else if (typeof data === 'object') {
         const record = data as Record<string, unknown>;
-        const nested = ['items', 'transactions', 'payments', 'records'].find((key) =>
+        // API bọc 2 lớp: envelope.data = { data: [...] } → phải dò cả khóa 'data' (giống web
+        // dùng `data?.data`). Trước đây thiếu 'data' nên danh sách rỗng dù backend có trả về.
+        const nested = ['items', 'transactions', 'payments', 'records', 'data'].find((key) =>
             Array.isArray(record[key]),
         );
         if (nested) rows = record[nested] as unknown[];
@@ -250,7 +252,8 @@ export function extractLatestOrderCodeFromHistory(data: unknown): string | null 
         items.push(...data);
     } else if (typeof data === 'object') {
         const record = data as Record<string, unknown>;
-        const nested = ['items', 'transactions', 'payments', 'records'].find((key) =>
+        // Bọc 2 lớp: envelope.data = { data: [...] } → dò cả khóa 'data' (giống web).
+        const nested = ['items', 'transactions', 'payments', 'records', 'data'].find((key) =>
             Array.isArray(record[key]),
         );
 
