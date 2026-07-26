@@ -19,7 +19,11 @@ import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import Toast from 'react-native-toast-message';
-import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import {
+    useReanimatedKeyboardAnimation,
+    KeyboardController,
+    AndroidSoftInputModes,
+} from 'react-native-keyboard-controller';
 import Reanimated, { useAnimatedStyle } from 'react-native-reanimated';
 
 import {
@@ -52,12 +56,16 @@ export default function DetailMessageScreen() {
     // nếu không ô nhập sẽ bị nav bar đè (app bật edgeToEdgeEnabled).
     const insets = useSafeAreaInsets();
 
-    // Đẩy ô nhập lên trên bàn phím bằng "khoảng đệm ảo" (fake spacer) — mẫu khuyến nghị của
-    // react-native-keyboard-controller. `height` là shared value (âm khi bàn phím mở), đặt một
-    // View cao đúng bằng chiều cao bàn phím NGAY DƯỚI ô nhập → ScrollView co lại, ô nhập nổi lên
-    // vừa khít trên bàn phím. Đáng tin cậy hơn behavior="padding" của KeyboardAvoidingView vốn
-    // không co được layout flex này trên Android.
+    // Bàn phím che ô nhập — cách xử lý TẤT ĐỊNH:
+    // Ép cửa sổ sang chế độ adjustNothing khi ở màn này (cửa sổ KHÔNG tự resize), tránh việc
+    // edge-to-edge chỉ resize một phần khiến lúc thì che ô nhập, lúc thì đẩy quá cao / lộ khoảng
+    // trắng. Rồi TỰ đẩy nội dung lên bằng "khoảng đệm ảo" cao đúng bằng bàn phím → chính xác trên
+    // cả Android lẫn iOS. Khôi phục chế độ mặc định khi rời màn.
     const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
+    useEffect(() => {
+        KeyboardController.setInputMode(AndroidSoftInputModes.SOFT_INPUT_ADJUST_NOTHING);
+        return () => KeyboardController.setDefaultMode();
+    }, []);
     const keyboardSpacerStyle = useAnimatedStyle(() => ({
         height: Math.abs(keyboardHeight.value),
     }));
@@ -97,13 +105,20 @@ export default function DetailMessageScreen() {
     const scrollViewRef = useRef<ScrollView>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    // Khi bàn phím mở, ScrollView co lại (behavior="padding") nên tin nhắn mới nhất có thể
-    // bị đẩy khỏi tầm nhìn — cuộn xuống đáy để luôn thấy tin cuối ngay trên ô nhập.
+    // Khi bàn phím mở, khoảng đệm ảo đẩy nội dung lên nên tin nhắn mới nhất có thể bị khuất —
+    // cuộn xuống đáy để luôn thấy tin cuối ngay trên ô nhập. Đồng thời theo dõi trạng thái bàn
+    // phím để RÚT NGẮN padding đáy của ô nhập khi bị đẩy lên (không cần chừa chỗ nav bar nữa).
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
     useEffect(() => {
-        const sub = Keyboard.addListener('keyboardDidShow', () => {
+        const showSub = Keyboard.addListener('keyboardDidShow', () => {
+            setIsKeyboardVisible(true);
             requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
         });
-        return () => sub.remove();
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false));
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
     }, []);
 
     useEffect(() => {
@@ -630,8 +645,9 @@ export default function DetailMessageScreen() {
                 <View
                     style={[
                         styles.inputContainer,
-                        // MessageInput đã có sẵn py-2; phần này chỉ chừa thêm chỗ nav bar.
-                        { paddingBottom: Math.max(insets.bottom, 8) },
+                        // Bàn phím đóng: chừa chỗ nav bar. Bàn phím mở: khoảng đệm ảo đã đẩy ô nhập
+                        // lên sát bàn phím rồi → rút ngắn padding đáy cho gọn.
+                        { paddingBottom: isKeyboardVisible ? 8 : Math.max(insets.bottom, 8) },
                     ]}
                     className="bg-white border-t border-gray-100"
                 >
@@ -648,7 +664,8 @@ export default function DetailMessageScreen() {
                     />
                 </View>
 
-                {/* Khoảng đệm ảo: cao bằng bàn phím → đẩy toàn bộ cột (gồm ô nhập) lên trên. */}
+                {/* Khoảng đệm ảo: cao bằng bàn phím → đẩy ô nhập + danh sách lên trên bàn phím
+                    (cửa sổ đang ở adjustNothing nên không tự co, khoảng đệm này lo toàn bộ). */}
                 <Reanimated.View style={keyboardSpacerStyle} />
 
                 {/* Action Sheet */}

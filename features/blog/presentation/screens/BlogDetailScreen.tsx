@@ -134,12 +134,17 @@ export default function BlogDetailScreen() {
         });
     };
 
-    const handleSendComment = async (text: string) => {
+    const handleSendComment = async (text: string, parentId?: string | null) => {
         try {
-            await createCommentM.mutateAsync({ content: text.trim() });
+            // Bình luận hiện ngay trong danh sách nên không cần popup thành công.
+            // parentId có giá trị khi đang trả lời một bình luận gốc (tối đa 2 tầng).
+            await createCommentM.mutateAsync({
+                content: text.trim(),
+                parent_id: parentId ?? undefined,
+            });
         } catch (e) {
-            const msg = e instanceof Error ? e.message : 'Could not post comment';
-            showAppDialog('Error', msg);
+            const msg = e instanceof Error ? e.message : 'Không thể đăng bình luận.';
+            showAppDialog('Lỗi', msg);
         }
     };
 
@@ -149,18 +154,20 @@ export default function BlogDetailScreen() {
                 commentId,
                 request: { content: newText.trim() },
             });
+            showAppDialog('Thành công', 'Đã cập nhật bình luận.');
         } catch (e) {
-            const msg = e instanceof Error ? e.message : 'Could not update comment';
-            showAppDialog('Error', msg);
+            const msg = e instanceof Error ? e.message : 'Không thể cập nhật bình luận.';
+            showAppDialog('Lỗi', msg);
         }
     };
 
     const handleDeleteComment = async (commentId: string) => {
         try {
             await deleteCommentM.mutateAsync(commentId);
+            showAppDialog('Thành công', 'Đã xóa bình luận.');
         } catch (e) {
-            const msg = e instanceof Error ? e.message : 'Could not delete comment';
-            showAppDialog('Error', msg);
+            const msg = e instanceof Error ? e.message : 'Không thể xóa bình luận.';
+            showAppDialog('Lỗi', msg);
         }
     };
 

@@ -30,6 +30,8 @@ export interface BlogComment {
     timestamp: string;
     likes: number;
     isVoiceMessage?: boolean;
+    /** id của bình luận cha (nếu đây là trả lời). null/undefined = bình luận gốc. */
+    parentId?: string | null;
 }
 
 /**
@@ -254,6 +256,9 @@ export interface BlogApiComment {
     text?: string;
     user_id?: string;
     author_id?: string;
+    // API thực tế trả tên/avatar phẳng theo các khóa này (không lồng trong `user`).
+    author_username?: string;
+    author_avatar_url?: string;
     parent_id?: string | null;
     created_at: string;
     updated_at?: string;

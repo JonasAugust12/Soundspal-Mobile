@@ -67,6 +67,54 @@ function extractArrayFromEnvelope(body: unknown): unknown[] {
     return [];
 }
 
+// Bóc user ra khỏi body của GET /users/{id} (dạng {data:{...}} hoặc user trần).
+function extractUserBasic(
+    body: unknown,
+): { display_name?: string; username?: string; avatar_url?: string } | null {
+    if (!body || typeof body !== 'object') return null;
+    const outer = body as Record<string, unknown>;
+    const u = (outer.data && typeof outer.data === 'object' ? outer.data : outer) as Record<
+        string,
+        unknown
+    >;
+    return {
+        display_name: typeof u.display_name === 'string' ? u.display_name : undefined,
+        username: typeof u.username === 'string' ? u.username : undefined,
+        avatar_url: typeof u.avatar_url === 'string' ? u.avatar_url : undefined,
+    };
+}
+
+// Nhiều comment từ API chỉ có author_id, thiếu tên/avatar → tự gọi GET /users/{id} bù vào
+// (giống web). Gọi 1 lần cho mỗi user, lỗi thì bỏ qua để vẫn hiển thị được bình luận.
+async function enrichCommentAuthors(rows: BlogApiComment[]): Promise<void> {
+    const ids = [
+        ...new Set(
+            rows
+                .filter((r) => !r.author_username && !r.author_avatar_url)
+                .map((r) => String(r.author_id ?? r.user_id ?? ''))
+                .filter(Boolean),
+        ),
+    ];
+    if (!ids.length) return;
+
+    const entries = await Promise.all(
+        ids.map((id) =>
+            apiClient
+                .get(`/users/${id}`)
+                .then((res) => [id, extractUserBasic(res.data)] as const)
+                .catch(() => [id, null] as const),
+        ),
+    );
+    const byId = new Map(entries.filter(([, u]) => u).map(([id, u]) => [id, u!]));
+
+    for (const r of rows) {
+        const user = byId.get(String(r.author_id ?? r.user_id ?? ''));
+        if (!user) continue;
+        if (!r.author_username) r.author_username = user.display_name || user.username;
+        if (!r.author_avatar_url) r.author_avatar_url = user.avatar_url;
+    }
+}
+
 export const blogRemoteDataSource = {
     async fetchBlogPosts(filters?: BlogPostFilters): Promise<BlogPost[]> {
         const response = await apiClient.get<BlogsResponse>('/blogs', {
@@ -239,10 +287,11 @@ export const blogRemoteDataSource = {
     async fetchComments(postId: string): Promise<BlogComment[]> {
         const { data: body } = await apiClient.get(`/blogs/${postId}/comments`);
         // Bóc envelope linh hoạt: mảng trần, {data:[...]}, {data:{items|comments|data:[...]}}…
-        const rows = extractArrayFromEnvelope(body);
-        return rows
-            .filter((r): r is BlogApiComment => !!r && typeof r === 'object')
-            .map(mapApiCommentToBlogComment);
+        const rows = extractArrayFromEnvelope(body).filter(
+            (r): r is BlogApiComment => !!r && typeof r === 'object',
+        );
+        await enrichCommentAuthors(rows);
+        return rows.map(mapApiCommentToBlogComment);
     },
 
     async createComment(postId: string, request: CreateCommentRequest): Promise<BlogApiComment> {

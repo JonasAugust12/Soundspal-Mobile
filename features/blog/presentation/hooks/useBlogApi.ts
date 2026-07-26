@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { blogRepository } from '@/features/blog/data/repositories/BlogRepositoryImpl';
 import { AddBlogPostMediaUseCase } from '@/features/blog/domain/usecases/AddBlogPostMediaUseCase';
+import { mapApiCommentToBlogComment } from '@/features/blog/data/mappers/blogCommentMapper';
+import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import type {
     BlogPostFilters,
     BlogSearchParams,
@@ -9,6 +11,7 @@ import type {
     UpdateCommentRequest,
     BookmarkPostRequest,
     BlogItem,
+    BlogComment,
 } from '@/features/blog/domain/entities/blog.type';
 
 const addBlogPostMediaUseCase = new AddBlogPostMediaUseCase(blogRepository);
@@ -138,14 +141,37 @@ export function useUpdateBlogPost() {
 
 export function useCreateComment(postId: string | undefined) {
     const queryClient = useQueryClient();
+    const currentUser = useAuthStore((s) => s.user);
     return useMutation({
         mutationFn: (request: CreateCommentRequest) => {
             if (!postId) throw new Error('Missing post id');
             return blogRepository.createComment(postId, request);
         },
-        onSuccess: () => {
+        onSuccess: (created, variables) => {
             if (!postId) return;
-            queryClient.invalidateQueries({ queryKey: ['blogComments', postId] });
+            // Chèn thẳng bình luận vừa tạo (server trả về, có id thật) vào cache để hiển thị NGAY,
+            // không chờ refetch. Trước đây chỉ invalidate → refetch chạy trước khi backend kịp
+            // commit (đọc trễ) nên bình luận không hiện, phải reload mới thấy.
+            const newComment = mapApiCommentToBlogComment(created);
+            // Giữ parentId (từ response, thiếu thì lấy từ request) để trả lời hiện đúng dưới cha.
+            if (newComment.parentId == null && variables.parent_id) {
+                newComment.parentId = variables.parent_id;
+            }
+            // Bình luận này do chính người dùng hiện tại tạo → điền tên/avatar từ auth store phòng
+            // khi API tạo không trả kèm (nếu không sẽ hiện 'User' + avatar mặc định).
+            if (currentUser) {
+                newComment.author = {
+                    id: currentUser.id,
+                    name:
+                        currentUser.display_name || currentUser.username || newComment.author.name,
+                    avatar: currentUser.avatar_url || newComment.author.avatar,
+                };
+            }
+            queryClient.setQueryData<BlogComment[]>(['blogComments', postId], (old) => {
+                const list = Array.isArray(old) ? old : [];
+                return list.some((c) => c.id === newComment.id) ? list : [...list, newComment];
+            });
+            // Cập nhật số đếm bình luận ở danh sách/bài viết.
             queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
             queryClient.invalidateQueries({ queryKey: ['blogArticle', postId] });
         },
@@ -162,9 +188,18 @@ export function useUpdateComment(postId: string | undefined) {
             commentId: string;
             request: UpdateCommentRequest;
         }) => blogRepository.updateComment(commentId, request),
-        onSuccess: () => {
+        onSuccess: (_data, variables) => {
             if (!postId) return;
-            queryClient.invalidateQueries({ queryKey: ['blogComments', postId] });
+            // Sửa nội dung ngay trong cache (không chờ refetch — tránh đọc trễ trả về bản cũ).
+            queryClient.setQueryData<BlogComment[]>(['blogComments', postId], (old) =>
+                Array.isArray(old)
+                    ? old.map((c) =>
+                          c.id === variables.commentId
+                              ? { ...c, text: variables.request.content }
+                              : c,
+                      )
+                    : old,
+            );
             queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
             queryClient.invalidateQueries({ queryKey: ['blogArticle', postId] });
         },
@@ -175,9 +210,12 @@ export function useDeleteComment(postId: string | undefined) {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (commentId: string) => blogRepository.deleteComment(commentId),
-        onSuccess: () => {
+        onSuccess: (_data, commentId) => {
             if (!postId) return;
-            queryClient.invalidateQueries({ queryKey: ['blogComments', postId] });
+            // Gỡ bình luận khỏi cache ngay (không chờ refetch — tránh đọc trễ trả về bản đã xóa).
+            queryClient.setQueryData<BlogComment[]>(['blogComments', postId], (old) =>
+                Array.isArray(old) ? old.filter((c) => c.id !== commentId) : old,
+            );
             queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
             queryClient.invalidateQueries({ queryKey: ['blogArticle', postId] });
         },

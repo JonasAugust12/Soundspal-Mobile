@@ -21,11 +21,20 @@ function dicebearCommentPng(seed: string): string {
 
 export function mapApiCommentToBlogComment(row: BlogApiComment): BlogComment {
     const text = (row.content ?? row.body ?? row.text ?? '').trim();
-    const authorId = String(row.user?.id ?? row.user_id ?? row.author_id ?? row.author?.id ?? '');
-    const name = String(row.user?.display_name ?? row.user?.username ?? row.author?.name ?? 'User');
+    const authorId = String(row.author_id ?? row.user_id ?? row.user?.id ?? row.author?.id ?? '');
+    // Ưu tiên khóa phẳng của API thực tế (author_username / author_avatar_url), rồi mới đến các
+    // biến thể lồng khác. Trước đây chỉ đọc `user.*` nên luôn rơi về 'User' + avatar mặc định.
+    const name = String(
+        row.author_username ??
+            row.user?.display_name ??
+            row.user?.username ??
+            row.author?.name ??
+            'User',
+    );
     const u = row.user;
     const rawAvatar = String(
-        u?.avatar_url ??
+        row.author_avatar_url ??
+            u?.avatar_url ??
             u?.avatar ??
             row.author?.avatar ??
             row.avatar_url ??
@@ -45,5 +54,6 @@ export function mapApiCommentToBlogComment(row: BlogApiComment): BlogComment {
         isVoiceMessage: false,
         timestamp: formatCommentTime(row.created_at),
         likes: row.like_count ?? row.upvote_count ?? 0,
+        parentId: row.parent_id ?? null,
     };
 }

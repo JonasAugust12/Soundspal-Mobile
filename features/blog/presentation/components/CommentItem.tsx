@@ -2,7 +2,7 @@ import React, { memo, useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, TextInput } from 'react-native';
 import { showAppDialog } from '@/shared/presentation/ui';
 import { useColorScheme } from 'nativewind';
-import { ThumbsUp, Pencil, Trash2 } from 'lucide-react-native';
+import { Pencil, Trash2 } from 'lucide-react-native';
 import { VoicePlayer } from './VoicePlayer';
 import type { BlogAuthor, BlogComment } from '@/features/blog/domain/entities/blog.type';
 
@@ -21,8 +21,9 @@ function avatarUriForComment(author: BlogAuthor): string {
 interface CommentItemProps {
     comment: BlogComment;
     isOwn?: boolean;
+    /** Đây là trả lời (tầng 2) → không hiện nút "Trả lời" (chỉ trả lời được bình luận cha). */
+    isReply?: boolean;
     onReplyPress?: () => void;
-    onLikePress?: () => void;
     onDelete?: (commentId: string) => void;
     onUpdate?: (commentId: string, newText: string) => void;
 }
@@ -30,8 +31,8 @@ interface CommentItemProps {
 function CommentItemComponent({
     comment,
     isOwn,
+    isReply,
     onReplyPress,
-    onLikePress,
     onDelete,
     onUpdate,
 }: CommentItemProps) {
@@ -140,30 +141,21 @@ function CommentItemComponent({
                 )}
 
                 <View className="flex-row items-center gap-4 flex-wrap">
-                    <TouchableOpacity
-                        onPress={onLikePress}
-                        className="flex-row items-center gap-1"
-                        activeOpacity={0.7}
-                    >
-                        <ThumbsUp size={18} color="#7C3AED" fill="#7C3AED" strokeWidth={1.5} />
-                        <Text className="text-purple-600 font-semibold text-sm">
-                            {comment.likes}
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={onReplyPress}
-                        className="flex-row items-center gap-1"
-                        activeOpacity={0.7}
-                    >
-                        <Text
-                            className={`font-semibold text-sm ${
-                                isDark ? 'text-gray-400' : 'text-gray-600'
-                            }`}
+                    {!isReply ? (
+                        <TouchableOpacity
+                            onPress={onReplyPress}
+                            className="flex-row items-center gap-1"
+                            activeOpacity={0.7}
                         >
-                            Trả lời
-                        </Text>
-                    </TouchableOpacity>
+                            <Text
+                                className={`font-semibold text-sm ${
+                                    isDark ? 'text-gray-400' : 'text-gray-600'
+                                }`}
+                            >
+                                Trả lời
+                            </Text>
+                        </TouchableOpacity>
+                    ) : null}
 
                     {isOwn && !editing && !comment.isVoiceMessage ? (
                         <>
@@ -200,10 +192,10 @@ function CommentItemComponent({
 export const CommentItem = memo(CommentItemComponent, (prevProps, nextProps) => {
     return (
         prevProps.comment.id === nextProps.comment.id &&
-        prevProps.comment.likes === nextProps.comment.likes &&
         prevProps.comment.text === nextProps.comment.text &&
         prevProps.comment.author?.avatar === nextProps.comment.author?.avatar &&
         prevProps.comment.author?.name === nextProps.comment.author?.name &&
-        prevProps.isOwn === nextProps.isOwn
+        prevProps.isOwn === nextProps.isOwn &&
+        prevProps.isReply === nextProps.isReply
     );
 });
