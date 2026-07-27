@@ -436,15 +436,15 @@
                     <tr>
                         <td>Tin nhắn đến lúc app ở nền không về qua socket</td>
                         <td>
-                            <code>DetailMessageScreen</code> <b>luôn gọi lại API</b> khi mở màn, dù
-                            đã có cache
+                            <code>useConversationMessages</code> <b>luôn gọi lại API</b> khi mở màn,
+                            dù đã có cache
                         </td>
                     </tr>
                     <tr>
                         <td>Đang mở sẵn màn chat rồi app xuống nền và quay lại</td>
                         <td>
-                            Thêm listener <code>AppState</code> riêng ở màn chat để fetch lại khi
-                            trở lại <code>active</code>
+                            Hook của màn chat thêm listener <code>AppState</code> riêng để fetch lại
+                            khi trở lại <code>active</code>
                         </td>
                     </tr>
                     <tr>

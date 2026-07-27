@@ -67,16 +67,26 @@
         </div>
 
         <div class="note info">
-            <span class="t">Hai màn hình chat đi qua <code>messagingRepository</code></span>
-            Hai màn hình chính (<code>DetailMessageScreen</code>,
-            <code>NotificationsScreen</code>) <b>không gọi <code>apiClient</code> trực tiếp</b> —
-            chúng gọi <code>messagingRepository</code> (tầng data) rồi ghi kết quả vào Zustand
-            store. Cách này giữ đúng phân tầng Clean Architecture (màn hình phụ thuộc abstraction
-            <code>IMessagingRepository</code>, không phụ thuộc hạ tầng) mà vẫn giữ được luồng "luôn
-            fetch lại" cần thiết cho socket. Song song đó, <code>useMessagingApi.ts</code> có đầy đủ
-            hook React Query (<code>useGetConversations</code>, <code>useSendMessage</code>…) phục
-            vụ những nơi khác (vd <code>useGetOrCreateConversation</code> dùng từ màn hồ sơ và màn
-            chi tiết job).
+            <span class="t">Màn phòng chat đi qua hook <code>useConversationMessages</code></span>
+            <code>DetailMessageScreen</code> <b>không import bất cứ thứ gì từ tầng
+            <code>data/</code></b> (và cũng không chạm <code>socketService</code>). Toàn bộ lời gọi
+            <code>messagingRepository</code> + socket nằm trong
+            <code>presentation/hooks/useConversationMessages.ts</code>; màn hình chỉ nhận dữ liệu &amp;
+            hành động rồi lo phần UI. Đây đúng là luồng chuẩn của dự án —
+            <code>screen → presentation/hooks → repository</code> — giống cách
+            <code>JobDetailScreen</code> chỉ dùng hook chứ không đụng <code>jobRepository</code>.
+            Song song đó, <code>useMessagingApi.ts</code> có đầy đủ hook React Query
+            (<code>useGetConversations</code>, <code>useSendMessage</code>…) phục vụ những nơi khác
+            (vd <code>useGetOrCreateConversation</code> dùng từ màn hồ sơ và màn chi tiết job).
+        </div>
+
+        <div class="note warn">
+            <span class="t">Còn sót: <code>NotificationsScreen</code></span>
+            Màn danh sách hội thoại <b>vẫn gọi thẳng</b>
+            <code>messagingRepository.getConversations()</code> và
+            <code>deleteConversation()</code> ngay trong component. Nó vẫn đi qua tầng data (không
+            chạm <code>apiClient</code>) nên không sai nghiêm trọng, nhưng chưa được gom vào hook
+            như màn phòng chat — xem mục 12.
         </div>
 
         <h2>2. Cấu trúc dữ liệu</h2>
@@ -420,7 +430,7 @@
         <div class="note info">
             <span class="t">Hệ quả kéo theo: cache tin nhắn không đáng tin</span>
             Socket ngắt khi ở nền nghĩa là <b>mọi tin nhắn đến lúc đó không về qua socket</b>. Vì
-            vậy <code>DetailMessageScreen</code> <b>luôn gọi lại API</b> khi mở màn (dù đã có
+            vậy <code>useConversationMessages</code> <b>luôn gọi lại API</b> khi mở màn (dù đã có
             cache), và còn đăng ký thêm listener <code>AppState</code> để fetch lại mỗi lần app trở
             lại foreground. Không làm vậy thì bấm vào thông báo sẽ mở chat mà
             <b>không thấy chính tin nhắn vừa được báo</b>.
@@ -512,7 +522,60 @@
 
         <h2>8. Màn phòng chat</h2>
 
-        <p>Route <code>(messages)/detailMessage?conversationId=…</code>. Chuỗi việc khi mở màn:</p>
+        <p>
+            Route <code>(messages)/detailMessage?conversationId=…</code>. Màn hình được tách làm hai
+            phần rõ ràng:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tệp</th>
+                        <th>Chịu trách nhiệm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>hooks/useConversationMessages.ts</code></td>
+                        <td>
+                            Gọi repository, đồng bộ vào store, vòng đời socket, typing, upload —
+                            <b>nơi duy nhất</b> của feature chạm tới tầng data
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>screens/DetailMessageScreen.tsx</code></td>
+                        <td>
+                            Chỉ UI: bàn phím, cuộn, ô nhập, action sheet, toast, và map
+                            <code>Message</code> → <code>ChatMessage</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Hook trả về:</p>
+
+        <pre><code><span class="c-key">const</span> {
+    <span class="c-com">// Dữ liệu</span>
+    conversation, otherUser, isOtherUserOnline,
+    messages, isLoadingMessages, isUploading,
+    typingUserIds, pendingJobRef,
+    <span class="c-com">// Hành động — ném lỗi ra ngoài để màn hình tự hiện toast</span>
+    <span class="c-fn">sendMessage</span>, <span class="c-fn">editMessage</span>, <span class="c-fn">deleteMessage</span>, <span class="c-fn">sendAttachment</span>,
+    <span class="c-fn">notifyTyping</span>, <span class="c-fn">stopTyping</span>,
+} = <span class="c-fn">useConversationMessages</span>(conversationId);</code></pre>
+
+        <div class="note info">
+            <span class="t">Vì sao hook này không dùng React Query</span>
+            Nguồn sự thật của màn chat là <code>messagingStore</code> (để socket đẩy tin nhắn/typing
+            /online vào thẳng store). Nếu vừa dùng hook React Query trong
+            <code>useMessagingApi.ts</code> vừa dùng store thì sẽ có <b>hai cache tranh nhau</b>.
+            Hook này giữ mô hình store + socket, đồng thời vẫn đóng vai trò lớp trung gian mà tầng
+            presentation cần.
+        </div>
+
+        <p>Chuỗi việc khi mở màn (tất cả nằm trong hook):</p>
 
         <ol class="steps">
             <li>
@@ -553,17 +616,25 @@
             </li>
             <li>
                 <span class="h"> <span class="badge post">POST</span> <code>/messages</code> </span>
-                Rồi <code>addMessage()</code> vào store, <code>clearPendingJobRef()</code>, xoá ô
-                nhập, <code>stopTyping()</code>.
+                Hook <code>addMessage()</code> vào store rồi <code>clearPendingJobRef()</code>; màn
+                hình xoá ô nhập và gọi <code>stopTyping()</code>.
             </li>
         </ol>
+
+        <p>
+            Hook <b>không nuốt lỗi</b> — nó để exception ném ra ngoài, màn hình bắt và hiện toast
+            riêng cho từng luồng ("Không thể gửi tin nhắn" / "Không thể chỉnh sửa" / "Không thể tải
+            ảnh lên" / "Không thể tải tệp lên").
+        </p>
 
         <h3>Báo đang gõ</h3>
 
         <p>
-            Gõ phím → <code>socketService.startTyping()</code>. Một <code>setTimeout</code> tự gọi
+            Gõ phím → màn hình gọi <code>notifyTyping(text)</code> → hook bắn
+            <code>socketService.startTyping()</code>. Một <code>setTimeout</code> 3 giây tự gọi
             <code>stopTyping()</code> nếu người dùng ngừng gõ; timeout được reset mỗi lần gõ tiếp.
-            Cũng <code>stopTyping()</code> ngay sau khi gửi tin và khi rời màn.
+            Cũng <code>stopTyping()</code> ngay sau khi gửi tin và khi rời màn. Khi đang <b>sửa</b>
+            tin thì màn hình không báo gõ.
         </p>
 
         <h3>Đính kèm ảnh và tệp</h3>
@@ -611,12 +682,12 @@
 
         <div class="note warn">
             <span class="t">Đường upload này dùng axios</span>
-            Màn hình gọi <code>messagingRepository.uploadAttachment(formData)</code>; datasource bên
+            Hook gọi <code>messagingRepository.uploadAttachment(formData)</code>; datasource bên
             dưới <code>POST /storage/upload</code> bằng axios — chính là đường mà
             <code>multipartUpload.ts</code> cảnh báo có thể gửi body rỗng trên React Native. Nếu gặp
             <code>ERR_NETWORK</code> khi đính kèm, đây là chỗ cần chuyển sang
-            <code>postMultipartWithFetch()</code> (chỉ cần sửa trong datasource, màn hình giữ
-            nguyên).
+            <code>postMultipartWithFetch()</code> (chỉ cần sửa trong datasource, hook và màn hình
+            giữ nguyên).
         </div>
 
         <h3>Sửa &amp; xoá tin nhắn</h3>
@@ -799,11 +870,17 @@ Xin chào, tôi quan tâm đến "Ca sĩ acoustic tối T6".</code></pre>
             </li>
             <li><b>Đính kèm không sửa được.</b> Muốn đổi thì xoá tin rồi gửi lại.</li>
             <li>
-                <b>Hai đường truy cập dữ liệu song song.</b> Màn hình chat dùng
-                <code>messagingRepository</code> + Zustand store; còn
+                <b>Hai đường truy cập dữ liệu song song.</b> Màn phòng chat dùng
+                <code>useConversationMessages</code> (repository + Zustand store); còn
                 <code>useMessagingApi.ts</code> có hook React Query đầy đủ dùng ở nơi khác. Cả hai
-                đều đi qua tầng data (không còn gọi <code>apiClient</code> trực tiếp), nhưng nếu
-                thống nhất về một cơ chế state thì code sẽ dễ bảo trì hơn.
+                đều đi qua tầng data, nhưng nếu thống nhất về một cơ chế state thì code sẽ dễ bảo
+                trì hơn.
+            </li>
+            <li>
+                <b><code>NotificationsScreen</code> chưa được tách hook.</b> Màn danh sách hội thoại
+                vẫn gọi <code>messagingRepository</code> trực tiếp trong component — cùng kiểu vi
+                phạm phân tầng mà màn phòng chat đã sửa. Gom vào một hook (vd
+                <code>useConversationList</code>) sẽ làm cả feature đồng nhất.
             </li>
         </ul>
 

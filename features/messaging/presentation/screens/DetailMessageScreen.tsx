@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -8,7 +8,6 @@ import {
     ActivityIndicator,
     StyleSheet,
     TouchableOpacity,
-    AppState,
     Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,18 +32,10 @@ import {
     OnlineIndicator,
     TypingIndicator,
 } from '@/shared/presentation/ui';
-import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
+import { useConversationMessages } from '@/features/messaging/presentation/hooks/useConversationMessages';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
-import { socketService } from '@/shared/infrastructure/socket/socketService';
-import { messagingRepository } from '@/features/messaging/data/repositories/MessagingRepositoryImpl';
 import type { ChatMessage } from '@/shared/presentation/ui/MessageBubble';
-import type { Conversation } from '@/features/messaging/domain/entities/messaging.type';
-import {
-    isJobReference,
-    buildJobReference,
-    getAttachmentTypeFromMimeType,
-    isMessageSeenBy,
-} from '@/features/messaging/domain/utils/messageContent';
+import { isJobReference, isMessageSeenBy } from '@/features/messaging/domain/utils/messageContent';
 
 export default function DetailMessageScreen() {
     const router = useRouter();
@@ -74,36 +65,26 @@ export default function DetailMessageScreen() {
     const currentUserId = currentUser?.id;
 
     const {
-        typingUsers,
-        loadingMessages,
-        setActiveConversation,
-        setMessages,
-        addMessage,
-        updateMessage,
-        removeMessage,
-        setLoadingMessages,
-        hasMessages,
-        clearUnread,
-        getMessages,
-        isUserOnline,
-        pendingJobRefs,
-        clearPendingJobRef,
-    } = useMessagingStore();
-
-    const pendingJobRef = pendingJobRefs[conversationId || ''];
-    const messages = getMessages(conversationId || '');
-    const isLoadingMessages = loadingMessages[conversationId || ''] || false;
-    const allTypingUsers = typingUsers[conversationId || ''] || [];
-    const filteredTypingUsers = allTypingUsers.filter((userId) => userId !== currentUserId);
+        otherUser,
+        isOtherUserOnline,
+        messages,
+        isLoadingMessages,
+        isUploading,
+        typingUserIds,
+        pendingJobRef,
+        sendMessage,
+        editMessage,
+        deleteMessage,
+        sendAttachment,
+        notifyTyping,
+        stopTyping,
+    } = useConversationMessages(conversationId);
 
     const [messageText, setMessageText] = useState('');
-    const [isUploading, setIsUploading] = useState(false);
     const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
     const [showActionSheet, setShowActionSheet] = useState(false);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-    const [conversation, setConversation] = useState<Conversation | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
-    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Khi bàn phím mở, khoảng đệm ảo đẩy nội dung lên nên tin nhắn mới nhất có thể bị khuất —
     // cuộn xuống đáy để luôn thấy tin cuối ngay trên ô nhập. Đồng thời theo dõi trạng thái bàn
@@ -120,80 +101,6 @@ export default function DetailMessageScreen() {
             hideSub.remove();
         };
     }, []);
-
-    useEffect(() => {
-        if (!conversationId) return;
-
-        const fetchConversation = async () => {
-            try {
-                const data = await messagingRepository.getConversationById(conversationId);
-                setConversation(data);
-            } catch (error) {
-                console.error('Failed to fetch conversation:', error);
-            }
-        };
-
-        fetchConversation();
-    }, [conversationId]);
-
-    /**
-     * Hiển thị cache ngay cho mượt, nhưng LUÔN gọi lại API.
-     *
-     * Không được tin vào cache: socket bị ngắt khi app xuống nền (để backend coi là
-     * offline mà gửi push — xem SocketProvider), nên mọi tin nhắn đến trong lúc đó
-     * KHÔNG về qua socket. Nếu chỉ đọc cache thì mở chat từ thông báo sẽ không thấy
-     * chính tin nhắn vừa được báo.
-     */
-    const fetchMessages = useCallback(async () => {
-        if (!conversationId) return;
-
-        const hasCache = hasMessages(conversationId);
-        if (!hasCache) setLoadingMessages(conversationId, true);
-
-        try {
-            const data = await messagingRepository.getMessages(conversationId);
-            setMessages(conversationId, data);
-        } catch (error) {
-            console.error('Failed to fetch messages:', error);
-        } finally {
-            if (!hasCache) setLoadingMessages(conversationId, false);
-        }
-    }, [conversationId, hasMessages, setMessages, setLoadingMessages]);
-
-    useEffect(() => {
-        fetchMessages();
-    }, [fetchMessages]);
-
-    // Đang mở sẵn màn chat rồi app xuống nền → lúc quay lại cũng phải fetch lại,
-    // vì socket đã ngắt nên không nhận được tin nhắn đến trong lúc đó.
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', (state) => {
-            if (state === 'active') fetchMessages();
-        });
-
-        return () => subscription.remove();
-    }, [fetchMessages]);
-
-    useEffect(() => {
-        if (conversationId) {
-            setActiveConversation(conversationId);
-            socketService.joinConversation(conversationId);
-            clearUnread(conversationId);
-
-            messagingRepository.markConversationAsRead(conversationId).catch(console.error);
-        }
-
-        return () => {
-            if (conversationId) {
-                socketService.leaveConversation(conversationId);
-                socketService.stopTyping(conversationId);
-            }
-            setActiveConversation(null);
-            if (typingTimeoutRef.current) {
-                clearTimeout(typingTimeoutRef.current);
-            }
-        };
-    }, [conversationId, setActiveConversation, clearUnread]);
 
     useEffect(() => {
         if (messages.length > 0) {
@@ -215,37 +122,18 @@ export default function DetailMessageScreen() {
 
         try {
             if (editingMessageId) {
-                const updated = await messagingRepository.editMessage(editingMessageId, {
-                    content: messageText.trim(),
-                });
-
-                updateMessage(conversationId, editingMessageId, {
-                    content: updated.content,
-                    isEdited: true,
-                });
+                await editMessage(editingMessageId, messageText.trim());
 
                 Toast.show({ type: 'success', text1: 'Đã chỉnh sửa tin nhắn' });
                 setEditingMessageId(null);
                 setMessageText('');
-                socketService.stopTyping(conversationId);
+                stopTyping();
                 return;
             }
 
-            // First message of a job-originated conversation is wrapped as a
-            // JOB_REF so the recipient sees the rich job card (mirrors web).
-            const content = pendingJobRef
-                ? buildJobReference(pendingJobRef.jobData, messageText.trim())
-                : messageText.trim();
-
-            const sent = await messagingRepository.sendMessage({
-                conversationId,
-                content,
-            });
-
-            addMessage(conversationId, sent);
-            if (pendingJobRef) clearPendingJobRef(conversationId);
+            await sendMessage(messageText.trim());
             setMessageText('');
-            socketService.stopTyping(conversationId);
+            stopTyping();
         } catch (error) {
             console.error('Failed to send message:', error);
             Toast.show({
@@ -267,33 +155,19 @@ export default function DetailMessageScreen() {
             });
 
             if (!result.canceled && result.assets[0]) {
-                setIsUploading(true);
                 const asset = result.assets[0];
 
-                const formData = new FormData();
-                formData.append('file', {
+                await sendAttachment({
                     uri: asset.uri,
-                    type: 'image/jpeg',
                     name: 'image.jpg',
-                } as unknown as Blob);
-                formData.append('folder', 'messages');
-
-                const { url } = await messagingRepository.uploadAttachment(formData);
-
-                const sent = await messagingRepository.sendMessage({
-                    conversationId,
-                    content: messageText.trim() || '',
-                    attachmentUrl: url,
-                    attachmentType: 'image',
+                    mimeType: 'image/jpeg',
+                    caption: messageText.trim() || '',
                 });
 
-                addMessage(conversationId, sent);
                 setMessageText('');
-                setIsUploading(false);
             }
         } catch (error) {
             console.error('Failed to upload image:', error);
-            setIsUploading(false);
             Toast.show({
                 type: 'error',
                 text1: 'Không thể tải ảnh lên',
@@ -325,33 +199,16 @@ export default function DetailMessageScreen() {
                 return;
             }
 
-            setIsUploading(true);
-            const mimeType = asset.mimeType || 'application/octet-stream';
-            const attachmentType = getAttachmentTypeFromMimeType(mimeType);
-
-            const formData = new FormData();
-            formData.append('file', {
+            await sendAttachment({
                 uri: asset.uri,
-                type: mimeType,
                 name: asset.name || 'file',
-            } as unknown as Blob);
-            formData.append('folder', 'messages');
-
-            const { url } = await messagingRepository.uploadAttachment(formData);
-
-            const sent = await messagingRepository.sendMessage({
-                conversationId,
-                content: messageText.trim() || '',
-                attachmentUrl: url,
-                attachmentType,
+                mimeType: asset.mimeType || 'application/octet-stream',
+                caption: messageText.trim() || '',
             });
 
-            addMessage(conversationId, sent);
             setMessageText('');
-            setIsUploading(false);
         } catch (error) {
             console.error('Failed to upload file:', error);
-            setIsUploading(false);
             Toast.show({
                 type: 'error',
                 text1: 'Không thể tải tệp lên',
@@ -363,21 +220,9 @@ export default function DetailMessageScreen() {
     const handleTextChange = (text: string) => {
         setMessageText(text);
 
-        if (editingMessageId || !conversationId) return;
+        if (editingMessageId) return;
 
-        if (text.length > 0) {
-            socketService.startTyping(conversationId);
-
-            if (typingTimeoutRef.current) {
-                clearTimeout(typingTimeoutRef.current);
-            }
-
-            typingTimeoutRef.current = setTimeout(() => {
-                socketService.stopTyping(conversationId);
-            }, 3000);
-        } else {
-            socketService.stopTyping(conversationId);
-        }
+        notifyTyping(text);
     };
 
     const handleMessageLongPress = (messageId: string) => {
@@ -397,8 +242,7 @@ export default function DetailMessageScreen() {
         if (!selectedMessageId || !conversationId) return;
 
         try {
-            await messagingRepository.deleteMessage(selectedMessageId);
-            removeMessage(conversationId, selectedMessageId);
+            await deleteMessage(selectedMessageId);
             Toast.show({ type: 'success', text1: 'Đã xóa tin nhắn' });
         } catch (error) {
             console.error('Failed to delete message:', error);
@@ -426,13 +270,6 @@ export default function DetailMessageScreen() {
     const goBack = () => {
         router.back();
     };
-
-    const otherUser = useMemo(() => {
-        if (!conversation?.participants) return null;
-        return conversation.participants.find((p) => p.id !== currentUserId) || null;
-    }, [conversation, currentUserId]);
-
-    const isOtherUserOnline = otherUser?.id ? isUserOnline(otherUser.id) : false;
 
     const chatMessages: ChatMessage[] = useMemo(() => {
         return messages.map((msg) => ({
@@ -533,7 +370,7 @@ export default function DetailMessageScreen() {
                                 {otherUser?.displayName || 'Unknown User'}
                             </Text>
                             <View className="flex-row items-center gap-1">
-                                {filteredTypingUsers.length > 0 ? (
+                                {typingUserIds.length > 0 ? (
                                     <Text className="text-xs font-medium text-purple-600">
                                         Đang nhập...
                                     </Text>
@@ -593,7 +430,7 @@ export default function DetailMessageScreen() {
                             </View>
                         )}
 
-                        {filteredTypingUsers.length > 0 && <TypingIndicator />}
+                        {typingUserIds.length > 0 && <TypingIndicator />}
                         {isUploading && (
                             <View className="items-start p-3">
                                 <View className="bg-white rounded-2xl px-4 py-3 flex-row items-center gap-2">
