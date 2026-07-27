@@ -1,5 +1,20 @@
 # Documentation
 
+## 📘 Tài liệu HTML (khuyến nghị — bản mới nhất)
+
+Bộ tài liệu đầy đủ dạng HTML, có mục lục tự động, dark mode và điều hướng chéo.
+Mở bằng trình duyệt: **[docs/html/index.html](./html/index.html)**
+
+| Document                                                           | Description                                                                                                                   |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| [html/01-kien-truc-du-an.html](./html/01-kien-truc-du-an.html)     | Cấu trúc thư mục, vai trò từng file, luồng dữ liệu, luồng khởi động, refresh token                                            |
+| [html/02-cong-nghe-su-dung.html](./html/02-cong-nghe-su-dung.html) | Mỗi thư viện dùng ở file nào, dùng thế nào, vì sao chọn                                                                       |
+| [html/03-setup-ben-thu-ba.html](./html/03-setup-ben-thu-ba.html)   | Google Cloud, FCM, Google Sign-In, PayOS, Socket.IO, EAS, Play Console, Fastlane                                              |
+| [html/features/](./html/features/)                                 | 10 tài liệu tính năng: auth, profiles, jobs, collab, messaging, notifications, payments, blog, challenge, explore/home/search |
+
+> Các file `.md` bên dưới là bản cũ; một số đã lỗi thời so với code. Bộ HTML được viết
+> lại từ source tại v1.0.28 và là bản được duy trì.
+
 ## Bắt đầu
 
 | Document                                             | Description                       |

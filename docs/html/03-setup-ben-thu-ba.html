@@ -1,0 +1,1473 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Setup bên thứ ba &amp; Auto Deploy — Soundspal Mobile</title>
+<link rel="stylesheet" href="assets/style.css" />
+<script src="assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Setup bên thứ ba &amp; Auto Deploy</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tài liệu 04</span>
+        <h1>Setup bên thứ ba &amp; Auto Deploy</h1>
+        <p class="lede">
+            Hướng dẫn thao tác thật, từng bước bấm, để dựng lại toàn bộ dịch vụ bên ngoài mà app phụ
+            thuộc: Google Cloud, Firebase FCM, Google Sign-In, PayOS, Socket.IO, EAS Build, Google
+            Play Console và Fastlane. Kèm cách xử lý những lỗi hay gặp nhất ở mỗi phần.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Đọc mục 1 trước khi làm bất cứ mục nào khác</span>
+            Gần như mọi lỗi tích hợp trong dự án này đều bắt nguồn từ <b>hai định danh</b> phải khớp
+            nhau ở nhiều nơi: <code>package name</code> và <code>OAuth client ID</code>.
+        </div>
+
+        <h2>1. Bốn định danh xuyên suốt mọi dịch vụ</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Định danh</th>
+                        <th>Giá trị hiện tại</th>
+                        <th>Xuất hiện ở đâu (phải khớp tất cả)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Package name Android</td>
+                        <td><code>com.jonasaugust12.talent_link</code></td>
+                        <td>
+                            <code>app.json</code> → <code>android.package</code> ·
+                            <code>fastlane/Appfile</code> → <code>package_name</code> ·
+                            <code>google-services.json</code> · Firebase Console · Google Play
+                            Console · OAuth client Android trên Google Cloud
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Firebase project (FCM)</td>
+                        <td><code>talentlink-22clc</code></td>
+                        <td><code>google-services.json</code> · Firebase Console</td>
+                    </tr>
+                    <tr>
+                        <td>Google Cloud project (đăng nhập)</td>
+                        <td>
+                            <code>talent-link-480717</code> —
+                            <b>project riêng, khác project FCM</b>
+                        </td>
+                        <td>
+                            OAuth consent screen · Web client ID trong
+                            <code>.env</code> · client_secret ở backend
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>URL scheme (deep link)</td>
+                        <td><code>soundspal</code></td>
+                        <td>
+                            <code>app.json</code> → <code>scheme</code>; sinh ra
+                            <code>soundspal://…</code> cho PayOS redirect
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t">Bẫy dễ mắc nhất của dự án này</span>
+            <b>Đăng nhập Google và FCM nằm ở HAI project Google khác nhau.</b> Chúng độc lập hoàn
+            toàn. Đừng thấy <code>google-services.json</code> có <code>oauth_client: []</code> rỗng
+            mà tưởng cấu hình sai — đăng nhập Google ở dự án này không đọc file đó. Comment trong
+            <code>useGoogleSignIn.ts</code> đã ghi rõ điều này.
+        </div>
+
+        <h2>2. File <code>.env</code> — 7 biến</h2>
+
+        <p>
+            Chép <code>.env.example</code> thành <code>.env</code> rồi điền.
+            <b>Không có giá trị mặc định trong source</b> — thiếu biến thì app vẫn build nhưng không
+            gọi được backend.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Biến</th>
+                        <th>Đọc bởi</th>
+                        <th>Lấy ở đâu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_API_BASE_URL</code></td>
+                        <td><code>apiClient.ts</code></td>
+                        <td>
+                            Backend team. Hiện tại
+                            <code>https://api.soundspal.com/api/v1</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_AUTH_REFRESH_URL</code></td>
+                        <td><code>apiClient.ts</code> (interceptor 401)</td>
+                        <td>
+                            <b>URL tuyệt đối</b>, không phải path. Hiện đang trỏ domain cũ
+                            <code>talentlink.io.vn</code> — kiểm tra lại với backend
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_SOCKET_URL</code></td>
+                        <td><code>socketService.ts</code></td>
+                        <td>
+                            Gốc domain, <b>không kèm</b> <code>/socket.io</code>. Vd
+                            <code>https://api.soundspal.com</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_SOCKET_PATH</code></td>
+                        <td><code>socketService.ts</code></td>
+                        <td>Thường là <code>/socket.io</code> (mặc định của Socket.IO)</td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID</code></td>
+                        <td><code>useGoogleSignIn.ts</code></td>
+                        <td>Google Cloud → OAuth client loại <b>Web application</b> (mục 4)</td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_STORAGE_ID</code></td>
+                        <td><code>storage.ts</code></td>
+                        <td>Tự đặt. Là tên "khoang" MMKV</td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_STORAGE_ENCRYPTION_KEY</code></td>
+                        <td><code>storage.ts</code></td>
+                        <td>Tự đặt, chuỗi ngẫu nhiên</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t">Hiểu đúng tiền tố EXPO_PUBLIC_</span>
+            Tiền tố này khiến giá trị bị <b>nhúng thẳng vào file .apk/.ipa</b>. Bất kỳ ai giải nén
+            file cài đặt đều đọc được. Nó dùng để <b>tách môi trường</b> (dev/staging/prod),
+            <b>không phải kho bí mật</b>. Tuyệt đối không đặt mật khẩu, <code>client_secret</code>,
+            hay private key vào đây.
+        </div>
+
+        <div class="note info">
+            <span class="t">Sửa .env xong phải xoá cache</span>
+            Expo đọc <code>.env</code> tại thời điểm bundle. Chạy
+            <code>npm run start:clear</code> (tức <code>expo start -c</code>), nếu không giá trị cũ
+            vẫn được dùng.
+        </div>
+
+        <h2 id="firebase-cloud-messaging-push-notification">
+            3. Firebase Cloud Messaging (Push notification)
+        </h2>
+
+        <h3>3.1. Tạo project và đăng ký app Android</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Tạo Firebase project</span>
+                Vào <a href="https://console.firebase.google.com">console.firebase.google.com</a> →
+                <b>Add project</b>. Đặt tên (dự án hiện dùng <code>talentlink-22clc</code>). Google
+                Analytics có thể tắt — FCM không cần.
+            </li>
+            <li>
+                <span class="h">Thêm ứng dụng Android</span>
+                Trong project → biểu tượng Android. Điền
+                <b>Android package name</b> = <code>com.jonasaugust12.talent_link</code>
+                <b>chính xác từng ký tự</b> như trong <code>app.json</code>. Sai một chữ là FCM
+                không bao giờ giao được tin.
+            </li>
+            <li>
+                <span class="h">Tải <code>google-services.json</code></span>
+                Đặt vào <b>thư mục gốc repo</b> (cùng cấp <code>package.json</code>).
+                <code>app.json</code> đã trỏ tới nó qua
+                <code>"googleServicesFile": "./google-services.json"</code>.
+                <div class="note warn" style="margin-top: 10px; margin-bottom: 0">
+                    <span class="t">File này nằm trong .gitignore</span>
+                    Nó <b>không</b> được commit. Vì vậy CI phải tự ghi lại từ secret trước khi build
+                    — xem mục 8.3. Đồng thời <code>.easignore</code> cố tình <b>không</b> liệt kê
+                    file này, để EAS đóng gói kèm khi build.
+                </div>
+            </li>
+            <li>
+                <span class="h">Bật Cloud Messaging API</span>
+                Firebase Console → <b>Project settings → Cloud Messaging</b>. Nếu thấy "Firebase
+                Cloud Messaging API (V1)" đang <i>Disabled</i>, bấm bật (nó mở link sang Google
+                Cloud Console).
+            </li>
+            <li>
+                <span class="h">Cấp credential cho backend gửi push</span>
+                <b>Project settings → Service accounts → Generate new private key</b>. File JSON tải
+                về đưa cho backend. Backend dùng nó với FCM HTTP v1 API để đẩy thông báo.
+                <b>Đây là khoá bí mật</b> — không commit, không đặt vào <code>.env</code> của app.
+            </li>
+        </ol>
+
+        <h3>3.2. Phía app đã làm sẵn những gì</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Việc</th>
+                        <th>File</th>
+                        <th>Cơ chế</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Đăng ký handler nền</td>
+                        <td><code>registerBackgroundHandler.ts</code></td>
+                        <td>
+                            Module side-effect, <b>phải import ở đầu</b>
+                            <code>app/_layout.tsx</code>. Thân hàm để trống là <b>cố ý</b>: khi
+                            message có khối <code>notification</code> thì hệ điều hành tự hiện
+                            banner
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Xin quyền + lấy token</td>
+                        <td><code>useDevicePayload.ts</code></td>
+                        <td>Gọi lúc đăng nhập, gắn token vào body login</td>
+                    </tr>
+                    <tr>
+                        <td>3 listener nhận thông báo</td>
+                        <td><code>usePushNotifications.ts</code></td>
+                        <td>
+                            <code>onMessage</code> (foreground) ·
+                            <code>onNotificationOpenedApp</code> (bấm khi app chạy nền) ·
+                            <code>getInitialNotification</code> (bấm khi app đã bị kill)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Đồng bộ token xoay vòng</td>
+                        <td><code>usePushTokenSync.ts</code></td>
+                        <td>
+                            <code>onTokenRefresh</code> → <span class="badge post">POST</span>
+                            <code>/auth/device-token</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Định danh thiết bị</td>
+                        <td><code>deviceInfo.ts</code></td>
+                        <td>
+                            UUID v4 tự sinh, lưu MMKV key <code>device_id</code>, ổn định vĩnh viễn
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t">Bẫy quyền thông báo trên Android 13+</span>
+            Hàm <code>requestPermission()</code> của React Native Firebase được đánh dấu
+            <code>@platform ios</code> — trên Android nó
+            <b>chỉ <code>return Promise.resolve(AUTHORIZED)</code> mà không hỏi user gì cả</b>. Nếu
+            tin vào nó, trên Android 13+ quyền <code>POST_NOTIFICATIONS</code> mặc định bị từ chối:
+            FCM <i>vẫn</i> giao message (handler nền vẫn chạy) nhưng hệ điều hành
+            <b>lặng lẽ không hiện banner</b> — cực khó debug. <br /><br />
+            Cách dự án xử lý (<code>useDevicePayload.ts</code>): Android ≥ 13 xin quyền qua
+            <code>PermissionsAndroid.request(PERMISSIONS.POST_NOTIFICATIONS)</code>; Android &lt; 13
+            coi như đã cấp lúc cài; iOS mới dùng <code>requestPermission()</code>.
+        </div>
+
+        <h3>3.3. Backend cần gửi payload như thế nào</h3>
+
+        <p>
+            App suy ra màn hình đích từ khối <code>data</code> (<code>resolvePushRoute.ts</code>).
+            Quy tắc: ưu tiên <code>type</code> + id, còn <code>route</code>/<code>path</code> chỉ là
+            phương án cuối.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th><code>data.type</code></th>
+                        <th>Cần kèm</th>
+                        <th>App mở màn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>new_application</code></td>
+                        <td><code>job_id</code></td>
+                        <td><code>/(jobs)/applicants?id=…</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>application_status_changed</code></td>
+                        <td>—</td>
+                        <td><code>/(jobs)/my-applications</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>new_message</code></td>
+                        <td><code>conversation_id</code></td>
+                        <td><code>/(messages)/detailMessage?conversationId=…</code></td>
+                    </tr>
+                    <tr>
+                        <td><i>(không có type)</i></td>
+                        <td><code>conversationId</code></td>
+                        <td>Vẫn mở được phòng chat</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Hai backend đặt tên khác nhau — app đã xử lý</span>
+            <code>job-post-service</code> gửi snake_case (<code>job_id</code>,
+            <code>conversation_id</code>), còn <code>messaging-service</code> gửi camelCase
+            (<code>conversationId</code>) và <b>không gửi <code>type</code></b
+            >. Hàm <code>pick()</code> trong <code>resolvePushRoute.ts</code> thử lần lượt cả hai
+            kiểu. <br /><br />
+            Cũng lưu ý: <code>messaging-service</code> đính sẵn
+            <code>route: "/(messages)/&lt;id&gt;"</code> nhưng
+            <b>route đó không tồn tại trong app</b> — nên code cố tình ưu tiên suy từ
+            <code>type</code>+id trước.
+        </div>
+
+        <h3>3.4. Kiểm tra push có chạy không</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Lấy FCM token của máy test</span>
+                Đăng nhập app rồi xem log — <code>useDevicePayload</code> ghi token ra console. Hoặc
+                hỏi backend token đã lưu cho <code>device_id</code> đó.
+            </li>
+            <li>
+                <span class="h">Gửi thử từ Firebase Console</span>
+                <b>Engage → Messaging → New campaign → Notifications</b> →
+                <b>Send test message</b> → dán token. Nếu banner hiện: FCM + quyền OK.
+            </li>
+            <li>
+                <span class="h">Test điều hướng khi bấm</span>
+                Gửi bằng API v1 kèm khối <code>data</code> (Console không gửi được
+                <code>data</code> tuỳ ý), rồi bấm vào thông báo, kiểm tra app mở đúng màn.
+            </li>
+            <li>
+                <span class="h">Test push tin nhắn — nhớ tắt màn hình</span>
+                Messaging-service <b>chỉ push cho người offline</b>. App chủ động ngắt socket khi
+                xuống nền. Nên phải thực sự đưa app xuống nền rồi mới nhờ người khác nhắn.
+            </li>
+        </ol>
+
+        <h2 id="dang-nhap-google-google-sign-in">4. Đăng nhập Google (Google Sign-In)</h2>
+
+        <p>
+            Luồng dùng ở đây là <b>server auth code flow</b>, không phải ID token flow. App lấy
+            <code>serverAuthCode</code> rồi gửi lên backend; backend mới là bên đổi code lấy token
+            thật (nó giữ <code>client_secret</code>).
+        </p>
+
+        <div class="flow">
+            <div class="n hl"><b>1. App</b><small>GoogleSignin.signIn()</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>2. Google</b><small>trả serverAuthCode</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>3. App</b><small>POST /auth/mobile-oauth</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>4. Backend</b><small>đổi code + client_secret</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>5. Backend</b><small>trả JWT của hệ thống</small></div>
+        </div>
+
+        <h3>4.1. Tạo Google Cloud project &amp; OAuth consent screen</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Tạo project</span>
+                <a href="https://console.cloud.google.com">console.cloud.google.com</a> →
+                <b>Select a project → New project</b>. (Dự án đang dùng
+                <code>talent-link-480717</code>.)
+            </li>
+            <li>
+                <span class="h">Cấu hình OAuth consent screen</span>
+                <b>APIs &amp; Services → OAuth consent screen</b>. Chọn <b>External</b>. Điền tên
+                ứng dụng, email hỗ trợ, email liên hệ nhà phát triển. Scope chỉ cần
+                <code>email</code>, <code>profile</code>, <code>openid</code>. <br /><br />
+                Khi ở trạng thái <b>Testing</b>, chỉ tài khoản trong danh sách
+                <b>Test users</b> đăng nhập được (tối đa 100). Muốn mở cho tất cả thì bấm
+                <b>Publish app</b>. Với 3 scope cơ bản trên thì <b>không cần</b> Google thẩm định.
+            </li>
+        </ol>
+
+        <h3>4.2. Tạo hai OAuth client — và hiểu vì sao cần cả hai</h3>
+
+        <div class="note info">
+            <span class="t">Điểm gây bối rối nhất</span>
+            Bạn phải tạo <b>2 client</b>, nhưng trong code chỉ dùng <b>1</b>:
+            <ul style="margin-bottom: 0; margin-top: 8px">
+                <li>
+                    <b>Android client</b> — không xuất hiện ở đâu trong code. Nó tồn tại để Google
+                    <i>xác minh</i> rằng app gọi tới đúng là app của bạn, dựa vào chữ ký SHA-1.
+                </li>
+                <li>
+                    <b>Web client</b> — đây mới là cái đưa vào
+                    <code>EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID</code>, và
+                    <b>backend phải giữ đúng <code>client_secret</code> của chính client này</b>.
+                    Lệch nhau là backend trả 401 <code>oauth_failed</code>.
+                </li>
+            </ul>
+        </div>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Lấy chữ ký SHA-1</span>
+                <b>Debug</b> (máy dev):
+                <pre
+                    style="margin: 8px 0"
+                ><code>keytool -list -v -keystore ~/.android/debug.keystore \
+        -alias androiddebugkey -storepass android -keypass android</code></pre>
+                <b>Release qua EAS</b> — EAS quản lý keystore giúp bạn:
+                <pre style="margin: 8px 0"><code>eas credentials
+<span class="c-com"># chọn: Android → production → Keystore → xem SHA-1 fingerprint</span></code></pre>
+                <b>Bản do Google Play ký</b> (khi bật Play App Signing): Play Console →
+                <b>Setup → App integrity → App signing</b> → chép SHA-1 ở mục
+                <i>App signing key certificate</i>.
+                <div class="note warn" style="margin-top: 10px; margin-bottom: 0">
+                    Có tới <b>3 SHA-1 khác nhau</b> (debug / upload key của EAS / key Google Play
+                    ký). Muốn đăng nhập Google chạy được ở cả bản dev lẫn bản trên Play thì phải
+                    <b>thêm hết cả ba</b> vào Android OAuth client.
+                </div>
+            </li>
+            <li>
+                <span class="h">Tạo Android OAuth client</span>
+                <b>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</b> →
+                <b>Android</b>. Package name <code>com.jonasaugust12.talent_link</code>, dán SHA-1.
+                Lặp lại cho từng SHA-1.
+            </li>
+            <li>
+                <span class="h">Tạo Web OAuth client</span>
+                Cũng ở <b>Create credentials → OAuth client ID</b> → chọn <b>Web application</b>.
+                Chép <b>Client ID</b> vào <code>.env</code>, và đưa <b>Client secret</b> cho
+                backend.
+                <pre
+                    style="margin: 8px 0"
+                ><code>EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=1234567890-xxxxxxxx.apps.googleusercontent.com</code></pre>
+            </li>
+            <li>
+                <span class="h">Kiểm tra cấu hình phía app</span>
+                Đã viết sẵn trong <code>useGoogleSignIn.ts</code>, không cần sửa:
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>GoogleSignin.<span class="c-fn">configure</span>({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    offlineAccess: <span class="c-key">true</span>,            <span class="c-com">// bắt buộc — không có thì Google không trả serverAuthCode</span>
+    forceCodeForRefreshToken: <span class="c-key">true</span>, <span class="c-com">// buộc trả code mới mỗi lần</span>
+});</code></pre>
+            </li>
+            <li>
+                <span class="h">Build lại development build</span>
+                Google Sign-In là native module — <b>Expo Go không chạy được</b>. Chạy
+                <code>npx expo prebuild --clean</code> rồi <code>npm run android</code>.
+            </li>
+        </ol>
+
+        <h3>4.3. Bảng lỗi thường gặp</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lỗi</th>
+                        <th>Nguyên nhân thật sự</th>
+                        <th>Cách sửa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>DEVELOPER_ERROR</code> / code 10</td>
+                        <td>SHA-1 hoặc package name không khớp OAuth client</td>
+                        <td>
+                            Đối chiếu lại SHA-1 của <b>đúng bản build đang chạy</b>. Bản debug và
+                            bản EAS có SHA-1 khác nhau
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>serverAuthCode</code> trả về <code>null</code></td>
+                        <td>Thiếu <code>offlineAccess: true</code> hoặc thiếu Web client</td>
+                        <td>Kiểm tra <code>webClientId</code> đúng là client loại <b>Web</b></td>
+                    </tr>
+                    <tr>
+                        <td>Backend trả 401 <code>oauth_failed</code></td>
+                        <td>App và backend đang dùng <b>hai OAuth client khác nhau</b></td>
+                        <td>
+                            Đối chiếu <code>EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID</code> với client_id
+                            backend đang cấu hình — phải là <b>cùng một cặp</b> id/secret
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>SIGN_IN_CANCELLED</code></td>
+                        <td>User tự đóng — không phải lỗi</td>
+                        <td>Code đã <code>return</code> im lặng, không hiện toast</td>
+                    </tr>
+                    <tr>
+                        <td><code>PLAY_SERVICES_NOT_AVAILABLE</code></td>
+                        <td>Máy ảo không có Google Play Services</td>
+                        <td>Dùng emulator image có <i>Google APIs</i>, hoặc máy thật</td>
+                    </tr>
+                    <tr>
+                        <td>Chỉ một số tài khoản đăng nhập được</td>
+                        <td>Consent screen còn ở chế độ <b>Testing</b></td>
+                        <td>Thêm vào Test users, hoặc <b>Publish app</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>4.4. Người dùng Google lần đầu — luồng 2 bước</h3>
+
+        <p>
+            Backend trả <code>is_registered</code> để phân biệt. Nếu <code>false</code>, nó gửi kèm
+            <code>registration_token</code>, app chuyển sang màn
+            <code>/(auth)/complete-oauth-profile</code> để người dùng chọn
+            <b>role</b> (<code>producer</code>/<code>singer</code>/<code>venue</code>) và
+            <b>username</b>, rồi gọi <span class="badge post">POST</span>
+            <code>/auth/complete-oauth</code> mới nhận được token thật.
+        </p>
+
+        <h2 id="payos-thanh-toan-premium">5. PayOS (Thanh toán Premium)</h2>
+
+        <p>
+            PayOS là cổng thanh toán Việt Nam, dùng VietQR. Điểm mấu chốt của tích hợp này:
+            <b>app không hề xử lý tiền</b>. Nó chỉ xin backend một <code>checkout_url</code>, mở URL
+            đó bằng trình duyệt hệ thống, rồi chờ người dùng quay lại app qua deep link.
+        </p>
+
+        <h3>5.1. Đăng ký &amp; lấy khoá</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Tạo tài khoản kênh thanh toán</span>
+                Đăng ký tại <a href="https://my.payos.vn">my.payos.vn</a>, hoàn tất xác minh doanh
+                nghiệp/cá nhân và liên kết tài khoản ngân hàng nhận tiền.
+            </li>
+            <li>
+                <span class="h">Tạo kênh thanh toán và lấy 3 khoá</span>
+                Trong dashboard, mỗi kênh có <code>Client ID</code>, <code>API Key</code>,
+                <code>Checksum Key</code>.
+                <div class="note danger" style="margin-top: 10px; margin-bottom: 0">
+                    Cả ba khoá này thuộc về <b>backend</b>. Tuyệt đối không đưa vào app —
+                    <code>EXPO_PUBLIC_*</code> ai cũng đọc được, và <code>Checksum Key</code> là thứ
+                    dùng để xác thực webhook. Lộ nó nghĩa là bất kỳ ai cũng giả được "đã thanh
+                    toán".
+                </div>
+            </li>
+            <li>
+                <span class="h">Đăng ký webhook URL</span>
+                Trong dashboard PayOS, khai báo endpoint webhook của backend (vd
+                <code>https://api.soundspal.com/api/v1/payments/webhook</code>). PayOS gọi vào đây
+                khi giao dịch đổi trạng thái. <b>Đây mới là nguồn sự thật</b>, không phải redirect
+                URL — người dùng có thể đóng trình duyệt trước khi bị chuyển hướng.
+            </li>
+        </ol>
+
+        <h3>5.2. Deep link — cách người dùng quay lại app</h3>
+
+        <p>
+            <code>app.json</code> khai báo <code>"scheme": "soundspal"</code>. Ở
+            <code>PremiumScreen.tsx</code>:
+        </p>
+
+        <pre><code><span class="c-key">const</span> paymentReturnUrl = <span class="c-fn">useMemo</span>(
+    () =&gt; ExpoLinking.<span class="c-fn">createURL</span>(<span class="c-str">'/(payments)/premium'</span>),
+    []
+);
+<span class="c-com">// → "soundspal:///(payments)/premium" trên bản build thật</span>
+
+<span class="c-fn">createCheckout</span>({
+    redirect_url: paymentReturnUrl,
+    cancel_url:   <span class="c-str">`${paymentReturnUrl}?cancel=1`</span>,
+    ...
+});</code></pre>
+
+        <div class="note warn">
+            <span class="t">PayOS chỉ nhận URL http/https ở phần cấu hình dashboard</span>
+            Nếu PayOS từ chối scheme <code>soundspal://</code>, cách chuẩn là dùng
+            <b>trang trung gian</b>: đặt <code>redirect_url</code> là một trang web của bạn
+            (<code>https://soundspal.com/payment-return</code>), trang đó nhận
+            <code>orderCode</code> + <code>status</code> rồi tự chuyển tiếp sang
+            <code>soundspal://…</code>. Cách này cũng xử lý được trường hợp người dùng thanh toán
+            trên máy khác.
+        </div>
+
+        <h3>5.3. Luồng thanh toán đầy đủ</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Người dùng chọn gói</span>
+                Bảng giá nằm <b>cứng trong code</b>
+                (<code>features/payments/domain/constants/payment.ts</code>): tháng 49 000 ₫ / năm
+                490 000 ₫ (= 10× giá tháng, tặng 2 tháng). Mặc định chọn gói năm.
+                <div class="note info" style="margin-top: 10px; margin-bottom: 0">
+                    <b>Bảng giá này phải khớp bảng giá server.</b> Payment-service re-validate
+                    <code>amount</code> theo <code>billing_period</code> và từ chối nếu lệch — chống
+                    việc sửa giá từ client.
+                </div>
+            </li>
+            <li>
+                <span class="h">App gọi tạo phiên thanh toán</span>
+                <span class="badge post">POST</span> <code>/payments/checkout</code> với body:
+                <pre style="margin: 8px 0; margin-bottom: 0"><code>{
+    purpose: <span class="c-str">'ACCOUNT_UPGRADE'</span>,
+    amount: <span class="c-num">490000</span>,
+    billing_period: <span class="c-str">'yearly'</span>,
+    description: <span class="c-str">'Soundspal Premium 1Y'</span>,   <span class="c-com">// ≤25 ký tự ASCII không dấu!</span>
+    reference_id: user.id,
+    redirect_url: <span class="c-str">'soundspal:///(payments)/premium'</span>,
+    cancel_url:   <span class="c-str">'soundspal:///(payments)/premium?cancel=1'</span>
+}</code></pre>
+                <div class="note danger" style="margin-top: 10px; margin-bottom: 0">
+                    <b><code>description</code> phải ≤ 25 ký tự ASCII không dấu.</b> PayOS dùng
+                    chuỗi này làm nội dung chuyển khoản VietQR. Dài hơn hoặc có dấu tiếng Việt →
+                    <code>CreatePaymentLink</code> thất bại.
+                </div>
+            </li>
+            <li>
+                <span class="h">Mở PayOS</span>
+                Backend trả <code>checkout_url</code>, app gọi
+                <code>Linking.openURL(checkoutUrl)</code> — mở trình duyệt ngoài, không phải
+                WebView.
+            </li>
+            <li>
+                <span class="h">Người dùng quét VietQR và chuyển khoản</span>
+                Ngân hàng xử lý. PayOS phát hiện tiền về.
+            </li>
+            <li>
+                <span class="h">PayOS gọi webhook backend (đường chính)</span>
+                Backend xác minh chữ ký bằng Checksum Key, rồi set
+                <code>is_premium = true</code> và
+                <code>premium_expired_at = now + 30/365 ngày</code>
+                trên user-service.
+            </li>
+            <li>
+                <span class="h">PayOS chuyển hướng người dùng về app (đường phụ)</span>
+                Deep link mang theo <code>orderCode</code> và <code>status</code>.
+                <code>parsePayOSReturnUrl()</code> đọc chúng. Hàm này xử lý khá nhiều biến thể:
+                <code>status</code> / <code>payment_status</code> / <code>paymentStatus</code>, quy
+                ước <code>code=00</code> nghĩa là đã trả tiền, và <code>cancel=1</code> hoặc
+                <code>cancel=true</code> nghĩa là huỷ.
+            </li>
+            <li>
+                <span class="h">App poll trạng thái</span>
+                <span class="badge get">GET</span> <code>/payments/status/{orderCode}</code>, mỗi
+                <b>2 giây, tối đa 10 lần (~20 giây)</b>. Hết hạn mức mà vẫn <code>pending</code> →
+                hiện màn "đang xử lý" (webhook có thể tới muộn hơn). Riêng lỗi
+                <b>404 được retry tới 8 lần</b> vì giao dịch có khi chưa kịp ghi vào DB.
+            </li>
+            <li>
+                <span class="h">Thành công → làm mới quyền lợi</span>
+                Invalidate <code>userKeys.all</code> + <code>paymentKeys.all</code> để
+                <code>/users/me</code> trả về cờ premium mới.
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t">Cứu cánh khi không lấy được orderCode</span>
+            Nếu người dùng quay lại app mà deep link không mang <code>orderCode</code> (đóng trình
+            duyệt, mở lại app bằng tay…), <code>resolvePaymentOrderCodeFromHistory()</code> gọi
+            <span class="badge get">GET</span> <code>/payments/history?limit=10</code> và lấy
+            <code>order_code</code> mới nhất. <code>PremiumScreen</code> cũng lắng nghe
+            <code>AppState</code> để tự refetch trạng thái mỗi khi app quay lại foreground.
+        </div>
+
+        <h3>5.4. Trạng thái Premium — đọc thế nào cho đúng</h3>
+
+        <pre><code><span class="c-com">// shared/domain/utils/premium.ts</span>
+<span class="c-fn">isPremiumActive</span>(user)   <span class="c-com">// = is_premium === true VÀ premium_expired_at &gt; now</span></code></pre>
+
+        <div class="note warn">
+            <span class="t">Không được tin mỗi cờ is_premium</span>
+            Backend để <code>is_premium = true</code> cho tới lần quét dọn kế tiếp, kể cả khi gói đã
+            hết hạn. Mọi chỗ hiển thị huy hiệu/quyền lợi
+            <b>phải so <code>premium_expired_at</code> với thời điểm hiện tại</b>. Hàm trên trả về 3
+            trạng thái: <code>none</code> (chưa từng mua) · <code>active</code> (còn hạn) ·
+            <code>expired</code> (hết hạn → hiện nút gia hạn).
+        </div>
+
+        <h3>5.5. Test PayOS ở môi trường dev</h3>
+
+        <ul>
+            <li>Dùng kênh thanh toán <b>sandbox</b> của PayOS (khoá riêng, tiền ảo).</li>
+            <li>
+                Webhook cần URL công khai — chạy <code>ngrok http 8080</code> rồi khai URL ngrok vào
+                dashboard PayOS.
+            </li>
+            <li>
+                Test deep link không cần thanh toán thật:
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code><span class="c-com"># Android</span>
+adb shell am start -W -a android.intent.action.VIEW \
+  -d <span class="c-str">"soundspal:///(payments)/premium?orderCode=123456&amp;status=PAID"</span>
+
+<span class="c-com"># iOS simulator</span>
+xcrun simctl openurl booted <span class="c-str">"soundspal:///(payments)/premium?orderCode=123456&amp;status=PAID"</span></code></pre>
+            </li>
+        </ul>
+
+        <h2 id="socket-io-realtime">6. Socket.IO (Realtime)</h2>
+
+        <p>
+            Không cần đăng ký dịch vụ bên ngoài — server Socket.IO do backend tự vận hành. Việc cần
+            làm ở app chỉ là trỏ đúng địa chỉ và đảm bảo hạ tầng cho WebSocket đi qua được.
+        </p>
+
+        <h3>6.1. Cấu hình phía app</h3>
+
+        <pre><code>EXPO_PUBLIC_SOCKET_URL=https://api.soundspal.com   <span class="c-com"># gốc domain, KHÔNG kèm /socket.io</span>
+EXPO_PUBLIC_SOCKET_PATH=/socket.io                <span class="c-com"># mặc định của Socket.IO</span></code></pre>
+
+        <div class="note warn">
+            <span class="t">Phân biệt URL và PATH</span>
+            Sai lầm phổ biến: nhét luôn <code>/socket.io</code> vào <code>SOCKET_URL</code>. Khi đó
+            client gọi tới <code>https://host/socket.io/socket.io/</code> → 404 và không bao giờ kết
+            nối được.
+        </div>
+
+        <h3>6.2. Yêu cầu phía hạ tầng</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hạng mục</th>
+                        <th>Cần làm gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Nginx / reverse proxy</td>
+                        <td>
+                            Phải cho phép nâng cấp giao thức, nếu không WebSocket bị hạ xuống
+                            polling (hoặc chết hẳn):
+                            <pre style="margin: 8px 0 0"><code>location /socket.io/ {
+    proxy_pass http://backend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 3600s;
+}</code></pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Load balancer nhiều instance</td>
+                        <td>
+                            Bật <b>sticky session</b>, hoặc dùng
+                            <code>socket.io-redis-adapter</code>. Không thì mỗi lần polling rơi vào
+                            node khác → mất session
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Xác thực</td>
+                        <td>
+                            Client gửi token ở <b>3 chỗ</b> (<code>auth.token</code>,
+                            <code>query.token</code>, header <code>Authorization</code>) — backend
+                            đọc chỗ nào cũng được. Lưu ý <code>extraHeaders</code> chỉ có tác dụng ở
+                            transport polling, WebSocket thuần không gửi header tuỳ ý
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Theo dõi presence</td>
+                        <td>
+                            Server phải coi user là <b>offline</b> khi socket ngắt, vì đó là điều
+                            kiện để messaging-service quyết định có gửi push hay không
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>6.3. Hợp đồng sự kiện</h3>
+
+        <p>
+            Danh sách đầy đủ ở
+            <a href="01-kien-truc-du-an.html#luong-realtime-websocket">tài liệu kiến trúc</a> và
+            <a href="features/messaging.html">tài liệu Messaging</a>. Hai điểm backend cần biết:
+        </p>
+
+        <ul>
+            <li>
+                Sự kiện <code>message:read</code> đang được gửi ở
+                <b>hai dạng payload khác nhau</b> (gateway gửi <code>{messageId, userId}</code>,
+                REST gửi <code>{messageId, readerId, conversationId}</code>). App đã chuẩn hoá cả
+                hai, nhưng thống nhất lại một dạng thì sạch hơn.
+            </li>
+            <li>
+                App đã wire sẵn <code>users:online</code> (snapshot toàn bộ người đang online lúc
+                kết nối) nhưng <b>backend hiện chưa phát sự kiện này</b>. Khi backend bật, presence
+                sẽ tự khởi tạo đúng ngay từ lúc kết nối mà không cần sửa app.
+            </li>
+        </ul>
+
+        <h3>6.4. Debug khi socket không kết nối</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Triệu chứng trong log</th>
+                        <th>Khả năng cao là</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>❌ Socket connection error: xhr poll error</code></td>
+                        <td>Sai URL/PATH, hoặc server không chạy, hoặc CORS chặn</td>
+                    </tr>
+                    <tr>
+                        <td><code>⚠️ Cannot connect: user not authenticated</code></td>
+                        <td>
+                            Chưa đăng nhập — <code>SocketProvider</code> chỉ kết nối khi có
+                            <code>userId</code> và <code>accessToken</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>Reason: io server disconnect</code>
+                        </td>
+                        <td>Server chủ động đá ra — thường do token hết hạn hoặc không hợp lệ</td>
+                    </tr>
+                    <tr>
+                        <td><code>❌ Max reconnection attempts reached</code></td>
+                        <td>
+                            Đã thử 5 lần với backoff. Service đặt cờ ngừng hẳn — phải khởi động lại
+                            app (hoặc đăng xuất/đăng nhập) mới thử lại
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Kết nối OK nhưng không nhận được tin nhắn</td>
+                        <td>
+                            Chưa <code>conversation:join</code> đúng phòng, hoặc backend emit sai
+                            tên sự kiện (phải là <code>message:new</code> kiểu hai chấm)
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>7. EAS Build (Expo Application Services)</h2>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Tạo tài khoản Expo &amp; đăng nhập</span>
+                <pre style="margin: 8px 0; margin-bottom: 0"><code>npm install -g eas-cli
+eas login
+eas whoami</code></pre>
+                Gói Free đủ để build, chỉ phải xếp hàng lâu hơn.
+            </li>
+            <li>
+                <span class="h">Liên kết project</span>
+                <code>app.json</code> đã có sẵn <code>extra.eas.projectId</code>. Nếu bạn fork sang
+                tài khoản Expo khác thì chạy <code>eas init</code> để sinh id mới.
+            </li>
+            <li>
+                <span class="h">Hiểu 3 profile trong <code>eas.json</code></span>
+                <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Cấu hình</th>
+                                <th>Dùng khi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>development</code></td>
+                                <td>
+                                    <code>developmentClient: true</code>,
+                                    <code>distribution: internal</code>
+                                </td>
+                                <td>
+                                    Lập trình hằng ngày — có Metro, hot reload, và
+                                    <b>có native module</b>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>preview</code></td>
+                                <td><code>distribution: internal</code></td>
+                                <td>APK gửi tester cài trực tiếp</td>
+                            </tr>
+                            <tr>
+                                <td><code>production</code></td>
+                                <td><code>autoIncrement: true</code></td>
+                                <td>
+                                    Sinh <code>.aab</code> để lên Play Store. Tự tăng
+                                    <code>versionCode</code> ở phía Expo
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <span class="h">Để EAS quản lý keystore</span>
+                Lần build production đầu tiên, EAS hỏi có tạo keystore không → chọn <b>Yes</b>. Nó
+                lưu an toàn trên server Expo.
+                <div class="note danger" style="margin-top: 10px; margin-bottom: 0">
+                    <b>Sao lưu keystore ngay:</b> <code>eas credentials</code> → Android → download.
+                    Mất keystore = <b>không bao giờ update được app đã phát hành nữa</b> (trừ khi đã
+                    bật Play App Signing và làm thủ tục reset key với Google).
+                </div>
+            </li>
+            <li>
+                <span class="h">Tạo EXPO_TOKEN cho CI</span>
+                <a href="https://expo.dev/accounts/[account]/settings/access-tokens"
+                    >expo.dev → Account settings → Access tokens</a
+                >
+                → <b>Create token</b>. Chép giá trị (chỉ hiện <b>một lần</b>) — sẽ dùng làm GitHub
+                secret ở mục 8.3.
+            </li>
+            <li>
+                <span class="h">Build thử tại chỗ</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>npm run build:android:dev      <span class="c-com"># development build để lập trình</span>
+npm run build:android:prod     <span class="c-com"># .aab production</span></code></pre>
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t"><code>.easignore</code> có nhiệm vụ riêng</span>
+            EAS dùng file này <b>thay cho</b> <code>.gitignore</code> khi đóng gói source gửi lên
+            build server. Khác biệt duy nhất: nó <b>không</b> loại
+            <code>google-services.json</code>, để prebuild/gradle trên máy build vẫn có file cấu
+            hình Firebase.
+        </div>
+
+        <h2>8. Google Play Console + Fastlane (Auto deploy)</h2>
+
+        <p>
+            Đích đến: <b>push một git tag → app tự động lên Google Play track internal</b>. Chuỗi
+            mắt xích gồm 4 phần.
+        </p>
+
+        <h3>8.1. Tài khoản Google Play Developer</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Đăng ký &amp; trả phí</span>
+                <a href="https://play.google.com/console">play.google.com/console</a> — phí
+                <b>25 USD, trả một lần, vĩnh viễn</b> (không phải thuê hàng năm). Cần thẻ quốc tế.
+            </li>
+            <li>
+                <span class="h">Xác minh danh tính</span>
+                Google yêu cầu giấy tờ tuỳ thân (và giấy tờ doanh nghiệp nếu đăng ký dạng tổ chức).
+                Duyệt mất <b>vài ngày đến 2 tuần</b> — <b>làm bước này sớm</b>, đừng để sát ngày
+                phát hành.
+            </li>
+            <li>
+                <span class="h">Tạo ứng dụng</span>
+                <b>Create app</b> → tên, ngôn ngữ mặc định, App/Game, Free/Paid.
+            </li>
+            <li>
+                <span class="h">Upload bản .aab đầu tiên BẰNG TAY</span>
+                <div class="note warn" style="margin-top: 8px; margin-bottom: 8px">
+                    <b>Bắt buộc.</b> Google Play API <b>không cho phép</b> tạo bản phát hành đầu
+                    tiên của một app. Fastlane sẽ báo lỗi <i>"Package not found"</i> nếu bạn chạy nó
+                    trước khi có ít nhất một bản upload thủ công.
+                </div>
+                Chạy <code>npm run build:android:prod</code>, tải <code>.aab</code> về, rồi
+                <b>Release → Testing → Internal testing → Create new release</b> → upload.
+            </li>
+            <li>
+                <span class="h">Hoàn tất các khai báo bắt buộc</span>
+                Play Console bắt điền trước khi cho phát hành: Privacy policy (URL công khai), Data
+                safety, Content rating, Target audience, Ads declaration, App access (cấp tài khoản
+                test cho Google nếu app cần đăng nhập).
+            </li>
+        </ol>
+
+        <h3>8.2. Service account — chìa khoá để CI upload</h3>
+
+        <p>
+            Fastlane cần một "tài khoản máy" có quyền upload. Tài khoản đó tạo trên
+            <b>Google Cloud</b>, rồi cấp quyền bên <b>Play Console</b>.
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Bật Google Play Android Developer API</span>
+                <a href="https://console.cloud.google.com">Google Cloud Console</a> → chọn project →
+                <b>APIs &amp; Services → Library</b> → tìm
+                <i>Google Play Android Developer API</i> → <b>Enable</b>.
+            </li>
+            <li>
+                <span class="h">Tạo service account</span>
+                <b>IAM &amp; Admin → Service Accounts → Create service account</b>. Đặt tên vd
+                <code>fastlane-publisher</code>. Phần "Grant this service account access to project"
+                có thể <b>bỏ qua</b> — quyền thật sẽ cấp bên Play Console.
+            </li>
+            <li>
+                <span class="h">Tạo khoá JSON</span>
+                Bấm vào service account vừa tạo → tab <b>Keys</b> →
+                <b>Add key → Create new key</b> → chọn <b>JSON</b> → tải về.
+                <div class="note danger" style="margin-top: 10px; margin-bottom: 0">
+                    File JSON này cho phép phát hành app dưới tên bạn.
+                    <b>Không commit, không đưa vào <code>.env</code>.</b> Nếu lỡ lộ: xoá key ngay
+                    trong Cloud Console và tạo key mới.
+                </div>
+            </li>
+            <li>
+                <span class="h">Mời service account vào Play Console</span>
+                Play Console → <b>Users and permissions → Invite new users</b>. Dán
+                <b>email của service account</b> (dạng
+                <code>fastlane-publisher@&lt;project&gt;.iam.gserviceaccount.com</code>, có trong
+                file JSON ở trường <code>client_email</code>). <br /><br />
+                Cấp quyền tối thiểu, chọn <b>app cụ thể</b> chứ đừng cấp toàn tài khoản:
+                <ul style="margin-bottom: 0; margin-top: 6px">
+                    <li><b>Release to testing tracks</b> — bắt buộc</li>
+                    <li><b>View app information</b> — bắt buộc</li>
+                    <li><b>Release to production</b> — chỉ khi muốn CI đẩy thẳng lên production</li>
+                </ul>
+            </li>
+            <li>
+                <span class="h">Kiểm tra khoá hoạt động</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>fastlane run validate_play_store_json_key json_key:/duong/dan/key.json</code></pre>
+                Lời mời trong Play Console có thể mất <b>vài phút đến vài giờ</b> mới có hiệu lực —
+                nếu lỗi quyền, chờ rồi thử lại.
+            </li>
+        </ol>
+
+        <h3>8.3. GitHub Actions secrets</h3>
+
+        <p>
+            Repo → <b>Settings → Secrets and variables → Actions → New repository secret</b>. Cần 3
+            secret:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên secret</th>
+                        <th>Nội dung</th>
+                        <th>Cách tạo giá trị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>EXPO_TOKEN</code></td>
+                        <td>Access token Expo</td>
+                        <td>expo.dev → Account settings → Access tokens (mục 7)</td>
+                    </tr>
+                    <tr>
+                        <td><code>GOOGLE_SERVICES_JSON</code></td>
+                        <td><code>google-services.json</code> mã hoá <b>base64</b></td>
+                        <td>
+                            <code>base64 -i google-services.json | pbcopy</code> (macOS) ·
+                            <code>base64 -w 0 google-services.json</code> (Linux)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>PLAY_STORE_JSON_KEY</code></td>
+                        <td><b>Nội dung JSON nguyên bản</b> của service account key</td>
+                        <td>
+                            Mở file JSON, copy <b>toàn bộ</b> nội dung, dán vào ô secret.
+                            <b>Không</b> base64 — <code>Fastfile</code> truyền thẳng vào
+                            <code>json_key_data</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>CODECOV_TOKEN</code></td>
+                        <td>(tuỳ chọn) token Codecov</td>
+                        <td>
+                            Chỉ để upload coverage. Workflow đã đặt
+                            <code>fail_ci_if_error: false</code> nên thiếu cũng không sao
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Chú ý khác biệt định dạng</span>
+            <code>GOOGLE_SERVICES_JSON</code> phải <b>base64</b> (workflow chạy
+            <code>base64 -d</code>), còn <code>PLAY_STORE_JSON_KEY</code> phải là <b>JSON thô</b>.
+            Nhầm hai cái này là lỗi rất hay gặp.
+        </div>
+
+        <h3>8.4. Cài Fastlane &amp; hiểu 4 lane</h3>
+
+        <pre><code><span class="c-com"># macOS</span>
+brew install fastlane
+<span class="c-com"># hoặc qua RubyGems (mọi hệ điều hành)</span>
+gem install fastlane</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lane</th>
+                        <th>Chạy ở</th>
+                        <th>Làm gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>fastlane android doctor</code></td>
+                        <td>Máy dev</td>
+                        <td>Kiểm tra <code>eas --version</code> và <code>node -v</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>fastlane android bump_version</code></td>
+                        <td>Máy dev</td>
+                        <td>
+                            <code>npm version patch</code> → chạy
+                            <code>scripts/sync-version.js</code> để chép version sang
+                            <code>app.json</code> và <code>+1</code> vào
+                            <code>android.versionCode</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <b><code>fastlane android trigger_release</code></b>
+                        </td>
+                        <td>Máy dev</td>
+                        <td>
+                            <b>Lệnh "khai hoả".</b> Gọi <code>bump_version</code>, commit
+                            <code>chore(release): bump version to vX.Y.Z</code>, tạo tag
+                            <code>release-vX.Y.Z</code>, push cả branch lẫn tag
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>fastlane android upload_to_playstore</code></td>
+                        <td><b>CI</b></td>
+                        <td>
+                            Upload <code>./app-release.aab</code> lên track <code>internal</code>,
+                            đọc khoá từ biến môi trường <code>PLAY_STORE_JSON_KEY</code>, bỏ qua
+                            metadata &amp; ảnh
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>8.5. Quy trình phát hành đầy đủ</h3>
+
+        <p>Đây là toàn bộ chuỗi tự động, từ một lệnh trên máy bạn đến app trên Play Store:</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Bạn gõ một lệnh duy nhất</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>fastlane android trigger_release</code></pre>
+            </li>
+            <li>
+                <span class="h">Fastlane tăng version và push tag</span>
+                <code>1.0.28 → 1.0.29</code>, <code>versionCode 13 → 14</code>, tạo và push tag
+                <code>release-v1.0.29</code>.
+            </li>
+            <li>
+                <span class="h">GitHub Actions bắt được tag</span>
+                Workflow <code>eas-build.yml</code> kích hoạt bởi
+                <code>on: push: tags: ['release-v*']</code>.
+            </li>
+            <li>
+                <span class="h">CI khôi phục <code>google-services.json</code></span>
+                Giải mã secret base64 ra file. Nếu thiếu secret, job
+                <b>dừng ngay với thông báo tiếng Việt</b> chỉ rõ cần thêm secret nào.
+            </li>
+            <li>
+                <span class="h">EAS build production</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>eas build --platform android --profile production --non-interactive --wait --json &gt; eas-build.json</code></pre>
+                Cờ <code>--json</code> đẩy log thường sang stderr nên stdout chỉ còn JSON sạch.
+                <code>--wait</code> khiến job chờ build xong (thường 10–25 phút).
+            </li>
+            <li>
+                <span class="h">Tải file .aab về</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>URL=$(jq -er '.[0].artifacts.applicationArchiveUrl' eas-build.json)
+curl -fSL -o ./app-release.aab -H "Authorization: Bearer ${EXPO_TOKEN}" "$URL"</code></pre>
+                <b>Vì sao không dùng <code>eas build:download</code>?</b> Lệnh đó không hỗ trợ
+                <code>--latest</code>/<code>--output</code> cho AAB dạng store, nên workflow lấy URL
+                trực tiếp từ JSON.
+            </li>
+            <li>
+                <span class="h">Fastlane upload lên Play Store</span>
+                Cài Ruby 3.2 + fastlane, chạy lane <code>upload_to_playstore</code> với
+                <code>PLAY_STORE_JSON_KEY</code>.
+            </li>
+            <li>
+                <span class="h">Bạn duyệt phát hành trên Play Console</span>
+                Bản build nằm ở track <b>Internal testing</b>. Muốn ra ngoài thì
+                <b>Promote release</b> lên Closed/Open testing rồi Production.
+            </li>
+        </ol>
+
+        <h3>8.6. Lỗi hay gặp khi deploy</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lỗi</th>
+                        <th>Nguyên nhân</th>
+                        <th>Cách xử lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Package not found: com.jonasaugust12.talent_link</code></td>
+                        <td>Chưa từng upload bản nào bằng tay</td>
+                        <td>Làm bước 4 của mục 8.1</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>APK specifies a version code that has already been used</code>
+                        </td>
+                        <td><code>versionCode</code> trùng bản đã có</td>
+                        <td>
+                            Chạy lại <code>bump_version</code>. Lưu ý cả
+                            <code>sync-version.js</code> và <code>autoIncrement</code> của EAS đều
+                            tăng số này — có thể nhảy cách quãng, không sao
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>The caller does not have permission</code></td>
+                        <td>Service account chưa được cấp quyền, hoặc lời mời chưa hiệu lực</td>
+                        <td>
+                            Kiểm tra Users and permissions; chờ vài phút; xác nhận
+                            <code>client_email</code> đúng
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>Google Api Error: applicationNotFound</code></td>
+                        <td>
+                            <code>package_name</code> trong <code>Appfile</code> khác Play Console
+                        </td>
+                        <td>Đối chiếu với <code>app.json</code> → <code>android.package</code></td>
+                    </tr>
+                    <tr>
+                        <td>EAS build fail: <code>google-services.json is missing</code></td>
+                        <td>Thiếu secret, hoặc base64 sai (thừa xuống dòng)</td>
+                        <td>
+                            Tạo lại bằng <code>base64 -w 0</code> (Linux) để ra một dòng duy nhất
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>App cài được nhưng không gọi được API</td>
+                        <td>
+                            Build trên CI <b>không có file <code>.env</code></b>
+                        </td>
+                        <td><b>Vấn đề cần lưu ý của repo hiện tại</b> — xem cảnh báo ngay dưới</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t"
+                >Khoảng trống trong pipeline hiện tại: biến môi trường lúc build CI</span
+            >
+            <code>.env</code> nằm trong <code>.gitignore</code> và <code>.easignore</code>, nên
+            <b>bản build từ GitHub Actions không có 7 biến <code>EXPO_PUBLIC_*</code></b
+            >. App sẽ cài được nhưng không kết nối được backend. <br /><br />
+            Ba cách xử lý, chọn một:
+            <ul style="margin-bottom: 0; margin-top: 8px">
+                <li>
+                    <b>EAS Environment Variables (khuyến nghị):</b> khai báo trên
+                    <code>expo.dev → Project → Environment variables</code> cho môi trường
+                    <code>production</code>. EAS tự inject lúc build, không cần đụng workflow.
+                </li>
+                <li>
+                    <b><code>env</code> trong <code>eas.json</code>:</b> thêm khối
+                    <code>"env": { ... }</code> vào profile <code>production</code>. Đơn giản nhưng
+                    giá trị bị commit vào repo.
+                </li>
+                <li>
+                    <b>Ghi <code>.env</code> từ GitHub secret:</b> thêm một step trước
+                    <code>eas build</code> để tạo file, và bỏ <code>.env</code> khỏi
+                    <code>.easignore</code>.
+                </li>
+            </ul>
+        </div>
+
+        <h2>9. Checklist dựng lại từ số 0</h2>
+
+        <p>Bàn giao dự án cho người mới? Đây là thứ tự nên làm:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Việc</th>
+                        <th>Thời gian</th>
+                        <th>Chặn cái gì nếu thiếu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Đăng ký Google Play Developer (25 USD) + xác minh</td>
+                        <td><b>vài ngày – 2 tuần</b></td>
+                        <td>Toàn bộ khâu phát hành → <b>làm đầu tiên</b></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Đăng ký &amp; xác minh PayOS</td>
+                        <td>1–3 ngày</td>
+                        <td>Tính năng Premium</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Tạo Firebase project + tải <code>google-services.json</code></td>
+                        <td>15 phút</td>
+                        <td>Push notification; app crash lúc khởi động nếu thiếu file</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Tạo Google Cloud project + 2 OAuth client</td>
+                        <td>30 phút</td>
+                        <td>Đăng nhập Google</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Điền <code>.env</code> đủ 7 biến</td>
+                        <td>5 phút</td>
+                        <td>Mọi thứ liên quan mạng</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>
+                            <code>npm install</code> → <code>npx expo prebuild</code> →
+                            <code>npm run android</code>
+                        </td>
+                        <td>20 phút</td>
+                        <td>Chạy app lần đầu</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Tạo tài khoản Expo + <code>EXPO_TOKEN</code></td>
+                        <td>10 phút</td>
+                        <td>EAS build</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Build production + upload thủ công lần đầu</td>
+                        <td>1 giờ</td>
+                        <td>Fastlane không chạy được nếu bỏ qua</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Tạo service account + cấp quyền Play Console</td>
+                        <td>30 phút</td>
+                        <td>Auto deploy</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Thêm 3 GitHub secret</td>
+                        <td>10 phút</td>
+                        <td>Workflow CD</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Cấu hình biến môi trường cho EAS (cảnh báo mục 8.6)</td>
+                        <td>15 phút</td>
+                        <td>Bản build CI không gọi được API</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Chạy thử <code>fastlane android trigger_release</code></td>
+                        <td>30 phút</td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>10. Bí mật nằm ở đâu — bảng tổng kết</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thông tin</th>
+                        <th>Nơi lưu đúng</th>
+                        <th>Tuyệt đối KHÔNG để ở</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>URL API, URL socket</td>
+                        <td><code>.env</code> (<code>EXPO_PUBLIC_*</code>)</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Google <b>Web Client ID</b></td>
+                        <td><code>.env</code></td>
+                        <td>— (ID công khai được)</td>
+                    </tr>
+                    <tr>
+                        <td>Google <b>client_secret</b></td>
+                        <td>Backend</td>
+                        <td><b>App</b>, <code>.env</code>, repo</td>
+                    </tr>
+                    <tr>
+                        <td>PayOS API Key / Checksum Key</td>
+                        <td>Backend</td>
+                        <td><b>App</b>, <code>.env</code>, repo</td>
+                    </tr>
+                    <tr>
+                        <td>Firebase service account JSON</td>
+                        <td>Backend (secret manager)</td>
+                        <td>App, repo</td>
+                    </tr>
+                    <tr>
+                        <td><code>google-services.json</code></td>
+                        <td>Máy dev (local) + GitHub secret dạng base64</td>
+                        <td>Git (đã có trong <code>.gitignore</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>Play service account JSON</td>
+                        <td>GitHub secret <code>PLAY_STORE_JSON_KEY</code></td>
+                        <td>Repo, <code>.env</code></td>
+                    </tr>
+                    <tr>
+                        <td>Android keystore</td>
+                        <td>EAS (có sao lưu ngoại tuyến)</td>
+                        <td>
+                            Repo — <code>.gitignore</code> đã chặn <code>*.jks</code>,
+                            <code>*.p12</code>, <code>*.key</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>MMKV encryption key</td>
+                        <td>
+                            <code>.env</code> — chấp nhận được vì nó chỉ bảo vệ dữ liệu
+                            <b>trên máy chính người dùng đó</b>
+                        </td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagenav">
+            <a href="02-cong-nghe-su-dung.html">← Công nghệ sử dụng</a>
+            <a href="features/auth.html">Tài liệu tính năng →</a>
+        </div>
+    </main>
+</div>

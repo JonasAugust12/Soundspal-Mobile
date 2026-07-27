@@ -1,0 +1,840 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Xác thực (Auth) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Xác thực</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · auth</span>
+        <h1>Xác thực &amp; Tài khoản</h1>
+        <p class="lede">
+            Đăng ký, đăng nhập, xác thực email bằng OTP, quên mật khẩu 3 bước, đăng nhập Google, đổi
+            email. Đây là feature nền — mọi feature khác đều phụ thuộc vào token mà nó sinh ra.
+        </p>
+
+        <h2>1. Tổng quan</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thành phần</th>
+                        <th>Vị trí</th>
+                        <th>Vai trò</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Kiểu dữ liệu</td>
+                        <td><code>domain/entities/auth.type.ts</code></td>
+                        <td>Request/Response của 14 endpoint</td>
+                    </tr>
+                    <tr>
+                        <td>Endpoint</td>
+                        <td><code>data/datasources/authRemoteDataSource.ts</code></td>
+                        <td>Khai báo toàn bộ URL</td>
+                    </tr>
+                    <tr>
+                        <td>Use case</td>
+                        <td><code>domain/usecases/LoginUseCase.ts</code></td>
+                        <td>Validate rỗng trước khi gọi mạng</td>
+                    </tr>
+                    <tr>
+                        <td>Store</td>
+                        <td><code>presentation/store/authStore.ts</code></td>
+                        <td>Zustand + persist MMKV — nguồn sự thật của phiên đăng nhập</td>
+                    </tr>
+                    <tr>
+                        <td>Hook</td>
+                        <td><code>presentation/hooks/useAuthApi.ts</code></td>
+                        <td>12 mutation React Query</td>
+                    </tr>
+                    <tr>
+                        <td>Google</td>
+                        <td><code>presentation/hooks/useGoogleSignIn.ts</code></td>
+                        <td>SDK Google + gọi <code>/auth/mobile-oauth</code></td>
+                    </tr>
+                    <tr>
+                        <td>Khởi động</td>
+                        <td><code>useAuthHydration.ts</code>, <code>useAuthInitialize.ts</code></td>
+                        <td>Nạp từ MMKV, rồi xác thực token với server</td>
+                    </tr>
+                    <tr>
+                        <td>Thông báo lỗi</td>
+                        <td>
+                            <code>domain/constants/authApiErrorCode.ts</code>,
+                            <code>domain/utils/resolveAuthErrorMessage.ts</code>
+                        </td>
+                        <td>Dịch lỗi backend thành câu tiếng Việt cho người dùng</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Bản đồ 8 màn hình</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Màn hình</th>
+                        <th>Vai trò trong luồng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>(auth)/login</code></td>
+                        <td>LoginScreen</td>
+                        <td>Điểm vào chính</td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/register</code></td>
+                        <td>RegisterScreen</td>
+                        <td>Đăng ký + chọn vai trò</td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/verify-email</code></td>
+                        <td>VerifyEmailScreen</td>
+                        <td>Nhập OTP 6 số</td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/email-verification-required</code></td>
+                        <td>EmailVerificationRequiredScreen</td>
+                        <td>Màn chặn khi đã đăng nhập nhưng <code>is_verified = false</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/forgot-password</code></td>
+                        <td>ForgotPasswordScreen</td>
+                        <td>Quên mật khẩu bước 1</td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/verify-reset-code</code></td>
+                        <td>VerifyResetCodeScreen</td>
+                        <td>Bước 2 — đổi OTP lấy <code>reset_token</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/reset-password</code></td>
+                        <td>ResetPasswordScreen</td>
+                        <td>Bước 3 — đặt mật khẩu mới</td>
+                    </tr>
+                    <tr>
+                        <td><code>(auth)/complete-oauth-profile</code></td>
+                        <td>CompleteOAuthProfileScreen</td>
+                        <td>Người dùng Google lần đầu chọn role + username</td>
+                    </tr>
+                    <tr>
+                        <td><code>(editprofile)/change-email</code></td>
+                        <td>ChangeEmailScreen</td>
+                        <td>Nằm ở nhóm route khác nhưng thuộc feature auth</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>2. Danh sách endpoint</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Body</th>
+                        <th>Trả về</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/login</code></td>
+                        <td>
+                            <code>identifier, password</code> + (tuỳ chọn)
+                            <code>device_id, fcm_token, platform</code>
+                        </td>
+                        <td><code>access_token, refresh_token, token_type</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/signup</code></td>
+                        <td>
+                            <code>display_name, username, email, password, role</code>
+                        </td>
+                        <td>Thông tin user vừa tạo</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/logout</code></td>
+                        <td><code>refresh_token</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/verify-email</code></td>
+                        <td><code>code, email</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/verification-email-resend</code></td>
+                        <td><code>email</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/reset-password-request</code></td>
+                        <td><code>email</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/confirm-reset-password-request</code></td>
+                        <td><code>email, reset_code</code></td>
+                        <td>
+                            <b><code>reset_token</code></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/reset-password-request-resend</code></td>
+                        <td><code>email</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/reset-password</code></td>
+                        <td><code>email, new_password, reset_token</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/mobile-oauth</code></td>
+                        <td><code>code</code> (serverAuthCode) + device info</td>
+                        <td>
+                            <code>is_registered</code> + token <b>hoặc</b>
+                            <code>registration_token</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/complete-oauth</code></td>
+                        <td><code>registration_token, role, username</code></td>
+                        <td>Token</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/change-email-request</code></td>
+                        <td><code>new_email</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/auth/verify-email-change</code></td>
+                        <td><code>new_email, code</code></td>
+                        <td><code>null</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/users/me</code></td>
+                        <td>—</td>
+                        <td>Thông tin user hiện tại (gọi lúc mở app)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>EXPO_PUBLIC_AUTH_REFRESH_URL</code> (URL tuyệt đối)</td>
+                        <td><code>refresh_token</code></td>
+                        <td>Cặp token mới</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Vì sao refresh token dùng URL tuyệt đối riêng?</span>
+            Nó nằm ngoài <code>authRemoteDataSource</code>, gọi bằng <b>axios trần</b> ngay trong
+            <code>apiClient.ts</code>. Nếu gọi qua <code>apiClient</code> thì khi refresh trả 401,
+            interceptor lại bắt và gọi refresh tiếp → đệ quy vô hạn.
+        </div>
+
+        <h2>3. Luồng đăng nhập bằng email/mật khẩu</h2>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Người dùng nhập và bấm Đăng nhập</span>
+                <code>LoginForm</code> dùng React Hook Form + Zod. Kiểm tra tại chỗ:
+                <code>identifier</code> không rỗng, mật khẩu ≥ 6 ký tự, có ≥ 1 chữ hoa, có ≥ 1 chữ
+                số.
+            </li>
+            <li>
+                <span class="h">Lấy thông tin thiết bị cho push</span>
+                <code>useDevicePayload().getDevicePayload()</code> xin quyền thông báo và lấy FCM
+                token. <b>Có timeout 5 giây</b> — nếu native call bị treo thì trả về
+                <code>null</code>, và người dùng <b>vẫn đăng nhập được</b> (chỉ là chưa nhận push).
+            </li>
+            <li>
+                <span class="h"><code>LoginUseCase</code> chặn dữ liệu rỗng</span>
+                Nếu <code>identifier</code> hoặc <code>password</code> rỗng, nó reject ngay tại
+                client — tiết kiệm một vòng gọi mạng.
+            </li>
+            <li>
+                <span class="h"
+                    >Gọi <span class="badge post">POST</span> <code>/auth/login</code></span
+                >
+                Body gồm thông tin đăng nhập + <code>device_id</code>, <code>fcm_token</code>,
+                <code>platform</code>. Backend lưu token thiết bị để gửi push sau này.
+            </li>
+            <li>
+                <span class="h">Giải mã JWT ngay tại client</span>
+                <code>getUserFromToken(access_token)</code> đọc payload JWT (không verify chữ ký —
+                đó là việc của server) và lấy ra: <code>sub → id</code>, <code>email</code>,
+                <code>role</code>, <code>is_verified</code>, <code>username</code>,
+                <code>avatar_url</code>, <code>display_name</code>, <code>tier</code>.
+                <div class="note info" style="margin-top: 10px; margin-bottom: 0">
+                    Nhờ vậy đăng nhập xong là có ngay đủ thông tin để dựng giao diện,
+                    <b>không cần gọi thêm API</b>.
+                </div>
+            </li>
+            <li>
+                <span class="h">Lưu vào store và xoá cache cũ</span>
+                <code>setCredentials()</code> ghi vào <code>authStore</code> (Zustand tự persist
+                xuống MMKV), rồi <code>queryClient.clear()</code> xoá sạch cache của người dùng
+                trước — tránh rò rỉ dữ liệu giữa hai tài khoản trên cùng máy.
+            </li>
+            <li>
+                <span class="h">Điều hướng do guard lo</span>
+                Màn hình <b>không tự gọi</b> <code>router.replace()</code>.
+                <code>useProtectedRoute</code> thấy <code>isAuthenticated = true</code> và đang ở
+                nhóm <code>(auth)</code> → chuyển tới <code>returnTo</code> đã lưu hoặc
+                <code>(tabs)</code>.
+            </li>
+        </ol>
+
+        <h2>4. Luồng đăng ký &amp; xác thực email</h2>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Điền form đăng ký</span>
+                Schema Zod trong <code>RegisterForm.tsx</code>:
+                <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Trường</th>
+                                <th>Luật</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>display_name</code></td>
+                                <td>Không rỗng</td>
+                            </tr>
+                            <tr>
+                                <td><code>username</code></td>
+                                <td>3–20 ký tự, chỉ chữ cái, số và dấu gạch dưới</td>
+                            </tr>
+                            <tr>
+                                <td><code>email</code></td>
+                                <td>Định dạng email hợp lệ</td>
+                            </tr>
+                            <tr>
+                                <td><code>password</code></td>
+                                <td>≥ 6 ký tự, ≥ 1 chữ hoa, ≥ 1 chữ số</td>
+                            </tr>
+                            <tr>
+                                <td><code>confirmPassword</code></td>
+                                <td>Phải trùng <code>password</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>role</code></td>
+                                <td>
+                                    <code>producer</code> | <code>singer</code> |
+                                    <code>venue</code> — <b>chọn lúc này và không đổi được sau</b>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <span class="h"
+                    ><span class="badge post">POST</span> <code>/auth/signup</code></span
+                >
+                Backend tạo tài khoản với <code>is_verified = false</code> và gửi email chứa OTP 6
+                số. <b>Signup không trả token</b> — chưa đăng nhập được.
+            </li>
+            <li>
+                <span class="h">Chuyển sang màn nhập OTP</span>
+                <code>OTPInput.tsx</code> hiển thị 6 ô, tự nhảy ô kế tiếp khi gõ, tự lùi khi xoá.
+            </li>
+            <li>
+                <span class="h">
+                    <span class="badge post">POST</span> <code>/auth/verify-email</code>
+                </span>
+                Body <code>{ code, email }</code>. Thành công thì <code>useVerifyEmail</code> cập
+                nhật <code>is_verified = true</code> trong store (nếu đang có phiên), rồi điều
+                hướng: <code>router.replace('/(tabs)')</code> nếu đã đăng nhập, ngược lại về
+                <code>/(auth)/login</code>.
+            </li>
+            <li>
+                <span class="h">Gửi lại mã — có đếm ngược 30 giây</span>
+                Nút "Gửi lại mã" bị khoá <b>30 giây</b> sau mỗi lần bấm, hiển thị
+                <code>Gửi lại sau {n}s</code>. Chống spam email và tránh dính rate limit của
+                backend.
+            </li>
+        </ol>
+
+        <div class="note warn">
+            <span class="t">Chưa xác thực email thì bị chặn ở đâu?</span>
+            <code>useProtectedRoute</code> luật số 2: đã đăng nhập mà
+            <code>user.is_verified === false</code> → ép về
+            <code>/(auth)/email-verification-required</code>, trừ khi đang ở chính màn đó hoặc màn
+            <code>verify-email</code>. Người dùng <b>không thể</b> lách vào bất kỳ màn nào khác.
+        </div>
+
+        <h2>5. Luồng quên mật khẩu (3 bước, 3 màn hình)</h2>
+
+        <div class="flow">
+            <div class="n hl"><b>1. Nhập email</b><small>forgot-password</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>2. Nhập OTP</b><small>verify-reset-code</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>3. Mật khẩu mới</b><small>reset-password</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>Về Login</b><small></small></div>
+        </div>
+
+        <ol class="steps">
+            <li>
+                <span class="h">
+                    Bước 1 — <span class="badge post">POST</span>
+                    <code>/auth/reset-password-request</code>
+                </span>
+                Chỉ gửi <code>email</code>. Backend gửi mã đặt lại.
+            </li>
+            <li>
+                <span class="h">
+                    Bước 2 — <span class="badge post">POST</span>
+                    <code>/auth/confirm-reset-password-request</code>
+                </span>
+                Gửi <code>{ email, reset_code }</code>, nhận về <b><code>reset_token</code></b
+                >. Token này được truyền sang màn 3 qua route param.
+                <div class="note info" style="margin-top: 10px; margin-bottom: 0">
+                    <b>Vì sao phải đổi OTP lấy token?</b> Mã OTP 6 số dễ bị dò. Đổi nó lấy một token
+                    dài, dùng một lần, hạn ngắn thì an toàn hơn hẳn — và bước cuối không cần gửi lại
+                    OTP nữa.
+                </div>
+            </li>
+            <li>
+                <span class="h">
+                    Bước 3 — <span class="badge post">POST</span> <code>/auth/reset-password</code>
+                </span>
+                Gửi <code>{ email, new_password, reset_token }</code>. Mật khẩu mới chịu cùng luật
+                Zod như lúc đăng ký. Xong thì về màn đăng nhập.
+            </li>
+        </ol>
+
+        <p>Màn bước 2 cũng có nút gửi lại mã với cùng cơ chế đếm ngược 30 giây.</p>
+
+        <h2>6. Đăng nhập Google (OAuth)</h2>
+
+        <p>
+            Luồng <b>server auth code</b>: app không bao giờ chạm vào <code>client_secret</code>; nó
+            chỉ lấy một mã uỷ quyền dùng một lần rồi chuyển cho backend.
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Cấu hình SDK</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>GoogleSignin.<span class="c-fn">configure</span>({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    offlineAccess: <span class="c-key">true</span>,             <span class="c-com">// thiếu cái này thì KHÔNG có serverAuthCode</span>
+    forceCodeForRefreshToken: <span class="c-key">true</span>,
+});</code></pre>
+            </li>
+            <li>
+                <span class="h">Kiểm tra Play Services rồi đăng xuất trước</span>
+                <code>hasPlayServices({ showPlayServicesUpdateDialog: true })</code>, sau đó
+                <b><code>GoogleSignin.signOut()</code></b
+                >. Bước signOut là cố ý: nó buộc Google hiện lại màn chọn tài khoản, và đảm bảo trả
+                về <code>serverAuthCode</code> mới thay vì dùng lại phiên cũ.
+            </li>
+            <li>
+                <span class="h">Lấy <code>serverAuthCode</code></span>
+                Nếu <code>null</code> → báo lỗi và dừng. Đây gần như luôn là dấu hiệu
+                <code>offlineAccess</code> chưa bật hoặc <code>webClientId</code> sai loại client.
+            </li>
+            <li>
+                <span class="h">
+                    <span class="badge post">POST</span> <code>/auth/mobile-oauth</code>
+                </span>
+                Gửi <code>{ code, device_id, platform, fcm_token? }</code>. Backend đổi
+                <code>code</code> + <code>client_secret</code> lấy thông tin Google, rồi tra xem
+                email này đã có tài khoản chưa.
+            </li>
+            <li>
+                <span class="h">Rẽ nhánh theo <code>is_registered</code></span>
+                <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Giá trị</th>
+                                <th>Backend trả</th>
+                                <th>App làm gì</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>true</code></td>
+                                <td><code>access_token</code>, <code>refresh_token</code></td>
+                                <td>Giải mã JWT → <code>setCredentials()</code> → vào app</td>
+                            </tr>
+                            <tr>
+                                <td><code>false</code></td>
+                                <td><code>registration_token</code></td>
+                                <td>
+                                    Chuyển sang <code>/(auth)/complete-oauth-profile</code> kèm
+                                    token
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <span class="h">Hoàn tất hồ sơ (chỉ khi lần đầu)</span>
+                Người dùng chọn <b>role</b> và <b>username</b>, rồi
+                <span class="badge post">POST</span> <code>/auth/complete-oauth</code> với
+                <code>{ registration_token, role, username }</code>. Lúc này mới nhận được token
+                thật.
+                <div class="note info" style="margin-top: 10px; margin-bottom: 0">
+                    Google cho biết email và tên, nhưng <b>không</b> biết người này là ca sĩ, nhà
+                    sản xuất hay chủ quán — nên bắt buộc phải có bước hỏi thêm này.
+                </div>
+            </li>
+        </ol>
+
+        <p>
+            Các bước tạo OAuth client trên Google Cloud và bảng lỗi thường gặp nằm ở
+            <a href="../03-setup-ben-thu-ba.html#dang-nhap-google-google-sign-in"
+                >tài liệu Setup bên thứ ba, mục 4</a
+            >.
+        </p>
+
+        <h2>7. Đổi email</h2>
+
+        <p>Cùng mẫu "yêu cầu → OTP" như xác thực email, nhưng cần đang đăng nhập:</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">
+                    <span class="badge post">POST</span> <code>/auth/change-email-request</code>
+                </span>
+                Body <code>{ new_email }</code>. Backend gửi OTP tới <b>email mới</b> — chứng minh
+                người dùng thật sự sở hữu hòm thư đó.
+            </li>
+            <li>
+                <span class="h">
+                    <span class="badge post">POST</span> <code>/auth/verify-email-change</code>
+                </span>
+                Body <code>{ new_email, code }</code>. Cũng có đếm ngược 30 giây cho nút gửi lại.
+            </li>
+        </ol>
+
+        <h2>8. Vòng đời phiên đăng nhập</h2>
+
+        <h3>Trạng thái trong <code>authStore</code></h3>
+
+        <pre><code>{
+    accessToken: string | <span class="c-key">null</span>,
+    refreshToken: string | <span class="c-key">null</span>,
+    user: {
+        id, email, role,
+        is_verified?, username?, avatar_url?, display_name?, tier?
+    } | <span class="c-key">null</span>,
+    isAuthenticated: boolean,
+}</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Khi nào gọi</th>
+                        <th>Tác dụng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>setCredentials()</code></td>
+                        <td>Login, OAuth, refresh token thành công</td>
+                        <td>Ghi cả token lẫn user, bật <code>isAuthenticated</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>setUser()</code></td>
+                        <td>Sau <code>/users/me</code></td>
+                        <td>Chỉ làm mới thông tin user, <b>không đụng token</b></td>
+                    </tr>
+                    <tr>
+                        <td><code>updateAvatarUrl()</code></td>
+                        <td>Sau khi upload avatar</td>
+                        <td>Header, thẻ hồ sơ cập nhật ngay</td>
+                    </tr>
+                    <tr>
+                        <td><code>updateDisplayName()</code></td>
+                        <td>Sau khi lưu hồ sơ</td>
+                        <td>Tương tự</td>
+                    </tr>
+                    <tr>
+                        <td><code>logout()</code></td>
+                        <td>Bấm đăng xuất, hoặc refresh token thất bại</td>
+                        <td>Xoá sạch → guard tự đá về màn login</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Hai hook khởi động — phân biệt rõ</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th><code>useAuthHydration()</code></th>
+                        <th><code>useAuthInitialize()</code></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Trả lời câu hỏi</th>
+                        <td>"MMKV đã nạp xong chưa?"</td>
+                        <td>"Token này còn dùng được không?"</td>
+                    </tr>
+                    <tr>
+                        <th>Có gọi mạng?</th>
+                        <td>Không</td>
+                        <td>Có — <span class="badge get">GET</span> <code>/users/me</code></td>
+                    </tr>
+                    <tr>
+                        <th>Bẫy đã xử lý</th>
+                        <td>
+                            Rehydrate thường <b>đồng bộ</b> và có thể xong trước khi ta subscribe →
+                            phải kiểm tra <code>hasHydrated()</code> ngay trong effect, nếu không
+                            app kẹt màn loading mãi mãi
+                        </td>
+                        <td>
+                            Guard <code>initPromise</code> ở mức module đảm bảo chỉ gọi
+                            <b>một lần</b> mỗi lần mở app, dù hook được dùng ở nhiều nơi
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Khi lỗi</th>
+                        <td>—</td>
+                        <td>
+                            Lỗi mạng → <b>giữ nguyên phiên</b>, dùng dữ liệu từ JWT. Token hỏng thật
+                            → interceptor 401 tự refresh → thất bại → logout
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Đăng xuất</h3>
+
+        <pre><code><span class="c-key">export const</span> <span class="c-fn">useLogout</span> = () =&gt; {
+    <span class="c-key">return</span> <span class="c-fn">useMutation</span>({
+        mutationFn: () =&gt; authRepository.<span class="c-fn">logout</span>({ refresh_token: refreshToken || <span class="c-str">''</span> }),
+        onSettled: () =&gt; {              <span class="c-com">// onSettled, KHÔNG phải onSuccess</span>
+            <span class="c-fn">logout</span>();
+            queryClient.<span class="c-fn">clear</span>();
+        },
+    });
+};</code></pre>
+
+        <div class="note info">
+            <span class="t">Vì sao dùng <code>onSettled</code>?</span>
+            <code>onSettled</code> chạy dù API thành công hay thất bại. Người dùng bấm đăng xuất lúc
+            mất mạng thì phiên local <b>vẫn phải</b> bị xoá — không thể bắt họ giữ phiên chỉ vì
+            server không phản hồi.
+        </div>
+
+        <h2>9. Xử lý thông báo lỗi</h2>
+
+        <p>
+            Đây là phần được đầu tư kỹ nhất của feature này. Backend trả lỗi ở nhiều dạng khác nhau;
+            <code>resolveAuthErrorMessage(error, context)</code> chuẩn hoá chúng thành một câu tiếng
+            Việt có ích cho người dùng.
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Ưu tiên 1 — mã lỗi tường minh từ backend</span>
+                Đọc trường <code>error</code> (snake_case) trong body và tra bảng
+                <code>AUTH_BACKEND_ERROR_CODES</code>. Vd
+                <code>email_not_verified → AccountNotVerified</code>.
+            </li>
+            <li>
+                <span class="h">Ưu tiên 2 — so khớp mẫu trong message</span>
+                Nếu không có mã, dò <code>message</code> bằng regex. Mỗi mã lỗi có một danh sách
+                mẫu, <b>bao gồm cả tiếng Anh lẫn tiếng Việt</b>:
+                <code>/invalid credentials/i</code>, <code>/sai.*mật khẩu/i</code>,
+                <code>/chưa.*xác thực/i</code>…
+            </li>
+            <li>
+                <span class="h">Ưu tiên 3 — fallback theo ngữ cảnh</span>
+                Vẫn không nhận diện được thì dùng câu mặc định của
+                <code>AuthErrorContext</code> đang xử lý (Login / Register / ForgotPassword /
+                GoogleSignIn / …).
+            </li>
+        </ol>
+
+        <p>Một vài mã lỗi đáng chú ý:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Thông báo hiển thị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>OAUTH_ACCOUNT</code></td>
+                        <td>
+                            "Tài khoản này được tạo qua Google. Vui lòng đăng nhập bằng Google." —
+                            xử lý trường hợp người dùng quên mình đã đăng ký bằng Google
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>OAUTH_ACCOUNT_NO_PASSWORD</code></td>
+                        <td>
+                            Bấm "quên mật khẩu" cho tài khoản Google — mà tài khoản đó
+                            <b>không hề có mật khẩu</b> để quên
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>RATE_LIMITED</code></td>
+                        <td>"Bạn thao tác quá nhanh. Vui lòng đợi vài phút rồi thử lại."</td>
+                    </tr>
+                    <tr>
+                        <td><code>VERIFICATION_CODE_EXPIRED</code></td>
+                        <td>"Mã xác thực đã hết hạn. Vui lòng gửi lại mã mới."</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note ok">
+            <span class="t">Bài học rút ra</span>
+            Khi backend bổ sung mã lỗi mới, chỉ cần thêm một dòng vào
+            <code>AUTH_BACKEND_ERROR_CODES</code> và một câu vào
+            <code>AUTH_API_ERROR_MESSAGES</code>. Không phải sửa màn hình nào.
+        </div>
+
+        <h2>10. Guard điều hướng &amp; returnTo</h2>
+
+        <p>
+            <code>useProtectedRoute()</code> chạy 3 luật, theo đúng thứ tự này. Chỉ chạy sau khi
+            MMKV hydrate xong (<code>authHydrated</code>).
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Điều kiện</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Chưa đăng nhập + đang ở route được bảo vệ</td>
+                        <td>
+                            Lưu <code>returnTo</code> (chỉ với <code>(profiles)</code>,
+                            <code>(jobs)</code>, <code>(messages)</code>, <code>(payments)</code>) →
+                            <code>replace('/(auth)/login')</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Đã đăng nhập + <code>is_verified = false</code></td>
+                        <td>
+                            <code>replace('/(auth)/email-verification-required')</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Đã đăng nhập + đã xác thực + đang ở nhóm <code>(auth)</code></td>
+                        <td>Về <code>returnTo</code> nếu có, ngược lại <code>(tabs)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Các nhóm route được bảo vệ:</p>
+        <p>
+            <code>(tabs)</code> · <code>(profiles)</code> · <code>(jobs)</code> ·
+            <code>(messages)</code> · <code>(editprofile)</code> · <code>(payments)</code>
+        </p>
+
+        <div class="note info">
+            <span class="t">Chi tiết nhỏ nhưng quan trọng của returnTo</span>
+            <code>(tabs)</code> và <code>(editprofile)</code> <b>cố tình bị loại</b> khỏi danh sách
+            lưu <code>returnTo</code>. Lý do: khi bấm đăng xuất từ màn cá nhân (thuộc
+            <code>(tabs)</code>), nếu lưu returnTo thì đăng nhập lại sẽ quay về đúng màn vừa đăng
+            xuất — hành vi rất khó hiểu với người dùng.
+        </div>
+
+        <h2>11. Ghi chú &amp; điểm cần lưu ý</h2>
+
+        <ul>
+            <li>
+                <b>Vai trò cố định sau đăng ký.</b> App không có luồng đổi <code>role</code>. Muốn
+                đổi phải nhờ backend can thiệp.
+            </li>
+            <li>
+                <b>Thông tin thiết bị là tuỳ chọn.</b>
+                <code>DeviceInfo</code> có mọi trường optional. Login không bao giờ thất bại chỉ vì
+                không lấy được FCM token.
+            </li>
+            <li>
+                <b>Không tự kiểm tra hạn token trước khi gọi.</b> Có sẵn
+                <code>isTokenValid()</code> trong <code>shared/utils/jwt.ts</code> nhưng
+                <code>apiClient</code> không dùng — nó theo hướng phản ứng: cứ gọi, nhận 401 thì
+                refresh. Đơn giản hơn và tránh lệch giờ giữa máy người dùng với server.
+            </li>
+            <li>
+                <b>Refresh token cũng được xoay vòng.</b> Mỗi lần refresh thành công, backend trả
+                <b>cả cặp</b> access + refresh mới, và cả hai đều được lưu lại.
+            </li>
+            <li>
+                <b>Đăng nhập/đăng xuất đều <code>queryClient.clear()</code>.</b> Bắt buộc trên thiết
+                bị dùng chung — nếu không, người dùng B có thể thấy dữ liệu đã cache của người dùng
+                A.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="../index.html">← Mục lục</a>
+            <a href="profiles.html">Hồ sơ người dùng →</a>
+        </div>
+    </main>
+</div>

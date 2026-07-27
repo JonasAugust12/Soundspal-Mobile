@@ -1,0 +1,1003 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hồ sơ người dùng (Profiles) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Hồ sơ người dùng</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · profiles</span>
+        <h1>Hồ sơ người dùng</h1>
+        <p class="lede">
+            Hồ sơ nghệ sĩ và hồ sơ venue là <b>hai thế giới gần như tách biệt</b>: khác màn hình,
+            khác trường dữ liệu, khác endpoint, khác cả bảng màu. 29 endpoint, 11 màn hình. Đây là
+            feature có nhiều bề mặt nhất dự án.
+        </p>
+
+        <h2>1. Chia đôi theo vai trò</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Nghệ sĩ (<code>singer</code> / <code>producer</code>)</th>
+                        <th>Venue (<code>venue</code>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Màn xem</th>
+                        <td><code>ArtistProfileScreen</code></td>
+                        <td><code>VenueProfileScreen</code></td>
+                    </tr>
+                    <tr>
+                        <th>Màn sửa</th>
+                        <td><code>EditProfileScreen</code> — <b>7 tab</b></td>
+                        <td><code>VenueEditProfileScreen</code> — <b>4 tab</b></td>
+                    </tr>
+                    <tr>
+                        <th>Endpoint sửa</th>
+                        <td>
+                            <code>PATCH /users/me</code>, <code>/users/me/contact</code>,
+                            <code>/users/me/social</code>, <code>/users/genres/{u}</code>,
+                            <code>/users/me/services</code>, <code>/experiences*</code>
+                        </td>
+                        <td>
+                            <code>/users/me/venue/basic</code>, <code>/venue/contact</code>,
+                            <code>/venue/additional</code>,
+                            <code>PATCH /users/me/venue-requirements</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Trường riêng</th>
+                        <td>
+                            <code>service_types</code>, <code>fee_min/max</code>,
+                            <code>services[]</code>, <code>featured_release_links</code>,
+                            <code>genres</code>, kinh nghiệm, video
+                        </td>
+                        <td>
+                            <code>business_types</code>, <code>capacity</code>,
+                            <code>open_hour</code>, <code>rent_price</code>,
+                            <code>detailed_address</code>, <code>convenient_facilities</code>,
+                            <code>preferred_genre_ids</code>, <code>artist_requirements_note</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Form</th>
+                        <td>3 tab dùng React Hook Form + Zod, còn lại <code>useState</code></td>
+                        <td>Toàn bộ <code>useState</code> thuần</td>
+                    </tr>
+                    <tr>
+                        <th>Màu chủ đạo</th>
+                        <td>Tím <code>#7C3AED</code></td>
+                        <td>Xanh dương <code>#3B82F6</code></td>
+                    </tr>
+                    <tr>
+                        <th>Nút liên hệ</th>
+                        <td>"Nhắn tin"</td>
+                        <td>"Liên hệ đặt lịch"</td>
+                    </tr>
+                    <tr>
+                        <th>Thanh hoàn thiện hồ sơ</th>
+                        <td>Có</td>
+                        <td><b>Không</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Hai khoảng trống của hồ sơ venue</span>
+            Venue <b>không có form nào ghi <code>detail_bio</code></b> và
+            <b>không sửa được liên kết mạng xã hội</b> — dù <code>VenueProfileScreen</code> vẫn hiển
+            thị cả hai. Chúng chỉ đổi được qua bản web hoặc can thiệp trực tiếp vào database.
+        </div>
+
+        <h2>2. Mô hình dữ liệu</h2>
+
+        <h3>Enum</h3>
+
+        <pre><code><span class="c-key">enum</span> Role       { GUEST=<span class="c-str">'guest'</span>, SINGER=<span class="c-str">'singer'</span>, PRODUCER=<span class="c-str">'producer'</span>, VENUE=<span class="c-str">'venue'</span> }
+<span class="c-key">enum</span> UserStatus { PENDING=<span class="c-str">'pending'</span>, VALIDATE=<span class="c-str">'validate'</span>, REJECTED=<span class="c-str">'rejected'</span> }</code></pre>
+
+        <div class="note info">
+            <span class="t">Lệch nhỏ giữa hai feature</span>
+            <code>profiles</code> khai <code>Role</code> có 4 giá trị (thêm <code>guest</code>), còn
+            <code>auth</code> khai <code>UserRole</code> chỉ 3 giá trị. Không gây lỗi thực tế nhưng
+            đáng biết khi đọc code.
+        </div>
+
+        <h3><code>BaseUser</code> — các nhóm trường</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nhóm</th>
+                        <th>Trường</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Định danh</td>
+                        <td>
+                            <code>id</code>, <code>username</code>, <code>email</code>,
+                            <code>role</code>, <code>status</code>, <code>is_verified</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hiển thị</td>
+                        <td>
+                            <code>display_name</code>, <code>avatar_url</code>,
+                            <code>cover_url</code>, <code>brief_bio</code>,
+                            <code>detail_bio</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Vị trí</td>
+                        <td>
+                            <code>city</code>, <code>country</code>, <code>state_province</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Liên hệ</td>
+                        <td><code>phone_number</code>, <code>website_url</code></td>
+                    </tr>
+                    <tr>
+                        <td>Mạng xã hội</td>
+                        <td>
+                            <code>facebook_url</code>, <code>instagram_url</code>,
+                            <code>youtube_url</code>, <code>tiktok_url</code>,
+                            <code>soundcloud_url</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nghề nghiệp</td>
+                        <td>
+                            <code>genres[]</code>, <code>services[]</code>,
+                            <code>service_types[]</code>, <code>fee_min</code>,
+                            <code>fee_max</code>, <code>is_available</code>,
+                            <code>featured_release_links[]</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Premium</td>
+                        <td>
+                            <code>is_premium</code>, <code>premium_expired_at</code>,
+                            <code>tier</code>, <code>subscription_status</code>,
+                            <code>subscription_expires_at</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Yêu cầu venue</td>
+                        <td>
+                            <code>preferred_genre_ids[]</code>,
+                            <code>artist_requirements_note</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <code>VenueUser</code> mở rộng thêm: <code>business_types[]</code>,
+            <code>detailed_address</code>, <code>capacity</code> (<b>kiểu chuỗi</b>, không phải số),
+            <code>open_hour</code>, <code>convenient_facilities[]</code>, <code>rent_price</code>.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Union type bị "sập" — phải ép kiểu</span>
+            <code>type User = ArtistUser | VenueUser | BaseUser</code>. Vì <code>BaseUser</code> có
+            mọi trường optional, union này thực tế thu về <code>BaseUser</code>. Nên màn venue phải
+            ép: <code>const venueData = userData as unknown as VenueUser</code>. Không đẹp nhưng là
+            hiện trạng.
+        </div>
+
+        <h3>Kiểu phụ</h3>
+
+        <pre><code>UserService { name, price: number, currency, is_negotiable: boolean }
+MediaItem   { id, user_id, media_type: <span class="c-str">'portfolio'</span>|<span class="c-str">'avatar'</span>|<span class="c-str">'cover'</span>,
+              file_url, file_name, file_size, mime_type, width, height, ... }
+VideoItem   { id, user_id, video_url, title, thumbnail_url, created_at }
+Experience  { id, user_id, title?, description?, portfolio_url?,
+              start_date?, end_date?, genres?: ExperienceGenre[] }
+Genre       { id, name, created_at, updated_at }</code></pre>
+
+        <h3>Hằng số</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hằng</th>
+                        <th>Giá trị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>SERVICE_TYPES</code> (10)</td>
+                        <td>
+                            <code
+                                >live_performance, wedding, corporate_event, private_event,
+                                cafe_restaurant, recording, teaching, dj_set, songwriting,
+                                music_production</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>FEE_TIERS</code></td>
+                        <td>
+                            <code>0</code> Dưới 1 triệu · <code>1M</code> 1–2 · <code>2M</code> 2–5
+                            · <code>5M</code> 5–10 · <code>10M</code> Trên 10 ·
+                            <b><code>-1</code> Thương lượng</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>VN_PROVINCES</code> (8)</td>
+                        <td>
+                            SG · HN · DN · BD · DNG · CT · HP · BH — lưu <b>mã ISO</b>, không lưu
+                            tên
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>BUSINESS_TYPES</code> (8)</td>
+                        <td>
+                            Quán Bar · Pub · Café · Nhà hàng · Club · Sân khấu · Phòng trà · Khác —
+                            <b>hardcode trong màn venue</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>FACILITIES</code> (8)</td>
+                        <td>
+                            WiFi · Điều hòa · Bãi đỗ xe · Sân khấu · Âm thanh · Ánh sáng · VIP Room
+                            · Ngoài trời
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Thể loại nhạc</td>
+                        <td>
+                            <b>Không phải hằng số</b> — luôn lấy từ
+                            <span class="badge get">GET</span> <code>/users/genres</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>3. Endpoint</h2>
+
+        <h3>Đọc</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Trả về</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge get">GET</span> <code>/users/me</code></td>
+                        <td>Hồ sơ của mình</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span> <code>/users/{username}</code></td>
+                        <td>Hồ sơ người khác (nhận cả id lẫn username)</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge get">GET</span> <code>/users/me/media</code> ·
+                            <code>/users/media/{username}</code>
+                        </td>
+                        <td><code>{ media: MediaItem[], total }</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge get">GET</span>
+                            <code>/users/videos/all/{username}</code>
+                        </td>
+                        <td><code>{ items: VideoItem[], total }</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge get">GET</span> <code>/users/genres</code> ·
+                            <code>/users/genres/{username}</code>
+                        </td>
+                        <td><code>{ genres: Genre[], total }</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge get">GET</span>
+                            <code>/users/experiences/{username}</code>
+                        </td>
+                        <td>
+                            Mảng trần <b>hoặc</b> <code>{experiences}</code> <b>hoặc</b>
+                            <code>{items}</code> — datasource chuẩn hoá cả ba
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Ghi</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method + Path</th>
+                        <th>Ghi trường nào</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge patch">PATCH</span> <code>/users/me</code></td>
+                        <td>
+                            <code
+                                >display_name, brief_bio, detail_bio, city, country, state_province,
+                                service_types, fee_min, fee_max, is_available</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span> <code>/users/me/contact</code></td>
+                        <td><code>email, phone_number</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span> <code>/users/me/social</code></td>
+                        <td>5 liên kết mạng xã hội</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge put">PUT</span> <code>/users/genres/{username}</code>
+                        </td>
+                        <td>
+                            <code>{ genre_names: string[] }</code> — gửi <b>tên</b>, không phải id
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span> <code>/users/me/services</code></td>
+                        <td><code>{ services: UserService[] }</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge put">PUT</span>
+                            <code>/users/me/featured-releases</code>
+                        </td>
+                        <td>
+                            <code>{ featured_release_links: string[] }</code> — <b>gửi cả mảng</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge put">PUT</span> <code>/users/me/venue/basic</code>
+                        </td>
+                        <td>
+                            <code>display_name, brief_bio, business_type, capacity</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge put">PUT</span> <code>/users/me/venue/contact</code>
+                        </td>
+                        <td>
+                            <code
+                                >email, phone_number, city, country, state_province,
+                                detailed_address, website_url</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge put">PUT</span>
+                            <code>/users/me/venue/additional</code>
+                        </td>
+                        <td>
+                            <code>open_hour, convenient_facilities, rent_price</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge patch">PATCH</span>
+                            <code>/users/me/venue-requirements</code>
+                        </td>
+                        <td>
+                            <code>preferred_genre_ids, artist_requirements_note</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge post">POST</span>
+                            <code>/experiences</code> · <span class="badge put">PUT</span>
+                            <code>/experiences/{id}</code> · <span class="badge del">DELETE</span>
+                            <code>/experiences/{id}</code> · <span class="badge put">PUT</span>
+                            <code>/experiences/genres/{id}</code>
+                        </td>
+                        <td>CRUD kinh nghiệm</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t"
+                >Bẫy đặt tên: <code>business_type</code> khi ghi, <code>business_types</code> khi
+                đọc</span
+            >
+            Khi <span class="badge put">PUT</span> <code>/users/me/venue/basic</code>, trường tên là
+            <b><code>business_type</code></b> (số ít) dù giá trị là mảng. Nhưng khi đọc từ
+            <code>/users/me</code>, nó tên là <b><code>business_types</code></b> (số nhiều). Không
+            phải lỗi typo trong app — backend đang bất đối xứng như vậy.
+        </div>
+
+        <h3>Upload</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Path</th>
+                        <th>Transport</th>
+                        <th>Field</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge post">POST</span> <code>/users/me/avatar</code></td>
+                        <td><b>fetch</b></td>
+                        <td>
+                            <code>file</code> (mime/name hardcode <code>image/jpeg</code> /
+                            <code>avatar.jpg</code>)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span> <code>/users/me/cover</code></td>
+                        <td><b>fetch</b></td>
+                        <td><code>file</code> (hardcode <code>cover.jpg</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span> <code>/users/me/media</code></td>
+                        <td><b>fetch</b></td>
+                        <td>
+                            <code>file</code> + <code>media_type='portfolio'</code> (dùng mime/name
+                            thật của asset)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span> <code>/users/videos</code></td>
+                        <td><b>fetch</b></td>
+                        <td><code>file</code>, <code>title</code>, <code>thumbnail?</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span> <code>submissions/media</code></td>
+                        <td><b>axios</b></td>
+                        <td>
+                            <code>file</code> — hệ thống media <b>riêng biệt</b>, dùng khi ứng tuyển
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>4. Query key &amp; hook</h2>
+
+        <pre><code>userKeys = {
+    current():        [<span class="c-str">'users'</span>, <span class="c-str">'current'</span>],
+    byUsername(u):    [<span class="c-str">'users'</span>, <span class="c-str">'username'</span>, u],
+    currentMedia():   [<span class="c-str">'users'</span>, <span class="c-str">'media'</span>, <span class="c-str">'current'</span>],
+    userMedia(u):     [<span class="c-str">'users'</span>, <span class="c-str">'media'</span>, u],
+    userVideos(u):    [<span class="c-str">'users'</span>, <span class="c-str">'videos'</span>, u],
+    allGenres():      [<span class="c-str">'users'</span>, <span class="c-str">'genres'</span>, <span class="c-str">'all'</span>],
+    userGenres(u):    [<span class="c-str">'users'</span>, <span class="c-str">'genres'</span>, u],
+    userExperiences(u): [<span class="c-str">'users'</span>, <span class="c-str">'experiences'</span>, u],
+}</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>staleTime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <code>useGetCurrentUser</code>, <code>useGetUserByUsername</code>,
+                            <code>useGetUserExperiences</code>
+                        </td>
+                        <td>5 phút</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>useGetCurrentUserMedia</code>, <code>useGetUserMedia</code>,
+                            <code>useGetUserVideos</code>
+                        </td>
+                        <td>3 phút</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetMyMedia</code> (submissions)</td>
+                        <td>1 phút</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetAllGenres</code>, <code>useGetUserGenres</code></td>
+                        <td><b>Không đặt</b> → dùng mặc định toàn cục 5 phút</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Gần như mọi mutation đều invalidate <code>userKeys.current()</code>. Riêng
+            <code>useUpdateUserGenres</code> invalidate cả <code>userGenres(username)</code> và
+            <code>current()</code>.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Ba vấn đề đã biết về cache</span>
+            <b>1.</b> <code>byUsername(u)</code> <b>không bao giờ được invalidate</b>. Sau khi sửa
+            hồ sơ, người khác vẫn thấy bản cũ tới 5 phút.
+            <br />
+            <b>2.</b> Trùng khoá: <code>userMedia('current')</code> tạo ra đúng mảng khoá như
+            <code>currentMedia()</code>; tương tự <code>userGenres('all')</code> và
+            <code>allGenres()</code>.
+            <br />
+            <b>3.</b> <code>useGetUserGenres</code> spread <code>...options</code> <i>sau</i>
+            <code>enabled</code>, nên caller truyền <code>enabled: true</code> có thể khiến query
+            chạy với username rỗng.
+        </div>
+
+        <h2>5. Chỉnh sửa hồ sơ nghệ sĩ — 7 tab</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Endpoint</th>
+                        <th>Trường</th>
+                        <th>Form</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Cơ bản</b></td>
+                        <td><span class="badge patch">PATCH</span> <code>/users/me</code></td>
+                        <td>
+                            <code
+                                >display_name, brief_bio, detail_bio, city, country,
+                                state_province</code
+                            >
+                        </td>
+                        <td>RHF + Zod</td>
+                    </tr>
+                    <tr>
+                        <td><b>Liên hệ</b></td>
+                        <td><span class="badge put">PUT</span> <code>/users/me/contact</code></td>
+                        <td><code>email, phone_number</code></td>
+                        <td>RHF + Zod</td>
+                    </tr>
+                    <tr>
+                        <td><b>Mạng XH</b></td>
+                        <td><span class="badge put">PUT</span> <code>/users/me/social</code></td>
+                        <td>5 URL, mỗi cái Zod <code>.url()</code> hoặc rỗng</td>
+                        <td>RHF + Zod</td>
+                    </tr>
+                    <tr>
+                        <td><b>Thể loại</b></td>
+                        <td>
+                            <span class="badge put">PUT</span> <code>/users/genres/{username}</code>
+                        </td>
+                        <td><code>genre_names[]</code></td>
+                        <td>useState</td>
+                    </tr>
+                    <tr>
+                        <td><b>Dịch vụ</b></td>
+                        <td><span class="badge put">PUT</span> <code>/users/me/services</code></td>
+                        <td>
+                            Mảng <code>{name, price, currency, is_negotiable}</code>; chỉ gửi mục có
+                            <code>name</code> khác rỗng
+                        </td>
+                        <td>useState</td>
+                    </tr>
+                    <tr>
+                        <td><b>Nhận show</b></td>
+                        <td><span class="badge patch">PATCH</span> <code>/users/me</code> ×2</td>
+                        <td>
+                            Công tắc <code>is_available</code> gửi <b>ngay lập tức</b> (optimistic,
+                            có rollback); nút Lưu gửi
+                            <code>service_types, fee_min, fee_max</code>
+                        </td>
+                        <td>useState</td>
+                    </tr>
+                    <tr>
+                        <td><b>Kinh nghiệm</b></td>
+                        <td><code>/experiences</code> + <code>/experiences/genres/{id}</code></td>
+                        <td>
+                            <code>title</code> (bắt buộc), <code>description</code>, ngày bắt/kết
+                            thúc, <code>portfolio_url</code>, thể loại
+                        </td>
+                        <td>useState</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Sửa kinh nghiệm cần <b>hai</b> request và không nguyên tử</span>
+            <code>UpdateExperiencePayload</code> <b>không có</b> trường genres. Nên sửa một kinh
+            nghiệm = <span class="badge put">PUT</span> <code>/experiences/{id}</code> rồi
+            <span class="badge put">PUT</span> <code>/experiences/genres/{id}</code>. Request thứ
+            hai hỏng thì thể loại lệch với phần còn lại.
+        </div>
+
+        <div class="note info">
+            <span class="t">Định dạng ngày trong form kinh nghiệm</span>
+            Server trả datetime RFC3339 đầy đủ; form giữ dạng <code>YYYY-MM-DD</code> (hàm
+            <code>toDateOnly</code>) và gắn lại <code>T00:00:00Z</code> khi ghi (hàm
+            <code>dateToApi</code>) vì backend Go yêu cầu RFC3339.
+        </div>
+
+        <p>
+            Ba form dùng RHF đều <b>khoá nút Lưu khi chưa có thay đổi</b> (<code>isDirty</code>) và
+            có nút Đặt lại gọi <code>reset(defaultValues)</code>.
+        </p>
+
+        <p>
+            <code>ProvincePicker</code> có một hành vi đáng nhớ: chọn tỉnh sẽ ghi <b>đồng thời</b>
+            <code>state_province</code> = mã ISO <b>và</b> <code>city</code> = tên tỉnh.
+        </p>
+
+        <h2>6. Chỉnh sửa hồ sơ venue — 4 tab</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Endpoint</th>
+                        <th>Trường</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Cơ bản</b></td>
+                        <td><code>/users/me/venue/basic</code></td>
+                        <td>
+                            <code>display_name, brief_bio, capacity, business_type[]</code>. Công
+                            tắc "Đang tuyển nghệ sĩ" gửi riêng qua
+                            <span class="badge patch">PATCH</span> <code>/users/me</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Liên hệ</b></td>
+                        <td><code>/users/me/venue/contact</code></td>
+                        <td>7 trường liên hệ + địa chỉ</td>
+                    </tr>
+                    <tr>
+                        <td><b>Hoạt động</b></td>
+                        <td><code>/users/me/venue/additional</code></td>
+                        <td>
+                            <code>open_hour, rent_price, convenient_facilities[]</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Yêu cầu</b></td>
+                        <td>
+                            <span class="badge patch">PATCH</span>
+                            <code>/users/me/venue-requirements</code>
+                        </td>
+                        <td>
+                            <code>preferred_genre_ids[]</code> (<b>id</b>, không phải tên) +
+                            <code>artist_requirements_note</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Thể loại: khi thì tên, khi thì id</span>
+            Nghệ sĩ gửi <code>genre_names</code> (<b>tên</b>), venue gửi
+            <code>preferred_genre_ids</code> (<b>id</b>). Cùng một danh sách thể loại từ
+            <code>/users/genres</code> nhưng hai cách tham chiếu khác nhau. Nhầm là dữ liệu sai âm
+            thầm.
+        </div>
+
+        <h2>7. Upload ảnh</h2>
+
+        <h3>Avatar &amp; ảnh bìa</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Chọn ảnh</span>
+                <code>ImagePicker.launchImageLibraryAsync</code> với
+                <code>allowsEditing: true, quality: 0.8</code>; tỉ lệ crop <code>[1,1]</code> cho
+                avatar, <code>[16,9]</code> cho ảnh bìa.
+            </li>
+            <li>
+                <span class="h">Hiện preview ngay (optimistic)</span>
+                <code>setSelectedAvatar(uri)</code> — người dùng thấy ảnh mới lập tức.
+            </li>
+            <li>
+                <span class="h">Upload qua <code>postMultipartWithFetch</code></span>
+                Field <code>file</code>, mime/name <b>hardcode</b> <code>image/jpeg</code> /
+                <code>avatar.jpg</code>.
+            </li>
+            <li>
+                <span class="h">Đồng bộ ngược vào authStore (chỉ avatar)</span>
+                <code>updateAvatarUrl(uploadResult.file_url)</code> để header và các thẻ hiển thị
+                avatar cập nhật ngay.
+                <div class="note warn" style="margin-top: 10px; margin-bottom: 0">
+                    <b>Ảnh bìa không có bước này.</b> Nó chỉ dựa vào
+                    <code>invalidateQueries(userKeys.current())</code>.
+                </div>
+            </li>
+            <li>
+                <span class="h">Lỗi thì hoàn tác preview</span>
+                Trả về <code>userData?.avatar_url</code> cũ + hiện toast lỗi. Trong lúc upload có
+                lớp phủ toàn màn "Đang tải ảnh lên...".
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t">URL được lưu ở đâu?</span>
+            <b>Server tự lưu.</b> Client không bao giờ <span class="badge patch">PATCH</span>
+            <code>avatar_url</code>/<code>cover_url</code> —
+            <code>UpdateMyProfilePayload</code> thậm chí không có hai trường đó.
+        </div>
+
+        <h3>Ảnh portfolio &amp; video</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Portfolio</th>
+                        <th>Video</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Màn</th>
+                        <td><code>PortfolioGalleryScreen</code></td>
+                        <td><code>AddVideoModal</code> → <code>VideoGalleryScreen</code></td>
+                    </tr>
+                    <tr>
+                        <th>Endpoint</th>
+                        <td><code>POST /users/me/media</code></td>
+                        <td><code>POST /users/videos</code></td>
+                    </tr>
+                    <tr>
+                        <th>Field</th>
+                        <td><code>file</code> + <code>media_type='portfolio'</code></td>
+                        <td>
+                            <code>file</code>, <code>title</code> (bắt buộc),
+                            <code>thumbnail?</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Mime/name</th>
+                        <td colspan="2">
+                            Dùng <b>giá trị thật</b> của asset (khác avatar/cover vốn hardcode)
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Bố cục</th>
+                        <td>Lưới 3 cột, <code>(screenWidth - 32 - 24) / 3</code></td>
+                        <td>Lưới 2 cột</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Media dùng khi ứng tuyển — hệ thống riêng</h3>
+
+        <p>
+            <code>MediaGalleryScreen</code> → <code>MediaUploadSection</code> quản lý một kho media
+            <b>hoàn toàn tách biệt</b>: endpoint <code>submissions/*</code>, kiểu
+            <code>Media</code> riêng, key <code>mediaKeys</code> riêng, và <b>đi qua axios</b> chứ
+            không phải fetch. Đây chính là kho mà <code>JobApplyModal</code> chọn file demo.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Nút upload video ở đây không tồn tại</span>
+            <code>handlePickMedia</code> có nhánh <code>'video'</code> nhưng giao diện
+            <b>chỉ render nút "Tải ảnh"</b>. Nhánh video không thể chạm tới.
+        </div>
+
+        <h2>8. Phần trăm hoàn thiện hồ sơ</h2>
+
+        <p>
+            <code>profileCompletion.ts</code>: <b>8 tiêu chí, mỗi cái 12,5%</b>,
+            <code>pct = Math.round(doneCount / 8 × 100)</code>. Chỉ hiện cho nghệ sĩ, và
+            <b>tự ẩn khi đạt 100%</b>.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tiêu chí</th>
+                        <th>Điều kiện đạt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ảnh đại diện</td>
+                        <td><code>Boolean(avatar_url)</code></td>
+                    </tr>
+                    <tr>
+                        <td>Ảnh bìa</td>
+                        <td><code>Boolean(cover_url)</code></td>
+                    </tr>
+                    <tr>
+                        <td>Nghệ danh</td>
+                        <td>
+                            <code>display_name</code> có giá trị
+                            <b>và khác <code>username</code></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Địa điểm</td>
+                        <td><code>city || country</code></td>
+                    </tr>
+                    <tr>
+                        <td>Thể loại</td>
+                        <td><code>genresCount &gt; 0</code></td>
+                    </tr>
+                    <tr>
+                        <td>Dịch vụ</td>
+                        <td><code>servicesCount &gt; 0</code></td>
+                    </tr>
+                    <tr>
+                        <td>Giới thiệu ngắn</td>
+                        <td><code>brief_bio.length &gt; 20</code> (chặt hơn "khác rỗng")</td>
+                    </tr>
+                    <tr>
+                        <td>Video demo</td>
+                        <td><code>videoCount &gt; 0</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>9. Featured Releases (YouTube)</h2>
+
+        <p>
+            Lưu dưới dạng <code>featured_release_links: string[]</code> trên user. Cả thêm và xoá
+            đều <span class="badge put">PUT</span> <b>toàn bộ mảng mới</b> lên
+            <code>/users/me/featured-releases</code> — không có API thêm/xoá từng phần tử.
+        </p>
+
+        <p>
+            <code>YoutubeEmbed</code> rút id video 11 ký tự bằng regex rồi hiển thị ảnh
+            <code>https://img.youtube.com/vi/{id}/hqdefault.jpg</code>.
+            <b>Không có trình phát trong app</b> — bấm vào thì <code>Linking.openURL()</code> mở app
+            YouTube. URL sai định dạng hiện "Invalid YouTube URL".
+        </p>
+
+        <h2>10. Huy hiệu Premium</h2>
+
+        <p>
+            Dùng <code>isPremiumActive(userData)</code> từ
+            <code>shared/domain/utils/premium.ts</code> —
+            <b>phải kiểm tra cả <code>is_premium</code> lẫn <code>premium_expired_at</code></b
+            >, vì backend để cờ <code>true</code> tới lần quét dọn kế tiếp. Chi tiết ở
+            <a href="payments.html">tài liệu Payments</a>.
+        </p>
+
+        <p>
+            <code>PersonalScreen</code> còn hiển thị nội dung dòng menu Premium theo trạng thái:
+            đang hoạt động → "Có hiệu lực đến {ngày}"; hết hạn → "Premium đã hết hạn" + CTA gia hạn;
+            chưa mua → "Nâng cấp Premium".
+        </p>
+
+        <div class="note warn">
+            <span class="t">Icon xác minh hiển thị sai</span>
+            <code>PersonalScreen</code> chỉ hiện icon <code>BadgeCheck</code> khi
+            <code>is_verified</code>. Nhưng <code>InfoProfile</code> render nó
+            <b>không điều kiện</b> — nghĩa là <b>mọi hồ sơ</b> đều trông như đã được xác minh.
+        </div>
+
+        <h2>11. Bảng màu theo vai trò</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vai trò</th>
+                        <th>Gradient</th>
+                        <th>Icon</th>
+                        <th>Nhãn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>singer</code></td>
+                        <td><code>#7C3BED → #9333EA</code></td>
+                        <td>MicVocal</td>
+                        <td>Ca sĩ</td>
+                    </tr>
+                    <tr>
+                        <td><code>producer</code></td>
+                        <td><code>#2563EB → #3B82F6</code></td>
+                        <td>Disc2</td>
+                        <td>Nhà sản xuất</td>
+                    </tr>
+                    <tr>
+                        <td><code>venue</code></td>
+                        <td><code>#DC2626 → #EF4444</code></td>
+                        <td>Building2</td>
+                        <td>Nhà tuyển dụng</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>12. Ghi chú kỹ thuật</h2>
+
+        <ul>
+            <li>
+                <b><code>GlassCard</code> phải có nền đục hoàn toàn.</b> Trên Android, tổ hợp
+                <code>borderRadius + overflow:hidden + elevation + nền trong suốt</code> khiến hệ
+                thống vẽ một mảng bóng trắng vuông góc (hiện tượng "vệt trắng").
+            </li>
+            <li>
+                <b>Ảnh bìa có lớp <code>BlurView</code> + phủ màu theo vai trò</b> (iOS
+                <code>intensity 22</code>, Android <code>30</code>) để chữ trắng vẫn đọc được kể cả
+                khi Android không blur thật. Có cờ <code>coverFailed</code> quay về gradient khi ảnh
+                404.
+            </li>
+            <li>
+                <b>Đăng xuất không tự điều hướng.</b>
+                <code>PersonalScreen</code> để <code>useProtectedRoute</code> lo, tránh vào màn
+                login hai lần.
+            </li>
+            <li>
+                <b>Xem video toàn màn hình</b> khoá xoay bằng
+                <code>ScreenOrientation.lockAsync(LANDSCAPE_LEFT)</code> và ẩn thanh trạng thái.
+            </li>
+            <li>
+                <b>Điểm đánh giá là số giả.</b> <code>4.9</code> ở hồ sơ nghệ sĩ và
+                <code>4.8</code> ở hồ sơ venue đều hardcode — chưa có hệ thống đánh giá.
+            </li>
+            <li>
+                <b>Kéo để làm mới ở hồ sơ nghệ sĩ không hoạt động.</b>
+                <code>onRefresh</code> bật rồi tắt cờ mà <b>không gọi refetch</b> nào.
+            </li>
+            <li>
+                <b>Code chết:</b> <code>useUpdateBasicInfo</code> (<code>PUT /users/me/basic</code>)
+                và <code>useUploadFile</code> (<code>POST /storage/upload</code>) không có nơi nào
+                gọi. <code>userStore.ts</code> chỉ chứa <code>{name, email}</code>, persist bị
+                comment, và không được import ở đâu — <code>authStore</code> mới là store danh tính
+                thật.
+            </li>
+            <li>
+                <b>Route thiếu khai báo:</b> <code>mediaGallery</code> không có trong
+                <code>app/(profiles)/_layout.tsx</code> dù <code>PersonalScreen</code> vẫn điều
+                hướng tới (định tuyến theo file vẫn nhận, nhưng nên khai cho nhất quán).
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="auth.html">← Xác thực</a>
+            <a href="jobs.html">Tuyển dụng →</a>
+        </div>
+    </main>
+</div>

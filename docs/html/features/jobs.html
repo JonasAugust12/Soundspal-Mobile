@@ -1,0 +1,1009 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tuyển dụng (Jobs) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Tuyển dụng</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · jobs</span>
+        <h1>Tuyển dụng &amp; Ứng tuyển</h1>
+        <p class="lede">
+            Feature lớn nhất và nhiều nghiệp vụ nhất của app: venue đăng tin, nghệ sĩ tìm và ứng
+            tuyển, venue duyệt hồ sơ. 16 endpoint, 5 màn hình chính, một wizard 4 bước và khá nhiều
+            quy tắc trạng thái cần nắm.
+        </p>
+
+        <h2>1. Mô hình nghiệp vụ</h2>
+
+        <p>Ba khái niệm cần phân biệt rõ ngay từ đầu:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khái niệm</th>
+                        <th>Trong code</th>
+                        <th>Là gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Bài đăng</b></td>
+                        <td><code>Job</code> (backend gọi là "post")</td>
+                        <td>
+                            Một tin tuyển dụng / cơ hội biểu diễn. Endpoint là
+                            <code>/posts</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Đơn ứng tuyển</b></td>
+                        <td><code>Submission</code> / <code>Application</code></td>
+                        <td>Một người nộp hồ sơ vào một bài đăng</td>
+                    </tr>
+                    <tr>
+                        <td><b>Duyệt</b></td>
+                        <td><code>Review</code></td>
+                        <td>Chủ bài đăng chấp nhận hoặc từ chối một đơn</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Hai enum trạng thái khác nhau — dễ nhầm</span>
+            <code>ApplicationStatus</code> (chỉ dùng cho response của
+            <code>POST /posts/{id}/submit</code>) có 4 giá trị:
+            <code>pending | accepted | rejected | withdrawn</code>.
+            <br />
+            <code>SubmissionStatus</code> (dùng ở mọi nơi khác) có <b>7</b> giá trị:
+            <code
+                >pending_review | under_review | accepted | rejected | skipped | withdrawn |
+                expired</code
+            >. Chúng <b>không tương thích</b> với nhau.
+        </div>
+
+        <h3>Các enum khác</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Enum</th>
+                        <th>Giá trị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>PostType</code></td>
+                        <td>
+                            <code>job_offer</code> (đề nghị việc làm) · <code>gig</code> (show diễn)
+                            · <code>availability</code> (thông báo lịch trống)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>PostStatus</code></td>
+                        <td>
+                            <code>draft</code> · <code>published</code> · <code>closed</code> ·
+                            <code>completed</code> · <code>cancelled</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>PostVisibility</code></td>
+                        <td>
+                            <code>public</code> · <code>private</code> · <code>invite_only</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>ArtistType</code></td>
+                        <td>
+                            <code>venue</code> · <code>producer</code> · <code>singer</code> — loại
+                            người mà bài đăng đang tìm
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>RecruitmentType</code></td>
+                        <td>
+                            <code>full_time</code> · <code>part_time</code> ·
+                            <code>contract</code> ·
+                            <code>one_time</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>LocationType</code></td>
+                        <td><code>remote</code> · <code>onsite</code> · <code>hybrid</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>PaymentType</code></td>
+                        <td>
+                            <code>bySession</code> · <code>byHour</code> · <code>byProject</code> ·
+                            <code>byMonth</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>ExperienceLevel</code></td>
+                        <td>
+                            <code>beginner</code> · <code>intermediate</code> ·
+                            <code>expert</code> ·
+                            <code>any</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>BudgetCurrency</code></td>
+                        <td>
+                            <code>VND</code> · <code>USD</code> · <code>EUR</code> ·
+                            <code>JPY</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>2. Danh sách endpoint</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Dùng để</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/posts/search?q=…</code></td>
+                        <td>Tìm kiếm <b>thuần văn bản</b>, không có bộ lọc nâng cao</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/posts?…</code></td>
+                        <td>Danh sách có lọc (mặc định và khi có bộ lọc nâng cao)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/posts/{id}</code></td>
+                        <td>Chi tiết bài đăng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/posts/me</code></td>
+                        <td>Bài đăng của tôi (<b>mọi trạng thái</b>, kể cả draft)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/posts</code></td>
+                        <td>Tạo bài đăng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/posts/{id}</code></td>
+                        <td>Sửa — <b>luôn phải gửi body đầy đủ</b></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge del">DELETE</span></td>
+                        <td><code>/posts/{id}</code></td>
+                        <td>Xoá</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/posts/{id}/publish</code></td>
+                        <td>
+                            Xuất bản — <b>chỉ nhận bài đang ở <code>draft</code></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/posts/{id}/close</code></td>
+                        <td>Đóng tuyển dụng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/posts/{jobId}/submit</code></td>
+                        <td>Nộp đơn ứng tuyển</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/my-submissions</code></td>
+                        <td>Đơn tôi đã nộp</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/submissions/{id}/withdraw</code></td>
+                        <td>Rút đơn</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/posts/{jobId}/submissions</code></td>
+                        <td>Danh sách người ứng tuyển vào bài của tôi</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/submissions/{id}/review</code></td>
+                        <td>Duyệt một đơn</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/submissions/bulk-action</code></td>
+                        <td>Duyệt hàng loạt</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/submissions/pending-count</code></td>
+                        <td>Số đơn chờ duyệt (cho badge)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Quy tắc chọn giữa <code>/posts/search</code> và <code>/posts</code></h3>
+
+        <p>
+            <code>jobRemoteDataSource.ts</code> tự quyết định gọi endpoint nào — đây là điểm dễ gây
+            bối rối khi debug:
+        </p>
+
+        <pre><code>hasAdvancedFilters = post_type || location_type || experience_level || location
+                  || <span class="c-key">typeof</span> budget_min === <span class="c-str">'number'</span> || <span class="c-key">typeof</span> budget_max === <span class="c-str">'number'</span>
+                  || genres.length &gt; <span class="c-num">0</span>
+
+<span class="c-key">if</span> (search &amp;&amp; !hasAdvancedFilters)  → GET /posts/search?...&amp;q=&lt;search&gt;
+<span class="c-key">else</span>                             → GET /posts?...        <span class="c-com">// vẫn kèm q nếu có</span></code></pre>
+
+        <p>
+            Lý do (ghi trong comment): <code>/posts</code> hỗ trợ đầy đủ
+            <code>JobPostFilters</code>, còn <code>/posts/search</code> thì không. Khi có bộ lọc, ta
+            ưu tiên <code>/posts</code> và vẫn đính <code>q</code> để backend lọc thêm nếu nó hỗ
+            trợ.
+        </p>
+
+        <h2>3. Cấu trúc dữ liệu</h2>
+
+        <h3><code>Job</code> — các trường quan trọng</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nhóm</th>
+                        <th>Trường</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Định danh</td>
+                        <td><code>id</code>, <code>post_type</code>, <code>type</code></td>
+                    </tr>
+                    <tr>
+                        <td>Nội dung</td>
+                        <td>
+                            <code>title</code>, <code>brief_description</code>,
+                            <code>description</code>, <code>benefits[]</code>,
+                            <code>required_skills[]</code>, <code>genres[]</code>,
+                            <code>tags[]</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Người đăng</td>
+                        <td>
+                            <code>creator_id</code>, <code>creator_username</code>,
+                            <code>creator_display_name</code>, <code>creator_role</code>,
+                            <code>creator_avatar_url</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Điều kiện</td>
+                        <td>
+                            <code>recruitment_type</code>, <code>location_type</code>,
+                            <code>location</code>, <code>experience_level</code>,
+                            <code>work_time</code>, <code>deadline</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Thù lao</td>
+                        <td>
+                            <code>budget_min</code>, <code>budget_max</code>,
+                            <code>budget_currency</code>, <code>payment_type</code>,
+                            <code>is_negotiable</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Trạng thái</td>
+                        <td>
+                            <code>status</code>, <code>visibility</code>, <code>published_at</code>,
+                            <code>closed_at</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Thống kê</td>
+                        <td>
+                            <code>views_count</code>, <code>applications_count</code>,
+                            <code>total_submissions</code>, <code>bookings_count</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cờ điều khiển</td>
+                        <td>
+                            <code>can_accept_submissions</code>, <code>is_deadline_passed</code>,
+                            <code>max_submissions?</code>, <code>is_pool</code>,
+                            <code>auto_notify</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Trạng thái theo người xem</b></td>
+                        <td>
+                            <code>viewer_is_owner?</code>, <code>viewer_has_applied?</code>,
+                            <code>viewer_submission_id?</code>,
+                            <code>viewer_submission_status?</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Nhóm <code>viewer_*</code> là hợp đồng bổ sung</span>
+            Backend <b>chỉ trả</b> khi request có xác thực, và có thể chưa trả. Vì vậy
+            <code>jobInteractionState.ts</code> luôn có phương án dự phòng: suy ra quyền sở hữu từ
+            <code>viewerId === creator_id</code>, và suy ra "đã ứng tuyển chưa" bằng cách quét
+            <code>/my-submissions</code>.
+        </div>
+
+        <h3>Body nộp đơn</h3>
+
+        <pre><code>{
+    full_name: string,
+    email: string,
+    phone_number: string,
+    cover_letter: string,
+    portfolio_links?: string[],
+    demo_file?: string     <span class="c-com">// URL, KHÔNG phải file upload</span>
+}</code></pre>
+
+        <h2>4. Hook &amp; query key</h2>
+
+        <pre><code>jobKeys = {
+    all:                   [<span class="c-str">'jobs'</span>],
+    list(params):          [<span class="c-str">'jobs'</span>, <span class="c-str">'list'</span>, params],
+    detail(id):            [<span class="c-str">'jobs'</span>, <span class="c-str">'detail'</span>, id],
+    myPostsList(p):        [<span class="c-str">'jobs'</span>, <span class="c-str">'myPosts'</span>, p],
+    mySubmissionsList(p):  [<span class="c-str">'jobs'</span>, <span class="c-str">'mySubmissions'</span>, p],
+    jobSubmissionsList(jobId, p): [<span class="c-str">'jobs'</span>, <span class="c-str">'jobSubmissions'</span>, jobId, p],
+    pendingCount():        [<span class="c-str">'jobs'</span>, <span class="c-str">'pendingCount'</span>],
+}</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>staleTime</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useGetJobsInfinite</code></td>
+                        <td>60 giây</td>
+                        <td>
+                            Cuộn vô hạn, <code>refetchOnMount: false</code> để không nhảy vị trí
+                            cuộn khi quay lại
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetJobById</code></td>
+                        <td><b>5 phút</b></td>
+                        <td>
+                            Có <code>placeholderData</code> lấy từ cache <code>myPosts</code>; gặp
+                            404 thì invalidate <code>myPosts()</code> rồi ném lại lỗi
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetMyPostsInfinite</code></td>
+                        <td>60 giây</td>
+                        <td>Tab "Của tôi"</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetMySubmissions</code></td>
+                        <td>30 giây</td>
+                        <td>Một trang duy nhất (<code>pageSize: 50</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetJobSubmissions</code></td>
+                        <td>30 giây</td>
+                        <td>Cũng một trang duy nhất</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetPendingApplicationsCount</code></td>
+                        <td>60 giây</td>
+                        <td>
+                            <b>Có <code>refetchInterval: 60000</code></b> — poll liên tục để badge
+                            luôn mới
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Mutation invalidate cái gì</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mutation</th>
+                        <th>Invalidate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useCreateJob</code></td>
+                        <td><code>lists()</code>, <code>myPosts()</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>useUpdateJob</code> / <code>usePublishJob</code> /
+                            <code>useCloseJob</code> / <code>useReopenJob</code>
+                        </td>
+                        <td>
+                            <code>detail(id)</code>, <code>lists()</code>, <code>myPosts()</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useSubmitJobApplication</code></td>
+                        <td>
+                            <code>detail(jobId)</code>, <code>mySubmissions()</code> —
+                            <b>không</b> invalidate <code>lists()</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>useReviewSubmission</code> /
+                            <code>useBulkReviewSubmissions</code>
+                        </td>
+                        <td>
+                            <code>jobSubmissions(jobId)</code>, <code>detail(jobId)</code>,
+                            <code>pendingCount()</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>5. Luồng: duyệt &amp; lọc bài đăng</h2>
+
+        <p>Màn <code>JobsTabScreen</code> có 3 tab, tất cả xử lý phía client:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Nguồn dữ liệu</th>
+                        <th>Đặc biệt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Khác</b> (<code>others</code>)</td>
+                        <td>
+                            <code>useGetJobsInfinite</code> với
+                            <code>status: 'published', visibility: 'public'</code>
+                        </td>
+                        <td>
+                            <b>Lọc bỏ bài của chính mình phía client</b> (so
+                            <code>creator_id</code> với <code>user.id</code>)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Của tôi</b> (<code>mine</code>)</td>
+                        <td><code>useGetMyPostsInfinite</code> → <code>/posts/me</code></td>
+                        <td>Mọi trạng thái, kể cả nháp</td>
+                    </tr>
+                    <tr>
+                        <td><b>Đã lưu</b> (<code>saved</code>)</td>
+                        <td><code>jobBookmarkStore</code> (MMKV) — <b>không gọi mạng</b></td>
+                        <td>Hoạt động cả khi offline</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Cả 3 danh sách được mount cùng lúc</span>
+            Danh sách không active được ẩn bằng <code>display: none</code> +
+            <code>pointerEvents: 'none'</code> thay vì unmount. Nhờ đó
+            <b>vị trí cuộn được giữ nguyên</b> khi chuyển tab — chi tiết nhỏ nhưng ảnh hưởng lớn tới
+            trải nghiệm.
+        </div>
+
+        <p>Cơ chế khác:</p>
+        <ul>
+            <li>Ô tìm kiếm <b>debounce 500 ms</b> trước khi gọi API.</li>
+            <li>
+                Cuộn vô hạn: <code>onEndReachedThreshold = 0.35</code>, chặn bằng
+                <code>hasNextPage &amp;&amp; !isFetchingNextPage</code>. Mỗi trang 10 bài.
+            </li>
+            <li>
+                Con trỏ trang ưu tiên <code>pagination.current_page/total_pages</code> từ server;
+                nếu không có thì suy: trả về ít hơn <code>pageSize</code> nghĩa là hết.
+            </li>
+            <li>
+                <code>JobListItem</code> có hàm so sánh memo riêng — chỉ re-render khi
+                <code>id</code>, <code>isOwned</code>, <code>status</code> hoặc
+                <code>updated_at</code> đổi.
+            </li>
+        </ul>
+
+        <h3>Bộ lọc (<code>JobFilterSheet</code>)</h3>
+
+        <p>
+            Sheet dùng <b>state nháp</b> — chỉ áp dụng khi bấm "Áp dụng", không lọc theo từng thao
+            tác. Các trường: <code>post_type</code>, <code>location_type</code>,
+            <code>experience_level</code>, <code>budget_min/max</code> (chỉ nhận chữ số),
+            <code>location</code> (nhập tự do), <code>genres[]</code> (lấy từ
+            <code>useGetAllGenres</code>). Chip bấm lại thì bỏ chọn. Số bộ lọc đang bật hiển thị
+            dưới dạng badge trên nút lọc.
+        </p>
+
+        <h2>6. Luồng: tạo bài đăng (wizard 4 bước)</h2>
+
+        <p>
+            Màn <code>RecruitmentFormScreen</code>, các bước:
+            <code>basic → details → requirements → review</code>.
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Bước 1 — Cơ bản</span>
+                <code>title</code>, <code>brief_description</code>, <code>description</code>. Nút
+                "Tiếp tục" bị <b>khoá</b> nếu một trong ba trường còn rỗng. Đây là cổng chặn duy
+                nhất trong wizard.
+            </li>
+            <li>
+                <span class="h">Bước 2 — Chi tiết</span>
+                Loại nghệ sĩ cần tìm, hình thức tuyển, loại địa điểm, thù lao, thời gian làm việc,
+                hạn nộp.
+                <div class="note warn" style="margin-top: 10px; margin-bottom: 0">
+                    <b>Ba chi tiết dễ sai:</b>
+                    <ul style="margin-bottom: 0; margin-top: 6px">
+                        <li>
+                            Ô ngân sách nhập theo <b>đơn vị triệu</b>, code nhân
+                            <code>× 1 000 000</code> trước khi lưu.
+                            <b>Màn sửa bài lại nhập thẳng VND</b> — hai màn dùng đơn vị khác nhau
+                            cho cùng một trường.
+                        </li>
+                        <li>
+                            Công tắc thù lao bị <b>đảo</b>: <code>isFixed = !is_negotiable</code>.
+                        </li>
+                        <li>
+                            Hạn nộp lưu dạng chuỗi <code>dd-MM-yyyy</code>, <b>không phải ISO</b>.
+                        </li>
+                    </ul>
+                </div>
+                Ô địa điểm tự ẩn khi chọn <code>location_type = 'remote'</code>. Thời gian làm việc
+                được ghép thành chuỗi kiểu <code>Tối T6, T7 (19:30 - 21:30)</code>.
+            </li>
+            <li>
+                <span class="h">Bước 3 — Yêu cầu</span>
+                <code>genres</code> (12 gợi ý sẵn + nhập tự do, có khử trùng lặp),
+                <code>required_skills</code>, <code>benefits</code>, <code>experience_level</code>.
+            </li>
+            <li>
+                <span class="h">Bước 4 — Xem lại &amp; đăng</span>
+                Chọn <code>visibility</code> rồi lưu. Có <b>2 nút</b>: "Lưu nháp" (<code
+                    >status: 'draft'</code
+                >) và "Đăng" (<code>status: 'published'</code>). Cả hai đều gọi
+                <span class="badge post">POST</span> <code>/posts</code>, chỉ khác trường
+                <code>status</code>.
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t">Giá trị mặc định của form</span>
+            <code>post_type: 'job_offer'</code> · <code>type: 'producer'</code> ·
+            <code>recruitment_type: 'part_time'</code> · <code>location_type: 'onsite'</code> ·
+            <code>budget_currency: 'VND'</code> · <code>payment_type: 'bySession'</code> ·
+            <code>experience_level: 'intermediate'</code> · <code>visibility: 'public'</code>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Không kiểm tra vai trò</span>
+            Nút "Đăng tin" trong <code>JobHeader</code> hiển thị cho <b>mọi vai trò</b>. Một ca sĩ
+            cũng đăng được tin tuyển dụng. Nếu nghiệp vụ yêu cầu chỉ venue mới được đăng, phải bổ
+            sung — hiện tại không có ràng buộc nào ở client.
+        </div>
+
+        <h2>7. Luồng: ứng tuyển</h2>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Mở <code>JobApplyModal</code></span>
+                Từ nút CTA ở màn chi tiết hoặc trực tiếp trên thẻ job.
+            </li>
+            <li>
+                <span class="h">Điền và vượt qua 5 luật kiểm tra</span>
+                <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Trường</th>
+                                <th>Luật</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Họ tên</td>
+                                <td>≥ 2 ký tự</td>
+                            </tr>
+                            <tr>
+                                <td>Email</td>
+                                <td>Regex email; lưu dạng <b>chữ thường</b></td>
+                            </tr>
+                            <tr>
+                                <td>Điện thoại</td>
+                                <td><code>/^(0|\+84)[0-9]{9,10}$/</code> — chuẩn số Việt Nam</td>
+                            </tr>
+                            <tr>
+                                <td>Thư ứng tuyển</td>
+                                <td>≥ 50 ký tự, có bộ đếm hiển thị</td>
+                            </tr>
+                            <tr>
+                                <td>Link portfolio</td>
+                                <td>
+                                    Tách theo xuống dòng/phẩy/khoảng trắng, mỗi link khớp regex URL
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <span class="h">Chọn file demo (tuỳ chọn)</span>
+                <b>Không upload tại chỗ.</b> <code>MediaPicker</code> hiện thư viện media đã tải lên
+                trước đó (<span class="badge get">GET</span> <code>submissions/me/media</code>),
+                chọn một item rồi lấy <code>file_url</code> của nó gán vào <code>demo_file</code>.
+                <div class="note info" style="margin-top: 10px; margin-bottom: 0">
+                    Muốn có media để chọn, người dùng phải vào
+                    <code>/(profiles)/mediaGallery</code> tải lên trước (<span class="badge post"
+                        >POST</span
+                    >
+                    <code>submissions/media</code>). Màn đó ghi rõ media là "để sử dụng khi ứng
+                    tuyển công việc".
+                </div>
+            </li>
+            <li>
+                <span class="h">
+                    <span class="badge post">POST</span> <code>/posts/{jobId}/submit</code>
+                </span>
+                <code>SubmitJobApplicationUseCase</code> chặn trước nếu <code>jobId</code> rỗng.
+                Xong thì invalidate chi tiết job + danh sách đơn của tôi.
+            </li>
+        </ol>
+
+        <h2>8. Nút CTA hiển thị gì — <code>jobInteractionState.ts</code></h2>
+
+        <p>
+            Đây là logic tinh tế nhất của feature. Hàm <code>getJobInteractionState()</code> chạy
+            theo thứ tự sau và <b>dừng ngay khi khớp</b>:
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Là chủ bài đăng?</span>
+                <code>viewer_is_owner ?? (viewerId === creator_id)</code> → CTA <code>manage</code>.
+                Không cho ứng tuyển, không cho nhắn tin, không cho lưu.
+            </li>
+            <li>
+                <span class="h">Bài loại <code>availability</code>?</span>
+                Đây là thông báo lịch trống chứ không phải tin tuyển → CTA <code>contact</code>.
+            </li>
+            <li>
+                <span class="h">Đã ứng tuyển rồi?</span>
+                <code>viewer_has_applied ?? Boolean(submissionStatus)</code> → CTA
+                <code>view_application</code>.
+            </li>
+            <li>
+                <span class="h">Kiểm tra 4 rào cản, lấy cái đầu tiên gặp</span>
+                <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Điều kiện</th>
+                                <th>Lý do</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>status !== 'published'</code></td>
+                                <td><code>not_published</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>is_deadline_passed</code></td>
+                                <td><code>deadline_passed</code></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <code
+                                        >max_submissions &amp;&amp; count &gt;=
+                                        max_submissions</code
+                                    >
+                                </td>
+                                <td><code>capacity_reached</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>can_accept_submissions === false</code></td>
+                                <td><code>applications_closed</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                Không rào cản nào → CTA <code>apply</code>. Ngược lại → <code>unavailable</code>, và
+                <code>getJobReasonLabel()</code> dịch lý do thành câu tiếng Việt hiển thị cho người
+                dùng.
+            </li>
+        </ol>
+
+        <h3>Nhắn tin về một job — luồng JOB_REF</h3>
+
+        <p>Bấm "Liên hệ" ở màn chi tiết sẽ:</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Tạo (hoặc lấy) cuộc hội thoại với người đăng</span>
+                <span class="badge post">POST</span> <code>/conversations</code> với
+                <code>{ name: 'TL-MESS', isGroup: false, participantIds: [creatorId] }</code>.
+            </li>
+            <li>
+                <span class="h">Gài sẵn thẻ job vào messagingStore</span>
+                <code>setPendingJobRef()</code> lưu
+                <code>{ id, title, location, type, budget, description }</code> kèm câu mở đầu mặc
+                định <code>Xin chào, tôi quan tâm đến "&lt;title&gt;".</code>
+            </li>
+            <li>
+                <span class="h">Mở phòng chat</span>
+                Màn chat điền sẵn câu mở đầu. Khi gửi, tin nhắn được bọc theo giao thức
+                <code>:::JOB_REF:{json}:::\n&lt;nội dung&gt;</code> — bên nhận sẽ thấy một
+                <b>thẻ job đẹp</b> thay vì đoạn JSON thô. Chi tiết ở
+                <a href="messaging.html">tài liệu Messaging</a>.
+            </li>
+        </ol>
+
+        <h2>9. Luồng: duyệt hồ sơ ứng tuyển</h2>
+
+        <p>Màn <code>JobApplicantsScreen</code> (route <code>/(jobs)/applicants?id=…</code>):</p>
+
+        <ul>
+            <li>
+                Tải <b>một trang duy nhất</b> 50 đơn — không cuộn vô hạn. Bài nào nhiều hơn 50 người
+                ứng tuyển sẽ bị cắt.
+            </li>
+            <li>
+                Nút Chấp nhận/Từ chối <b>chỉ hiện khi <code>can_be_reviewed = true</code></b
+                >. Có dialog xác nhận. Body gửi lên chỉ có <code>{ action }</code> — app
+                <b>không bao giờ gửi <code>review_notes</code></b> dù API hỗ trợ.
+            </li>
+            <li>
+                Chế độ chọn nhiều: nút "Chọn nhiều" chỉ hiện khi có ít nhất một đơn duyệt được. Gọi
+                <span class="badge post">POST</span> <code>/submissions/bulk-action</code> rồi báo
+                kết quả <code>Đã {chấp nhận|từ chối} {n} đơn</code>, kèm <code>, {m} lỗi</code> nếu
+                có thất bại.
+            </li>
+            <li>
+                <code>skipped</code> là giá trị hợp lệ của cả <code>SubmissionStatus</code> lẫn
+                <code>ReviewActionType</code>, nhưng <b>giao diện không bao giờ gửi</b>
+                <code>skip</code> — chỉ có <code>accept</code> và <code>reject</code>.
+            </li>
+            <li>Link portfolio mở bằng <code>Linking.openURL</code>.</li>
+        </ul>
+
+        <h3>Nghệ sĩ xem đơn của mình</h3>
+
+        <p>Màn <code>MyApplicationsScreen</code>:</p>
+        <ul>
+            <li>Cũng một trang 50 đơn.</li>
+            <li>
+                Hiện tiêu đề job, huy hiệu trạng thái, ngày nộp, và
+                <code>Lý do: &lt;rejection_reason&gt;</code> khi bị từ chối.
+            </li>
+            <li>
+                Nút rút đơn chỉ hiện khi <code>can_withdraw</code>. Cảnh báo rõ là
+                <b>không thể hoàn tác và không ứng tuyển lại được</b>. Body gửi lên là
+                <code>{ reason: '' }</code> — <b>luôn rỗng</b>, app không hỏi lý do.
+            </li>
+        </ul>
+
+        <h2>10. Vòng đời trạng thái bài đăng</h2>
+
+        <div class="flow">
+            <div class="n hl"><b>draft</b><small>lưu nháp</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>published</b><small>POST /publish</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>closed</b><small>POST /close</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>published</b><small>mở lại (xem dưới)</small></div>
+        </div>
+
+        <p>
+            Nút ở màn sửa bài phụ thuộc <code>status</code>: "Xuất bản" chỉ khi <code>draft</code>;
+            "Mở lại tuyển dụng" chỉ khi <code>closed</code>; "Đóng bài đăng" chỉ khi
+            <code>published</code>. Nút xoá luôn có, kèm cảnh báo không hoàn tác.
+        </p>
+
+        <h3>Điều kiện xuất bản</h3>
+
+        <p>
+            <code>getJobPublishBlockReason()</code> trả về <b>lỗi đầu tiên</b> gặp phải, hoặc
+            <code>null</code> nếu hợp lệ:
+        </p>
+        <ul>
+            <li><code>title</code> ≥ 5 ký tự</li>
+            <li><code>description</code> ≥ 20 ký tự</li>
+            <li><code>brief_description</code> không rỗng</li>
+            <li>
+                <code>post_type</code> thuộc
+                <code>{job_offer, gig, availability}</code>
+            </li>
+        </ul>
+
+        <div class="note warn">
+            <span class="t">Backend không có endpoint "mở lại"</span>
+            Comment trong <code>jobRepositoryHelpers.ts</code> giải thích: <code>/publish</code> chỉ
+            nhận bài <code>draft</code>, còn <code>PUT /posts/:id</code> đòi body đầy đủ. Nên "mở
+            lại" được ghép thủ công: fetch lại job → <code>PUT /posts/{id}</code> với toàn bộ body
+            và <code>status: 'published'</code>.
+        </div>
+
+        <div class="note warn">
+            <span class="t"><code>PUT /posts/{id}</code> không phải partial update</span>
+            Mọi lần lưu đều dựng body đầy đủ bằng
+            <code>buildUpdatePayloadFromJob(job, formData)</code>. Nếu bạn thêm trường mới vào
+            <code>Job</code>, <b>nhớ thêm cả vào hàm này</b>, nếu không mỗi lần sửa bài trường đó sẽ
+            bị ghi đè về rỗng.
+        </div>
+
+        <h3>Bài nháp/riêng tư bị 404 — cơ chế dự phòng</h3>
+
+        <p>
+            <span class="badge get">GET</span> <code>/posts/{id}</code> có thể trả 404 cho chính bài
+            nháp của mình (vì endpoint này chỉ phục vụ bài công khai).
+            <code>getJobByIdWithOwnedFallback()</code> bắt lỗi 404 rồi phân trang
+            <span class="badge get">GET</span> <code>/posts/me</code> (50 bài mỗi trang) đến khi tìm
+            thấy id, hết trang, hoặc gặp trang rỗng — không thấy thì mới ném lại 404.
+        </p>
+
+        <h2>11. Đánh dấu (bookmark)</h2>
+
+        <p>
+            <b>Hoàn toàn ở phía client</b>, không có endpoint bookmark cho job.
+            <code>jobBookmarkStore</code> (Zustand + persist MMKV, key
+            <code>job-bookmarks-v2</code>) lưu <b>cả object <code>Job</code></b
+            >.
+        </p>
+
+        <div class="note info">
+            <span class="t">Chuyện đằng sau cái tên "v2"</span>
+            Bản v1 chỉ lưu id. Hậu quả: lưu một job từ trang chủ (job đó không có trong danh sách
+            đang tải) thì tab "Đã lưu" trống trơn dù badge vẫn đếm. v2 lưu nguyên object và
+            <b>đổi tên key</b> để không đọc phải dữ liệu v1 cũ.
+        </div>
+
+        <h2>12. Phân quyền theo vai trò</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thứ</th>
+                        <th>Ai thấy / làm được</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Badge "đơn chờ duyệt"</td>
+                        <td>Chỉ <code>venue</code></td>
+                    </tr>
+                    <tr>
+                        <td>Nút "Đơn của tôi" trên header</td>
+                        <td>Chỉ <code>producer</code> / <code>singer</code></td>
+                    </tr>
+                    <tr>
+                        <td>Đăng tin</td>
+                        <td><b>Mọi vai trò</b> — không có ràng buộc</td>
+                    </tr>
+                    <tr>
+                        <td>Ứng tuyển</td>
+                        <td>Ai không phải chủ bài đăng</td>
+                    </tr>
+                    <tr>
+                        <td>Sửa/xoá bài</td>
+                        <td>Chỉ chủ bài đăng (so <code>creator_id</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>Xem người ứng tuyển</td>
+                        <td>Chỉ chủ bài đăng</td>
+                    </tr>
+                    <tr>
+                        <td>Premium</td>
+                        <td>
+                            <b>Không liên quan</b> — feature jobs không có bất kỳ ràng buộc premium
+                            nào
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Ràng buộc phía client không phải bảo mật</span>
+            Route <code>/(jobs)/my-applications</code> không hề được guard theo vai trò. Mọi kiểm
+            tra ở đây là để giao diện hợp lý, <b>không thay thế được kiểm tra phía server</b>.
+        </div>
+
+        <h2>13. Trùng lặp với feature <code>collab</code> — cần biết</h2>
+
+        <div class="note danger">
+            <span class="t">Cùng một API, hai lớp code, hai cache riêng biệt</span>
+            <code>features/collab/</code> cài đặt lại y hệt các endpoint
+            <code>/my-submissions</code>, <code>/posts/me</code>,
+            <code>/posts/{id}/submissions</code>, <code>/submissions/{id}/withdraw</code>,
+            <code>/submissions/{id}/review</code> — với query key <code>collabKeys</code> riêng.
+            <br /><br />
+            <b>Hệ quả thực tế:</b> duyệt một đơn ở <code>JobApplicantsScreen</code> <b>không</b> làm
+            mới cache của màn <code>CollaborationScreen</code>, và ngược lại. Người dùng có thể thấy
+            dữ liệu cũ cho tới khi staleTime hết hạn. <br /><br />
+            Hai module cũng khai báo <code>SubmissionStatus</code> khác nhau: jobs có 7 giá trị,
+            collab chỉ có 4. Xem <a href="collab.html">tài liệu Collab</a>.
+        </div>
+
+        <h2>14. Ghi chú khác</h2>
+
+        <ul>
+            <li>
+                <b>Workaround bàn phím Android.</b>
+                <code>RecruitmentFormScreen</code> ép <code>SOFT_INPUT_ADJUST_NOTHING</code> lúc
+                mount và khôi phục lúc unmount, vì chế độ edge-to-edge chỉ resize cửa sổ một phần,
+                làm sai phép tính chiều cao của <code>KeyboardAwareScrollView</code> và che mất ô
+                nhập cuối.
+            </li>
+            <li>
+                <b><code>GetJobsUseCase</code> chỉ là lớp đệm.</b> Nó gọi thẳng repository, không có
+                logic. Giữ lại để nhất quán kiến trúc.
+            </li>
+            <li>
+                <b>Ép kiểu response.</b> Cả màn tạo bài và modal ứng tuyển đều đọc trường
+                <code>message</code> từ response được khai kiểu <code>Job</code>/<code
+                    >Application</code
+                >
+                thông qua <code>as { message?: string }</code> — dấu hiệu backend thật ra có trả
+                envelope ở các endpoint đó.
+            </li>
+            <li>
+                <b>Nơi khác cũng dùng jobs API.</b>
+                <code>useUnifiedSearch</code> (tìm kiếm gộp) và <code>VenueOpenJobs</code> (tin đang
+                tuyển trên hồ sơ venue). Với venue của người khác, <code>VenueOpenJobs</code> lọc
+                danh sách công khai theo <code>creator_username</code> ở phía client — nên tin nằm
+                ngoài trang 1 sẽ bị bỏ sót.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="profiles.html">← Hồ sơ người dùng</a>
+            <a href="collab.html">Cộng tác →</a>
+        </div>
+    </main>
+</div>

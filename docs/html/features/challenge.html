@@ -1,0 +1,959 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Challenge &amp; Thu âm — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Challenge</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · challenge</span>
+        <h1>Challenge &amp; Phòng thu</h1>
+        <p class="lede">
+            Producer đăng beat, ca sĩ thu âm đè lên beat đó, AI chấm điểm 6 tiêu chí, cộng đồng bình
+            chọn, bảng xếp hạng. Đây là feature <b>native-nặng</b> nhất dự án — thu âm, phát nhạc,
+            quản lý session âm thanh.
+        </p>
+
+        <h2>1. Mô hình nghiệp vụ</h2>
+
+        <div class="note info">
+            <span class="t">"Challenge" chính là "Beat"</span>
+            Không có entity <code>Challenge</code> riêng. Một challenge
+            <b>chính là một <code>Beat</code></b> mà mọi người thu âm đè lên. Endpoint đều là
+            <code>/beats*</code>.
+        </div>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khái niệm</th>
+                        <th>Type</th>
+                        <th>Là gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Beat / Challenge</td>
+                        <td><code>Beat</code></td>
+                        <td>Bản nhạc nền do producer đăng lên</td>
+                    </tr>
+                    <tr>
+                        <td>Bài dự thi</td>
+                        <td><code>BeatEntry</code></td>
+                        <td>Bản thu của một người trên beat đó, kèm điểm AI</td>
+                    </tr>
+                    <tr>
+                        <td>Bình chọn</td>
+                        <td>
+                            <code>vote_count</code> + <code>is_liked</code> trên
+                            <code>BeatEntry</code>
+                        </td>
+                        <td>Không có entity riêng</td>
+                    </tr>
+                    <tr>
+                        <td>Điểm</td>
+                        <td>6 trường số trên <code>BeatEntry</code></td>
+                        <td>Cũng không có entity riêng</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flow">
+            <div class="n hl"><b>1. Producer</b><small>đăng beat</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>2. Ca sĩ</b><small>thu âm đè lên</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>3. AI</b><small>chấm 6 tiêu chí</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>4. Cộng đồng</b><small>bình chọn</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>5. BXH</b><small>podium + rank</small></div>
+        </div>
+
+        <h2>2. Cấu trúc dữ liệu</h2>
+
+        <h3><code>Beat</code></h3>
+
+        <pre><code>{
+    id, title, description,
+    audio_url, cover_image_url,
+    bpm: number, key_signature: string,
+    duration_seconds: number, entry_count: number,
+    genre: string,          <span class="c-com">// legacy = genres[0]</span>
+    genres?: string[],      <span class="c-com">// ưu tiên dùng cho tag UI</span>
+    creator_id, creator_username,
+    creator_display_name?, creator_avatar_url?,
+    is_active: boolean,
+    is_bookmarked?: boolean,     <span class="c-com">// chỉ có khi request kèm token</span>
+    waveform_json?: string,      <span class="c-com">// KHÔNG BAO GIỜ ĐƯỢC ĐỌC — xem mục 6</span>
+    created_at, updated_at
+}</code></pre>
+
+        <h3><code>BeatEntry</code> — 6 tiêu chí điểm</h3>
+
+        <pre><code>{
+    id, beat_id, user_id, username, display_name, avatar_url?,
+    audio_url, created_at,
+
+    <span class="c-com">// 5 tiêu chí thành phần</span>
+    pitch_score:      number,   <span class="c-com">// Cao độ</span>
+    rhythm_score:     number,   <span class="c-com">// Nhịp độ</span>
+    tone_score:       number,   <span class="c-com">// Âm sắc / chất giọng</span>
+    stability_score:  number,   <span class="c-com">// Độ ổn định</span>
+    expression_score: number,   <span class="c-com">// Biểu cảm</span>
+
+    <span class="c-com">// tổng hợp</span>
+    total_score:      number,   <span class="c-com">// điểm gốc</span>
+    normalized_score: number,   <span class="c-com">// điểm đã chuẩn hoá 0–100</span>
+
+    explanation: string,        <span class="c-com">// nhận xét dạng văn bản của AI</span>
+    scoring_status?: <span class="c-str">'pending'</span> | <span class="c-str">'completed'</span> | <span class="c-str">'failed'</span> | <span class="c-str">'scored'</span>,
+    scored_at: string,
+    vote_count: number,
+    is_liked?: boolean          <span class="c-com">// chỉ có khi request kèm token</span>
+}</code></pre>
+
+        <div class="note warn">
+            <span class="t"
+                >Hai cờ boolean phải kiểm tra <code>=== true</code>, không dùng truthy</span
+            >
+            <code>is_bookmarked</code> và <code>is_liked</code>
+            <b>chỉ tồn tại khi request có Bearer token</b>. Thiếu trường nghĩa là "chưa đăng nhập",
+            <b>không phải "false"</b>. Vì vậy <code>isBeatBookmarked()</code> và
+            <code>isEntryLiked()</code> dùng so sánh nghiêm ngặt <code>=== true</code>.
+        </div>
+
+        <h3><code>scoring_status</code> — 4 giá trị, xử lý không đồng nhất</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Giá trị</th>
+                        <th>Ý nghĩa</th>
+                        <th>Giao diện</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>pending</code></td>
+                        <td>AI đang chấm</td>
+                        <td>
+                            Viền vàng, "Đang chờ chấm", điểm hiện <code>—</code>, không bấm được
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>scored</code></td>
+                        <td>Đã chấm xong</td>
+                        <td>Hiện điểm, mở được modal chi tiết</td>
+                    </tr>
+                    <tr>
+                        <td><code>completed</code></td>
+                        <td>Cũng là đã xong</td>
+                        <td>
+                            BXH coi như xong, nhưng
+                            <b><code>MyContentScreen</code> lại hiện "Chưa có điểm"</b> — không nhất
+                            quán
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>failed</code></td>
+                        <td>Chấm lỗi</td>
+                        <td>
+                            <b>Bị lọc khỏi mọi bảng xếp hạng</b> bởi
+                            <code>filterLeaderboardEntries()</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>3. Endpoint</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/beats?page&amp;page_size&amp;genre</code></td>
+                        <td>
+                            <code>genre</code> có thể là chuỗi nhiều thể loại ngăn bởi dấu phẩy →
+                            backend lọc kiểu OR
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/beats/{id}</code></td>
+                        <td>Chi tiết beat</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td>
+                            <code
+                                >/beats/{id}/leaderboard?limit&amp;offset&amp;include_unscored</code
+                            >
+                        </td>
+                        <td>Bảng xếp hạng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/beats</code></td>
+                        <td><b>multipart</b> — tạo beat (xem mục 5)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge del">DELETE</span></td>
+                        <td><code>/beats/{id}</code></td>
+                        <td>Xoá beat của mình</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/beats/{id}/entries</code></td>
+                        <td><b>multipart</b> — nộp bản thu, field <code>audio</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge post">POST</span> /
+                            <span class="badge del">DELETE</span>
+                        </td>
+                        <td><code>/beats/entries/{entryId}/vote</code></td>
+                        <td>Bình chọn. POST body <code>{ vote_type: 'up' }</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge del">DELETE</span></td>
+                        <td><code>/beats/entries/{entryId}</code></td>
+                        <td>Xoá bài dự thi của mình</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/beats/my</code></td>
+                        <td>Beat tôi đã đăng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td>
+                            <code>/beats/entries/my?beat_id&amp;scoring_status</code>
+                        </td>
+                        <td>Bài dự thi của tôi</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge post">POST</span> /
+                            <span class="badge del">DELETE</span>
+                        </td>
+                        <td><code>/beats/{id}/bookmark</code></td>
+                        <td>Lưu / bỏ lưu (idempotent, trả 204)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/beats/bookmarked</code></td>
+                        <td>Beat đã lưu — mọi item có <code>is_bookmarked = true</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <b>Code chết:</b> <span class="badge put">PUT</span> <code>/beats/{id}</code> và
+            <span class="badge get">GET</span> <code>/beats/stats/{userId}</code> được khai báo
+            nhưng <b>không nơi nào gọi</b>.
+        </p>
+
+        <h2>4. Hook &amp; cache</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>Query key</th>
+                        <th>staleTime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useGetBeats</code></td>
+                        <td><code>['beats', params]</code></td>
+                        <td>60 giây</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetBeatById</code></td>
+                        <td><code>['beat', id]</code></td>
+                        <td>60 giây</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetLeaderboard</code></td>
+                        <td>
+                            <code>['beat-leaderboard', id, limit, offset, includeUnscored]</code>
+                        </td>
+                        <td>30 giây</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>useGetMyBeats</code>, <code>useGetMyEntries</code>,
+                            <code>useGetBookmarkedBeats</code>
+                        </td>
+                        <td>
+                            <code>['my-beats']</code>, <code>['my-entries']</code>,
+                            <code>['bookmarked-beats']</code>
+                        </td>
+                        <td>30 giây</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Ba lỗ hổng invalidate — nguồn gốc của "sao chưa thấy cập nhật?"</span>
+            <ul style="margin-bottom: 0; margin-top: 8px">
+                <li>
+                    <b
+                        ><code>submitEntry</code> và <code>createBeat</code> không invalidate gì
+                        cả</b
+                    >
+                    (chúng được gọi trực tiếp, không qua <code>useMutation</code>). Beat/bài dự thi
+                    mới chỉ xuất hiện sau khi staleTime hết hoặc remount.
+                </li>
+                <li>
+                    <b><code>useDeleteEntry</code> chỉ invalidate <code>['my-entries']</code></b> —
+                    nhưng nó được gọi <b>từ bảng xếp hạng</b>. Bảng đang xem sẽ không làm mới.
+                </li>
+                <li>
+                    <b>Không có polling cho <code>pending</code>.</b> Màn kết quả ở trạng thái "đang
+                    chấm" là ngõ cụt — người dùng phải tự thoát và mở lại BXH/MyContent để thấy
+                    điểm.
+                </li>
+            </ul>
+        </div>
+
+        <h2>5. Tạo challenge (đăng beat)</h2>
+
+        <p>Màn <code>CreateChallengeScreen</code> → <code>CreateChallengeForm</code>.</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trường</th>
+                        <th>Bắt buộc</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>✅</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>File audio</td>
+                        <td>✅</td>
+                        <td>
+                            <code>expo-document-picker</code> với
+                            <code>type: 'audio/*'</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>genres</code></td>
+                        <td>✅ (≥ 1)</td>
+                        <td>
+                            Tối đa <b>5</b>; lấy từ <span class="badge get">GET</span>
+                            <code>/users/genres</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Ảnh bìa</td>
+                        <td>—</td>
+                        <td>Crop 1:1, hardcode <code>cover.jpg</code> / <code>image/jpeg</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>bpm</code></td>
+                        <td>—</td>
+                        <td>Mặc định <code>120</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>key_signature</code></td>
+                        <td>—</td>
+                        <td>Mặc định <code>C</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>FormData được ghép theo thứ tự:</p>
+
+        <pre><code>title, description, bpm, key_signature,
+genres, genres, genres, ...   <span class="c-com">// LẶP LẠI field cho mỗi thể loại (theo swagger POST /beats)</span>
+audio,
+cover_image                   <span class="c-com">// nếu có</span></code></pre>
+
+        <div class="note warn">
+            <span class="t">Giới hạn dung lượng chỉ là chữ, không kiểm tra</span>
+            Giao diện ghi "MP3, WAV, M4A tối đa 20MB" và "1:1, JPG/PNG tối đa 5MB", nhưng
+            <b>không có bất kỳ kiểm tra nào phía client</b>. File quá lớn sẽ upload rồi mới bị
+            backend từ chối — lãng phí băng thông và thời gian người dùng.
+        </div>
+
+        <h2>6. Thu âm — toàn bộ pipeline âm thanh</h2>
+
+        <p>
+            Màn <code>RecordScreen</code>. Bộ máy nằm ở <code>StudioDashboard.tsx</code>. Đây là
+            phần phức tạp nhất của cả app.
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Vào màn: dọn dẹp + xin quyền</span>
+                Gọi <code>stopEntry()</code> để tắt bất kỳ bản nghe thử nào từ BXH, rồi
+                <code>Audio.requestPermissionsAsync()</code>. Không được cấp thì hiện toast — nhưng
+                <b>không chặn hẳn</b> việc thu.
+            </li>
+            <li>
+                <span class="h">Chọn chế độ</span>
+                <code>with-beat</code> (thu kèm nhạc nền) hoặc <code>vocal-only</code> (chỉ giọng).
+                Lựa chọn bị ẩn khi đã có bản thu.
+            </li>
+            <li>
+                <span class="h">Đặt chế độ âm thanh cho thu</span>
+                <pre
+                    style="margin: 8px 0; margin-bottom: 0"
+                ><code>Audio.<span class="c-fn">setAudioModeAsync</span>({
+    allowsRecordingIOS: <span class="c-key">true</span>,
+    playsInSilentModeIOS: <span class="c-key">true</span>,
+    playThroughEarpieceAndroid: <span class="c-key">false</span>,   <span class="c-com">// phát ra loa ngoài, không phải loa thoại</span>
+});</code></pre>
+            </li>
+            <li>
+                <span class="h">Nạp beat nền (nếu chế độ <code>with-beat</code>)</span>
+                <code
+                    >Audio.Sound.createAsync({uri}, { shouldPlay: false, isLooping: true, volume:
+                    0.7 })</code
+                >. Nạp ở trạng thái <b>tạm dừng</b>, <b>lặp vô hạn</b>, âm lượng <b>70%</b> để không
+                át giọng.
+            </li>
+            <li>
+                <span class="h">Chốt chặn huỷ giữa chừng</span>
+                Người dùng có thể bấm dừng khi beat còn đang tải. Code kiểm tra
+                <code>isProcessing.current</code> và nếu đã bị huỷ thì unload beat rồi thoát.
+            </li>
+            <li>
+                <span class="h">Bắt đầu ghi</span>
+                <code
+                    >Audio.Recording.createAsync(RecordingOptionsPresets.HIGH_QUALITY, statusCb,
+                    100)</code
+                >
+                — callback trạng thái mỗi <b>100 ms</b>, đẩy <code>durationMillis</code> lên màn cha
+                để hiện đồng hồ.
+            </li>
+            <li>
+                <span class="h">Phát beat SAU khi mic đã mở</span>
+                <code>playAsync()</code> được gọi <i>sau</i> khi recorder khởi tạo xong.
+            </li>
+            <li>
+                <span class="h">Dừng, lấy file, khôi phục chế độ âm thanh</span>
+                <code>stopAndUnloadAsync()</code> → <code>getURI()</code> → lưu
+                <code>{ uri, name: 'soundspal-entry-{beatId}.m4a', type: 'audio/m4a' }</code> →
+                unload beat → đặt lại <code>allowsRecordingIOS: false</code>.
+            </li>
+        </ol>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thông số ghi âm</th>
+                        <th>iOS</th>
+                        <th>Android</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Định dạng</td>
+                        <td><code>.m4a</code> / MPEG4AAC / quality MAX</td>
+                        <td><code>.m4a</code> / MPEG_4 + AAC</td>
+                    </tr>
+                    <tr>
+                        <td>Chất lượng</td>
+                        <td colspan="2">44 100 Hz · 2 kênh · 128 kbps</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Đồng bộ giọng với beat là "gần đúng", không phải chính xác</span>
+            Không có bù trễ (latency compensation), không có mốc thời gian, và
+            <b>không gửi offset nào lên server</b>. Cơ chế duy nhất là "mở mic xong thì phát beat
+            ngay". Độ lệch giữa giọng và nhạc <b>chưa được đo và chưa được xử lý</b>. <br /><br />
+            Ngoài ra beat được đặt <code>isLooping: true</code>, nên thu dài hơn beat sẽ nghe thấy
+            nhạc lặp lại.
+        </div>
+
+        <div class="note danger">
+            <span class="t">Dạng sóng trên màn thu là GIẢ hoàn toàn</span>
+            <code>WaveformCanvas.tsx</code> có một mảng <b>25 thanh với chiều cao hardcode</b>. Khi
+            đang thu, một <code>setInterval</code> mỗi 120 ms gán cho mỗi thanh một
+            <code>scaleY</code> <b>ngẫu nhiên</b> trong khoảng 0.3–1.4. <br /><br />
+            Không có FFT, không đọc metering (dù
+            <code>isMeteringEnabled: true</code> đã bật trong preset), và
+            <code>Beat.waveform_json</code> từ server <b>không bao giờ được đọc</b>. Dạng sóng thuần
+            tuý là hiệu ứng thị giác.
+        </div>
+
+        <h3>Tải bản thu có sẵn thay vì ghi</h3>
+
+        <p>
+            Người dùng có thể chọn file audio đã thu ở nơi khác.
+            <code>ACCEPTED_UPLOAD_AUDIO_EXTENSIONS</code> cho phép:
+            <code>mp3, wav, flac, m4a, ogg, aac</code>. MIME lấy từ picker, nếu thiếu thì đoán theo
+            phần mở rộng (comment ghi rõ: "backend đọc bằng đuôi, không bắt buộc chuẩn").
+        </p>
+
+        <h2>7. Nộp bài &amp; chấm điểm AI</h2>
+
+        <pre><code><span class="c-key">const</span> formData = <span class="c-key">new</span> <span class="c-fn">FormData</span>();
+formData.<span class="c-fn">append</span>(<span class="c-str">'audio'</span>, { uri, name, type });   <span class="c-com">// ĐÚNG MỘT field</span>
+
+<span class="c-key">await</span> challengeApi.<span class="c-fn">submitEntry</span>(beat.id, formData);   <span class="c-com">// POST /beats/{id}/entries</span></code></pre>
+
+        <p>
+            Body chỉ có file audio — không gửi <code>explanation</code>, không gửi chế độ thu, không
+            gửi thời lượng. Beat id nằm trong đường dẫn.
+        </p>
+
+        <p>
+            Xong thì điều hướng sang màn kết quả,
+            <b>truyền cả object <code>BeatEntry</code> dưới dạng chuỗi JSON qua route param</b>:
+        </p>
+
+        <pre><code>router.<span class="c-fn">push</span>({
+    pathname: <span class="c-str">'/(challenge)/result'</span>,
+    params: { data: <span class="c-fn">JSON.stringify</span>(entry), beatId: beat.id },
+});</code></pre>
+
+        <div class="note warn">
+            <span class="t">Truyền dữ liệu qua param có giới hạn</span>
+            <code>explanation</code> của AI có thể dài, làm phình chuỗi param. Cách sạch hơn là
+            truyền <code>entryId</code> rồi fetch lại — nhưng hiện tại không có endpoint lấy một
+            entry.
+        </div>
+
+        <h3>Chấm điểm là bất đồng bộ, phía server</h3>
+
+        <p>
+            App <b>không biết gì</b> về cách AI chấm. Nó chỉ quan sát qua
+            <code>scoring_status</code> và các trường điểm. Màn "đang chờ" ghi rõ:
+            <i>"AI đang phân tích cao độ, nhịp độ và cảm xúc trong bản thu của bạn"</i>. BXH gọi
+            điểm là "Điểm AI", và modal chi tiết hiển thị <code>explanation</code> dưới nhãn "Nhận
+            xét AI".
+        </p>
+
+        <h2>8. Màn kết quả</h2>
+
+        <p>Hai trạng thái:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khi</th>
+                        <th>Hiển thị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>scoring_status === 'pending'</code></td>
+                        <td>
+                            Spinner + "Hệ Thống Đang Chấm Điểm" + nút sang BXH / quay về phòng thu
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Còn lại</td>
+                        <td>Điểm chữ + điểm số + 4 ô chi tiết</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Thang điểm chữ</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hạng</th>
+                        <th>S+</th>
+                        <th>S</th>
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                        <th>D</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th><code>total_score</code></th>
+                        <td>≥ 95</td>
+                        <td>≥ 90</td>
+                        <td>≥ 80</td>
+                        <td>≥ 70</td>
+                        <td>≥ 60</td>
+                        <td>&lt; 60</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Màn kết quả chỉ hiện 4/6 tiêu chí</span>
+            Cao Độ (<code>pitch</code>), Nhịp Độ (<code>rhythm</code>), Cảm Xúc
+            (<code>expression</code>), Âm Sắc (<code>tone</code>).
+            <br />
+            <b
+                ><code>stability_score</code>, <code>normalized_score</code> và
+                <code>explanation</code> chỉ xuất hiện trong <code>ScoreDetailModal</code></b
+            >
+            ở bảng xếp hạng. Người dùng vừa nộp bài sẽ không thấy nhận xét AI ngay tại màn kết quả.
+        </div>
+
+        <p>
+            Nút <b>"Chia sẻ"</b> ở màn này <b>không có <code>onPress</code></b> — giao diện chết.
+        </p>
+
+        <h2>9. Bảng xếp hạng &amp; bình chọn</h2>
+
+        <p>
+            <code>LeaderboardScreen</code> gọi <code>useGetLeaderboard(id, 50, 0, true)</code> — 50
+            mục, tính cả bài chưa chấm. Sau đó <code>filterLeaderboardEntries()</code>
+            <b>loại bỏ mọi bài <code>failed</code></b
+            >.
+        </p>
+
+        <ul>
+            <li>
+                <code>Podium</code> — 3 hạng đầu, sắp xếp thị giác theo thứ tự 2-1-3, hạng 1 cao
+                hơn.
+            </li>
+            <li>
+                <code>RankList</code> — từ hạng 4 trở đi. Bài <code>scored</code> hiện phụ đề
+                <code>KHỚP {rhythm_score}%</code>.
+            </li>
+            <li>
+                Chủ bài dự thi thấy <b>nút xoá thay cho nút bình chọn</b> — nên không thể tự vote
+                cho mình (chặn bằng giao diện, không phải bằng API).
+            </li>
+            <li>Avatar thiếu thì dùng dịch vụ sinh ảnh từ <code>username</code>.</li>
+        </ul>
+
+        <h3>Cơ chế bình chọn — đọc trạng thái từ cache</h3>
+
+        <div class="note info">
+            <span class="t">Vì sao <code>useEntryVotes</code> không dùng local state?</span>
+            Comment trong code giải thích: bản dùng state cục bộ
+            <b>mất trạng thái đã like khi unmount</b>, và cache 30 giây vẫn giữ dữ liệu
+            <i>trước khi vote</i> nên render lại thành chưa like. Giải pháp: đọc và ghi thẳng vào
+            cache React Query.
+        </div>
+
+        <p>Luồng vote (optimistic):</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Chưa đăng nhập → đẩy sang màn login</span>
+            </li>
+            <li>
+                <span class="h">Cập nhật cache ngay lập tức</span>
+                <code>patchLeaderboardCache()</code> dùng <code>setQueriesData</code> + predicate để
+                sửa <b>mọi cache</b> có <code>queryKey[0] === 'beat-leaderboard'</code>. Nhờ đó
+                modal chi tiết và danh sách nền luôn đồng bộ.
+            </li>
+            <li>
+                <span class="h">Gọi API</span>
+                <span class="badge post">POST</span> hoặc <span class="badge del">DELETE</span>
+                <code>/beats/entries/{id}/vote</code>.
+            </li>
+            <li>
+                <span class="h">Lỗi → hoàn tác cache + toast "Không thể bình chọn."</span>
+                <code>applyEntryLikeToggle()</code> điều chỉnh <code>vote_count</code> ±1 và
+                <b>chặn dưới ở 0</b>.
+            </li>
+        </ol>
+
+        <p>
+            <code>ScoreDetailModal</code> hiển thị: vòng tròn tiến độ SVG (giá trị
+            <code>normalized_score || total_score</code>, giới hạn 0–100), điểm gốc,
+            <b>5 bong bóng tiêu chí</b> (đủ cả <code>stability</code>), nhận xét AI, và các ô thống
+            kê số vote / trạng thái chấm / thời điểm chấm.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Logic vote bị viết hai lần</span>
+            <code>ScoreDetailModal</code> <b>tự cài đặt lại</b> luồng vote với state
+            <code>liked</code>/<code>voteCount</code> riêng thay vì dùng <code>useEntryVotes</code>.
+            Hai bản cùng ghi vào một cache nên vẫn nhất quán, nhưng là hai nguồn sự thật cho cùng
+            một hành vi — nên hợp nhất.
+        </div>
+
+        <h2>10. <code>audioStore</code> — máy trạng thái âm thanh</h2>
+
+        <p>Một Zustand store toàn cục với <b>hai player độc lập nhưng loại trừ lẫn nhau</b>:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Làn</th>
+                        <th>Trạng thái</th>
+                        <th>Dùng cho</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Beat</b></td>
+                        <td>
+                            <code
+                                >currentBeat, soundObject, isPlaying, isLoading, progress,
+                                duration</code
+                            >
+                        </td>
+                        <td>Nghe beat ở trang khám phá, chi tiết, MiniPlayer</td>
+                    </tr>
+                    <tr>
+                        <td><b>Entry</b></td>
+                        <td>
+                            <code>currentEntry, entrySound, isEntryPlaying, isEntryLoading</code>
+                        </td>
+                        <td>Nghe thử bài dự thi ở bảng xếp hạng</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Quy tắc chuyển trạng thái:</p>
+        <ul>
+            <li>
+                <code>playBeat(beat)</code> <b>luôn <code>stopEntry()</code> trước</b> — hai làn
+                không bao giờ phát cùng lúc.
+            </li>
+            <li>Bấm lại đúng beat/entry đang phát thì chuyển thành pause/resume, không nạp lại.</li>
+            <li>
+                <code>stop()</code> đặt <code>currentBeat = null</code> —
+                <b>đây chính là điều kiện khiến MiniPlayer biến mất</b>.
+            </li>
+            <li>
+                Kết thúc bài (<code>didJustFinish</code>) → dừng và
+                <code>progress = 0</code>.
+            </li>
+        </ul>
+
+        <p>
+            <b>Code chết trong store:</b> <code>setVolume()</code> và <code>stopAll()</code> không
+            có nơi nào gọi.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Beat nền lúc thu âm KHÔNG nằm trong store này</span>
+            <code>StudioDashboard</code> giữ beat nền và bản nghe thử trong <code>useRef</code> cục
+            bộ. Nên phòng thu <b>nằm ngoài máy trạng thái</b> — đó là lý do nó phải tự gọi
+            <code>stopEntry()</code> lúc mount.
+        </div>
+
+        <h2>11. Đánh dấu beat</h2>
+
+        <p>
+            <code>BeatBookmarkButton</code> — khác với bookmark job/blog, cái này
+            <b>gọi API trước rồi mới đổi giao diện</b> (không optimistic), theo đúng cách bản web
+            làm.
+        </p>
+
+        <p>
+            Thành công thì invalidate cả 4 key: <code>['bookmarked-beats']</code>,
+            <code>['beats']</code>, <code>['beat']</code>, <code>['my-beats']</code> — để cờ
+            <code>is_bookmarked</code> đồng bộ ở mọi màn.
+        </p>
+
+        <p>
+            Trạng thái ban đầu đọc bằng <code>isBeatBookmarked(beat)</code> (so
+            <code>=== true</code>), và có <code>useEffect</code> đồng bộ lại khi prop
+            <code>beat</code> đổi.
+        </p>
+
+        <h2>12. Màn nội dung của tôi</h2>
+
+        <p>
+            Route <code>/(challenge)/myContent?tab=beats|entries|saved</code>. Ba tab, mỗi tab tải
+            50 mục:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Nội dung</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>beats</code></td>
+                        <td>Beat tôi đã đăng</td>
+                        <td>Bấm để nghe · xoá</td>
+                    </tr>
+                    <tr>
+                        <td><code>entries</code></td>
+                        <td>Bài dự thi của tôi</td>
+                        <td>Bấm mở modal điểm · xoá</td>
+                    </tr>
+                    <tr>
+                        <td><code>saved</code></td>
+                        <td>Beat đã lưu</td>
+                        <td>Bấm mở chi tiết · bấm ảnh bìa để nghe · bỏ lưu</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Dải thống kê phía trên đếm: số beat, số bài dự thi, và số bài
+            <b>có <code>scoring_status === 'scored'</code> và <code>total_score &gt; 0</code></b> —
+            đây là chỗ <code>completed</code> bị bỏ sót (xem mục 2).
+        </p>
+
+        <div class="note info">
+            <span class="t">Toàn bộ màn này dùng StyleSheet</span>
+            981 dòng, không có NativeWind. Khác biệt so với phần còn lại của app — nếu sửa, cần biết
+            trước để không trộn lẫn hai phong cách.
+        </div>
+
+        <h2>13. Setup &amp; quyền</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hạng mục</th>
+                        <th>Hiện trạng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Quyền micro Android</td>
+                        <td>
+                            <code>RECORD_AUDIO</code> được <code>expo-av</code> autolink → hoạt động
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Quyền micro iOS</td>
+                        <td>
+                            <b>Chưa khai <code>NSMicrophoneUsageDescription</code></b> trong
+                            <code>app.json</code> — <b>cần bổ sung trước khi submit App Store</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Plugin trong <code>app.json</code></td>
+                        <td>
+                            <code>expo-av</code>, <code>expo-image-picker</code>,
+                            <code>expo-document-picker</code> <b>không có</b> trong mảng
+                            <code>plugins</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Backend</td>
+                        <td>
+                            Cần dịch vụ chấm điểm AI ở phía server — app không tham gia phần này
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Lưu trữ</td>
+                        <td>
+                            File audio đi thẳng vào <code>/beats</code> và
+                            <code>/beats/{id}/entries</code>, backend lo lưu trữ
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>14. Upload — vì sao dùng fetch</h2>
+
+        <p>
+            Cả <code>createBeat</code> và <code>submitEntry</code> đều đi qua
+            <code>postMultipartWithFetch()</code>, <b>không dùng axios</b>. Comment trong datasource
+            ghi rõ nguyên nhân:
+            <i
+                >"axios 1.x trên RN gửi FormData rỗng → ERR_NETWORK. Đây là lý do nộp bài/tải beat
+                trước đây thất bại."</i
+            >
+        </p>
+
+        <p>
+            Đặc điểm đường fetch: timeout 120 giây, tự sinh boundary, và
+            <b>không đi qua interceptor refresh 401</b>.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Rủi ro tiềm ẩn: không bóc envelope</span>
+            <code>unwrapUploadPayload()</code> có sẵn để bóc lớp
+            <code>{code, message, data}</code> nhưng datasource của challenge
+            <b>không gọi nó</b> (chỉ profiles dùng). Nếu backend đổi sang trả envelope cho
+            <code>/beats</code>, màn kết quả sẽ nhận nguyên envelope và mọi điểm hiện
+            <code>0</code>/<code>NaN</code>.
+        </div>
+
+        <h2>15. Tóm tắt điểm cần cải thiện</h2>
+
+        <ul>
+            <li>Thiếu polling cho <code>scoring_status = pending</code></li>
+            <li><code>submitEntry</code>/<code>createBeat</code> không invalidate cache</li>
+            <li><code>useDeleteEntry</code> không làm mới bảng xếp hạng đang xem</li>
+            <li>Dạng sóng giả — có thể dùng metering thật hoặc <code>waveform_json</code></li>
+            <li>Đồng bộ giọng/beat chưa có bù trễ</li>
+            <li>Không kiểm tra dung lượng file dù giao diện có ghi giới hạn</li>
+            <li>Nút "Chia sẻ" ở màn kết quả chưa gắn hành động</li>
+            <li>Logic vote bị viết hai lần</li>
+            <li>
+                <code>MyContentScreen</code> gọi <code>useAudioStore.getState()</code> ngay trong
+                render — đọc không phản ứng, sẽ không re-render khi trạng thái đổi
+            </li>
+            <li>
+                Nhãn sai: <code>beatDetail/HeroSection</code> hiển thị
+                <code>duration_seconds</code> dưới nhãn "LƯỢT NGHE"
+            </li>
+            <li>
+                <b>Tài liệu cũ đã lỗi thời:</b> <code>docs/features/challenge.md</code> không còn
+                khớp code (mô tả sai tên param, sai FormData, thiếu toàn bộ nhóm endpoint bookmark)
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="blog.html">← Blog</a>
+            <a href="explore-home-search.html">Khám phá · Trang chủ · Tìm kiếm →</a>
+        </div>
+    </main>
+</div>

@@ -1,0 +1,687 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Thanh toán Premium (PayOS) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Thanh toán Premium</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · payments</span>
+        <h1>Thanh toán Premium (PayOS)</h1>
+        <p class="lede">
+            Nâng cấp tài khoản lên Premium qua cổng PayOS/VietQR. Chỉ có 3 endpoint và 1 màn hình,
+            nhưng là feature <b>khó làm đúng nhất</b> — vì luồng tiền đi qua trình duyệt ngoài rồi
+            mới quay lại app, và trạng thái thật lại đến từ webhook chứ không phải từ app.
+        </p>
+
+        <h2>1. Nguyên tắc nền tảng</h2>
+
+        <div class="note danger">
+            <span class="t">App KHÔNG bao giờ xử lý tiền</span>
+            App chỉ làm ba việc: xin backend một <code>checkout_url</code>, mở URL đó bằng trình
+            duyệt hệ thống, rồi <b>hỏi lại trạng thái</b>. Nó không giữ khoá PayOS, không xác minh
+            chữ ký, và <b>tuyệt đối không được tin</b> kết quả từ URL redirect. <br /><br />
+            <b>Nguồn sự thật duy nhất là webhook PayOS → backend.</b> Mọi thứ app hiển thị chỉ là
+            phản chiếu của trạng thái server.
+        </div>
+
+        <div class="flow">
+            <div class="n hl"><b>1. App</b><small>POST /payments/checkout</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>2. Backend</b><small>tạo link PayOS</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>3. Trình duyệt</b><small>VietQR</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>4. PayOS</b><small>webhook → backend</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>5. App</b><small>deep link + poll</small></div>
+        </div>
+
+        <h2>2. Bảng giá</h2>
+
+        <p>Khai báo cứng trong <code>features/payments/domain/constants/payment.ts</code>:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Gói</th>
+                        <th>Giá</th>
+                        <th><code>description</code></th>
+                        <th>Thời hạn</th>
+                        <th>Khuyến mãi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>monthly</code></td>
+                        <td>49 000 ₫</td>
+                        <td><code>Soundspal Premium 1M</code></td>
+                        <td>30 ngày</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><code>yearly</code> <b>(mặc định)</b></td>
+                        <td>490 000 ₫</td>
+                        <td><code>Soundspal Premium 1Y</code></td>
+                        <td>365 ngày</td>
+                        <td>= 10× giá tháng → tặng 2 tháng (~17%)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Hai ràng buộc cứng của bảng giá này</span>
+            <b>1. Phải khớp bảng giá server.</b> Payment-service re-validate
+            <code>amount</code> theo <code>billing_period</code> và từ chối nếu lệch — chống sửa giá
+            từ client. Đổi giá ở đây mà quên đổi bên server thì mọi giao dịch fail. <br /><br />
+            <b>2. <code>description</code> phải ≤ 25 ký tự ASCII không dấu.</b> PayOS dùng chuỗi này
+            làm nội dung chuyển khoản VietQR. Dài hơn hoặc có dấu tiếng Việt →
+            <code>CreatePaymentLink</code> thất bại ngay từ phía backend.
+        </div>
+
+        <h2>3. Endpoint</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Body / Params</th>
+                        <th>Trả về</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/payments/checkout</code></td>
+                        <td>
+                            <code
+                                >purpose, amount, billing_period, description, reference_id,
+                                redirect_url, cancel_url</code
+                            >
+                        </td>
+                        <td><code>{ checkout_url }</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/payments/history</code></td>
+                        <td><code>limit</code>, <code>offset</code></td>
+                        <td>Danh sách giao dịch (nhiều dạng bọc — xem mục 7)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/payments/status/{orderCode}</code></td>
+                        <td>—</td>
+                        <td>Trạng thái giao dịch</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Body tạo checkout</h3>
+
+        <pre><code>{
+    purpose: <span class="c-str">'ACCOUNT_UPGRADE'</span>,
+    amount: <span class="c-num">490000</span>,
+    billing_period: <span class="c-str">'yearly'</span>,
+    description: <span class="c-str">'Soundspal Premium 1Y'</span>,
+    reference_id: user.id,                                  <span class="c-com">// ai được nâng cấp</span>
+    redirect_url: <span class="c-str">'soundspal:///(payments)/premium'</span>,
+    cancel_url:   <span class="c-str">'soundspal:///(payments)/premium?cancel=1'</span>
+}</code></pre>
+
+        <p>
+            Hàm dựng body là
+            <code>buildPremiumUpgradeCheckoutRequest(userId, billingPeriod, urls)</code> — nó tự lấy
+            <code>amount</code> và <code>description</code> từ <code>PREMIUM_PLANS</code>, nên không
+            có chỗ nào nhập tay giá.
+        </p>
+
+        <p>
+            <code>redirect_url</code> sinh bằng
+            <code>ExpoLinking.createURL('/(payments)/premium')</code>, dựa trên
+            <code>"scheme": "soundspal"</code> trong <code>app.json</code>.
+        </p>
+
+        <h2>4. Luồng thanh toán đầy đủ</h2>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Người dùng mở màn Premium</span>
+                <code>/(payments)/premium</code>. Màn đọc trạng thái premium hiện tại từ
+                <code>useGetCurrentUser()</code> và tải lịch sử giao dịch (<code>limit: 20</code>).
+            </li>
+            <li>
+                <span class="h">Chọn gói và bấm nâng cấp</span>
+                Nhãn nút tự đổi theo trạng thái: <b>"Nâng cấp Premium"</b> (chưa từng mua) hoặc
+                <b>"Gia hạn Premium"</b> (đang có hoặc đã hết hạn).
+            </li>
+            <li>
+                <span class="h">
+                    <span class="badge post">POST</span> <code>/payments/checkout</code>
+                </span>
+                Backend gọi PayOS <code>CreatePaymentLink</code> và trả <code>checkout_url</code>.
+                Datasource ném lỗi ngay nếu thiếu trường này. <br /><br />
+                Đồng thời reset trạng thái cục bộ: <code>pollCount = 0</code>,
+                <code>pollBudgetExhausted = false</code>, <code>payosReturnStatus = null</code>.
+            </li>
+            <li>
+                <span class="h">Mở PayOS bằng trình duyệt ngoài</span>
+                <code>Linking.openURL(checkoutUrl)</code> — <b>không dùng WebView</b>. Người dùng
+                thấy trang PayOS với mã VietQR.
+                <div class="note info" style="margin-top: 10px; margin-bottom: 0">
+                    Dùng trình duyệt hệ thống thay vì WebView có 3 lợi ích: người dùng thấy thanh
+                    địa chỉ thật (tin tưởng hơn), app ngân hàng mở được từ đó, và không phải chịu
+                    trách nhiệm bảo mật cho trang thanh toán.
+                </div>
+            </li>
+            <li>
+                <span class="h">Người dùng quét QR và chuyển khoản</span>
+                Ngân hàng xử lý. App lúc này đang ở nền, không biết gì.
+            </li>
+            <li>
+                <span class="h">PayOS gọi webhook backend — <b>đường chính</b></span>
+                Backend xác minh chữ ký bằng Checksum Key rồi set
+                <code>is_premium = true</code> và
+                <code>premium_expired_at = now + 30/365 ngày</code>.
+            </li>
+            <li>
+                <span class="h">PayOS chuyển hướng về app — <b>đường phụ</b></span>
+                Deep link kèm <code>orderCode</code> và <code>status</code>.
+                <code>parsePayOSReturnUrl()</code> đọc chúng.
+            </li>
+            <li>
+                <span class="h">App poll trạng thái</span>
+                Cứ 2 giây một lần, tối đa 10 lần (~20 giây). Chi tiết ở mục 6.
+            </li>
+            <li>
+                <span class="h">Thành công → làm mới quyền lợi</span>
+                Invalidate <code>userKeys.all</code> + <code>paymentKeys.all</code>. Lần
+                <span class="badge get">GET</span> <code>/users/me</code> tiếp theo trả về cờ
+                premium mới, huy hiệu Crown xuất hiện khắp app.
+            </li>
+        </ol>
+
+        <h2>5. Đọc kết quả từ deep link</h2>
+
+        <p>
+            <code>parsePayOSReturnUrl(url)</code> phải chịu đựng khá nhiều biến thể vì PayOS (và bản
+            web) không nhất quán:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tham số</th>
+                        <th>Các tên có thể gặp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mã đơn</td>
+                        <td>
+                            <code>orderCode</code> · <code>order_code</code> · <code>order</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Trạng thái</td>
+                        <td>
+                            <code>status</code> · <code>payment_status</code> ·
+                            <code>paymentStatus</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Quy ước thành công</td>
+                        <td><code>code=00</code> cũng nghĩa là đã trả tiền</td>
+                    </tr>
+                    <tr>
+                        <td>Quy ước huỷ</td>
+                        <td><code>cancel=1</code> hoặc <code>cancel=true</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Nếu <code>new URL()</code> ném lỗi (URL không chuẩn), hàm rơi xuống phương án dò bằng
+            regex. Mã đơn luôn được chuẩn hoá qua <code>normalizePayOSOrderCode()</code> — chỉ chấp
+            nhận <b>chuỗi toàn chữ số</b>, ngược lại trả <code>null</code>.
+        </p>
+
+        <h3>Chuẩn hoá trạng thái</h3>
+
+        <p>
+            <code>normalizePaymentStatus()</code> gom hàng chục biến thể về 5 giá trị. Nó chuyển chữ
+            thường, thay ký tự đặc biệt bằng <code>_</code>, rồi thử khớp cả bản có và không có gạch
+            dưới:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Chuẩn hoá thành</th>
+                        <th>Nhận các giá trị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>success</code></td>
+                        <td>
+                            <code
+                                >success, succeeded, paid, completed, complete, payment_success,
+                                payment_paid</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>pending</code></td>
+                        <td>
+                            <code
+                                >pending, processing, created, waiting, open, payment_pending</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>failed</code></td>
+                        <td>
+                            <code
+                                >failed, failure, error, expired, timeout, payment_failed,
+                                payment_error</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>cancelled</code></td>
+                        <td>
+                            <code
+                                >cancelled, canceled, cancel, payment_cancelled,
+                                payment_canceled</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>unknown</code></td>
+                        <td>Còn lại</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <code>isPaymentTerminal(status)</code> trả <code>true</code> cho <code>success</code>,
+            <code>failed</code>, <code>cancelled</code> — tức là "hết chuyện, ngừng poll".
+        </p>
+
+        <h2>6. Cơ chế poll trạng thái</h2>
+
+        <pre><code>PAYMENT_STATUS_POLL_INTERVAL_MS = <span class="c-num">2000</span>   <span class="c-com">// 2 giây/lần</span>
+PAYMENT_STATUS_MAX_POLLS        = <span class="c-num">10</span>     <span class="c-com">// tối đa 10 lần → ~20 giây</span>
+PAYMENT_STATUS_STALE_TIME_MS    = <span class="c-num">2000</span></code></pre>
+
+        <p>Ba cơ chế chạy song song để bắt được trạng thái cuối cùng:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Cơ chế</th>
+                        <th>Hoạt động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Poll định kỳ</b></td>
+                        <td>
+                            <code>setInterval</code> 2 giây gọi <code>refetchPaymentStatus()</code>.
+                            Dừng khi trạng thái đã terminal hoặc hết 10 lần
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Listener AppState</b></td>
+                        <td>
+                            Mỗi lần app quay lại <code>active</code> (người dùng chuyển từ trình
+                            duyệt về) thì refetch ngay, không đợi tới nhịp poll
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Deep link params</b></td>
+                        <td>
+                            Nếu URL mang <code>status</code> terminal thì dùng luôn, không cần chờ
+                            poll
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Hết hạn mức poll</h3>
+
+        <p>
+            Sau 10 lần mà vẫn <code>pending</code>, <code>pollBudgetExhausted</code> được bật và app
+            hiện màn <b>"đang xử lý"</b> — không báo thất bại. Lý do: webhook PayOS có thể tới muộn
+            hơn 20 giây, và premium vẫn sẽ được kích hoạt sau đó.
+        </p>
+
+        <h3>Retry riêng cho lỗi 404</h3>
+
+        <pre><code>retry: (failureCount, error) =&gt;
+    <span class="c-fn">isPaymentStatusNotFoundError</span>(error)
+        ? failureCount &lt; <span class="c-num">8</span>    <span class="c-com">// 404: giao dịch chưa kịp ghi vào DB → thử lại nhiều</span>
+        : failureCount &lt; <span class="c-num">1</span>,   <span class="c-com">// lỗi khác: chỉ thử lại 1 lần</span>
+retryDelay: (attemptIndex) =&gt; Math.<span class="c-fn">min</span>(<span class="c-num">3000</span> * (attemptIndex + <span class="c-num">1</span>), <span class="c-num">15000</span>),</code></pre>
+
+        <p>
+            Thông báo hiển thị cho 404 cũng được viết riêng:
+            <i>"Giao dịch đang được xác nhận. Vui lòng đợi vài giây rồi thử lại."</i> — chứ không
+            phải "không tìm thấy".
+        </p>
+
+        <h2>7. Khi không có <code>orderCode</code></h2>
+
+        <p>
+            Trường hợp thật hay xảy ra: người dùng đóng trình duyệt sau khi chuyển khoản, rồi tự mở
+            lại app. Không có deep link → không có <code>orderCode</code> → không biết hỏi trạng
+            thái của đơn nào.
+        </p>
+
+        <pre><code><span class="c-key">export async function</span> <span class="c-fn">resolvePaymentOrderCodeFromHistory</span>(preferred?) {
+    <span class="c-key">if</span> (preferred?.<span class="c-fn">trim</span>()) <span class="c-key">return</span> preferred.<span class="c-fn">trim</span>();
+
+    <span class="c-key">try</span> {
+        <span class="c-key">const</span> response = <span class="c-key">await</span> paymentRepository.<span class="c-fn">getHistory</span>({ limit: <span class="c-num">10</span>, offset: <span class="c-num">0</span> });
+        <span class="c-key">return</span> <span class="c-fn">extractLatestOrderCodeFromHistory</span>(response.data);
+    } <span class="c-key">catch</span> {
+        <span class="c-key">return</span> <span class="c-key">null</span>;   <span class="c-com">// thất bại thì im lặng, không làm hỏng màn hình</span>
+    }
+}</code></pre>
+
+        <div class="note warn">
+            <span class="t">Bọc envelope hai lớp — một lỗi đã từng xảy ra</span>
+            Backend trả <code>envelope.data = { data: [...] }</code>, tức mảng nằm sâu
+            <b>hai lớp</b>. Ban đầu code chỉ dò các khoá
+            <code>items / transactions / payments / records</code> nên
+            <b>lịch sử giao dịch luôn rỗng</b> dù backend có trả dữ liệu. Sửa bằng cách thêm
+            <code>'data'</code> vào danh sách khoá dò — giống cách bản web dùng
+            <code>data?.data</code>.
+        </div>
+
+        <p>
+            <code>parsePaymentHistoryItems()</code> cũng rất phòng thủ: chấp nhận mảng trần hoặc
+            object bọc, bỏ qua phần tử không có <code>id</code>, ép kiểu từng trường (<code
+                >Number(amount) || 0</code
+            >, <code>String(...)</code>), và nhận cả <code>created_at</code> lẫn
+            <code>createdAt</code>.
+        </p>
+
+        <h2>8. Trạng thái Premium — đọc thế nào cho đúng</h2>
+
+        <div class="note danger">
+            <span class="t">Không được tin mỗi cờ <code>is_premium</code></span>
+            Backend để <code>is_premium = true</code> <b>cho tới lần quét dọn kế tiếp</b>, kể cả khi
+            gói đã hết hạn. Nếu chỉ đọc cờ này, người dùng hết hạn vẫn thấy huy hiệu và vẫn tưởng
+            mình có quyền lợi.
+        </div>
+
+        <p><code>shared/domain/utils/premium.ts</code> giải quyết bằng 3 trạng thái:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trạng thái</th>
+                        <th>Điều kiện</th>
+                        <th>Giao diện</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>none</code></td>
+                        <td><code>!is_premium</code> hoặc không có ngày hết hạn</td>
+                        <td>"Nâng cấp Premium"</td>
+                    </tr>
+                    <tr>
+                        <td><code>active</code></td>
+                        <td>
+                            <code>is_premium === true</code> <b>VÀ</b>
+                            <code>premium_expired_at &gt; now</code>
+                        </td>
+                        <td>Huy hiệu Crown + "Có hiệu lực đến {ngày}"</td>
+                    </tr>
+                    <tr>
+                        <td><code>expired</code></td>
+                        <td><code>is_premium === true</code> nhưng đã quá hạn</td>
+                        <td>"Premium đã hết hạn" + nút gia hạn</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <pre><code><span class="c-fn">isPremiumActive</span>(user)  <span class="c-com">// chỉ true khi getPremiumState(user) === 'active'</span></code></pre>
+
+        <p>
+            Nơi dùng: <code>PremiumScreen</code>, <code>PersonalScreen</code>, và badge trên hồ sơ
+            nghệ sĩ/venue.
+        </p>
+
+        <div class="note info">
+            <span class="t">Phương án dự phòng cho backend cũ</span>
+            <code>PremiumScreen</code> và <code>PersonalScreen</code> kiểm tra
+            <code>currentUser?.is_premium !== undefined</code> trước. Nếu backend chưa trả hai
+            trường mới, chúng quay về đọc <code>tier === 'premium'</code>. Khi mọi service đã trả
+            <code>is_premium</code> + <code>premium_expired_at</code>, có thể gỡ nhánh này.
+        </div>
+
+        <h2>9. Giao diện màn Premium</h2>
+
+        <p>Màu sắc trạng thái được ánh xạ trong <code>getStatusTone()</code>:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trạng thái</th>
+                        <th>Màu</th>
+                        <th>Tiêu đề</th>
+                        <th>Mô tả</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>success</code></td>
+                        <td>Xanh lá</td>
+                        <td>Thanh toán thành công</td>
+                        <td>Premium sẽ được kích hoạt sau khi hệ thống xử lý webhook từ PayOS</td>
+                    </tr>
+                    <tr>
+                        <td><code>pending</code></td>
+                        <td>Xanh dương</td>
+                        <td>Đang chờ thanh toán</td>
+                        <td>Hoàn tất thanh toán trên PayOS, rồi quay lại ứng dụng</td>
+                    </tr>
+                    <tr>
+                        <td><code>failed</code></td>
+                        <td>Đỏ</td>
+                        <td>Thanh toán thất bại</td>
+                        <td>Giao dịch chưa hoàn tất. Bạn có thể tạo phiên thanh toán mới</td>
+                    </tr>
+                    <tr>
+                        <td><code>cancelled</code></td>
+                        <td>Vàng hổ phách</td>
+                        <td>Thanh toán đã hủy</td>
+                        <td>Bạn có thể mở lại PayOS hoặc tạo phiên mới</td>
+                    </tr>
+                    <tr>
+                        <td><code>unknown</code></td>
+                        <td>Xám</td>
+                        <td>Chưa xác định</td>
+                        <td>Ứng dụng chưa đọc được trạng thái từ cổng thanh toán</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Nút chính đổi theo ngữ cảnh:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tình huống</th>
+                        <th>Nhãn nút</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Chưa có phiên thanh toán</td>
+                        <td>"Nâng cấp Premium" / "Gia hạn Premium"</td>
+                        <td>Tạo checkout mới rồi mở PayOS</td>
+                    </tr>
+                    <tr>
+                        <td>Có phiên đang dở (chưa terminal)</td>
+                        <td><b>"Tiếp tục thanh toán"</b></td>
+                        <td>
+                            Mở lại <code>checkoutUrl</code> cũ — không tạo đơn mới, tránh sinh giao
+                            dịch rác
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Quyền lợi hiển thị được lấy theo vai trò qua <code>getPremiumBenefits(user?.role)</code>
+            — nghệ sĩ và venue thấy danh sách khác nhau.
+        </p>
+
+        <h2>10. Xử lý lỗi</h2>
+
+        <p><code>getPaymentErrorMessage(error)</code> dịch lỗi kỹ thuật thành câu tiếng Việt:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Điều kiện</th>
+                        <th>Thông báo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>HTTP 400</td>
+                        <td>
+                            Ưu tiên <code>message</code>/<code>error</code> từ server, mặc định
+                            "Thông tin thanh toán không hợp lệ."
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>HTTP 401</td>
+                        <td>"Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."</td>
+                    </tr>
+                    <tr>
+                        <td>HTTP 404</td>
+                        <td>
+                            "Giao dịch đang được xác nhận. Vui lòng đợi vài giây rồi thử lại." —
+                            <b>không</b> nói "không tìm thấy"
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>HTTP ≥ 500</td>
+                        <td>"Máy chủ thanh toán đang gặp sự cố. Vui lòng thử lại sau."</td>
+                    </tr>
+                    <tr>
+                        <td><code>ERR_NETWORK</code></td>
+                        <td>"Không thể kết nối mạng. Vui lòng kiểm tra kết nối và thử lại."</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>11. Setup PayOS</h2>
+
+        <p>
+            Các bước đăng ký tài khoản, lấy 3 khoá, đăng ký webhook, cấu hình deep link và cách test
+            ở sandbox được mô tả đầy đủ tại
+            <a href="../03-setup-ben-thu-ba.html#payos-thanh-toan-premium"
+                >Setup bên thứ ba, mục 5</a
+            >. Những điểm cần nhớ:
+        </p>
+
+        <ul>
+            <li>
+                <b>Ba khoá PayOS</b> (<code>Client ID</code>, <code>API Key</code>,
+                <code>Checksum Key</code>) thuộc về <b>backend</b>. Đưa vào
+                <code>EXPO_PUBLIC_*</code> là lộ hoàn toàn.
+            </li>
+            <li>
+                <b>Webhook URL</b> phải đăng ký trong dashboard PayOS. Đây là đường chính, redirect
+                chỉ là phụ.
+            </li>
+            <li>
+                <b>Deep link</b> dựa trên <code>"scheme": "soundspal"</code>. Nếu PayOS chỉ nhận
+                <code>http/https</code>, dùng trang web trung gian chuyển tiếp.
+            </li>
+            <li>
+                Test không cần tiền thật:
+                <code
+                    >adb shell am start -a android.intent.action.VIEW -d
+                    "soundspal:///(payments)/premium?orderCode=123456&amp;status=PAID"</code
+                >
+            </li>
+        </ul>
+
+        <h2>12. Ghi chú &amp; hạn chế</h2>
+
+        <ul>
+            <li>
+                <b>Chỉ có một mục đích thanh toán.</b>
+                <code>PaymentPurpose = 'ACCOUNT_UPGRADE'</code>. Muốn thêm loại giao dịch khác (mua
+                beat, tài trợ…) phải mở rộng type và bảng giá.
+            </li>
+            <li>
+                <b>Không tự động gia hạn.</b> Không có subscription định kỳ — hết hạn thì người dùng
+                phải tự mua lại.
+            </li>
+            <li>
+                <b><code>orderCode</code> luôn <code>null</code> ngay sau checkout.</b> Datasource
+                trả <code>{ checkoutUrl, orderCode: null }</code> vì backend chỉ trả URL. Mã đơn
+                phải lấy từ deep link hoặc từ lịch sử.
+            </li>
+            <li>
+                <b>Không huỷ được giao dịch từ app.</b> Chỉ đợi PayOS hết hạn hoặc người dùng bấm
+                huỷ trên trang PayOS.
+            </li>
+            <li>
+                <b>Không có xác nhận trong app khi premium kích hoạt.</b> Người dùng phải quay lại
+                màn Premium hoặc mở lại app. Có thể cải thiện bằng cách để backend đẩy một push khi
+                webhook xử lý xong.
+            </li>
+            <li>
+                <b>Giá hardcode ở client.</b> Đổi giá phải phát hành bản mới. Nếu cần đổi linh hoạt,
+                nên chuyển bảng giá sang một endpoint config.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="notifications.html">← Thông báo đẩy</a>
+            <a href="blog.html">Blog →</a>
+        </div>
+    </main>
+</div>

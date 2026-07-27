@@ -1,0 +1,816 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nhắn tin (Messaging) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Nhắn tin</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · messaging</span>
+        <h1>Nhắn tin thời gian thực</h1>
+        <p class="lede">
+            Chat 1-1 qua WebSocket: tin nhắn tức thời, báo đang gõ, trạng thái online, đã xem, sửa
+            &amp; xoá tin, đính kèm ảnh/tệp, và thẻ công việc JOB_REF. Đây là feature duy nhất kết
+            hợp cả REST lẫn socket cho cùng một luồng dữ liệu.
+        </p>
+
+        <h2>1. Kiến trúc: REST và Socket phối hợp thế nào</h2>
+
+        <p>
+            Điểm quan trọng nhất phải nắm: feature này
+            <b>không dùng React Query làm nguồn sự thật</b>. Nó dùng Zustand store
+            <code>messagingStore</code>, còn REST và socket là hai đường ghi vào cùng store đó.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Đường</th>
+                        <th>Dùng khi</th>
+                        <th>Ghi vào</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>REST</b></td>
+                        <td>Mở màn hình, tải lịch sử, gửi/sửa/xoá tin</td>
+                        <td><code>messagingStore</code></td>
+                    </tr>
+                    <tr>
+                        <td><b>Socket</b></td>
+                        <td>Tin nhắn đến, đang gõ, online, đã xem</td>
+                        <td><code>messagingStore</code> (cùng một store)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Vì sao Zustand mà không phải React Query?</span>
+            Socket đẩy hàng chục sự kiện nhỏ mỗi phút (gõ phím, online/offline, đã xem). Ép chúng
+            qua cơ chế cache/invalidate của React Query sẽ rất vòng vèo. Store chuẩn hoá với
+            <code>Record&lt;id, T&gt;</code> cho phép cập nhật <b>đúng một tin nhắn</b> ở độ phức
+            tạp O(1).
+        </div>
+
+        <div class="note warn">
+            <span class="t"
+                >Có <code>useMessagingApi.ts</code> đầy hook React Query — nhưng ít dùng</span
+            >
+            File này định nghĩa <code>useGetConversations</code>, <code>useSendMessage</code>… đầy
+            đủ. Nhưng hai màn hình chính lại <b>gọi thẳng <code>apiClient</code></b> rồi ghi vào
+            store. Các hook đó chủ yếu phục vụ những nơi khác (vd
+            <code>useGetOrCreateConversation</code> dùng từ màn hồ sơ và màn chi tiết job). Đừng
+            nhầm hai đường này với nhau khi debug.
+        </div>
+
+        <h2>2. Cấu trúc dữ liệu</h2>
+
+        <h3><code>Message</code></h3>
+
+        <pre><code>{
+    id: string,
+    conversationId: string,
+    senderId: string,
+    content: string,
+    attachmentUrl?: string | <span class="c-key">null</span>,
+    attachmentType?: <span class="c-str">'image'</span> | <span class="c-str">'video'</span> | <span class="c-str">'audio'</span> | <span class="c-str">'file'</span> | <span class="c-key">null</span>,
+    readBy?: string[],           <span class="c-com">// danh sách userId đã xem</span>
+    isEdited: boolean,
+    isDeleted: boolean,
+    createdAt: string,
+    updatedAt: string,
+    sender: { id, username, displayName, avatarUrl? }
+}</code></pre>
+
+        <h3><code>Conversation</code></h3>
+
+        <pre><code>{
+    id, name, isGroup: boolean,
+    participants: [{ id, username, displayName, avatarUrl? }],
+    lastMessage?: Message,
+    unreadCount: number,
+    createdAt, updatedAt
+}</code></pre>
+
+        <div class="note info">
+            <span class="t">Chat nhóm: có kiểu dữ liệu nhưng chưa có giao diện</span>
+            <code>isGroup</code> tồn tại trong model, nhưng mọi hội thoại do app tạo đều dùng
+            <code>{ name: 'TL-MESS', isGroup: false, participantIds: [otherUserId] }</code>. Không
+            có màn hình nào tạo nhóm.
+        </div>
+
+        <h2>3. Trạng thái trong <code>messagingStore</code></h2>
+
+        <p>
+            Store dùng <b>cấu trúc chuẩn hoá</b> — không lưu mảng lồng nhau mà tách map và mảng thứ
+            tự:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trường</th>
+                        <th>Kiểu</th>
+                        <th>Vì sao thiết kế vậy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>conversationsById</code></td>
+                        <td><code>Record&lt;id, Conversation&gt;</code></td>
+                        <td>Tra cứu &amp; cập nhật O(1)</td>
+                    </tr>
+                    <tr>
+                        <td><code>conversationOrder</code></td>
+                        <td><code>string[]</code></td>
+                        <td>Thứ tự hiển thị (mới nhất trước), cập nhật mỗi khi có tin nhắn mới</td>
+                    </tr>
+                    <tr>
+                        <td><code>messagesById</code></td>
+                        <td><code>Record&lt;id, Message&gt;</code></td>
+                        <td>Sửa một tin không đụng tới các tin khác</td>
+                    </tr>
+                    <tr>
+                        <td><code>conversationMessages</code></td>
+                        <td><code>Record&lt;convId, messageId[]&gt;</code></td>
+                        <td>Thứ tự tin trong từng phòng</td>
+                    </tr>
+                    <tr>
+                        <td><code>unreadCounts</code></td>
+                        <td><code>Record&lt;convId, number&gt;</code></td>
+                        <td>Badge</td>
+                    </tr>
+                    <tr>
+                        <td><code>onlineUsers</code></td>
+                        <td><code>Set&lt;string&gt;</code></td>
+                        <td>
+                            <code>Set</code> chứ không phải mảng — kiểm tra <code>has()</code> là
+                            O(1)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>typingUsers</code></td>
+                        <td><code>Record&lt;convId, userId[]&gt;</code></td>
+                        <td>Nhiều người có thể cùng gõ</td>
+                    </tr>
+                    <tr>
+                        <td><code>activeConversationId</code></td>
+                        <td><code>string | null</code></td>
+                        <td>Quyết định có tăng <code>unread</code> khi tin mới đến hay không</td>
+                    </tr>
+                    <tr>
+                        <td><code>pendingJobRefs</code></td>
+                        <td><code>Record&lt;convId, {jobData, defaultText}&gt;</code></td>
+                        <td>Thẻ job chờ gắn vào tin nhắn đầu tiên</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Store này KHÔNG persist</span>
+            Đóng app là mất sạch. Có chủ ý — tin nhắn luôn được tải lại từ server khi mở màn, tránh
+            hiển thị dữ liệu cũ.
+        </div>
+
+        <h2>4. Endpoint REST</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Dùng để</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/conversations</code></td>
+                        <td>Danh sách hội thoại</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/conversations/{id}</code></td>
+                        <td>Chi tiết một hội thoại (lấy người tham gia)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/conversations</code></td>
+                        <td>Tạo hoặc lấy hội thoại có sẵn — backend tự khử trùng lặp</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge del">DELETE</span></td>
+                        <td><code>/conversations/{id}</code></td>
+                        <td>Xoá hội thoại</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/messages/conversation/{id}</code></td>
+                        <td>Lịch sử tin nhắn</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td>
+                            <code>/messages/conversation/{id}/unread-count</code>
+                        </td>
+                        <td>Số tin chưa đọc</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/messages</code></td>
+                        <td>Gửi tin</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/messages/{id}</code></td>
+                        <td>Sửa tin</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge del">DELETE</span></td>
+                        <td><code>/messages/{id}</code></td>
+                        <td>Xoá tin</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/messages/{id}/read</code></td>
+                        <td>Đánh dấu một tin đã đọc</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td>
+                            <code>/messages/conversation/{id}/read</code>
+                        </td>
+                        <td>Đánh dấu cả hội thoại đã đọc</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/storage/upload</code></td>
+                        <td>Upload ảnh/tệp đính kèm, trả về <code>{ url }</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>5. Sự kiện Socket</h2>
+
+        <p>
+            Tất cả đăng ký trong <code>socketService.setupListeners()</code>. Hàm này gọi
+            <code>removeAllListeners()</code> đầu tiên để tránh nhân bản listener khi reconnect.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hướng</th>
+                        <th>Sự kiện</th>
+                        <th>Payload</th>
+                        <th>Xử lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>message:new</code></td>
+                        <td><code>Message</code></td>
+                        <td>
+                            <code>addMessage()</code>; nếu <code>activeConversationId</code> khác
+                            thì
+                            <code>incrementUnread()</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>message:edited</code></td>
+                        <td><code>Message</code></td>
+                        <td><code>updateMessage()</code> + <code>isEdited: true</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>message:deleted</code></td>
+                        <td><code>{messageId, conversationId}</code></td>
+                        <td><code>removeMessage()</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>typing:start</code> / <code>typing:stop</code></td>
+                        <td><code>{conversationId, userId}</code></td>
+                        <td>
+                            Thêm/bớt người gõ — <b>bỏ qua nếu <code>userId</code> là chính mình</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>messages:read</code></td>
+                        <td><code>{conversationId, readerId}</code></td>
+                        <td><code>markMessagesReadBy()</code> cho cả hội thoại</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>message:read</code></td>
+                        <td><b>Hai dạng</b> — xem ghi chú dưới</td>
+                        <td><code>markMessageReadBy()</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>user:online</code> / <code>user:offline</code></td>
+                        <td><code>{userId}</code></td>
+                        <td>Cập nhật <code>Set onlineUsers</code></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">NHẬN</span></td>
+                        <td><code>users:online</code></td>
+                        <td><code>string[]</code> hoặc <code>{userIds}</code></td>
+                        <td>Snapshot toàn bộ. <b>Backend chưa gửi</b> — đã wire sẵn</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">GỬI</span></td>
+                        <td><code>conversation:join</code> / <code>conversation:leave</code></td>
+                        <td><code>{conversationId}</code></td>
+                        <td>Vào/rời phòng khi mở/đóng màn chat</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge ws">GỬI</span></td>
+                        <td><code>typing:start</code> / <code>typing:stop</code></td>
+                        <td><code>{conversationId}</code></td>
+                        <td>Báo đang gõ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t"><code>message:read</code> đến ở hai dạng payload khác nhau</span>
+            Gateway socket gửi <code>{ messageId, userId }</code>, còn REST gửi
+            <code>{ messageId, readerId, conversationId }</code>. Listener phải chuẩn hoá:
+            <pre
+                style="margin: 8px 0 0"
+            ><code><span class="c-key">const</span> readerId = payload.readerId ?? payload.userId;
+<span class="c-key">const</span> conversationId = payload.conversationId
+    ?? store.messagesById[payload.messageId]?.conversationId;   <span class="c-com">// tra ngược từ store</span></code></pre>
+        </div>
+
+        <h2>6. Vòng đời kết nối socket</h2>
+
+        <p>
+            <code>SocketProvider</code> (mount một lần ở <code>app/_layout.tsx</code>) sở hữu toàn
+            bộ vòng đời. Màn hình <b>không bao giờ</b> tự gọi <code>connect()</code>.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sự kiện</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Có <code>userId</code> + <code>accessToken</code></td>
+                        <td><code>socketService.connect()</code></td>
+                    </tr>
+                    <tr>
+                        <td>Đăng xuất / token đổi</td>
+                        <td><code>disconnect()</code> rồi kết nối lại nếu cần</td>
+                    </tr>
+                    <tr>
+                        <td>App vào <code>background</code></td>
+                        <td>
+                            <b><code>disconnect()</code></b> — xem cảnh báo dưới
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>App quay lại <code>active</code></td>
+                        <td><code>connect()</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t">Vì sao phải chủ động ngắt socket khi app xuống nền?</span>
+            Messaging-service chỉ đẩy push notification cho người đang <b>offline</b>. Nếu app giữ
+            socket khi ở nền, server tưởng người dùng vẫn online →
+            <b>không bao giờ gửi thông báo tin nhắn</b>. Người dùng sẽ than "không nhận được thông
+            báo" mà không ai hiểu vì sao. <br /><br />
+            Đây là ràng buộc <b>hai chiều</b>: quyết định này ở client chỉ đúng khi backend thực sự
+            coi socket ngắt = user offline.
+        </div>
+
+        <div class="note info">
+            <span class="t">Hệ quả kéo theo: cache tin nhắn không đáng tin</span>
+            Socket ngắt khi ở nền nghĩa là <b>mọi tin nhắn đến lúc đó không về qua socket</b>. Vì
+            vậy <code>DetailMessageScreen</code> <b>luôn gọi lại API</b> khi mở màn (dù đã có
+            cache), và còn đăng ký thêm listener <code>AppState</code> để fetch lại mỗi lần app trở
+            lại foreground. Không làm vậy thì bấm vào thông báo sẽ mở chat mà
+            <b>không thấy chính tin nhắn vừa được báo</b>.
+        </div>
+
+        <p>Cơ chế reconnect (ngoài phần Socket.IO tự lo):</p>
+        <ul>
+            <li>Backoff mũ 2: <code>1s → 2s → 4s → 8s → 10s</code> (chặn trên 10 giây).</li>
+            <li>
+                Sau 5 lần thất bại, đặt cờ <code>hasReachedMaxAttempts</code> và <b>ngừng hẳn</b> —
+                tránh vòng lặp gọi mạng làm hao pin. Phải khởi động lại app hoặc đăng xuất/đăng nhập
+                mới thử lại.
+            </li>
+            <li>
+                <code>io server disconnect</code> (server chủ động đá ra) → thử kết nối lại một lần
+                sau 1 giây, thường là dấu hiệu token có vấn đề.
+            </li>
+        </ul>
+
+        <h2>7. Màn danh sách hội thoại</h2>
+
+        <p>
+            Route <code>(tabs)/notifications</code> → <code>NotificationsScreen</code>.
+            <b>Lưu ý tên gọi:</b> đây là danh sách chat, không phải danh sách thông báo hệ thống.
+        </p>
+
+        <ul>
+            <li>
+                Gọi <span class="badge get">GET</span> <code>/conversations</code> rồi
+                <code>setConversations()</code> vào store.
+            </li>
+            <li>
+                Hai tab: <b>Tất cả</b> và <b>Chưa đọc</b> (lọc theo
+                <code>unreadCounts[conv.id] &gt; 0</code>).
+            </li>
+            <li>
+                Ô tìm kiếm lọc <b>phía client</b> theo tên người tham gia (không phân biệt hoa
+                thường).
+            </li>
+            <li>
+                Badge tổng = tổng mọi giá trị trong <code>unreadCounts</code>. Thẻ có tin chưa đọc
+                được tô nền tím.
+            </li>
+            <li>
+                Mỗi dòng dùng <code>ChatItem</code>, kèm <code>OnlineIndicator</code> đọc từ
+                <code>onlineUsers</code>.
+            </li>
+        </ul>
+
+        <h3>Văn bản xem trước của hội thoại</h3>
+
+        <p><code>getConversationPreview(message)</code> quyết định hiển thị gì:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Điều kiện</th>
+                        <th>Hiển thị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Không có tin nào</td>
+                        <td><code>Chưa có tin nhắn</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>isDeleted</code></td>
+                        <td><code>Tin nhắn đã bị xóa</code></td>
+                    </tr>
+                    <tr>
+                        <td>Là JOB_REF</td>
+                        <td><code>📋 Đơn ứng tuyển</code> — <b>giấu đoạn JSON thô</b></td>
+                    </tr>
+                    <tr>
+                        <td>Có đính kèm</td>
+                        <td>
+                            <code>📷 Hình ảnh</code> / <code>🎬 Video</code> /
+                            <code>🎵 Âm thanh</code> / <code>📎 Tệp đính kèm</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Còn lại</td>
+                        <td>Nội dung tin nhắn</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>8. Màn phòng chat</h2>
+
+        <p>Route <code>(messages)/detailMessage?conversationId=…</code>. Chuỗi việc khi mở màn:</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Tải thông tin hội thoại</span>
+                <span class="badge get">GET</span> <code>/conversations/{id}</code> để biết đang
+                chat với ai.
+            </li>
+            <li>
+                <span class="h">Tải lịch sử tin nhắn</span>
+                Hiển thị cache ngay cho mượt, nhưng <b>vẫn luôn gọi API</b>. Chỉ hiện spinner khi
+                chưa có cache.
+            </li>
+            <li>
+                <span class="h">Vào phòng và đánh dấu đã đọc</span>
+                <code>setActiveConversation(id)</code> →
+                <code>socketService.joinConversation(id)</code> → <code>clearUnread(id)</code> →
+                <span class="badge post">POST</span> <code>/messages/conversation/{id}/read</code>.
+            </li>
+            <li>
+                <span class="h">Dọn dẹp khi rời màn</span>
+                <code>leaveConversation()</code>, <code>stopTyping()</code>,
+                <code>setActiveConversation(null)</code>, xoá timeout gõ phím.
+            </li>
+        </ol>
+
+        <h3>Gửi tin nhắn</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Nếu đang sửa tin</span>
+                <span class="badge put">PUT</span> <code>/messages/{id}</code> →
+                <code>updateMessage()</code> với <code>isEdited: true</code> → toast "Đã chỉnh sửa
+                tin nhắn".
+            </li>
+            <li>
+                <span class="h">Nếu có <code>pendingJobRef</code></span>
+                Bọc nội dung bằng <code>buildJobReference(jobData, text)</code>.
+            </li>
+            <li>
+                <span class="h"> <span class="badge post">POST</span> <code>/messages</code> </span>
+                Rồi <code>addMessage()</code> vào store, <code>clearPendingJobRef()</code>, xoá ô
+                nhập, <code>stopTyping()</code>.
+            </li>
+        </ol>
+
+        <h3>Báo đang gõ</h3>
+
+        <p>
+            Gõ phím → <code>socketService.startTyping()</code>. Một <code>setTimeout</code> tự gọi
+            <code>stopTyping()</code> nếu người dùng ngừng gõ; timeout được reset mỗi lần gõ tiếp.
+            Cũng <code>stopTyping()</code> ngay sau khi gửi tin và khi rời màn.
+        </p>
+
+        <h3>Đính kèm ảnh và tệp</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loại</th>
+                        <th>Chọn bằng</th>
+                        <th>Giới hạn</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ảnh</td>
+                        <td><code>expo-image-picker</code></td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td>Tệp</td>
+                        <td><code>expo-document-picker</code></td>
+                        <td><b>10 MB</b> (backend giới hạn, client kiểm tra trước)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Luồng upload:</p>
+        <div class="flow">
+            <div class="n hl"><b>1. Chọn file</b><small>picker</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>2. Upload</b><small>POST /storage/upload</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>3. Nhận URL</b><small>{ url }</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>4. Gửi tin</b><small>attachmentUrl + attachmentType</small></div>
+        </div>
+
+        <p>
+            <code>getAttachmentTypeFromMimeType()</code> suy loại từ MIME: <code>image/*</code> →
+            <code>image</code>, <code>video/*</code> → <code>video</code>, <code>audio/*</code> →
+            <code>audio</code>, còn lại → <code>file</code>.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Đường upload này dùng axios</span>
+            <code>apiClient.post('/storage/upload', formData)</code> — chính là đường mà
+            <code>multipartUpload.ts</code> cảnh báo có thể gửi body rỗng trên React Native. Nếu gặp
+            <code>ERR_NETWORK</code> khi đính kèm, đây là chỗ cần chuyển sang
+            <code>postMultipartWithFetch()</code>.
+        </div>
+
+        <h3>Sửa &amp; xoá tin nhắn</h3>
+
+        <p>Nhấn giữ tin nhắn → <code>MessageActionSheet</code>. Quy tắc hiển thị:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hành động</th>
+                        <th>Điều kiện</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Sửa</td>
+                        <td>
+                            Là tin của mình · <b>không phải JOB_REF</b> ·
+                            <b>không có đính kèm</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Xoá</td>
+                        <td>Là tin của mình</td>
+                    </tr>
+                    <tr>
+                        <td>Sao chép</td>
+                        <td>Có nội dung văn bản (<code>expo-clipboard</code>)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Tin JOB_REF bị <b>khoá</b> (không sửa, không xoá) vì nội dung của nó là JSON có cấu trúc
+            — sửa tay sẽ làm hỏng thẻ hiển thị bên nhận.
+        </p>
+
+        <h2>9. Giao thức JOB_REF — thẻ công việc trong chat</h2>
+
+        <p>
+            Khi người dùng bấm "Liên hệ" từ một bài tuyển dụng, tin nhắn đầu tiên được bọc theo một
+            định dạng đặc biệt để bên nhận thấy <b>thẻ job đẹp</b> thay vì đoạn JSON.
+        </p>
+
+        <h3>Định dạng</h3>
+
+        <pre><code>:::JOB_REF:{"id":"abc","title":"Ca sĩ acoustic tối T6","location":"TP.HCM",...}:::
+Xin chào, tôi quan tâm đến "Ca sĩ acoustic tối T6".</code></pre>
+
+        <p>
+            Regex nhận dạng:
+            <code>/^:::JOB_REF:(\{.*\}):::\n?([\s\S]*)$/</code>. An toàn khi dùng
+            <code>.*</code> trên một dòng vì <code>JSON.stringify</code> luôn sinh chuỗi một dòng.
+            <b>Đây là giao thức dùng chung với bản web</b> — sửa một bên phải sửa cả hai.
+        </p>
+
+        <h3>Ba hàm xử lý</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hàm</th>
+                        <th>Việc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>buildJobReference(jobData, text)</code></td>
+                        <td>Bọc — dùng lúc gửi</td>
+                    </tr>
+                    <tr>
+                        <td><code>isJobReference(content)</code></td>
+                        <td>Kiểm tra nhanh — dùng để chọn cách render</td>
+                    </tr>
+                    <tr>
+                        <td><code>parseJobReference(content)</code></td>
+                        <td>
+                            Bóc ra <code>{ jobData, userText }</code>; JSON hỏng thì trả
+                            <code>null</code> và tin nhắn hiển thị như văn bản thường
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Luồng đầy đủ</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Người dùng bấm "Liên hệ" ở màn chi tiết job</span>
+                <code>JobDetailScreen</code> gọi <code>useGetOrCreateConversation(creatorId)</code>.
+            </li>
+            <li>
+                <span class="h">Gài <code>pendingJobRef</code> vào store</span>
+                Kèm dữ liệu job rút gọn (<code>id, title, location, type, budget, description</code
+                >) và câu mở đầu mặc định.
+            </li>
+            <li>
+                <span class="h">Mở phòng chat, ô nhập đã điền sẵn</span>
+                Chỉ điền khi ô đang rỗng — không ghi đè thứ người dùng đang gõ dở.
+            </li>
+            <li>
+                <span class="h">Gửi → bọc JOB_REF → xoá pending</span>
+                Chỉ <b>tin nhắn đầu tiên</b> được bọc. Các tin sau là văn bản bình thường.
+            </li>
+        </ol>
+
+        <p>
+            <code>getJobTypeLabel()</code> dịch loại job sang tiếng Việt: <code>opportunity</code> →
+            "Cơ hội biểu diễn", <code>collaboration</code> → "Tìm cộng tác",
+            <code>job_offer</code> → "Đề nghị việc làm", <code>availability</code> → "Thông báo lịch
+            trống", <code>gig</code> → "Gig".
+        </p>
+
+        <h2>10. Trạng thái "đã xem"</h2>
+
+        <p>
+            Mỗi <code>Message</code> có mảng <code>readBy: string[]</code>.
+            <code>isMessageSeenBy(message, userId)</code> chỉ đơn giản kiểm tra
+            <code>readBy.includes(userId)</code>.
+        </p>
+
+        <p>Có hai đường cập nhật:</p>
+        <ul>
+            <li>
+                <b>Theo hội thoại:</b> mở phòng chat → <span class="badge post">POST</span>
+                <code>/messages/conversation/{id}/read</code> → bên kia nhận
+                <code>messages:read</code> → <code>markMessagesReadBy()</code>.
+            </li>
+            <li>
+                <b>Theo từng tin:</b> <span class="badge post">POST</span>
+                <code>/messages/{id}/read</code> → sự kiện <code>message:read</code> →
+                <code>markMessageReadBy()</code>.
+            </li>
+        </ul>
+
+        <h2>11. Xử lý bàn phím</h2>
+
+        <p>
+            Chat là màn hình khó nhất về bàn phím trong toàn app. Ba xử lý đã có, đều được ghi chú
+            rõ trong code:
+        </p>
+
+        <ul>
+            <li>
+                Listener <code>keyboardDidShow</code> → <code>scrollToEnd()</code> trong
+                <code>requestAnimationFrame</code>, để tin cuối luôn nằm ngay trên ô nhập.
+            </li>
+            <li>
+                Cờ <code>isKeyboardVisible</code> dùng để <b>rút ngắn padding đáy</b> của ô nhập khi
+                bàn phím đã đẩy nó lên — không cần chừa chỗ cho thanh điều hướng nữa.
+            </li>
+            <li>
+                Tin nhắn mới đến cũng tự <code>scrollToEnd()</code> (có
+                <code>setTimeout 100ms</code> chờ layout xong).
+            </li>
+        </ul>
+
+        <h2>12. Ghi chú &amp; hạn chế hiện tại</h2>
+
+        <ul>
+            <li>
+                <b>Không có phân trang tin nhắn.</b>
+                <span class="badge get">GET</span> <code>/messages/conversation/{id}</code> tải toàn
+                bộ. Store có sẵn <code>prependMessages()</code> cho việc cuộn ngược, nhưng chưa có
+                màn hình nào dùng.
+            </li>
+            <li>
+                <b>Không có tin nhắn tạm (optimistic).</b> Tin chỉ hiện sau khi server phản hồi.
+                Mạng chậm thì thấy độ trễ.
+            </li>
+            <li><b>Chat nhóm chưa có giao diện</b> dù model đã hỗ trợ.</li>
+            <li>
+                <b>Presence khởi đầu chưa chính xác.</b> Chưa có sự kiện
+                <code>users:online</code> từ backend, nên lúc mới kết nối chưa biết ai đang online —
+                phải chờ sự kiện lẻ. Code đã wire sẵn, backend bật là chạy.
+            </li>
+            <li><b>Đính kèm không sửa được.</b> Muốn đổi thì xoá tin rồi gửi lại.</li>
+            <li>
+                <b>Hai đường gọi API song song.</b> Màn hình gọi thẳng <code>apiClient</code>, còn
+                <code>useMessagingApi.ts</code> có hook React Query đầy đủ. Nếu thống nhất về một
+                đường thì code sẽ dễ bảo trì hơn.
+            </li>
+        </ul>
+
+        <div class="note info">
+            <span class="t">Liên quan</span>
+            Push notification tin nhắn được mô tả ở
+            <a href="notifications.html">tài liệu Notifications</a>. Cách dựng hạ tầng Socket.IO ở
+            <a href="../03-setup-ben-thu-ba.html#socket-io-realtime">Setup bên thứ ba, mục 6</a>.
+        </div>
+
+        <div class="pagenav">
+            <a href="collab.html">← Cộng tác</a>
+            <a href="notifications.html">Thông báo đẩy →</a>
+        </div>
+    </main>
+</div>

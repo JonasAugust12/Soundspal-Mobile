@@ -1,0 +1,785 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blog — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Blog</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · blog</span>
+        <h1>Blog &amp; Bình luận</h1>
+        <p class="lede">
+            Đọc và viết bài, bình luận có phân cấp, lưu bài. Đáng chú ý về mặt kỹ thuật: đây là
+            feature phải chịu đựng nhiều biến thể response nhất từ backend, và có luồng tạo bài
+            <b>4 bước</b> chứ không phải một request.
+        </p>
+
+        <h2>1. Tổng quan</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Màn hình</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>(blog)/index</code></td>
+                        <td><code>BlogIndexScreen</code> — danh sách, tab, tìm kiếm</td>
+                    </tr>
+                    <tr>
+                        <td><code>(blog)/[id]</code></td>
+                        <td><code>BlogDetailScreen</code> — đọc bài + bình luận</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note danger">
+            <span class="t">Không có endpoint <code>GET /blogs/{id}</code></span>
+            Backend <b>không cung cấp</b> API lấy chi tiết một bài.
+            <code>useBlogArticle(id)</code> phải lách: nó <code>fetchQuery</code> toàn bộ feed rồi
+            <code>.find(p =&gt; p.id === articleId)</code>. <br /><br />
+            <b>Hệ quả trực tiếp:</b> bài nào không nằm trong trang feed đầu tiên thì
+            <b>mở chi tiết sẽ báo "Blog not found"</b> — kể cả khi bài đó tồn tại. Deep link tới bài
+            cũ cũng gãy vì lý do này.
+        </div>
+
+        <h2>2. Endpoint</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/blogs</code></td>
+                        <td>
+                            Feed. Params: <code>topic_id</code>, <code>author_id</code>,
+                            <code>page_size</code>, <code>page</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/blogs/topics</code></td>
+                        <td>Danh sách chủ đề (sinh ra các tab)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/blogs/search?q=…</code></td>
+                        <td>Query string dựng tay, hỗ trợ <code>tag_ids[]</code> lặp lại</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/blogs</code></td>
+                        <td>
+                            Tạo bài:
+                            <code>{title, content, short_description, topic_id, tags[]}</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/blogs/{id}</code></td>
+                        <td>Sửa bài (cùng body)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge patch">PATCH</span></td>
+                        <td><code>/blogs/{id}/publish</code></td>
+                        <td>Xuất bản — <b>không có body</b></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/storage/upload</code></td>
+                        <td>Upload ảnh bìa (multipart, field <code>file</code>)</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/blogs/{postId}/media</code></td>
+                        <td>
+                            Gắn URL ảnh vào bài: <code>{url, media_type, embed_id?}</code>, timeout
+                            60 giây
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/bookmarks</code></td>
+                        <td>Bài đã lưu</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge post">POST</span> /
+                            <span class="badge del">DELETE</span>
+                        </td>
+                        <td><code>/blogs/{postId}/bookmark</code></td>
+                        <td>Lưu / bỏ lưu</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/blogs/{postId}/comments</code></td>
+                        <td>Danh sách bình luận</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/blogs/{postId}/comments</code></td>
+                        <td><code>{content, parent_id?}</code></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="badge put">PUT</span> /
+                            <span class="badge del">DELETE</span>
+                        </td>
+                        <td><code>/comments/{commentId}</code></td>
+                        <td>Sửa / xoá bình luận</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/users/{id}</code></td>
+                        <td>Gọi phụ để bổ sung thông tin tác giả bình luận (xem mục 7)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <b>Không tồn tại:</b> xoá bài viết, thích bài, thích bình luận. Ba thứ này không có
+            endpoint nào.
+        </p>
+
+        <h2>3. Mô hình dữ liệu</h2>
+
+        <p>
+            Có <b>hai kiểu</b> cần phân biệt: <code>BlogItem</code> là dữ liệu thô từ server, còn
+            <code>BlogPost</code> là kiểu client dùng sau khi qua mapper.
+        </p>
+
+        <h3><code>BlogItem</code> (server)</h3>
+
+        <pre><code>{
+    id, author_id, topic_id, title, slug,
+    status: <span class="c-str">'draft'</span> | <span class="c-str">'published'</span> | <span class="c-str">'archived'</span>,
+    short_description, content,
+    read_time, view_count, upvote_count, downvote_count,
+    comment_count, bookmark_count,
+    published_at, created_at, updated_at,
+    tags: string[],
+    media: BlogMedia[]     <span class="c-com">// { id, url, media_type, embed_id? }</span>
+}</code></pre>
+
+        <h3><code>BlogComment</code> (client)</h3>
+
+        <pre><code>{
+    id, author: { id, name, avatar },
+    text?, timestamp,        <span class="c-com">// timestamp đã format sẵn: "5m ago"</span>
+    likes: number,
+    parentId?: string | <span class="c-key">null</span>,
+    voiceUrl?, voiceDuration?, isVoiceMessage?   <span class="c-com">// xem mục 8</span>
+}</code></pre>
+
+        <h2>4. Hook &amp; cache</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>Query key</th>
+                        <th>staleTime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useBlogTopics</code></td>
+                        <td><code>['blogTopics']</code></td>
+                        <td>30 phút (chủ đề ít đổi)</td>
+                    </tr>
+                    <tr>
+                        <td><code>useBlogFeed</code></td>
+                        <td><code>['blogPosts','feed']</code></td>
+                        <td>5 phút</td>
+                    </tr>
+                    <tr>
+                        <td><code>useBlogSearch</code></td>
+                        <td>
+                            <code>['blogSearch', q, topic_id, sort, tag_ids]</code>
+                        </td>
+                        <td>
+                            0 — có <code>placeholderData</code> giữ kết quả cũ trong lúc tải mới
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useBookmarksList</code></td>
+                        <td><code>['bookmarks','list']</code></td>
+                        <td>2 phút</td>
+                    </tr>
+                    <tr>
+                        <td><code>useBlogComments</code></td>
+                        <td><code>['blogComments', postId]</code></td>
+                        <td>0</td>
+                    </tr>
+                    <tr>
+                        <td><code>useBlogArticle</code></td>
+                        <td><code>['blogArticle', id]</code></td>
+                        <td>30 phút</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Không có infinite query nào trong feature này</span>
+            <code>useInfiniteQuery</code> không xuất hiện ở đâu. Tham số phân trang
+            (<code>limit</code>, <code>offset</code>, <code>page</code>) có trong datasource nhưng
+            <b>không caller nào truyền</b> — <code>useBlogPosts</code> (hook nhận filters) là code
+            chết, không nơi nào gọi.
+        </div>
+
+        <h2>5. Danh sách &amp; tìm kiếm</h2>
+
+        <p>Tab được ghép từ hai nguồn:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Nguồn</th>
+                        <th>Lọc thế nào</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Dành cho bạn</b> (<code>for-you</code>)</td>
+                        <td><code>useBlogFeed()</code></td>
+                        <td>Toàn bộ feed</td>
+                    </tr>
+                    <tr>
+                        <td><b>Bài viết của tôi</b></td>
+                        <td>Cùng feed</td>
+                        <td>Lọc client <code>author_id === user.id</code></td>
+                    </tr>
+                    <tr>
+                        <td><b>Đã lưu</b></td>
+                        <td><code>blogBookmarkStore</code> (MMKV)</td>
+                        <td>Đọc thẳng từ store</td>
+                    </tr>
+                    <tr>
+                        <td>Tab chủ đề (động)</td>
+                        <td>Cùng feed</td>
+                        <td>Lọc client <code>topic_id === activeTab</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Chỉ có MỘT lần gọi feed cho tất cả tab</span>
+            Mọi tab không phải tìm kiếm đều lọc <b>phía client</b> trên cùng mảng
+            <code>listPosts</code>. Nghĩa là "Bài viết của tôi" chỉ thấy bài của bạn
+            <b>nằm trong trang feed đầu</b>. Bài cũ hơn sẽ không xuất hiện.
+        </div>
+
+        <p>Tìm kiếm là <b>kiểu submit</b>, không phải gõ tới đâu tìm tới đó:</p>
+        <ul>
+            <li>
+                <code>searchDraft</code> giữ ký tự đang gõ; <code>onSubmitEditing</code> mới chép
+                sang <code>committedSearch</code>.
+            </li>
+            <li>Xoá trắng ô tìm kiếm thì thoát chế độ tìm ngay lập tức.</li>
+            <li>
+                Chỉ tham số <code>q</code> được gửi. <code>topic_id</code>, <code>sort</code>,
+                <code>tag_ids</code> có trong kiểu dữ liệu nhưng giao diện không bao giờ điền.
+            </li>
+        </ul>
+
+        <p>
+            Tab "Bài viết của tôi" và "Đã lưu" yêu cầu đăng nhập — chưa đăng nhập thì hiện màn "Đăng
+            nhập để…" và <b>query tìm kiếm cũng bị tắt</b>.
+        </p>
+
+        <div class="note info">
+            <span class="t">Vì sao ô tìm kiếm nằm ngoài FlatList?</span>
+            Comment trong code ghi rõ: đặt <code>TextInput</code> bên trong
+            <code>FlatList</code> khiến bàn phím đóng lại sau <b>mỗi ký tự</b>. Nên chỉ có bài nổi
+            bật là <code>ListHeaderComponent</code>, còn ô tìm kiếm và thanh tab nằm bên ngoài.
+        </div>
+
+        <h2>6. Đọc bài viết</h2>
+
+        <p>Màn chi tiết gồm các phần theo thứ tự:</p>
+
+        <ol>
+            <li>Ngày xuất bản, tiêu đề, khối tác giả (xem mục 7)</li>
+            <li>Ảnh bìa</li>
+            <li>
+                <b>Nội dung HTML</b> render bằng <code>react-native-render-html</code>, có bảng
+                <code>tagsStyles</code> riêng cho
+                <code>body/p/h1/h2/h3/ul/ol/li/strong/a/blockquote</code>, hỗ trợ dark mode, và
+                <code>selectable: true</code>
+            </li>
+            <li>Một khối trích dẫn — <b>ghép cứng từ tiêu đề bài</b>, không phải nội dung thật</li>
+            <li>
+                Hàng thống kê: <code>view_count</code> / <code>comment_count</code> /
+                <code>upvote_count</code>
+            </li>
+            <li>Chip thẻ</li>
+            <li>
+                <b>Bài liên quan:</b> lấy 3 bài đầu trong feed khác bài hiện tại —
+                <b>không có logic liên quan thật</b>
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t">Chống trùng tiêu đề</span>
+            <code>stripOpeningH1IfMatchesTitle()</code> gỡ thẻ <code>&lt;h1&gt;</code> đầu tiên của
+            HTML nếu nội dung nó trùng <code>article.title</code> — nếu không, tiêu đề bị hiển thị
+            hai lần. Hàm so sánh có giải mã <code>&amp;nbsp; &amp;amp; &amp;lt; &amp;gt;</code> và
+            lột thẻ trước khi đối chiếu.
+        </div>
+
+        <h2>7. Hiển thị tác giả</h2>
+
+        <p><code>useBlogAuthorDisplay(authorId)</code> có một quy tắc thương hiệu:</p>
+
+        <pre><code><span class="c-key">const</span> realName = (user?.display_name || user?.username || <span class="c-str">''</span>).<span class="c-fn">trim</span>();
+<span class="c-key">const</span> isSoundspal = realName === <span class="c-str">''</span> || realName === <span class="c-str">'System Administrator'</span>;
+
+<span class="c-key">return</span> {
+    name: isSoundspal ? <span class="c-str">'SoundSpal'</span> : realName,
+    avatarUrl: isSoundspal ? <span class="c-key">undefined</span> : user?.avatar_url,   <span class="c-com">// → dùng logo app</span>
+    isSoundspal,
+};</code></pre>
+
+        <p>
+            Bài do tài khoản hệ thống viết được gắn thương hiệu <b>"SoundSpal"</b> + logo app. Người
+            thật thì hiện tên và avatar của họ.
+        </p>
+
+        <div class="note info">
+            <span class="t">Trong lúc tải, hook cố tình báo <code>isSoundspal: true</code></span>
+            Tên rỗng lúc đang tải cũng cho ra <code>isSoundspal = true</code>. Chủ ý: tránh nháy chữ
+            "Tác giả" mặc định rồi mới đổi thành tên thật.
+        </div>
+
+        <h3>Bổ sung thông tin tác giả bình luận</h3>
+
+        <p>
+            Bình luận từ server thường <b>chỉ có <code>author_id</code></b
+            >, không có tên và avatar. Datasource xử lý bằng <code>enrichCommentAuthors()</code>:
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Gom danh sách id tác giả duy nhất</span>
+            </li>
+            <li>
+                <span class="h"
+                    >Gọi song song <span class="badge get">GET</span> <code>/users/{id}</code></span
+                >
+                Dùng <code>Promise.all</code>, mỗi lời gọi <code>.catch(() =&gt; null)</code> để một
+                id hỏng không làm hỏng cả danh sách.
+            </li>
+            <li>
+                <span class="h">Ghi ngược vào dữ liệu thô rồi mới map</span>
+                Điền <code>author_username</code> / <code>author_avatar_url</code> vào từng dòng.
+            </li>
+        </ol>
+
+        <h2>8. Bình luận</h2>
+
+        <h3>Phân cấp tối đa 2 tầng</h3>
+
+        <p>
+            <code>rootIdOf()</code> lần ngược chuỗi <code>parentId</code> để tìm gốc, rồi dựng danh
+            sách phẳng <code>{comment, isReply}</code>: mỗi bình luận gốc theo sau là các trả lời
+            của nó. Dữ liệu cũ có lồng sâu hơn cũng bị <b>ép về 2 tầng</b>. Nút "Trả lời" bị ẩn trên
+            các trả lời — nên chỉ trả lời được bình luận gốc.
+        </p>
+
+        <p>
+            Vòng lặp lần ngược có <b>chặn trên 10 vòng</b> để sống sót nếu dữ liệu có
+            <code>parentId</code> vòng tròn.
+        </p>
+
+        <h3>Ghi thẳng vào cache thay vì refetch</h3>
+
+        <p>
+            Cả ba mutation (tạo/sửa/xoá bình luận) đều <code>setQueryData</code> trực tiếp vào
+            <code>['blogComments', postId]</code>.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Vì sao không dùng invalidate cho gọn?</span>
+            Comment trong code ghi: refetch <b>chạy đua với thời điểm backend commit</b> — bình luận
+            mới không hiện cho tới khi người dùng tự tải lại trang. Ghi thẳng vào cache giải quyết
+            triệt để. <br /><br />
+            Kèm theo đó là hai vá lỗi nhỏ: (1) nếu response thiếu <code>parent_id</code> thì chép từ
+            request để trả lời lồng đúng ngay; (2) response thường thiếu tên/avatar người gửi nên
+            code lấy từ <code>authStore</code> điền vào — nếu không, bình luận vừa gửi hiện là
+            "User" với avatar mặc định.
+        </div>
+
+        <h3>Bình luận giọng nói — <b>giao diện rỗng, chưa có gì phía sau</b></h3>
+
+        <div class="note danger">
+            <span class="t">Tính năng này chưa được cài đặt</span>
+            Nếu bạn thấy <code>VoiceCommentButton</code>, <code>VoicePlayer</code> và các trường
+            <code>voiceUrl</code>/<code>voiceDuration</code> mà tưởng đã có bình luận giọng nói —
+            <b>chưa có</b>. Cụ thể:
+            <ul style="margin-bottom: 0; margin-top: 8px">
+                <li>
+                    <code>VoiceCommentButton</code> chỉ là nút hiển thị,
+                    <b>không có code ghi âm</b>, và <b>không được import ở đâu cả</b>.
+                </li>
+                <li>
+                    <code>VoicePlayer</code> <b>không dùng thư viện âm thanh nào</b>. Nút play chỉ
+                    đổi state cục bộ. Dạng sóng là 20 thanh sinh bằng
+                    <code>Math.sin(i * 0.5)</code> — hoàn toàn trang trí.
+                </li>
+                <li>
+                    <code>mapApiCommentToBlogComment</code>
+                    <b>hardcode <code>isVoiceMessage: false</code></b
+                    >, nên <code>VoicePlayer</code> không bao giờ được render từ dữ liệu server.
+                </li>
+                <li>
+                    <code>BlogDetailScreen</code> truyền <code>allowVoice={false}</code> → nút micro
+                    bị ẩn hoàn toàn.
+                </li>
+                <li>
+                    <code>expo-av</code> <b>có</b> trong dependency nhưng feature blog
+                    <b>không import nó</b> (chỉ challenge và profiles dùng).
+                </li>
+            </ul>
+        </div>
+
+        <h2>9. Tạo bài viết — luồng 4 bước</h2>
+
+        <p>Đây không phải một request. Tạo một bài có ảnh bìa cần <b>4 lần gọi mạng</b>:</p>
+
+        <div class="flow">
+            <div class="n hl"><b>1. Tạo bài</b><small>POST /blogs</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>2. Upload ảnh</b><small>POST /storage/upload</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>3. Gắn media</b><small>POST /blogs/{id}/media</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>4. Xuất bản</b><small>PATCH /blogs/{id}/publish</small></div>
+        </div>
+
+        <h3>Điều kiện hợp lệ</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trường</th>
+                        <th>Luật</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tiêu đề</td>
+                        <td>≥ 3 ký tự</td>
+                    </tr>
+                    <tr>
+                        <td>Nội dung</td>
+                        <td>≥ 20 ký tự</td>
+                    </tr>
+                    <tr>
+                        <td>Chủ đề</td>
+                        <td>Bắt buộc chọn</td>
+                    </tr>
+                    <tr>
+                        <td>Thẻ</td>
+                        <td>Ít nhất 1, <b>tối đa 5</b> — chọn từ danh sách 12 thẻ hardcode</td>
+                    </tr>
+                    <tr>
+                        <td>Mô tả ngắn</td>
+                        <td>≤ 200 ký tự; bỏ trống thì tự lấy <code>content.slice(0, 200)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Bài được tạo sớm nếu chọn ảnh trước</span>
+            Nếu người dùng chọn ảnh bìa trước khi bấm gửi, code <b>tạo bài ngay lập tức</b> để có
+            <code>postId</code> mà gắn media, rồi lưu id đó vào <code>draftPostId</code>. Khi bấm
+            gửi, nó bỏ qua bước tạo. Nhờ vậy không bao giờ có ảnh mồ côi không thuộc bài nào.
+        </div>
+
+        <h3>Sửa &amp; xoá</h3>
+
+        <ul>
+            <li>Nút "Sửa" (biểu tượng bút chì) <b>chỉ hiện ở tab "Bài viết của tôi"</b>.</li>
+            <li>
+                <code>EditBlogModal</code> sửa được tiêu đề, nội dung, mô tả ngắn, chủ đề, thẻ.
+                <b>Không đổi được ảnh bìa</b> — ảnh cũ chỉ hiện ở dạng chỉ đọc.
+            </li>
+            <li>
+                <b>Xoá bài viết không tồn tại</b> — không có endpoint, không có hook, không có nút.
+            </li>
+        </ul>
+
+        <div class="note warn">
+            <span class="t">Ngôn ngữ không nhất quán</span>
+            <code>CreateBlogModal</code> dùng tiếng Việt, còn <code>EditBlogModal</code> dùng
+            <b>tiếng Anh</b> ("Edit blog post", "Save changes", "Title must be at least…"). Nhãn
+            thời gian bình luận cũng là tiếng Anh (<code>5m ago</code>, <code>2d ago</code>) trong
+            một khung bình luận tiếng Việt. Đáng dọn lại.
+        </div>
+
+        <h2>10. Upload ảnh — bản sao riêng của blog</h2>
+
+        <div class="note warn">
+            <span class="t">Blog KHÔNG dùng helper chung <code>postMultipartWithFetch</code></span>
+            Nó có bản sao riêng: <code>postStorageUploadWithFetch()</code> trong
+            <code>data/utils/blogMediaUtils.ts</code>. Chức năng gần như giống hệt, nhưng là code
+            riêng — sửa helper chung <b>không</b> ảnh hưởng tới blog.
+        </div>
+
+        <p>Chi tiết đường upload:</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Chuẩn hoá tên file và MIME</span>
+                MIME mặc định <code>image/jpeg</code>. Tên file chỉ giữ nếu
+                <b>đã có phần mở rộng</b>, ngược lại sinh <code>cover_{timestamp}.{ext}</code>.
+            </li>
+            <li>
+                <span class="h">Gửi bằng <code>fetch</code></span>
+                Field <code>file</code>, header chỉ có <code>Accept</code> và
+                <code>Authorization</code> — <b>không đặt <code>Content-Type</code></b> để React
+                Native tự sinh boundary. Timeout <b>120 giây</b> bằng <code>AbortController</code>.
+            </li>
+            <li>
+                <span class="h">Rút URL từ response</span>
+                <code>extractStorageUploadUrl()</code> thử lần lượt <code>root.url</code> →
+                <code>root.data.url</code> → <code>root.data.file_url</code>.
+            </li>
+            <li>
+                <span class="h">Gắn vào bài bằng axios</span>
+                <span class="badge post">POST</span> <code>/blogs/{postId}/media</code> với
+                <code>{url, media_type}</code>, timeout 60 giây.
+            </li>
+        </ol>
+
+        <p>
+            Mọi bước đều log qua <code>console.warn</code> với tiền tố
+            <code>[BlogMediaUpload]</code> và nhãn giai đoạn (<code>[start]</code>,
+            <code>[step:storage]</code>, <code>[step:attach]</code>, <code>[done]</code>,
+            <code>[ERROR]</code>) — rất hữu ích khi debug upload thất bại.
+        </p>
+
+        <p>
+            Lỗi được dịch bởi <code>formatBlogFlowError()</code>, có xử lý riêng cho
+            <code>ERR_UPLOAD_AUTH_REFRESH</code> (token hết hạn giữa chừng upload) và
+            <code>ERR_NETWORK</code>.
+        </p>
+
+        <h2>11. Mapper — server nói gì, client hiểu gì</h2>
+
+        <p>
+            <code>mapBlogItemToBlogPost()</code> <b>giữ nguyên</b> mọi trường snake_case và
+            <b>thêm</b> các bí danh cho giao diện:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trường client</th>
+                        <th>Lấy từ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>thumbnail</code></td>
+                        <td><code>media[0].url</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>excerpt</code></td>
+                        <td><code>short_description</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>publishedAt</code></td>
+                        <td>
+                            Format <code>vi-VN</code> dd/mm/yyyy; ngày thiếu/sai →
+                            <code>'Chưa xuất bản'</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>likes</code> / <code>comments</code></td>
+                        <td><code>upvote_count</code> / <code>comment_count</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>category</code></td>
+                        <td>
+                            <b>Hardcode <code>'BÀI VIẾT'</code></b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>creator_username</code></td>
+                        <td>
+                            <b><code>author_id</code></b> — một id bị nhét vào trường tên username
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>creator_display_name</code></td>
+                        <td>Hardcode <code>'Tác giả'</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>creator_role</code></td>
+                        <td>Hardcode <code>'user'</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Hệ quả của việc hardcode <code>creator_role</code></span>
+            Hàm <code>creatorRoleLabel()</code> ánh xạ <code>artist</code>→"Nghệ sĩ",
+            <code>producer</code>→"Nhà sản xuất", <code>venue</code>→"Nhà tuyển dụng". Nhưng vì
+            mapper luôn đặt <code>'user'</code>, nhãn <b>luôn hiển thị "Tác giả"</b>. Chuỗi ánh xạ
+            kia là code chết trong thực tế.
+        </div>
+
+        <p>
+            <code>normalizeBlogTopics()</code> thì đặc biệt phòng thủ: bóc tới <b>3 lớp</b>
+            <code>data</code> lồng nhau, chấp nhận mảng trần hoặc <code>{items|topics|data}</code>,
+            và <b>chấp nhận cả chuỗi trần</b> (tự sinh id bằng slug). Có unit test riêng — file test
+            duy nhất của feature này.
+        </p>
+
+        <h2>12. Đánh dấu bài viết</h2>
+
+        <p>
+            Thiết kế <b>hai nguồn</b>: store MMKV (<code>blog-bookmarks-v1</code>) là nguồn hiển
+            thị, còn API là đích đồng bộ.
+        </p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Bấm lưu → cập nhật store ngay (optimistic)</span>
+            </li>
+            <li>
+                <span class="h">Gọi API</span>
+                <span class="badge post">POST</span>/<span class="badge del">DELETE</span>
+                <code>/blogs/{postId}/bookmark</code>.
+            </li>
+            <li>
+                <span class="h">Lỗi → hoàn tác store + hiện toast</span>
+                "Không thể lưu bài viết" / "Không thể bỏ lưu".
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t"><code>mergeServer()</code> có một chốt chặn quan trọng</span>
+            <pre
+                style="margin: 8px 0"
+            ><code><span class="c-key">if</span> (!serverPosts.length) <span class="c-key">return</span> state;  <span class="c-com">// đừng ghi đè bằng rỗng</span></code></pre>
+            Server trả mảng rỗng (do chậm, do lỗi, do chưa đồng bộ) <b>không được</b> xoá sạch danh
+            sách local. Nếu không có dòng này, bài vừa lưu sẽ biến mất ngay sau đó.
+        </div>
+
+        <h2>13. Chuẩn hoá response — nhiều lần vá lỗi</h2>
+
+        <p>
+            Backend bọc dữ liệu ở nhiều tầng khác nhau tuỳ endpoint. Feature này có hẳn một lớp hàm
+            để chịu đựng điều đó:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hàm</th>
+                        <th>Xử lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>extractArrayFromEnvelope()</code></td>
+                        <td>
+                            Bóc tới 3 tầng, chấp nhận mảng trần hoặc
+                            <code>{items|data|posts|bookmarks|comments|records}</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>unwrapBlogData()</code></td>
+                        <td>Bóc <code>{data}</code>, ném lỗi có nhãn nếu thiếu</td>
+                    </tr>
+                    <tr>
+                        <td><code>normalizeBlogTopics()</code></td>
+                        <td>Bóc 3 tầng + chấp nhận chuỗi trần</td>
+                    </tr>
+                    <tr>
+                        <td><code>mapBookmarkRowToBlogPost()</code></td>
+                        <td>
+                            Dòng có <code>post</code> lồng thì map cái đó, không thì coi chính dòng
+                            là
+                            <code>BlogItem</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Comment trong code ghi rõ lý do: bản bóc một tầng trước đây trả về
+            <code>[]</code> cho response lồng nhiều tầng, khiến
+            <b>bookmark và bình luận biến mất hoàn toàn</b> dù backend có trả dữ liệu.
+        </p>
+
+        <h2>14. Code chết &amp; điểm cần dọn</h2>
+
+        <ul>
+            <li>
+                <code>useBlogPosts</code> — không caller nào, kéo theo mọi logic phân trang thành
+                không thể chạm tới.
+            </li>
+            <li>
+                <code>useAddBlogComment</code>, <code>useAddCommentLike</code> — đã đánh dấu
+                <code>@deprecated</code>, chỉ là hàm rỗng.
+            </li>
+            <li>
+                <code>TagSelector.tsx</code> — được export nhưng không ai import; cả hai modal đều
+                tự viết lại giao diện chip thẻ, kèm <b>hai bản sao giống hệt</b> của danh sách 12
+                thẻ.
+            </li>
+            <li><code>VoiceCommentButton</code> — export nhưng không import.</li>
+            <li>
+                <code>BLOG_FEED_TABS</code> — <code>@deprecated</code>, chỉ giữ để không vỡ import.
+            </li>
+            <li>
+                <code>IBlogRepository</code> thực ra là <code>typeof blogRemoteDataSource</code> —
+                tức "hợp đồng domain" đang được suy ra <b>ngược</b> từ tầng data, trái với nguyên
+                tắc Clean Architecture. Đây là ngoại lệ so với các feature khác.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="payments.html">← Thanh toán Premium</a>
+            <a href="challenge.html">Challenge →</a>
+        </div>
+    </main>
+</div>

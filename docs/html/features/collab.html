@@ -1,0 +1,446 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cộng tác (Collab) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Cộng tác</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · collab</span>
+        <h1>Quản lý hợp tác</h1>
+        <p class="lede">
+            Màn hình tổng hợp "đơn tôi đã gửi" và "bài đăng của tôi + người ứng tuyển". Feature nhỏ
+            nhưng cần đọc kỹ vì nó <b>dùng lại đúng API của feature jobs</b> bằng một lớp code riêng
+            — và điều đó gây ra vài hệ quả cần biết.
+        </p>
+
+        <h2>1. "Cộng tác" thực chất là gì?</h2>
+
+        <div class="note info">
+            <span class="t">Không có entity "collaboration" nào cả</span>
+            Trong app này, một
+            <b>collaboration = một đơn ứng tuyển (submission) vào bài đăng tuyển</b>. Không có
+            endpoint <code>/collaborations</code>, không có bảng riêng. Toàn bộ feature xây trên
+            <code>/posts</code> và <code>/submissions</code> — cùng bộ API mà
+            <a href="jobs.html">feature jobs</a> dùng.
+        </div>
+
+        <p>Điểm vào: <code>/(profiles)/collaboration</code> → <code>CollaborationScreen</code>.</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tab</th>
+                        <th>Nhãn</th>
+                        <th>Thực sự hiển thị gì</th>
+                        <th>Endpoint</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>sent</code></td>
+                        <td>Đã gửi</td>
+                        <td>Đơn <b>tôi đã nộp</b> vào bài của người khác</td>
+                        <td><span class="badge get">GET</span> <code>/my-submissions</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>received</code></td>
+                        <td>Nhận được</td>
+                        <td><b>Bài đăng của tôi</b> — <b>không phải danh sách đơn</b></td>
+                        <td><span class="badge get">GET</span> <code>/posts/me</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Tab "Nhận được" dễ hiểu nhầm</span>
+            Tên tab gợi ý "các đơn tôi nhận được", nhưng nó liệt kê <b>bài đăng của tôi</b>. Muốn
+            xem người ứng tuyển thì phải <b>bấm vào từng bài</b> để đi tiếp một cấp nữa.
+        </div>
+
+        <h2>2. Luồng đi trong màn hình</h2>
+
+        <div class="flow">
+            <div class="n hl"><b>CollaborationScreen</b><small>2 tab</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>Tab "received"</b><small>danh sách bài đăng</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>Bấm 1 bài</b><small>jobSubmissions?jobId=</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>JobSubmissionsScreen</b><small>duyệt đơn</small></div>
+        </div>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Màn hình</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>(profiles)/collaboration</code></td>
+                        <td><code>CollaborationScreen</code></td>
+                        <td>
+                            Nằm ở <code>features/profiles/</code> nhưng dùng toàn bộ hook của
+                            <code>collab</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>(profiles)/jobSubmissions?jobId=&amp;jobTitle=</code>
+                        </td>
+                        <td><code>JobSubmissionsScreen</code></td>
+                        <td>Cũng vậy</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>3. Endpoint</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Có ở jobs?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/my-submissions?page&amp;page_size</code></td>
+                        <td>✅ trùng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/posts/me?page&amp;page_size</code></td>
+                        <td>✅ trùng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td>
+                            <code
+                                >/posts/{id}/submissions?page&amp;page_size&amp;status&amp;sort_by&amp;sort_order</code
+                            >
+                        </td>
+                        <td>✅ trùng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/submissions/{id}/withdraw</code></td>
+                        <td>✅ trùng — nhưng <b>kiểu response khai khác nhau</b></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge put">PUT</span></td>
+                        <td><code>/submissions/{id}/review</code></td>
+                        <td>✅ trùng</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/my-posts/submissions</code></td>
+                        <td>❌ <b>chỉ có ở collab</b> — và <b>không hook nào gọi</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>4. Mô hình dữ liệu</h2>
+
+        <pre><code>SubmissionStatus = <span class="c-str">'pending_review'</span> | <span class="c-str">'accepted'</span> | <span class="c-str">'rejected'</span> | <span class="c-str">'withdrawn'</span>
+
+MySubmission {
+    id, cover_letter, portfolio_links: string[], demo_file,
+    status: SubmissionStatus, can_withdraw: boolean,
+    rejection_reason, reviewed_at, created_at, updated_at,
+    job: OpportunityInfo
+}
+
+OpportunitySubmission {          <span class="c-com">// góc nhìn của bên tuyển</span>
+    id, pool_id, creator_id,
+    full_name, email, phone_number,
+    cover_letter, portfolio_links, demo_file,
+    status: SubmissionStatus,
+    is_reviewed, can_be_reviewed, can_withdraw: boolean,
+    review_notes, reviewed_at, created_at, updated_at
+}</code></pre>
+
+        <div class="note danger">
+            <span class="t">Enum lệch nhau giữa hai feature — rủi ro crash thật</span>
+            <code>features/collab</code> khai <code>SubmissionStatus</code> có <b>4</b> giá trị.
+            <code>features/jobs</code> khai <b>7</b>: thêm <code>under_review</code>,
+            <code>skipped</code>, <code>expired</code>. <br /><br />
+            <code>CollabStatusBadge</code> dùng <code>switch</code> trên 4 giá trị và
+            <b>không có nhánh <code>default</code></b
+            >. Nếu server trả về <code>under_review</code>, <code>skipped</code> hay
+            <code>expired</code>, hàm <code>getStatusConfig()</code> trả <code>undefined</code> và
+            component <b>crash</b> tại dòng đọc <code>config.icon</code>. <br /><br />
+            <b>Cách khắc phục:</b> thêm nhánh <code>default</code> trả về cấu hình "Không rõ"
+            (feature jobs đã làm đúng điều này với hằng <code>FALLBACK</code>).
+        </div>
+
+        <h2>5. Huy hiệu trạng thái</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trạng thái</th>
+                        <th>Nhãn</th>
+                        <th>Màu</th>
+                        <th>Icon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>pending_review</code></td>
+                        <td>Đang chờ xem xét</td>
+                        <td>Vàng</td>
+                        <td><code>Clock</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>accepted</code></td>
+                        <td>Chấp nhận</td>
+                        <td>Xanh lá</td>
+                        <td><code>CheckCircle</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>rejected</code></td>
+                        <td>Từ chối</td>
+                        <td>Đỏ</td>
+                        <td><code>XCircle</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>withdrawn</code></td>
+                        <td>Đã rút lại</td>
+                        <td>Xám</td>
+                        <td><code>AlertCircle</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Ba kích cỡ <code>sm | md | lg</code> ánh xạ sang icon 14 / 16 / 18 px.</p>
+
+        <h2>6. Hook &amp; cache</h2>
+
+        <pre><code>collabKeys = {
+    all:                             [<span class="c-str">'collab'</span>],
+    mySubmissionsList(p):            [<span class="c-str">'collab'</span>, <span class="c-str">'mySubmissions'</span>, p],
+    opportunitySubmissionsList(id,p):[<span class="c-str">'collab'</span>, <span class="c-str">'opportunitySubmissions'</span>, id, p],
+}</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>staleTime</th>
+                        <th>Invalidate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useGetMySubmissions</code></td>
+                        <td>30 giây</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetMyPosts</code></td>
+                        <td>60 giây</td>
+                        <td>
+                            — (key <b>hardcode</b> <code>['collab','myPosts',params]</code>, không
+                            đi qua factory)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetOpportunitySubmissions</code></td>
+                        <td>60 giây</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><code>useWithdrawSubmission</code></td>
+                        <td>—</td>
+                        <td><code>collabKeys.mySubmissions()</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>useReviewSubmission</code></td>
+                        <td>—</td>
+                        <td><code>collabKeys.opportunitySubmissions()</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>7. Luồng duyệt đơn</h2>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Nút chỉ hiện khi đủ điều kiện</span>
+                <code>item.can_be_reviewed &amp;&amp; item.status === 'pending_review'</code>.
+            </li>
+            <li>
+                <span class="h">Hộp thoại xác nhận</span>
+                "Xác nhận chấp nhận — Bạn chắc chắn muốn chấp nhận ứng tuyển từ {tên}?" Nút từ chối
+                dùng kiểu <code>destructive</code>.
+            </li>
+            <li>
+                <span class="h">
+                    <span class="badge put">PUT</span> <code>/submissions/{id}/review</code>
+                </span>
+                Body <code>{ action, review_notes }</code>.
+            </li>
+            <li>
+                <span class="h">Thông báo + làm mới danh sách</span>
+                "Đã chấp nhận/từ chối ứng tuyển", rồi invalidate
+                <code>['collab','opportunitySubmissions']</code>.
+            </li>
+        </ol>
+
+        <p>Đơn đã duyệt hiện dòng <code>Đã xem xét: {reviewed_at}</code> thay cho hai nút.</p>
+
+        <div class="note warn">
+            <span class="t">Một lần duyệt làm quay spinner trên MỌI thẻ</span>
+            <code>JobSubmissionsScreen</code> truyền cùng một cờ <code>isReviewing</code> (giá trị
+            <code>isPending</code> của mutation) xuống <b>tất cả</b> thẻ. Duyệt một đơn thì cả danh
+            sách trông như đang xử lý. Sửa bằng cách theo dõi id đang duyệt như
+            <code>JobApplicantsScreen</code> đã làm.
+        </div>
+
+        <h2>8. Luồng rút đơn</h2>
+
+        <p>
+            Nút thùng rác chỉ hiện khi
+            <code>can_withdraw &amp;&amp; status === 'pending_review'</code>.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Lý do rút đơn bị hardcode</span>
+            <pre
+                style="margin: 8px 0"
+            ><code><span class="c-fn">onWithdraw</span>(item.id, <span class="c-str">'Tôi muốn rút đơn'</span>);   <span class="c-com">// không hỏi người dùng</span></code></pre>
+            App <b>không hiện ô nhập lý do</b>. Bên tuyển dụng luôn nhận đúng một câu này. (Feature
+            jobs còn gửi chuỗi rỗng <code>''</code> — hai bên cũng không thống nhất.)
+        </div>
+
+        <h2>9. Hệ quả của việc trùng lặp với feature jobs</h2>
+
+        <div class="note danger">
+            <span class="t">Cùng một API, hai lớp code, hai cache tách biệt</span>
+            Các type <code>MySubmission</code>, <code>OpportunitySubmission</code>,
+            <code>OpportunityInfo</code>, <code>ReviewActionType</code> và cả hai response shape
+            <b>bị sao chép nguyên xi</b> giữa <code>features/jobs</code> và
+            <code>features/collab</code>. Mỗi bên có hook riêng, query key riêng. <br /><br />
+            <b>Hệ quả thực tế người dùng gặp phải:</b> duyệt một đơn ở
+            <code>JobApplicantsScreen</code> (feature jobs) <b>không</b> làm mới danh sách ở
+            <code>JobSubmissionsScreen</code> (feature collab), và ngược lại. Cùng một dữ liệu, hai
+            màn hình hiển thị hai kết quả khác nhau cho tới khi staleTime hết hạn.
+        </div>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Việc</th>
+                        <th>Ở feature jobs</th>
+                        <th>Ở feature collab</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Xem đơn của tôi</td>
+                        <td><code>MyApplicationsScreen</code></td>
+                        <td><code>CollaborationScreen</code> tab "Đã gửi"</td>
+                    </tr>
+                    <tr>
+                        <td>Duyệt đơn</td>
+                        <td><code>JobApplicantsScreen</code> — <b>có duyệt hàng loạt</b></td>
+                        <td><code>JobSubmissionsScreen</code> — chỉ duyệt từng cái</td>
+                    </tr>
+                    <tr>
+                        <td>Query key</td>
+                        <td><code>['jobs', …]</code></td>
+                        <td><code>['collab', …]</code></td>
+                    </tr>
+                    <tr>
+                        <td>Enum trạng thái</td>
+                        <td>7 giá trị, có fallback</td>
+                        <td>4 giá trị, <b>không fallback</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note ok">
+            <span class="t">Hướng dọn dẹp đề xuất</span>
+            Giữ <code>features/jobs</code> làm nguồn duy nhất cho submission (nó đầy đủ hơn: enum 7
+            giá trị, có fallback, có duyệt hàng loạt), và chuyển <code>CollaborationScreen</code> /
+            <code>JobSubmissionsScreen</code> sang dùng hook của jobs. Việc này xoá luôn cả vấn đề
+            cache lệch lẫn nguy cơ crash badge.
+        </div>
+
+        <h2>10. Ghi chú kỹ thuật khác</h2>
+
+        <ul>
+            <li>
+                <b><code>useGetMyPostedJobsSubmissions</code> vừa thừa vừa sai.</b> Nó lấy danh sách
+                bài đăng rồi <b>chỉ truy vấn bài đầu tiên</b> (comment ghi: "bài mới nhất"), đồng
+                thời bỏ qua endpoint <code>/my-posts/submissions</code> vốn được sinh ra cho đúng
+                việc này. Và <b>không màn hình nào gọi nó</b>.
+            </li>
+            <li>
+                <b>Lớp đệm dữ liệu.</b>
+                <code>CollabList</code> phải nắn <code>Job</code> thành shape mà
+                <code>JobPostCard</code> mong đợi: <code>post_type || type</code>,
+                <code>deadline → submission_deadline</code>,
+                <code>applications_count → total_submissions</code>. Sau đó
+                <code>JobPostCard</code> lại in thẳng <code>post_type</code> dạng slug
+                (<code>job_offer</code>) mà không dịch sang tiếng Việt.
+            </li>
+            <li>
+                <b><code>ScrollView</code> lồng nhau cùng trục.</b>
+                <code>OpportunitySubmissionCard</code> bọc nội dung trong một
+                <code>ScrollView</code>, trong khi chính nó nằm trong <code>ScrollView</code> của
+                màn cha. Cuộn có thể giật/kẹt.
+            </li>
+            <li>
+                <b><code>CollabList</code> thiếu nhánh trả về.</b> Sau nhánh
+                <code>received</code> không có <code>return</code> cuối. An toàn hiện tại chỉ vì
+                prop <code>tab</code> là union 2 giá trị — thêm giá trị thứ ba là render
+                <code>undefined</code>.
+            </li>
+            <li>
+                <b>Shadow tách riêng cho iOS/Android.</b>
+                <code>CollabTabs</code> tách <code>shadow*</code> và <code>elevation</code> vì gộp
+                chung khiến Android chỉ nhận <code>elevation: 2</code>, tạo quầng sáng thô.
+            </li>
+            <li>
+                <b><code>skip</code> có trong hàm dịch thông báo</b> ("bỏ qua ứng tuyển") nhưng
+                <b>không giao diện nào phát hành động này</b> — giống hệt tình trạng bên jobs.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="jobs.html">← Tuyển dụng</a>
+            <a href="messaging.html">Nhắn tin →</a>
+        </div>
+    </main>
+</div>

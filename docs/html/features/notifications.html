@@ -1,0 +1,638 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Thông báo đẩy (FCM) — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Thông báo đẩy</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · notifications</span>
+        <h1>Thông báo đẩy (Push / FCM)</h1>
+        <p class="lede">
+            Feature nhỏ về số dòng code nhưng nhiều bẫy nhất dự án. Chỉ có 1 endpoint, 3 hook và 1
+            handler — nhưng mỗi phần đều đang né một hành vi khó chịu của Android, iOS hoặc chính
+            thư viện Firebase.
+        </p>
+
+        <h2>1. Toàn cảnh</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Nhiệm vụ</th>
+                        <th>Gọi từ đâu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>handlers/registerBackgroundHandler.ts</code></td>
+                        <td>Đăng ký handler nhận message khi app ở nền / đã bị kill</td>
+                        <td>
+                            <code>import</code> side-effect ở <b>đầu</b>
+                            <code>app/_layout.tsx</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>hooks/useDevicePayload.ts</code></td>
+                        <td>Xin quyền + lấy FCM token + device_id</td>
+                        <td><code>LoginScreen</code>, <code>useGoogleSignIn</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>hooks/usePushNotifications.ts</code></td>
+                        <td>3 listener nhận/điều hướng thông báo</td>
+                        <td><code>app/_layout.tsx</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>hooks/usePushTokenSync.ts</code></td>
+                        <td>Đẩy token mới lên server khi FCM xoay vòng</td>
+                        <td><code>app/_layout.tsx</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>domain/utils/resolvePushRoute.ts</code></td>
+                        <td>Suy màn hình đích từ <code>data</code> của message</td>
+                        <td><code>usePushNotifications</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>data/deviceInfo.ts</code></td>
+                        <td>Sinh &amp; lưu <code>device_id</code>, xác định platform</td>
+                        <td>2 hook trên</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>data/datasources/notificationRemoteDataSource.ts</code>
+                        </td>
+                        <td>
+                            <span class="badge post">POST</span> <code>/auth/device-token</code>
+                        </td>
+                        <td><code>usePushTokenSync</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Feature này KHÔNG có màn hình nào</span>
+            Không có "trung tâm thông báo" trong app. Thông báo do hệ điều hành hiển thị; nhiệm vụ
+            duy nhất của app là <b>đăng ký nhận</b> và <b>điều hướng khi người dùng bấm vào</b>.
+            (Tab tên "notifications" trong <code>(tabs)</code> thực ra là danh sách chat.)
+        </div>
+
+        <h2>2. Ba trạng thái app — ba cách xử lý khác nhau</h2>
+
+        <p>
+            Đây là kiến thức nền quan trọng nhất. Cùng một message FCM, tuỳ app đang ở trạng thái
+            nào mà hành vi khác hẳn:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trạng thái app</th>
+                        <th>OS có tự hiện banner?</th>
+                        <th>Callback được gọi</th>
+                        <th>Ai xử lý trong dự án</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Foreground</b> (đang mở)</td>
+                        <td><b>Không</b></td>
+                        <td><code>onMessage</code></td>
+                        <td>
+                            <code>usePushNotifications</code> → tự hiện toast bằng
+                            <code>showInfo()</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Background</b> (ở nền)</td>
+                        <td>Có</td>
+                        <td><code>setBackgroundMessageHandler</code></td>
+                        <td>
+                            <code>registerBackgroundHandler</code> —
+                            <b>thân hàm để trống có chủ ý</b>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b>Bấm vào thông báo</b> (app ở nền)</td>
+                        <td>—</td>
+                        <td><code>onNotificationOpenedApp</code></td>
+                        <td><code>usePushNotifications</code> → <code>router.push()</code></td>
+                    </tr>
+                    <tr>
+                        <td><b>Bấm vào thông báo</b> (app đã bị kill)</td>
+                        <td>—</td>
+                        <td>
+                            <code>getInitialNotification</code> —
+                            <b><code>onNotificationOpenedApp</code> KHÔNG bắn</b>
+                        </td>
+                        <td><code>usePushNotifications</code> → <code>router.push()</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Vì sao thân background handler để trống?</span>
+            <pre
+                style="margin: 8px 0"
+            ><code><span class="c-fn">setBackgroundMessageHandler</span>(<span class="c-fn">getMessaging</span>(<span class="c-fn">getApp</span>()), <span class="c-key">async</span> (message) =&gt; {
+    console.<span class="c-fn">warn</span>(<span class="c-str">'[FCM] background message:'</span>, message?.messageId);
+});</code></pre>
+            Khi message có khối <code>notification</code>,
+            <b>hệ điều hành đã tự hiện banner rồi</b>. Nếu handler cũng hiện thêm thì người dùng
+            thấy <b>hai thông báo trùng nhau</b>. Nhưng handler <b>vẫn phải tồn tại</b> — React
+            Native Firebase yêu cầu nó được đăng ký, nếu không sẽ cảnh báo và message data-only bị
+            bỏ qua. <br /><br />
+            Vì lý do đó, <code>app/_layout.tsx</code> import file này ở <b>đầu file</b> dưới dạng
+            side-effect: handler phải sẵn sàng <b>trước khi</b> app khởi động xong.
+        </div>
+
+        <h2>3. Lấy quyền &amp; token — nơi có bẫy lớn nhất</h2>
+
+        <div class="note danger">
+            <span class="t">
+                <code>requestPermission()</code> của RNFirebase KHÔNG hỏi gì trên Android
+            </span>
+            Hàm này được đánh dấu <code>@platform ios</code> và trên Android nó
+            <b>chỉ <code>return Promise.resolve(AUTHORIZED)</code></b> — không hiện hộp thoại nào.
+            <br /><br />
+            Tin vào nó thì trên <b>Android 13+</b> quyền <code>POST_NOTIFICATIONS</code> mặc định bị
+            từ chối. Hậu quả cực khó debug: FCM <i>vẫn</i> giao message (background handler vẫn
+            chạy, log vẫn ra), nhưng hệ điều hành <b>lặng lẽ không hiện banner</b>. Nhìn từ ngoài
+            giống hệt "server không gửi push".
+        </div>
+
+        <p>Cách <code>ensureNotificationPermission()</code> xử lý:</p>
+
+        <pre><code><span class="c-key">if</span> (Platform.OS === <span class="c-str">'android'</span>) {
+    <span class="c-com">// Dưới Android 13 (API 33): quyền được cấp sẵn lúc cài đặt</span>
+    <span class="c-key">if</span> (<span class="c-fn">Number</span>(Platform.Version) &lt; <span class="c-num">33</span>) <span class="c-key">return</span> <span class="c-key">true</span>;
+
+    <span class="c-com">// Android 13+: PHẢI dùng API của React Native, không dùng RNFirebase</span>
+    <span class="c-key">const</span> result = <span class="c-key">await</span> PermissionsAndroid.<span class="c-fn">request</span>(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+    <span class="c-key">return</span> result === PermissionsAndroid.RESULTS.GRANTED;
+}
+
+<span class="c-com">// iOS: đây mới là chỗ requestPermission() thật sự làm việc</span>
+<span class="c-key">const</span> status = <span class="c-key">await</span> <span class="c-fn">requestPermission</span>(messaging);
+<span class="c-key">return</span> status === AuthorizationStatus.AUTHORIZED
+    || status === AuthorizationStatus.PROVISIONAL;</code></pre>
+
+        <h3>Timeout 5 giây</h3>
+
+        <p>
+            <code>getDevicePayload()</code> bọc toàn bộ việc lấy token trong
+            <code>withTimeout(promise, 5000, null)</code>:
+        </p>
+
+        <pre><code><span class="c-key">const</span> fcm_token = <span class="c-key">await</span> <span class="c-fn">withTimeout</span>(<span class="c-fn">requestAndGetToken</span>(), <span class="c-num">5000</span>, <span class="c-key">null</span>);
+<span class="c-key">return</span> { device_id: <span class="c-fn">getOrCreateDeviceId</span>(), fcm_token, platform: <span class="c-fn">resolvePlatform</span>() };</code></pre>
+
+        <div class="note ok">
+            <span class="t">Nguyên tắc thiết kế: push không bao giờ được chặn đăng nhập</span>
+            Native call có thể treo (máy không có Play Services, mất mạng lúc đăng ký token…). Nếu
+            đăng nhập <code>await</code> vô hạn thì người dùng kẹt ở màn loading. Sau 5 giây,
+            <code>fcm_token</code> trả về <code>null</code> và người dùng
+            <b>vẫn đăng nhập bình thường</b> — chỉ là tạm thời chưa nhận push. Lần đăng nhập sau,
+            hoặc khi FCM xoay vòng token, nó sẽ tự đồng bộ lại.
+        </div>
+
+        <h3><code>device_id</code> — định danh thiết bị ổn định</h3>
+
+        <pre><code><span class="c-key">export function</span> <span class="c-fn">getOrCreateDeviceId</span>(): string {
+    <span class="c-key">const</span> existing = storage.<span class="c-fn">getString</span>(<span class="c-str">'device_id'</span>);
+    <span class="c-key">if</span> (existing) <span class="c-key">return</span> existing;
+
+    <span class="c-key">const</span> id = <span class="c-fn">generateUuid</span>();   <span class="c-com">// UUID v4 tự sinh, không cần thư viện</span>
+    storage.<span class="c-fn">set</span>(<span class="c-str">'device_id'</span>, id);
+    <span class="c-key">return</span> id;
+}</code></pre>
+
+        <p>
+            Lưu trong MMKV nên <b>ổn định qua mọi lần mở app</b>. Backend dùng nó để phân biệt thiết
+            bị: một tài khoản đăng nhập trên 3 máy = 3 <code>device_id</code> = 3 FCM token, và cần
+            đẩy thông báo tới cả ba.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Hệ quả của việc lưu trong MMKV</span>
+            Gỡ app hoặc xoá dữ liệu app → <code>device_id</code> mới được sinh. Bản ghi thiết bị cũ
+            ở backend trở thành rác. Backend nên dọn định kỳ các token mà FCM trả về
+            <code>UNREGISTERED</code>.
+        </div>
+
+        <p>
+            <code>resolvePlatform()</code> ánh xạ <code>Platform.OS</code> sang giá trị backend chờ
+            đợi: <code>ios → 'IOS'</code>, <code>android → 'ANDROID'</code>, còn lại
+            <code>'WEB'</code>.
+        </p>
+
+        <h2>4. Hai thời điểm token được gửi lên server</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khi nào</th>
+                        <th>Gửi qua đâu</th>
+                        <th>Code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Lúc đăng nhập</td>
+                        <td>
+                            <b>Kèm trong body login</b> — <code>/auth/login</code> hoặc
+                            <code>/auth/mobile-oauth</code>
+                        </td>
+                        <td><code>LoginScreen</code>, <code>useGoogleSignIn</code></td>
+                    </tr>
+                    <tr>
+                        <td>Khi FCM xoay vòng token</td>
+                        <td>
+                            <span class="badge post">POST</span> <code>/auth/device-token</code>
+                        </td>
+                        <td><code>usePushTokenSync</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Body của cả hai đường đều là:</p>
+
+        <pre><code>{
+    device_id: string,      <span class="c-com">// UUID lưu trong MMKV</span>
+    fcm_token: string,
+    platform: <span class="c-str">'ANDROID'</span> | <span class="c-str">'IOS'</span> | <span class="c-str">'WEB'</span>
+}</code></pre>
+
+        <div class="note danger">
+            <span class="t">Không đồng bộ token xoay vòng = push chết âm thầm</span>
+            FCM tự đổi token khi: cài lại app, khôi phục từ bản sao lưu, xoá dữ liệu app, hoặc định
+            kỳ theo chính sách của Google. Token cũ ngừng hoạt động
+            <b>mà không có lỗi nào</b> — server vẫn gửi, FCM vẫn nhận, chỉ là không tới máy nào cả.
+            <br /><br />
+            Đó là lý do <code>usePushTokenSync</code> tồn tại. Nó chỉ lắng nghe khi
+            <code>isAuthenticated</code>, và nuốt lỗi (chỉ <code>console.warn</code>) để không làm
+            hỏng trải nghiệm nếu mạng chập chờn.
+        </div>
+
+        <h2>5. Điều hướng khi bấm thông báo</h2>
+
+        <p>
+            <code>resolvePushRoute(data)</code> là toàn bộ logic. Nó nhận khối <code>data</code> của
+            message và trả về đường dẫn, hoặc <code>null</code>.
+        </p>
+
+        <h3>Thứ tự ưu tiên</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Suy từ <code>type</code> + id</span>
+                <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><code>type</code></th>
+                                <th>Cần</th>
+                                <th>Đường dẫn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>new_application</code></td>
+                                <td><code>job_id</code></td>
+                                <td><code>/(jobs)/applicants?id={jobId}</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>application_status_changed</code></td>
+                                <td>—</td>
+                                <td><code>/(jobs)/my-applications</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>new_message</code></td>
+                                <td><code>conversation_id</code></td>
+                                <td>
+                                    <code>/(messages)/detailMessage?conversationId={id}</code>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </li>
+            <li>
+                <span class="h"
+                    >Không có <code>type</code> nhưng có <code>conversationId</code></span
+                >
+                Vẫn mở được phòng chat — đây là trường hợp của
+                <code>messaging-service</code>.
+            </li>
+            <li>
+                <span class="h">Cuối cùng mới xét <code>route</code> / <code>path</code></span>
+                Chỉ là phương án dự phòng.
+            </li>
+        </ol>
+
+        <div class="note warn">
+            <span class="t">Vì sao <code>route</code> chỉ là dự phòng?</span>
+            Comment trong code ghi rõ: <code>messaging-service</code> đính sẵn
+            <code>route: "/(messages)/&lt;id&gt;"</code> — nhưng
+            <b>route đó không tồn tại trong app</b>. Đường dẫn đúng phải là
+            <code>/(messages)/detailMessage?conversationId=&lt;id&gt;</code>. Nếu tin vào
+            <code>route</code> thì bấm thông báo sẽ mở màn trắng.
+        </div>
+
+        <h3>Hai backend, hai quy ước đặt tên</h3>
+
+        <pre><code><span class="c-key">function</span> <span class="c-fn">pick</span>(data, ...keys) {
+    <span class="c-key">for</span> (<span class="c-key">const</span> key <span class="c-key">of</span> keys) {
+        <span class="c-key">const</span> value = data[key];
+        <span class="c-key">if</span> (<span class="c-key">typeof</span> value === <span class="c-str">'string'</span> &amp;&amp; value.length &gt; <span class="c-num">0</span>) <span class="c-key">return</span> value;
+    }
+    <span class="c-key">return</span> <span class="c-key">undefined</span>;
+}
+
+<span class="c-com">// Thử cả hai kiểu đặt tên</span>
+<span class="c-key">const</span> conversationId = <span class="c-fn">pick</span>(data, <span class="c-str">'conversation_id'</span>, <span class="c-str">'conversationId'</span>);
+<span class="c-key">const</span> jobId         = <span class="c-fn">pick</span>(data, <span class="c-str">'job_id'</span>, <span class="c-str">'jobId'</span>);</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Kiểu tên</th>
+                        <th>Có gửi <code>type</code>?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>job-post-service</code></td>
+                        <td>snake_case (<code>job_id</code>)</td>
+                        <td>Có</td>
+                    </tr>
+                    <tr>
+                        <td><code>messaging-service</code></td>
+                        <td>camelCase (<code>conversationId</code>)</td>
+                        <td><b>Không</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Có test đầy đủ</span>
+            <code>resolvePushRoute</code> và <code>deviceInfo</code> nằm trong số ít phần của dự án
+            có unit test tử tế: <code>__tests__/resolvePushRoute.test.ts</code>,
+            <code>deviceInfo.test.ts</code>, <code>useDevicePayload.test.ts</code>,
+            <code>usePushNotifications.test.ts</code>. Logic thuần, không React → dễ test.
+        </div>
+
+        <h2>6. Push tin nhắn — ràng buộc với Socket</h2>
+
+        <div class="note danger">
+            <span class="t">Quy tắc quan trọng nhất của cả hai feature</span>
+            Messaging-service <b>chỉ gửi push cho người đang offline</b>. "Offline" ở đây nghĩa là
+            <b>không có socket đang kết nối</b>. <br /><br />
+            Vì vậy <code>SocketProvider</code> phải <b>chủ động ngắt socket khi app xuống nền</b>:
+            <pre
+                style="margin: 8px 0 0"
+            ><code>AppState.<span class="c-fn">addEventListener</span>(<span class="c-str">'change'</span>, (state) =&gt; {
+    <span class="c-key">if</span> (state === <span class="c-str">'background'</span>) socketService.<span class="c-fn">disconnect</span>();
+    <span class="c-key">else if</span> (state === <span class="c-str">'active'</span>) socketService.<span class="c-fn">connect</span>();
+});</code></pre>
+            Không làm vậy thì người dùng <b>không bao giờ nhận được thông báo tin nhắn</b> — server
+            tưởng họ vẫn đang online.
+        </div>
+
+        <p>Hệ quả dây chuyền của quyết định này:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hệ quả</th>
+                        <th>Cách xử lý trong code</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tin nhắn đến lúc app ở nền không về qua socket</td>
+                        <td>
+                            <code>DetailMessageScreen</code> <b>luôn gọi lại API</b> khi mở màn, dù
+                            đã có cache
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Đang mở sẵn màn chat rồi app xuống nền và quay lại</td>
+                        <td>
+                            Thêm listener <code>AppState</code> riêng ở màn chat để fetch lại khi
+                            trở lại <code>active</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Trạng thái online của người khác bị "nhấp nháy"</td>
+                        <td>Chấp nhận — đây là đánh đổi có chủ ý để có push</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>7. Setup phía Firebase</h2>
+
+        <p>
+            Các bước tạo project, tải <code>google-services.json</code>, cấp service account cho
+            backend và cách test được mô tả đầy đủ ở
+            <a href="../03-setup-ben-thu-ba.html#firebase-cloud-messaging-push-notification"
+                >Setup bên thứ ba, mục 3</a
+            >. Tóm tắt những gì bắt buộc:
+        </p>
+
+        <ul>
+            <li>
+                Firebase project (hiện tại: <code>talentlink-22clc</code>) — <b>khác</b> project
+                Google Cloud dùng cho đăng nhập Google.
+            </li>
+            <li>
+                <code>google-services.json</code> ở thư mục gốc repo, package name phải khớp
+                <code>com.jonasaugust12.talent_link</code>. File này <b>bị gitignore</b>, CI ghi lại
+                từ secret base64.
+            </li>
+            <li>Backend giữ service account JSON để gọi FCM HTTP v1 API.</li>
+            <li>
+                <code>app.json</code> đã khai <code>@react-native-firebase/app</code> và
+                <code>/messaging</code> trong <code>plugins</code>, cùng
+                <code>googleServicesFile</code>.
+            </li>
+        </ul>
+
+        <h2>8. Yêu cầu payload cho backend</h2>
+
+        <p>Để app hoạt động đúng, message FCM nên có <b>cả hai khối</b>:</p>
+
+        <pre><code>{
+  <span class="c-str">"message"</span>: {
+    <span class="c-str">"token"</span>: <span class="c-str">"&lt;fcm_token&gt;"</span>,
+    <span class="c-str">"notification"</span>: {                 <span class="c-com">// OS dùng khối này để hiện banner</span>
+      <span class="c-str">"title"</span>: <span class="c-str">"Có người ứng tuyển mới"</span>,
+      <span class="c-str">"body"</span>:  <span class="c-str">"Nguyễn Văn A vừa nộp đơn vào 'Ca sĩ acoustic tối T6'"</span>
+    },
+    <span class="c-str">"data"</span>: {                         <span class="c-com">// app dùng khối này để điều hướng</span>
+      <span class="c-str">"type"</span>: <span class="c-str">"new_application"</span>,
+      <span class="c-str">"job_id"</span>: <span class="c-str">"abc-123"</span>
+    }
+  }
+}</code></pre>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thiếu khối nào</th>
+                        <th>Hậu quả</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Thiếu <code>notification</code></td>
+                        <td>
+                            Không có banner khi app ở nền (background handler đang cố ý để trống)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Thiếu <code>data</code></td>
+                        <td>Bấm vào thông báo chỉ mở app ở màn cuối, <b>không nhảy đúng chỗ</b></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Mọi giá trị trong <code>data</code> phải là chuỗi</span>
+            FCM chỉ chấp nhận <code>Record&lt;string, string&gt;</code>. Gửi số hay boolean sẽ bị từ
+            chối. <code>pick()</code> phía app cũng chỉ nhận giá trị
+            <code>typeof === 'string'</code> và độ dài &gt; 0.
+        </div>
+
+        <h2>9. Bảng chẩn đoán khi push không chạy</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Triệu chứng</th>
+                        <th>Kiểm tra theo thứ tự</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Không nhận được gì cả</td>
+                        <td>
+                            1. Có phải development build không (Expo Go không chạy được FCM) · 2.
+                            <code>google-services.json</code> có đúng package name không · 3. Token
+                            có được gửi lên server không (xem log lúc login) · 4. Gửi thử từ
+                            Firebase Console
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Log ra <code>[FCM] background message</code> nhưng
+                            <b>không thấy banner</b>
+                        </td>
+                        <td>
+                            <b>Gần như chắc chắn là quyền Android 13+.</b> Vào Cài đặt → Ứng dụng →
+                            Soundspal → Thông báo xem đã bật chưa. Hoặc payload thiếu khối
+                            <code>notification</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Có banner nhưng bấm vào không nhảy đúng màn</td>
+                        <td>
+                            Khối <code>data</code> thiếu <code>type</code> hoặc id. Đối chiếu bảng ở
+                            mục 5
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nhận được thông báo job nhưng không nhận thông báo tin nhắn</td>
+                        <td>
+                            App đang giữ socket khi ở nền → server tưởng online. Kiểm tra
+                            <code>SocketProvider</code> có ngắt ở <code>background</code> không
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hoạt động lúc đầu rồi tự nhiên ngừng</td>
+                        <td>
+                            Token đã xoay vòng mà không đồng bộ. Kiểm tra
+                            <code>usePushTokenSync</code> và endpoint
+                            <code>/auth/device-token</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Thấy <b>hai</b> thông báo giống nhau</td>
+                        <td>
+                            Ai đó đã thêm code hiện notification vào background handler. Để trống
+                            lại
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Đăng nhập bị treo ở màn loading</td>
+                        <td>
+                            Timeout 5 giây lẽ ra đã xử lý. Kiểm tra
+                            <code>withTimeout</code> còn nguyên không
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>10. Ghi chú &amp; hạn chế</h2>
+
+        <ul>
+            <li>
+                <b>Không có lịch sử thông báo trong app.</b> Vuốt đi là mất. Muốn có thì cần backend
+                bổ sung endpoint và app thêm màn hình.
+            </li>
+            <li>
+                <b>Không có cài đặt bật/tắt từng loại thông báo.</b>
+                <code>settingsStore</code> có trường <code>notifications: boolean</code> nhưng
+                <b>không được dùng ở đâu</b>.
+            </li>
+            <li>
+                <b>Không xoá token khi đăng xuất.</b>
+                <code>logout()</code> không gọi API huỷ đăng ký thiết bị. Thiết bị đó vẫn có thể
+                nhận push của tài khoản cũ cho tới khi backend dọn.
+            </li>
+            <li>
+                <b>Không có notification channel riêng cho Android.</b> Tất cả dùng channel mặc định
+                — không phân loại được mức độ ưu tiên.
+            </li>
+            <li>
+                <b>Chưa cấu hình đầy đủ cho iOS.</b> Cần APNs key trên Firebase Console và
+                <code>NSUserNotificationsUsageDescription</code>; <code>app.json</code> hiện chưa
+                có.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="messaging.html">← Nhắn tin</a>
+            <a href="payments.html">Thanh toán Premium →</a>
+        </div>
+    </main>
+</div>

@@ -1,0 +1,1231 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Công nghệ sử dụng — Soundspal Mobile</title>
+<link rel="stylesheet" href="assets/style.css" />
+<script src="assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Công nghệ sử dụng</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tài liệu 03</span>
+        <h1>Công nghệ sử dụng</h1>
+        <p class="lede">
+            Mỗi thư viện trong <code>package.json</code>: nó là gì, dùng ở file nào, dùng như thế
+            nào, và <b>vì sao chọn nó</b>. Không liệt kê suông — mỗi mục đều có địa chỉ cụ thể trong
+            source.
+        </p>
+
+        <h2>1. Tổng quan một trang</h2>
+
+        <div class="stack">
+            <div class="lyr">
+                <div class="lh">Nền tảng</div>
+                <div class="lb">
+                    React Native 0.81.5 · React 19.1 · Expo SDK 54 · TypeScript 5.9 (strict) · New
+                    Architecture (Fabric + TurboModules) đã bật
+                </div>
+            </div>
+            <div class="lyr">
+                <div class="lh">Điều hướng &amp; giao diện</div>
+                <div class="lb">
+                    Expo Router 6 · NativeWind 4 (Tailwind 3) · Reanimated 4 · Gesture Handler ·
+                    lucide-react-native · @gorhom/bottom-sheet
+                </div>
+            </div>
+            <div class="lyr">
+                <div class="lh">Dữ liệu &amp; state</div>
+                <div class="lb">
+                    TanStack React Query 5 (server state) · Zustand 5 (client state) · MMKV 4 (lưu
+                    trữ) · Axios 1.13 · Socket.IO client 4.8
+                </div>
+            </div>
+            <div class="lyr">
+                <div class="lh">Form &amp; kiểm tra dữ liệu</div>
+                <div class="lb">React Hook Form 7 · Zod 4 · @hookform/resolvers</div>
+            </div>
+            <div class="lyr">
+                <div class="lh">Native &amp; media</div>
+                <div class="lb">
+                    Firebase Messaging (FCM) · Google Sign-In · expo-av (thu/phát âm thanh) ·
+                    expo-image-picker · expo-document-picker · react-native-svg
+                </div>
+            </div>
+            <div class="lyr">
+                <div class="lh">Chất lượng &amp; phát hành</div>
+                <div class="lb">
+                    Jest + Testing Library · ESLint 9 (flat config) · Prettier · Husky + lint-staged
+                    + commitlint · EAS Build · Fastlane · GitHub Actions
+                </div>
+            </div>
+        </div>
+
+        <h2>2. Nền tảng: Expo + React Native</h2>
+
+        <h3>Expo SDK 54 &amp; New Architecture</h3>
+
+        <p>
+            <code>app.json</code> bật <code>"newArchEnabled": true</code> — app chạy trên Fabric
+            renderer và TurboModules thay vì cầu nối (bridge) cũ. Đây là lý do dự án dùng được
+            <code>react-native-nitro-modules</code> (yêu cầu của MMKV 4).
+        </p>
+
+        <div class="note danger">
+            <span class="t">Dự án này KHÔNG chạy được trên Expo Go</span>
+            Có 3 native module không có sẵn trong Expo Go: <code>@react-native-firebase/*</code>,
+            <code>react-native-mmkv</code>, <code>@react-native-google-signin/google-signin</code>.
+            Bắt buộc phải tạo <b>development build</b>: <code>npm run build:android:dev</code> hoặc
+            <code>npx expo run:android</code>.
+        </div>
+
+        <h4>Cấu hình native được khai báo ở đâu?</h4>
+
+        <p>
+            Dự án dùng mô hình <b>prebuild</b>: không commit thư mục <code>android/</code> và
+            <code>ios/</code> (chúng nằm trong <code>.gitignore</code>). Mọi cấu hình native khai
+            báo trong <code>app.json</code>, và <code>npx expo prebuild</code> sinh ra project
+            native từ đó.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plugin trong app.json</th>
+                        <th>Sinh ra cái gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>expo-font</code></td>
+                        <td>Nhúng font Outfit + Poppins vào bundle native</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-splash-screen</code></td>
+                        <td>Màn hình chờ, có cấu hình riêng cho iOS/Android/dark mode</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-build-properties</code></td>
+                        <td>
+                            Ghi đè Gradle: <code>minSdkVersion 28</code>,
+                            <code>targetSdkVersion 35</code>, <code>compileSdkVersion 35</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>@react-native-firebase/app</code> + <code>/messaging</code></td>
+                        <td>
+                            Áp <code>google-services.json</code>, thêm Google Services Gradle
+                            plugin, khai báo FirebaseMessagingService
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>@react-native-community/datetimepicker</code></td>
+                        <td>Picker ngày giờ native</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Thiếu sót cần biết trước khi lên App Store</span>
+            <code>app.json</code> hiện <b>không khai báo</b> <code>expo-av</code>,
+            <code>expo-image-picker</code>, <code>expo-document-picker</code> trong mảng
+            <code>plugins</code>, và không có <code>NSMicrophoneUsageDescription</code>. Trên
+            Android quyền <code>RECORD_AUDIO</code> được autolink nên tính năng thu âm vẫn chạy,
+            nhưng chuỗi mô tả quyền của iOS đang phụ thuộc giá trị mặc định — cần kiểm tra lại trước
+            khi submit iOS.
+        </div>
+
+        <h3>TypeScript strict</h3>
+
+        <p>
+            <code>tsconfig.json</code> bật <code>strict: true</code> và
+            <code>isolatedModules</code>. Import alias khai báo <b>3 nơi phải khớp nhau</b>:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Khai báo</th>
+                        <th>Ai đọc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>tsconfig.json</code></td>
+                        <td><code>"paths": { "@/*": ["./*"] }</code></td>
+                        <td>Trình biên dịch TS + IDE</td>
+                    </tr>
+                    <tr>
+                        <td><code>babel.config.js</code></td>
+                        <td><code>module-resolver</code> alias <code>'@': './'</code></td>
+                        <td>Metro bundler lúc chạy thật</td>
+                    </tr>
+                    <tr>
+                        <td><code>jest.config.js</code></td>
+                        <td><code>moduleNameMapper: {'^@/(.*)$': '&lt;rootDir&gt;/$1'}</code></td>
+                        <td>Jest lúc chạy test</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>3. Điều hướng: Expo Router 6</h2>
+
+        <p>
+            <b>Là gì:</b> định tuyến dựa trên file, xây trên React Navigation. Cây thư mục
+            <code>app/</code> = cây URL.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>API</th>
+                        <th>Dùng ở đâu</th>
+                        <th>Để làm gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>&lt;Stack&gt;</code></td>
+                        <td><code>app/_layout.tsx</code> và mọi <code>_layout.tsx</code> nhóm</td>
+                        <td>Điều hướng dạng chồng màn hình, <code>headerShown: false</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>&lt;Tabs&gt;</code></td>
+                        <td><code>app/(tabs)/_layout.tsx</code></td>
+                        <td>
+                            5 tab, dùng <code>tabBar</code> tuỳ biến (<code>CustomTabBar</code>)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useRouter()</code></td>
+                        <td>Khắp nơi</td>
+                        <td>
+                            <code>router.push()</code> đẩy màn mới,
+                            <code>router.replace()</code> thay thế (dùng trong guard)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useLocalSearchParams()</code></td>
+                        <td>
+                            Màn có tham số: <code>JobDetailScreen</code>,
+                            <code>BeatDetailScreen</code>, <code>PremiumScreen</code>…
+                        </td>
+                        <td>
+                            Đọc query param. <b>Lưu ý:</b> giá trị có thể là
+                            <code>string | string[]</code> nên code luôn phải unwrap
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useSegments()</code></td>
+                        <td><code>useProtectedRoute.ts</code></td>
+                        <td>Biết đang ở nhóm route nào để chạy guard</td>
+                    </tr>
+                    <tr>
+                        <td><code>&lt;Redirect&gt;</code></td>
+                        <td><code>app/index.tsx</code></td>
+                        <td>Chuyển hướng lúc render, không cần effect</td>
+                    </tr>
+                    <tr>
+                        <td>Route động <code>[id]</code></td>
+                        <td><code>app/(blog)/[id].tsx</code></td>
+                        <td>Duy nhất một route động trong toàn app</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-linking</code></td>
+                        <td><code>PremiumScreen.tsx</code></td>
+                        <td>
+                            <code>ExpoLinking.createURL('/(payments)/premium')</code> sinh deep link
+                            <code>soundspal://</code> làm URL PayOS trả về
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>4. Giao diện: NativeWind + Tailwind</h2>
+
+        <p>
+            <b>Là gì:</b> NativeWind cho phép viết
+            <code>className="flex-1 bg-white p-4"</code> trong React Native — nó biên dịch class
+            Tailwind thành <code>StyleSheet</code> lúc build, không có chi phí runtime đáng kể.
+        </p>
+
+        <p><b>Đường dây cấu hình:</b></p>
+
+        <div class="flow">
+            <div class="n"><b>global.css</b><small>@tailwind base/components/utilities</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>metro.config.js</b><small>withNativeWind({input})</small></div>
+            <span class="arrow">→</span>
+            <div class="n"><b>babel.config.js</b><small>jsxImportSource: nativewind</small></div>
+            <span class="arrow">→</span>
+            <div class="n hl"><b>className=""</b><small>trong component</small></div>
+        </div>
+
+        <h3>Design token trong <code>tailwind.config.js</code></h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Token</th>
+                        <th>Giá trị</th>
+                        <th>Ý nghĩa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>primary</code> / <code>primary-01</code></td>
+                        <td><code>#7d3bed</code></td>
+                        <td>Tím thương hiệu — nút chính, tab active</td>
+                    </tr>
+                    <tr>
+                        <td><code>primary-02</code></td>
+                        <td><code>#f471b7</code></td>
+                        <td>Hồng — đầu kia của gradient thương hiệu</td>
+                    </tr>
+                    <tr>
+                        <td><code>secondary</code></td>
+                        <td><code>#b39ef5</code> / <code>#f9b8dd</code></td>
+                        <td>Bản nhạt của cặp trên</td>
+                    </tr>
+                    <tr>
+                        <td><code>font-heading</code></td>
+                        <td>Outfit-Bold</td>
+                        <td>Tiêu đề</td>
+                    </tr>
+                    <tr>
+                        <td><code>font-body</code></td>
+                        <td>Poppins-Regular</td>
+                        <td>Nội dung</td>
+                    </tr>
+                    <tr>
+                        <td>Thang chữ</td>
+                        <td>
+                            <code>display</code> 32 · <code>h1</code> 24 · <code>h2</code> 20 ·
+                            <code>h3</code> 18 · <code>body-lg</code> 16 · <code>body</code> 14 ·
+                            <code>caption</code> 12
+                        </td>
+                        <td>Đã gồm sẵn lineHeight + fontWeight</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <code>darkMode: 'class'</code> — dark mode bật bằng cách gọi
+            <code>setColorScheme()</code> của NativeWind trong <code>app/_layout.tsx</code>, đồng bộ
+            từ <code>useThemeStore</code>.
+        </p>
+
+        <div class="note info">
+            <span class="t">Khi nào phải bỏ NativeWind dùng StyleSheet?</span>
+            Khi Tailwind không diễn đạt được: shadow đa nền tảng (<code
+                >shared/presentation/ui/shadows.ts</code
+            >
+            có <code>cardShadow / raisedShadow / floatingShadow / accentFabShadow</code> vì iOS dùng
+            <code>shadow*</code> còn Android dùng <code>elevation</code>), animation
+            (<code>Animated.Value</code>), hoặc màn hình rất lớn (<code>MyContentScreen.tsx</code>
+            981 dòng dùng toàn <code>StyleSheet</code>).
+        </div>
+
+        <h3>Thư viện UI phụ trợ</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thư viện</th>
+                        <th>Dùng ở</th>
+                        <th>Để làm gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>lucide-react-native</code></td>
+                        <td>Toàn bộ app</td>
+                        <td>Bộ icon SVG duy nhất — không dùng emoji làm icon</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-linear-gradient</code></td>
+                        <td><code>GradientPill</code>, nút CTA, hero card, thẻ challenge</td>
+                        <td>Gradient tím→hồng của thương hiệu</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-blur</code></td>
+                        <td><code>ExploreUserCard</code>, ảnh bìa <code>PersonalScreen</code></td>
+                        <td>
+                            Hiệu ứng kính mờ. <b>Trên Android gần như không có blur thật</b> —
+                            <code>experimentalBlurMethod</code> mặc định <code>'none'</code>, code
+                            cố tình không bật <code>dimezisBlurView</code> vì thẻ nằm trong FlatList
+                            vô hạn. Bù lại bằng lớp phủ trắng để chữ vẫn đọc được
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-svg</code></td>
+                        <td><code>ScoreDetailModal</code> (challenge)</td>
+                        <td>Vòng tròn tiến độ điểm số</td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-reanimated</code> + <code>-worklets</code></td>
+                        <td>Animation chạy trên luồng UI</td>
+                        <td>Plugin Babel <b>bắt buộc đứng cuối</b> danh sách plugins</td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-gesture-handler</code></td>
+                        <td>Bottom sheet, vuốt</td>
+                        <td>Cử chỉ chạy native, không qua JS thread</td>
+                    </tr>
+                    <tr>
+                        <td><code>@gorhom/bottom-sheet</code></td>
+                        <td><code>PickerBottomSheet</code> (form tuyển dụng)</td>
+                        <td>Sheet kéo từ dưới lên</td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-keyboard-controller</code></td>
+                        <td>
+                            <code>KeyboardProvider</code> ở root;
+                            <code>KeyboardAwareScrollView</code>
+                            trong form
+                        </td>
+                        <td>Đẩy nội dung khi bàn phím hiện — vấn đề kinh niên của RN</td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-safe-area-context</code></td>
+                        <td><code>ScreenSafeArea</code>, <code>useSafeAreaInsets()</code></td>
+                        <td>Tránh tai thỏ, thanh điều hướng</td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-toast-message</code></td>
+                        <td>Bọc trong <code>useToast()</code></td>
+                        <td>3 hàm: <code>showSuccess/showError/showInfo</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>react-native-render-html</code></td>
+                        <td><code>BlogDetailContent.tsx</code></td>
+                        <td>
+                            Render HTML từ CMS thành component native, có bảng
+                            <code>tagsStyles</code> riêng cho light/dark
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>react-native-date-picker</code>,
+                            <code>@react-native-community/datetimepicker</code>
+                        </td>
+                        <td>Form tuyển dụng, form kinh nghiệm</td>
+                        <td>
+                            Chọn hạn nộp, khoảng thời gian. Android tự đóng picker, iOS đóng bằng
+                            nút Done
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>@react-native-community/slider</code></td>
+                        <td>Điều chỉnh giá trị dạng thanh trượt</td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>5. Quản lý state: hai hệ thống song song</h2>
+
+        <p>
+            Đây là quyết định kiến trúc quan trọng nhất về dữ liệu. Nắm được nó thì đọc code nhanh
+            hơn nhiều.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>React Query</th>
+                        <th>Zustand</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>Giữ cái gì</th>
+                        <td>Dữ liệu <b>thuộc về server</b></td>
+                        <td>Dữ liệu <b>chỉ tồn tại ở máy user</b></td>
+                    </tr>
+                    <tr>
+                        <th>Ví dụ</th>
+                        <td>Danh sách job, hồ sơ, bài blog, lịch sử thanh toán</td>
+                        <td>Token, theme, bookmark, bài đang phát, phòng chat đang mở</td>
+                    </tr>
+                    <tr>
+                        <th>Nguồn sự thật</th>
+                        <td>Server (client chỉ cache)</td>
+                        <td>Client</td>
+                    </tr>
+                    <tr>
+                        <th>Lỗi thường gặp</th>
+                        <td colspan="2">
+                            Copy dữ liệu từ React Query sang Zustand → hai bản, lệch nhau. Dự án này
+                            <b>chỉ vi phạm có chủ đích một chỗ</b>: bookmark (xem bên dưới)
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>TanStack React Query 5</h3>
+
+        <p>Cấu hình toàn cục ở <code>shared/infrastructure/api/queryClient.ts</code>:</p>
+
+        <pre><code>queries: {
+    staleTime: <span class="c-num">1000 * 60 * 5</span>,      <span class="c-com">// 5 phút mới coi là cũ</span>
+    gcTime:    <span class="c-num">1000 * 60 * 10</span>,     <span class="c-com">// 10 phút không dùng thì xoá khỏi bộ nhớ</span>
+    retry: <span class="c-num">2</span>,
+    refetchOnMount: <span class="c-key">true</span>,
+    refetchOnWindowFocus: <span class="c-key">false</span>,   <span class="c-com">// mobile không có "window focus"</span>
+    refetchOnReconnect: <span class="c-key">false</span>,
+},
+mutations: { retry: <span class="c-num">1</span> }</code></pre>
+
+        <p>Các API của React Query được dùng trong dự án:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>API</th>
+                        <th>Ví dụ thật trong repo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useQuery</code></td>
+                        <td>
+                            <code>useGetCurrentUser</code> (staleTime 5 phút),
+                            <code>useGetConversations</code> (30 giây)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useInfiniteQuery</code></td>
+                        <td>
+                            <code>useGetJobsInfinite</code>, <code>useSearchUsersInfinite</code>,
+                            <code>useUnifiedJobSearch</code> — cuộn vô hạn với
+                            <code>getNextPageParam</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>useMutation</code></td>
+                        <td>Mọi thao tác ghi: <code>useLogin</code>, <code>useCreateJob</code>…</td>
+                    </tr>
+                    <tr>
+                        <td><code>invalidateQueries</code></td>
+                        <td>
+                            Sau khi ghi. Vd <code>useReviewSubmission</code> invalidate
+                            <code>jobSubmissions(jobId)</code> + <code>detail(jobId)</code> +
+                            <code>pendingCount()</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>setQueryData</code></td>
+                        <td>
+                            Ghi thẳng vào cache. Dùng ở comment blog (vì refetch chạy đua với
+                            backend → bình luận mới không hiện) và ở vote challenge (<code
+                                >setQueriesData</code
+                            >
+                            + predicate cập nhật mọi cache leaderboard cùng lúc)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>placeholderData</code></td>
+                        <td>
+                            <code>useGetJobById</code> tìm job trong cache <code>myPosts</code> để
+                            hiện ngay, không chờ mạng
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>fetchQuery</code></td>
+                        <td>
+                            <code>useBlogArticle</code> — không có API <code>GET /blogs/{id}</code>,
+                            nên nó fetch feed rồi <code>.find()</code> theo id
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>skipToken</code></td>
+                        <td>
+                            <code>useGetPaymentStatus</code> — không có <code>orderCode</code> thì
+                            không tạo <code>queryFn</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>retry</code> tuỳ biến</td>
+                        <td>
+                            <code>useGetPaymentStatus</code>: lỗi 404 retry tới 8 lần (giao dịch
+                            chưa kịp ghi), lỗi khác chỉ 1 lần
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>queryClient.clear()</code></td>
+                        <td>Sau login/logout — xoá sạch cache của phiên trước</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Zustand 5 — 9 store</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Store</th>
+                        <th>Giữ gì</th>
+                        <th>Persist MMKV?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>authStore</code></td>
+                        <td><code>accessToken, refreshToken, user, isAuthenticated</code></td>
+                        <td>✅ key <code>auth-storage</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>messagingStore</code></td>
+                        <td>
+                            State realtime chuẩn hoá: <code>conversationsById</code>,
+                            <code>messagesById</code>, <code>onlineUsers</code> (Set),
+                            <code>typingUsers</code>, <code>unreadCounts</code>,
+                            <code>pendingJobRefs</code>
+                        </td>
+                        <td>❌ (dữ liệu tạm thời)</td>
+                    </tr>
+                    <tr>
+                        <td><code>audioStore</code></td>
+                        <td>
+                            Hai player độc lập: beat nền và entry đang nghe thử. Loại trừ lẫn nhau
+                        </td>
+                        <td>❌</td>
+                    </tr>
+                    <tr>
+                        <td><code>jobBookmarkStore</code></td>
+                        <td><code>savedJobs: Job[]</code> — lưu <b>cả object</b>, không chỉ id</td>
+                        <td>✅ key <code>job-bookmarks-v2</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>blogBookmarkStore</code></td>
+                        <td><code>savedPosts: BlogPost[]</code> + <code>mergeServer()</code></td>
+                        <td>✅ key <code>blog-bookmarks-v1</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>searchStore</code></td>
+                        <td>Bộ lọc tìm nghệ sĩ (role, genres, phí, tỉnh…)</td>
+                        <td>❌</td>
+                    </tr>
+                    <tr>
+                        <td><code>redirectStore</code></td>
+                        <td><code>pendingPath</code> + <code>pendingParams</code> (returnTo)</td>
+                        <td>❌</td>
+                    </tr>
+                    <tr>
+                        <td><code>themeStore</code></td>
+                        <td><code>colorScheme: light|dark|auto</code></td>
+                        <td>❌ (đang bị comment lại)</td>
+                    </tr>
+                    <tr>
+                        <td><code>settingsStore</code></td>
+                        <td>theme / language / notifications</td>
+                        <td>❌ (đang bị comment lại)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Vì sao bookmark lưu cả object thay vì chỉ id?</span>
+            Bản v1 chỉ lưu id. Hậu quả: lưu một job từ trang chủ (job đó không nằm trong danh sách
+            đang tải) thì tab "Đã lưu" trống trơn dù badge vẫn đếm. v2 lưu nguyên
+            <code>Job</code> và <b>đổi tên key store</b> để không đọc phải dữ liệu v1 cũ.
+        </div>
+
+        <h3>MMKV 4 — lưu trữ</h3>
+
+        <p>
+            <b>Là gì:</b> key-value store viết bằng C++, nhanh hơn AsyncStorage khoảng 10–30 lần và
+            <b>đồng bộ</b> (không cần <code>await</code>). Có mã hoá sẵn.
+        </p>
+
+        <pre><code><span class="c-com">// shared/infrastructure/storage/storage.ts</span>
+<span class="c-key">export const</span> storage = <span class="c-fn">createMMKV</span>({
+    id: <span class="c-str">`${process.env.EXPO_PUBLIC_STORAGE_ID}`</span>,
+    encryptionKey: <span class="c-str">`${process.env.EXPO_PUBLIC_STORAGE_ENCRYPTION_KEY}`</span>,
+});</code></pre>
+
+        <div class="note danger">
+            <span class="t">Không bao giờ đổi 2 biến env này trên bản đã phát hành</span>
+            Đổi <code>EXPO_PUBLIC_STORAGE_ID</code> hoặc
+            <code>EXPO_PUBLIC_STORAGE_ENCRYPTION_KEY</code> khiến dữ liệu MMKV cũ không giải mã được
+            → <b>toàn bộ user bị đăng xuất</b> và mất bookmark.
+        </div>
+
+        <p>Ai dùng MMKV:</p>
+        <ul>
+            <li>
+                <code>mmkvStorage.ts</code> — adapter cho <code>persist</code> của Zustand (3 store)
+            </li>
+            <li>
+                <code>features/notifications/data/deviceInfo.ts</code> — lưu
+                <code>device_id</code> (UUID tự sinh) để backend nhận diện thiết bị ổn định qua các
+                lần mở app
+            </li>
+        </ul>
+
+        <h2>6. Mạng: Axios + Socket.IO</h2>
+
+        <h3>Axios 1.13</h3>
+
+        <p>Ba thứ đáng nhớ trong <code>apiClient.ts</code>:</p>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Request interceptor gắn token tự động</span>
+                Đọc <code>accessToken</code> từ <code>useAuthStore.getState()</code> — dùng
+                <code>getState()</code> chứ không phải hook, vì đây không phải component React.
+            </li>
+            <li>
+                <span class="h">Response interceptor + hàng đợi refresh</span>
+                Bắt 401 → refresh token một lần duy nhất → các request khác xếp hàng trong
+                <code>failedQueue</code> chờ token mới. Chi tiết ở
+                <a href="01-kien-truc-du-an.html#luong-du-lieu-ghi-mutation-co-che-refresh-token"
+                    >tài liệu kiến trúc</a
+                >.
+            </li>
+            <li>
+                <span class="h"><code>createApiCall()</code> — factory sinh hàm gọi API</span>
+                Mọi datasource đều dùng nó. Tự tách <code>params</code> (GET) và
+                <code>data</code> (khác), tự đặt <code>Content-Type</code> — <b>trừ FormData</b>, vì
+                axios phải tự sinh <code>boundary</code>.
+            </li>
+        </ol>
+
+        <div class="note warn">
+            <span class="t">Giới hạn đã biết của Axios trên React Native</span>
+            Axios 1.x <b>không gửi được <code>FormData</code></b> trên RN — body tới server rỗng và
+            báo <code>ERR_NETWORK</code> (không có status, không có data). Đó là lý do dự án có
+            <code>postMultipartWithFetch()</code> dùng <code>fetch</code> thay thế. Xem bảng "hai
+            con đường upload" bên dưới.
+        </div>
+
+        <h4>Hiện trạng upload file — hơi lộn xộn, cần biết</h4>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Transport</th>
+                        <th>Field</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>POST /users/me/avatar</code></td>
+                        <td>fetch</td>
+                        <td><code>file</code></td>
+                        <td>
+                            mime/name hardcode <code>image/jpeg</code> / <code>avatar.jpg</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /users/me/cover</code></td>
+                        <td>fetch</td>
+                        <td><code>file</code></td>
+                        <td>Tương tự</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /users/me/media</code></td>
+                        <td>fetch</td>
+                        <td><code>file</code> + <code>media_type</code></td>
+                        <td>Ảnh portfolio</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /users/videos</code></td>
+                        <td>fetch</td>
+                        <td><code>file</code>, <code>title</code>, <code>thumbnail?</code></td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /beats</code></td>
+                        <td>fetch</td>
+                        <td>
+                            <code
+                                >title, description, bpm, key_signature, genres×N, audio,
+                                cover_image?</code
+                            >
+                        </td>
+                        <td><code>genres</code> lặp lại field cho mỗi thể loại</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /beats/{id}/entries</code></td>
+                        <td>fetch</td>
+                        <td><code>audio</code></td>
+                        <td>Chỉ một field duy nhất</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /storage/upload</code></td>
+                        <td>fetch (bản riêng của blog)</td>
+                        <td><code>file</code></td>
+                        <td>
+                            Blog có <b>bản sao riêng</b>
+                            (<code>postStorageUploadWithFetch</code>) chứ không dùng helper chung
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>POST /storage/upload</code> (chat)</td>
+                        <td><b>axios</b></td>
+                        <td><code>file</code></td>
+                        <td>Đính kèm ảnh/tệp trong chat</td>
+                    </tr>
+                    <tr>
+                        <td><code>POST submissions/media</code></td>
+                        <td><b>axios</b></td>
+                        <td><code>file</code></td>
+                        <td>
+                            Media dùng khi ứng tuyển — vẫn đi đường axios mà chính helper cảnh báo
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Socket.IO client 4.8</h3>
+
+        <p>
+            <code>socketService.ts</code> là singleton (class có một instance export sẵn). Điểm đáng
+            chú ý: token được gửi ở <b>ba chỗ cùng lúc</b> để tương thích với mọi cách backend đọc:
+        </p>
+
+        <pre><code><span class="c-fn">io</span>(process.env.EXPO_PUBLIC_SOCKET_URL, {
+    path: process.env.EXPO_PUBLIC_SOCKET_PATH,   <span class="c-com">// mặc định /socket.io</span>
+    auth:  { token: accessToken },               <span class="c-com">// 1. handshake auth</span>
+    query: { token: accessToken },               <span class="c-com">// 2. query string</span>
+    extraHeaders: {                              <span class="c-com">// 3. HTTP header (chỉ có tác dụng ở polling)</span>
+        Authorization: <span class="c-str">`Bearer ${accessToken}`</span>,
+        <span class="c-str">'x-user-id'</span>: user.id,
+    },
+    transports: [<span class="c-str">'websocket'</span>, <span class="c-str">'polling'</span>],
+    reconnection: <span class="c-key">true</span>,
+    reconnectionAttempts: <span class="c-num">5</span>,
+    reconnectionDelay: <span class="c-num">1000</span>,
+    reconnectionDelayMax: <span class="c-num">10000</span>,
+})</code></pre>
+
+        <p>
+            Ngoài cơ chế reconnect sẵn có của Socket.IO, service còn tự quản lý backoff mũ 2 (<code
+                >1s → 2s → 4s → 8s → 10s</code
+            >) và sau 5 lần thất bại thì đặt cờ <code>hasReachedMaxAttempts</code> để ngừng hẳn,
+            tránh vòng lặp gọi mạng vô tận làm tốn pin.
+        </p>
+
+        <h2>7. Form: React Hook Form + Zod</h2>
+
+        <p>
+            <b>Là gì:</b> React Hook Form quản lý state form theo cơ chế uncontrolled (ít
+            re-render). Zod định nghĩa schema và tự suy ra kiểu TypeScript.
+            <code>@hookform/resolvers</code> nối hai thứ lại.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Chỉ áp dụng nhất quán ở một phần dự án</span>
+            RHF + Zod được dùng trong feature <b>auth</b> và
+            <b>3 form hồ sơ nghệ sĩ</b> (<code>BasicInfoForm</code>, <code>ContactInfoForm</code>,
+            <code>SocialLinksForm</code>). Còn lại — form tuyển dụng, form hồ sơ venue, các modal —
+            dùng <code>useState</code> thuần và validate thủ công. Đây là nợ kỹ thuật, không phải
+            thiết kế có chủ đích.
+        </div>
+
+        <p>Ví dụ validate thủ công trong <code>JobApplyModal.tsx</code>:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trường</th>
+                        <th>Luật</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Họ tên</td>
+                        <td>≥ 2 ký tự sau khi trim</td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td><code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code>, lưu ở dạng chữ thường</td>
+                    </tr>
+                    <tr>
+                        <td>Điện thoại</td>
+                        <td><code>/^(0|\+84)[0-9]{9,10}$/</code> — chuẩn số Việt Nam</td>
+                    </tr>
+                    <tr>
+                        <td>Thư ứng tuyển</td>
+                        <td>≥ 50 ký tự, có bộ đếm hiển thị dưới ô nhập</td>
+                    </tr>
+                    <tr>
+                        <td>Link portfolio</td>
+                        <td>Tách theo <code>/[\n,\s]+/</code>, mỗi link khớp regex URL</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>8. Native: Firebase, Google Sign-In, Media</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thư viện</th>
+                        <th>API được dùng</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>@react-native-firebase/messaging</code></td>
+                        <td>
+                            <code>getToken</code>, <code>requestPermission</code>,
+                            <code>onMessage</code>, <code>onNotificationOpenedApp</code>,
+                            <code>getInitialNotification</code>, <code>onTokenRefresh</code>,
+                            <code>setBackgroundMessageHandler</code>
+                        </td>
+                        <td>
+                            <code>useDevicePayload</code>, <code>usePushNotifications</code>,
+                            <code>usePushTokenSync</code>,
+                            <code>registerBackgroundHandler</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>@react-native-google-signin/google-signin</code></td>
+                        <td>
+                            <code>configure</code>, <code>hasPlayServices</code>,
+                            <code>signOut</code>, <code>signIn</code> → lấy
+                            <code>serverAuthCode</code>
+                        </td>
+                        <td><code>useGoogleSignIn.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-av</code></td>
+                        <td>
+                            <code>Audio.Sound</code> (phát), <code>Audio.Recording</code> (thu),
+                            <code>Audio.setAudioModeAsync</code>,
+                            <code>Audio.requestPermissionsAsync</code>
+                        </td>
+                        <td>
+                            <code>audioStore.ts</code>, <code>StudioDashboard.tsx</code>,
+                            <code>VideoPlayer.tsx</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-image-picker</code></td>
+                        <td><code>launchImageLibraryAsync</code></td>
+                        <td>Avatar, cover, portfolio, ảnh bìa beat, ảnh trong chat</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-document-picker</code></td>
+                        <td><code>getDocumentAsync({ type: 'audio/*' })</code></td>
+                        <td>Chọn file beat, chọn bản thu có sẵn, tệp đính kèm chat</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-clipboard</code></td>
+                        <td>Copy văn bản</td>
+                        <td>Chat</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-screen-orientation</code></td>
+                        <td><code>lockAsync(LANDSCAPE_LEFT)</code></td>
+                        <td>Xem video toàn màn hình trong hồ sơ</td>
+                    </tr>
+                    <tr>
+                        <td><code>expo-video</code>, <code>expo-video-player</code></td>
+                        <td>—</td>
+                        <td>
+                            Có trong <code>package.json</code> nhưng
+                            <b>không được import ở đâu cả</b>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Chi tiết cấu hình thu âm (challenge)</h3>
+
+        <p>
+            <code>StudioDashboard.tsx</code> dùng preset
+            <code>Audio.RecordingOptionsPresets.HIGH_QUALITY</code>:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thông số</th>
+                        <th>iOS</th>
+                        <th>Android</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Định dạng</td>
+                        <td><code>.m4a</code> / MPEG4AAC</td>
+                        <td><code>.m4a</code> / MPEG_4 + AAC</td>
+                    </tr>
+                    <tr>
+                        <td>Tần số lấy mẫu</td>
+                        <td colspan="2">44 100 Hz, 2 kênh, 128 kbps</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>Ba chế độ âm thanh khác nhau được đặt tuỳ tình huống — đây là chi tiết dễ bị bỏ sót:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khi nào</th>
+                        <th><code>setAudioModeAsync</code></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Phát beat</td>
+                        <td>
+                            <code
+                                >{ playsInSilentModeIOS: true, staysActiveInBackground: true }</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Nghe thử bài dự thi</td>
+                        <td>
+                            <code>{ allowsRecordingIOS: false, playsInSilentModeIOS: true }</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Đang thu âm</td>
+                        <td>
+                            <code
+                                >{ allowsRecordingIOS: true, playsInSilentModeIOS: true,
+                                playThroughEarpieceAndroid: false }</code
+                            >
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Thu xong</td>
+                        <td>Khôi phục <code>{ allowsRecordingIOS: false }</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>9. Kiểm thử &amp; chất lượng code</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Công cụ</th>
+                        <th>Lệnh</th>
+                        <th>Cấu hình</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Jest + jest-expo</td>
+                        <td><code>npm test</code></td>
+                        <td>
+                            preset <code>jest-expo</code>; report ra
+                            <code>test-results.html</code> + <code>coverage/junit.xml</code>;
+                            <b>ngưỡng coverage đã gỡ bỏ</b> (~15%, 276 test) để CI qua được
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>@testing-library/react-native</td>
+                        <td>—</td>
+                        <td>Render component, tìm phần tử theo vai trò/text</td>
+                    </tr>
+                    <tr>
+                        <td>ESLint 9 flat config</td>
+                        <td><code>npm run lint</code></td>
+                        <td>
+                            TS + React + React Hooks + React Native + Expo plugin;
+                            <code>eslint-config-prettier</code> đặt cuối cùng
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Prettier 3</td>
+                        <td><code>npm run format</code></td>
+                        <td>4 space, single quote, 100 cột</td>
+                    </tr>
+                    <tr>
+                        <td>TypeScript</td>
+                        <td><code>npm run typecheck</code></td>
+                        <td><code>tsc --noEmit</code></td>
+                    </tr>
+                    <tr>
+                        <td>Husky + lint-staged</td>
+                        <td>tự động</td>
+                        <td>
+                            <code>pre-commit</code>: prettier + eslint --fix trên file staged;
+                            <code>commit-msg</code>: commitlint; <code>pre-push</code>: lint toàn bộ
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <code>jest.setup.js</code> mock sẵn các native module không tồn tại trong môi trường
+            Node: <code>react-native-mmkv</code>, <code>@react-native-firebase/*</code>,
+            <code>expo-router</code>, <code>expo-linear-gradient</code>,
+            <code>react-native-toast-message</code>, <code>react-native-keyboard-controller</code>.
+            Nó cũng tắt <code>console.warn/error</code> để log không làm rối output test.
+        </p>
+
+        <div class="note info">
+            <span class="t">Jest không đọc file .env</span>
+            Đọc <code>.env</code> là tính năng của bundler Expo, không phải của Node. Nên kết quả
+            test <b>không phụ thuộc</b> vào cấu hình môi trường — đó là điều tốt.
+        </div>
+
+        <h2>10. CI/CD &amp; phát hành</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Workflow</th>
+                        <th>Kích hoạt khi</th>
+                        <th>Làm gì</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>test.yml</code></td>
+                        <td>push/PR vào <code>main</code>, <code>develop</code></td>
+                        <td>
+                            lint → typecheck → test + coverage → upload Codecov → comment kết quả
+                            vào PR
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>lint.yml</code></td>
+                        <td>mọi push/PR</td>
+                        <td>Chỉ chạy ESLint</td>
+                    </tr>
+                    <tr>
+                        <td><code>commit-lint.yml</code></td>
+                        <td>mọi push/PR</td>
+                        <td>Kiểm tra định dạng commit message</td>
+                    </tr>
+                    <tr>
+                        <td><code>build.yml</code></td>
+                        <td>mọi push/PR</td>
+                        <td>
+                            Chạy <code>expo prebuild --platform android</code> để chắc chắn project
+                            native sinh ra được (ghi <code>google-services.json</code> giả nếu chưa
+                            có secret)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>eas-build.yml</code></td>
+                        <td>push <b>tag</b> <code>release-v*</code> hoặc chạy tay</td>
+                        <td>
+                            EAS build production → tải <code>.aab</code> → Fastlane upload lên
+                            Google Play track <code>internal</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Chi tiết cách lấy từng secret và dựng pipeline này ở
+            <a href="03-setup-ben-thu-ba.html">tài liệu Setup bên thứ ba</a>.
+        </p>
+
+        <h2>11. Bản đồ nhanh: thư viện → file</h2>
+
+        <p>Tra cứu nhanh khi cần biết "cái này dùng ở đâu":</p>
+
+        <dl class="kv">
+            <dt>axios</dt>
+            <dd><code>shared/infrastructure/api/apiClient.ts</code> (chỉ đây)</dd>
+
+            <dt>socket.io-client</dt>
+            <dd><code>shared/infrastructure/socket/socketService.ts</code> (chỉ đây)</dd>
+
+            <dt>react-native-mmkv</dt>
+            <dd><code>shared/infrastructure/storage/storage.ts</code> (chỉ đây)</dd>
+
+            <dt>@tanstack/react-query</dt>
+            <dd>
+                <code>queryClient.ts</code> + mọi <code>features/*/presentation/hooks/*.ts</code>
+            </dd>
+
+            <dt>zustand</dt>
+            <dd>9 file <code>*Store.ts</code> (xem bảng mục 5)</dd>
+
+            <dt>expo-router</dt>
+            <dd>Toàn bộ <code>app/</code> + mọi màn hình cần điều hướng</dd>
+
+            <dt>nativewind</dt>
+            <dd>Mọi file <code>.tsx</code> có <code>className</code></dd>
+
+            <dt>@react-native-firebase</dt>
+            <dd><code>features/notifications/</code> (chỉ feature này)</dd>
+
+            <dt>@react-native-google-signin</dt>
+            <dd><code>features/auth/presentation/hooks/useGoogleSignIn.ts</code> (chỉ đây)</dd>
+
+            <dt>expo-av</dt>
+            <dd>
+                <code>features/challenge/</code> +
+                <code>features/profiles/…/VideoPlayer.tsx</code>
+            </dd>
+
+            <dt>react-hook-form + zod</dt>
+            <dd>
+                <code>features/auth/presentation/components/</code> + 3 form trong
+                <code>features/profiles/…/editprofile/</code>
+            </dd>
+
+            <dt>react-native-render-html</dt>
+            <dd><code>features/blog/presentation/components/BlogDetailContent.tsx</code></dd>
+
+            <dt>react-native-svg</dt>
+            <dd>
+                <code>features/challenge/…/leaderboard/ScoreDetailModal.tsx</code>
+            </dd>
+        </dl>
+
+        <div class="pagenav">
+            <a href="01-kien-truc-du-an.html">← Kiến trúc dự án</a>
+            <a href="03-setup-ben-thu-ba.html">Setup bên thứ ba →</a>
+        </div>
+    </main>
+</div>

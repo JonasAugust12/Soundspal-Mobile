@@ -1,0 +1,708 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khám phá · Trang chủ · Tìm kiếm — Soundspal Mobile</title>
+<link rel="stylesheet" href="../assets/style.css" />
+<script src="../assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="../index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Tính năng / Khám phá · Trang chủ · Tìm kiếm</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Tính năng · home · explore · search</span>
+        <h1>Trang chủ · Khám phá · Tìm kiếm</h1>
+        <p class="lede">
+            Ba module khám phá nội dung. Gộp chung một tài liệu vì chúng nhỏ và liên quan chặt với
+            nhau — nhưng có <b>một điểm gây nhầm lẫn lớn</b> cần làm rõ ngay: có
+            <b>hai màn "khám phá"</b> khác nhau trong app.
+        </p>
+
+        <div class="note danger">
+            <span class="t">Hai màn "Explore" — đừng nhầm</span>
+            <div class="tablewrap" style="margin-top: 10px; margin-bottom: 0">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th>Màn hình</th>
+                            <th>Nội dung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>(tabs)/explore</code></td>
+                            <td><code>ExploreScreen</code></td>
+                            <td>
+                                <b>Tìm người</b> — nghệ sĩ, producer, venue. <b>Không có nhạc</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>(challenge)/explore</code></td>
+                            <td><code>ChallengeExploreScreen</code></td>
+                            <td><b>Khám phá beat</b> — có MiniPlayer, lọc thể loại</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            Rắc rối hơn nữa: các component của màn beat (<code>BeatCard</code>,
+            <code>BeatList</code>, <code>MiniPlayer</code>, <code>HeroSection</code>,
+            <code>FilterChips</code>) lại nằm trong thư mục
+            <code>features/explore/presentation/components/</code>, dù chỉ được
+            <code>ChallengeExploreScreen</code> dùng.
+        </div>
+
+        <h2>1. Trang chủ (<code>home</code>)</h2>
+
+        <p>
+            <code>(tabs)/index</code> → <code>HomeScreen</code>. Module này
+            <b>chỉ có tầng presentation</b> — không có <code>data/</code>, không có endpoint riêng.
+            Nó gom dữ liệu từ 4 feature khác.
+        </p>
+
+        <h3>Sáu khối nội dung, từ trên xuống</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Khối</th>
+                        <th>Nguồn dữ liệu</th>
+                        <th>Đi đâu khi bấm</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Header (logo + nút blog)</td>
+                        <td>Tĩnh</td>
+                        <td><code>/(blog)</code></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Ô tìm kiếm</td>
+                        <td>Tĩnh — <b>không phải input</b>, chỉ là nút trông giống ô tìm kiếm</td>
+                        <td><code>/(search)</code></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Thẻ challenge nổi bật</td>
+                        <td>
+                            <code>useGetBeats({page_size: 20})</code> → chọn beat có
+                            <code>entry_count</code> cao nhất
+                        </td>
+                        <td><code>/(challenge)/explore</code></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Nghệ sĩ nổi bật</td>
+                        <td>
+                            <span class="badge get">GET</span>
+                            <code>/landing/featured-users?limit=5</code>
+                        </td>
+                        <td>Hồ sơ nghệ sĩ/venue · "Tất cả" → <code>(tabs)/explore</code></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Việc làm hot</td>
+                        <td>
+                            <span class="badge get">GET</span>
+                            <code>/landing/featured-jobs?limit=5</code>
+                        </td>
+                        <td>
+                            <code>/(jobs)/detail?id=</code> · "Tất cả" → <code>(tabs)/jobs</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Blog · Tin tức</td>
+                        <td><code>useBlogFeed()</code>, cắt còn 5 bài</td>
+                        <td><code>/(blog)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Tiêu đề thẻ challenge là <b>động</b> (beat nhiều lượt tham gia nhất, viết hoa), có
+            phương án dự phòng cứng <code>"SONIC PULSE\nCYBERPUNK"</code> khi chưa có dữ liệu.
+        </p>
+
+        <div class="note info">
+            <span class="t">Tránh nháy "Chưa có..." lúc mới mở</span>
+            Mỗi khối dùng <code>SectionPlaceholder</code>: hiện spinner khi <code>isLoading</code>,
+            chỉ hiện thông báo rỗng khi đã tải xong mà vẫn không có dữ liệu. Nếu không, người dùng
+            thấy "Chưa có nghệ sĩ nào" nhấp nháy ở mỗi lần mở app.
+        </div>
+
+        <h3>Tối ưu hiệu năng carousel</h3>
+
+        <p>
+            Các băng chuyền ngang đã chuyển từ <code>ScrollView</code> sang
+            <code>FlatList</code> với <code>removeClippedSubviews: true</code>,
+            <code>initialNumToRender: 3</code>, <code>maxToRenderPerBatch: 3</code>,
+            <code>windowSize: 5</code>. Comment ghi lý do: giảm số ảnh/skeleton mount cùng lúc, khắc
+            phục hiện tượng "kéo nhiều mà trượt ít".
+        </p>
+
+        <p>
+            <code>ArtistCard</code> còn <b>ghim chiều cao hàng thể loại ở 44 px</b> — vì số lượng
+            thể loại rất khác nhau giữa các nghệ sĩ (3 với 12), không ghim thì thẻ trong carousel
+            cao thấp lởm chởm.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Response <code>/landing/featured-users</code> lồng hai lớp</span>
+            Cấu trúc thật là <code>data.users.users</code> (chứ không phải <code>data.users</code>).
+            <code>mapFeaturedUsersToArtistItems()</code> đọc đúng đường dẫn này và trả
+            <code>[]</code> nếu sai — đọc nhầm một lớp là danh sách rỗng im lặng.
+        </div>
+
+        <p>
+            <code>homeContent.ts</code> chỉ chứa <b>nội dung hiển thị</b> (tiêu đề khối, màu nhấn,
+            đường dẫn "Tất cả", thông báo rỗng) — comment ghi rõ đây <b>không phải dữ liệu</b>,
+            không có endpoint nào phục vụ chúng.
+        </p>
+
+        <div class="note warn">
+            <span class="t">Lỗi nhỏ về ngôn ngữ</span>
+            Mô tả nghệ sĩ có phương án dự phòng
+            <code>`${user.role} chuyên nghiệp`</code> — tức là slug tiếng Anh (<code>singer</code>,
+            <code>producer</code>) lọt vào giao diện tiếng Việt: "singer chuyên nghiệp". Nên map
+            sang nhãn tiếng Việt trước.
+        </div>
+
+        <h2>2. Khám phá — tìm người (<code>explore</code>)</h2>
+
+        <p><code>(tabs)/explore</code> → <code>ExploreScreen</code>. Đây là màn tìm người.</p>
+
+        <h3>Endpoint</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Path</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge post">POST</span></td>
+                        <td><code>/search/users</code></td>
+                        <td>Body là object lọc. <b>POST chứ không GET</b> vì bộ lọc phức tạp</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/users/genres</code></td>
+                        <td>Danh sách thể loại cho bộ lọc</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/landing/featured-users?limit=</code></td>
+                        <td>Dùng bởi trang chủ</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge get">GET</span></td>
+                        <td><code>/landing/featured-jobs?limit=</code></td>
+                        <td>Dùng bởi trang chủ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Datasource <b>loại bỏ giá trị <code>undefined</code> và chuỗi rỗng</b> trước khi POST.
+            Lưu ý <code>null</code>, <code>[]</code>, <code>false</code>, <code>0</code>
+            <b>không</b> bị loại.
+        </p>
+
+        <h3>Hook</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Hook</th>
+                        <th>Query key</th>
+                        <th>staleTime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>useSearchUsersInfinite</code> <b>(dùng thật)</b></td>
+                        <td><code>['search-users-infinite', params]</code></td>
+                        <td>60 giây, mỗi trang 20</td>
+                    </tr>
+                    <tr>
+                        <td><code>useSearchUsers</code></td>
+                        <td><code>['search-users', params]</code></td>
+                        <td>60 giây — comment ghi "giữ lại cho test", chỉ có file test gọi</td>
+                    </tr>
+                    <tr>
+                        <td><code>useGetGenres</code></td>
+                        <td><code>['genres']</code></td>
+                        <td><b>1 giờ</b> (thể loại hiếm khi đổi)</td>
+                    </tr>
+                    <tr>
+                        <td><code>useFeaturedUsers</code>, <code>useFeaturedJobs</code></td>
+                        <td><code>['featured-users' | 'featured-jobs', limit]</code></td>
+                        <td>5 phút</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p><b>Module này không có mutation nào</b> — hoàn toàn chỉ đọc.</p>
+
+        <h3>Luồng màn hình</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">4 tab vai trò</span>
+                <b>Tất cả</b> · <b>Ca sĩ</b> · <b>Nhà sản xuất</b> · <b>Nhà tuyển dụng</b>. Tab
+                active dùng gradient tím.
+            </li>
+            <li>
+                <span class="h">Ô tìm kiếm debounce 500 ms</span>
+                Gõ xong 0,5 giây mới gọi API.
+            </li>
+            <li>
+                <span class="h">Ghép tham số tìm kiếm</span>
+                Mảng rỗng → <code>undefined</code>; chuỗi rỗng → <code>undefined</code>; thêm
+                <code>pageSize: 20</code>.
+            </li>
+            <li>
+                <span class="h">Cuộn vô hạn</span>
+                <code>onEndReachedThreshold: 0.35</code>, kéo để làm mới,
+                <code>removeClippedSubviews</code> chỉ bật trên Android.
+            </li>
+            <li>
+                <span class="h">Bấm vào thẻ</span>
+                <code>role === 'venue'</code> → <code>/(profiles)/venueProfile</code>, ngược lại
+                <code>/(profiles)/artistProfile</code>, truyền <code>username</code>.
+            </li>
+        </ol>
+
+        <div class="note warn">
+            <span class="t">Đổi tab vai trò sẽ xoá các bộ lọc riêng của vai trò cũ</span>
+            <code>setRole()</code> reset
+            <code>genres, serviceTypes, businessTypes, feeMin, feeMax, venueType, isAvailable</code>
+            nhưng <b>giữ</b> <code>query</code> và <code>stateProvince</code>. Comment ghi đây là
+            hành vi khớp với bản web.
+        </div>
+
+        <h3>Bộ lọc (<code>FilterSheet</code>)</h3>
+
+        <p>Sheet hiển thị nhóm lọc khác nhau tuỳ vai trò đang chọn:</p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nhóm lọc</th>
+                        <th>Hiện khi</th>
+                        <th>Gửi lên</th>
+                        <th>Giá trị</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tỉnh / Thành</td>
+                        <td>Luôn</td>
+                        <td><code>stateProvince</code></td>
+                        <td>Mã ISO: <code>SG, HN, DN, BD, DNG, CT, HP, BH</code></td>
+                    </tr>
+                    <tr>
+                        <td>Thể loại</td>
+                        <td>Nghệ sĩ hoặc chưa chọn vai trò</td>
+                        <td><code>genres[]</code></td>
+                        <td>
+                            <b><code>genre.id</code></b
+                            >, không phải tên
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Loại dịch vụ</td>
+                        <td>Nghệ sĩ</td>
+                        <td><code>serviceTypes[]</code></td>
+                        <td>10 giá trị (<code>live_performance</code>…)</td>
+                    </tr>
+                    <tr>
+                        <td>Khoảng thù lao</td>
+                        <td>Nghệ sĩ</td>
+                        <td><code>feeMin</code>, <code>feeMax</code></td>
+                        <td>Số VND: 500k → 20 triệu</td>
+                    </tr>
+                    <tr>
+                        <td>Loại địa điểm</td>
+                        <td>Venue</td>
+                        <td><code>venueType</code></td>
+                        <td>Chọn một, bấm lại để bỏ</td>
+                    </tr>
+                    <tr>
+                        <td>Loại hình kinh doanh</td>
+                        <td>Venue</td>
+                        <td><code>businessTypes[]</code></td>
+                        <td>7 giá trị</td>
+                    </tr>
+                    <tr>
+                        <td>Công tắc sẵn sàng</td>
+                        <td>Nghệ sĩ hoặc venue</td>
+                        <td><code>isAvailable</code></td>
+                        <td>
+                            Nhãn đổi theo vai trò: "Chỉ nơi đang tuyển" / "Chỉ nghệ sĩ đang nhận
+                            show"
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Bộ lọc áp dụng ngay, nút "Áp dụng" chỉ để đóng sheet</span>
+            Mọi setter ghi thẳng vào store → query key đổi → gọi API ngay. Nút "Áp dụng" chỉ gọi
+            <code>onClose()</code>. (Khác với <code>JobFilterSheet</code> vốn dùng state nháp.)
+        </div>
+
+        <div class="note warn">
+            <span class="t">Hai đường lấy thể loại chạy song song</span>
+            <code>FilterSheet</code> dùng <code>useGetGenres</code> (key <code>['genres']</code>) và
+            gửi <b>id</b>. <code>FilterChips</code> (màn beat) dùng
+            <code>useGetAllGenres</code> (key <code>['users','genres','all']</code>) và gửi
+            <b>tên</b>. Cả hai gọi cùng endpoint <code>/users/genres</code> nhưng key khác nhau →
+            <b>fetch và cache hai lần</b>.
+        </div>
+
+        <h2>3. Khám phá beat (<code>ChallengeExploreScreen</code>)</h2>
+
+        <p>
+            <code>(challenge)/explore</code>. Đây mới là màn có nhạc. Chi tiết đầy đủ ở
+            <a href="challenge.html">tài liệu Challenge</a>; ở đây tóm tắt phần thuộc thư mục
+            <code>explore</code>:
+        </p>
+
+        <ul>
+            <li><code>HeroSection</code> — beat trending (nhiều <code>entry_count</code> nhất).</li>
+            <li><code>FilterChips</code> — chọn nhiều thể loại, không phân biệt hoa thường.</li>
+            <li>
+                <code>BeatList</code> — ghép thể loại thành chuỗi ngăn bởi dấu phẩy
+                (<code>?genre=pop,hiphop</code>), backend hiểu là lọc OR.
+            </li>
+            <li><code>MiniPlayer</code> — đặt <b>ngoài</b> ScrollView để nổi lên trên.</li>
+        </ul>
+
+        <h3>MiniPlayer hoạt động thế nào</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khía cạnh</th>
+                        <th>Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Thư viện</td>
+                        <td><code>expo-av</code> (<code>Audio.Sound</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>State</td>
+                        <td>
+                            <code>audioStore</code> (Zustand toàn cục) — không persist, không React
+                            Query
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Điều kiện hiện</td>
+                        <td>
+                            Chỉ khi <code>currentBeat !== null</code>. <code>stop()</code> đặt nó về
+                            <code>null</code> → player biến mất
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Vị trí</td>
+                        <td>
+                            <code>absolute bottom-[110px] right-6</code>, <code>zIndex: 40</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hiệu ứng sóng</td>
+                        <td>
+                            6 thanh <code>Animated.Value</code>, đỉnh khác nhau
+                            <code>[1, 0.6, 0.8, 0.5, 0.9, 0.6]</code>, thời lượng
+                            <code>250 + (i % 3) × 50</code> ms để lệch pha nhau.
+                            <code>useNativeDriver: false</code> — bắt buộc vì animate
+                            <code>height</code> dạng phần trăm
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Kích hoạt phát</td>
+                        <td>
+                            Bấm <b>ảnh bìa</b> trong <code>BeatCard</code> — ảnh bìa
+                            <i>chính là</i> nút play
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>4. Tìm kiếm gộp (<code>search</code>)</h2>
+
+        <p>
+            <code>(search)/index</code> → <code>UnifiedSearchScreen</code>. Module này
+            <b>không có datasource riêng</b> — nó dùng lại repository của explore và jobs.
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Loại</th>
+                        <th>Hook</th>
+                        <th>Endpoint thật</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Người dùng</td>
+                        <td><code>useUnifiedUserSearch</code></td>
+                        <td><span class="badge post">POST</span> <code>/search/users</code></td>
+                    </tr>
+                    <tr>
+                        <td>Việc làm</td>
+                        <td><code>useUnifiedJobSearch</code></td>
+                        <td>
+                            <span class="badge get">GET</span>
+                            <code
+                                >/posts/search?...&amp;status=published&amp;visibility=public&amp;q=</code
+                            >
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            Cả hai staleTime 60 giây, mỗi trang 10, và chỉ chạy khi có từ khoá (<code
+                >enabled: hasQuery</code
+            >).
+        </p>
+
+        <div class="note warn">
+            <span class="t">Chỉ tìm 2 loại nội dung</span>
+            <b>Blog và beat KHÔNG được tìm</b> ở màn này, dù cả hai đều có endpoint tìm kiếm riêng
+            (<code>/blogs/search</code>, <code>/beats?genre=</code>). Đây là hạn chế đáng kể của
+            tính năng "tìm kiếm gộp".
+        </div>
+
+        <h3>Cách hoạt động</h3>
+
+        <ol class="steps">
+            <li>
+                <span class="h">Debounce 400 ms</span>
+                Nhanh hơn màn Explore (500 ms) vì đây là màn chuyên tìm kiếm.
+            </li>
+            <li>
+                <span class="h">Ba tab</span>
+                <b>Tất cả</b> · <b>Việc làm</b> · <b>Người dùng</b>. Tab con hiện số kết quả trong
+                ngoặc.
+            </li>
+            <li>
+                <span class="h">Tab "Tất cả" là bản xem trước</span>
+                Hiện tối đa <b>5</b> mỗi loại theo thứ tự cố định
+                <b>Người dùng trước, Việc làm sau</b>. Có nút "Xem tất cả" khi tổng &gt; 5.
+                <b>Tab này không có phân trang.</b>
+            </li>
+            <li>
+                <span class="h">Tab riêng có cuộn vô hạn đầy đủ</span>
+            </li>
+        </ol>
+
+        <div class="note info">
+            <span class="t">Kết quả không trộn lẫn</span>
+            Hai loại kết quả nằm ở hai danh sách tách biệt,
+            <b>không xếp xen kẽ theo độ liên quan</b>. Không có thuật toán xếp hạng chung.
+        </div>
+
+        <p>
+            Cách đếm tổng cũng khác nhau: người dùng đọc <code>pages[0].data.total</code>, việc làm
+            đọc <code>pages[0].pagination.total_items</code>, cả hai đều có phương án dự phòng là độ
+            dài mảng đã tải.
+        </p>
+
+        <h2>5. Chi tiết giao diện đáng chú ý</h2>
+
+        <h3>Ảnh bìa mặc định — chọn ổn định theo hash</h3>
+
+        <p>
+            <code>defaultCoverImages.ts</code> có bộ ảnh Unsplash tuyển chọn.
+            <code>getDefaultCoverUrl(seed, role)</code> dùng <b>hàm băm djb2</b> để chọn ảnh — nghĩa
+            là cùng một người <b>luôn nhận cùng một ảnh bìa</b>, không đổi mỗi lần render.
+        </p>
+
+        <p>
+            Comment ghi rõ tham số <code>h=520&amp;fit=crop</code> là <b>bắt buộc</b> vì một số ảnh
+            gốc là ảnh dọc; tỉ lệ crop ~1.54:1 khớp với thẻ chứ không phải banner.
+        </p>
+
+        <h3>Hiệu ứng kính trên thẻ người dùng</h3>
+
+        <div class="note warn">
+            <span class="t">Android gần như không có blur thật</span>
+            <code>experimentalBlurMethod</code> của <code>expo-blur</code> mặc định
+            <code>'none'</code>. Code <b>cố tình không bật</b> <code>dimezisBlurView</code> vì thẻ
+            nằm trong FlatList vô hạn (chi phí quá lớn). <br /><br />
+            Bù lại: thêm lớp phủ gradient trắng dưới lớp kính để chữ tối vẫn đọc được.
+            <code>GLASS_INTENSITY</code> là 70 trên iOS, 90 trên Android.
+        </div>
+
+        <p>Hai chi tiết nhỏ khác trong <code>ExploreUserCard</code>:</p>
+        <ul>
+            <li>
+                <code>cover_url?.trim()</code> là bắt buộc — API có thể trả chuỗi chỉ gồm khoảng
+                trắng (đã có test cho trường hợp này).
+            </li>
+            <li>
+                Avatar được đặt <b>cuối cùng trong JSX</b> chỉ để nó nằm trên <code>BlurView</code>.
+            </li>
+        </ul>
+
+        <h3>Huy hiệu Premium trên kết quả tìm kiếm</h3>
+
+        <p>
+            <code>UserProfile</code> có <code>is_premium</code> và <code>premium_expired_at</code> —
+            search-service trả sẵn để thẻ kết quả gắn huy hiệu mà không cần gọi thêm API. Nhưng vẫn
+            phải dùng <code>isPremiumActive()</code> (kiểm tra hạn), không đọc mỗi cờ. Xem
+            <a href="payments.html">tài liệu Payments</a>.
+        </p>
+
+        <h2>6. Mô hình dữ liệu</h2>
+
+        <pre><code>Genre { id, name, created_at, updated_at }
+
+UserProfile {                      <span class="c-com">// kết quả POST /search/users</span>
+    id, username, status, email,
+    role: <span class="c-str">'singer'</span> | <span class="c-str">'producer'</span> | <span class="c-str">'venue'</span>,
+    display_name,
+    avatar_url?, cover_url?, phone_number?,
+    brief_bio?, detail_bio?, city?, country?,
+    featured_release_links?: string[],
+    genres: Genre[] | <span class="c-key">null</span>,          <span class="c-com">// nullable (khác FeaturedUser)</span>
+    is_verified, is_featured: boolean,
+    is_premium?: boolean,
+    premium_expired_at?: string | <span class="c-key">null</span>,
+    created_at, updated_at
+}
+
+SearchUsersRequest {
+    query?, role?, location?, genres?: string[],
+    businessTypes?: string[], serviceTypes?: string[],
+    capacity?, feeMin?, feeMax?, isAvailable?,
+    stateProvince?, venueType?,
+    page?, pageSize?,
+    <span class="c-com">// khai báo nhưng KHÔNG BAO GIỜ được điền:</span>
+    openHour?, rentPrice?, convenientFacilities?, sortBy?, sortOrder?
+}</code></pre>
+
+        <div class="note info">
+            <span class="t">Khác biệt nhỏ giữa hai kiểu user</span>
+            <code>FeaturedUser.genres</code> là <code>Genre[]</code> (không null), còn
+            <code>UserProfile.genres</code> là <code>Genre[] | null</code>. Cũng lưu ý
+            <code>FeaturedJob.genres</code> là <code>string[]</code> — chuỗi trần, không phải
+            object.
+        </div>
+
+        <h2>7. Bản đồ route</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Màn hình</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>(tabs)/index</code></td>
+                        <td><code>HomeScreen</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>(tabs)/explore</code></td>
+                        <td><code>ExploreScreen</code> — tìm người</td>
+                    </tr>
+                    <tr>
+                        <td><code>(search)/index</code></td>
+                        <td><code>UnifiedSearchScreen</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>(challenge)/explore</code></td>
+                        <td><code>ChallengeExploreScreen</code> — khám phá beat</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p>
+            <code>(search)</code> được đăng ký ở <b>stack gốc</b>, không nằm trong
+            <code>(tabs)</code> — nên nó <b>phủ lên thanh tab</b> khi mở.
+        </p>
+
+        <h2>8. Code chết &amp; điểm cần dọn</h2>
+
+        <ul>
+            <li>
+                <b><code>features/explore/…/CustomTabBar.tsx</code></b> — nhãn hardcode, không có
+                <code>onPress</code>, không export trong barrel, không nơi nào import. Tab bar thật
+                là <code>shared/presentation/navigation/CustomTabBar</code>.
+            </li>
+            <li>
+                <b><code>useSearchUsers</code></b> (bản không infinite) — chỉ file test dùng.
+            </li>
+            <li>
+                <b><code>ArtistCardSkeleton</code>, <code>JobCardSkeleton</code> của home</b> —
+                export nhưng không import (bản đang dùng thật là của <code>features/jobs</code>).
+            </li>
+            <li>
+                <b><code>shared/presentation/ui/SearchBar.tsx</code></b> — component tìm kiếm dùng
+                chung, nhưng cả Explore lẫn UnifiedSearch đều
+                <b>tự viết <code>TextInput</code> riêng</b>.
+            </li>
+            <li>
+                <b>Trường không bao giờ được điền:</b> <code>capacity</code> có setter và được gửi
+                lên nhưng không có UI nào đặt giá trị; <code>openHour</code>,
+                <code>rentPrice</code>, <code>convenientFacilities</code>, <code>sortBy</code>,
+                <code>sortOrder</code> chỉ tồn tại trong type.
+            </li>
+            <li>
+                <b>Mọi setter đều <code>page: 1</code></b> — thừa, vì infinite query tự quản lý phân
+                trang.
+            </li>
+            <li>
+                <b><code>totalResults</code> chỉ đọc từ trang 0</b> — có thể lệch nếu tổng số thay
+                đổi giữa các trang.
+            </li>
+            <li>
+                <b><code>getHeroBeat</code> bị viết lại</b> — <code>HomeScreen</code> dùng hàm
+                chung, còn <code>ChallengeExploreScreen</code> tự <code>reduce</code> lại y hệt.
+            </li>
+        </ul>
+
+        <div class="pagenav">
+            <a href="challenge.html">← Challenge</a>
+            <a href="../index.html">Mục lục →</a>
+        </div>
+    </main>
+</div>

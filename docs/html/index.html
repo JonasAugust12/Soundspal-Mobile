@@ -1,0 +1,501 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tài liệu kỹ thuật — Soundspal Mobile</title>
+<link rel="stylesheet" href="assets/style.css" />
+<script src="assets/app.js"></script>
+
+<div class="topbar">
+    <a class="brand" href="index.html"><span class="dot"></span> Soundspal Docs</a>
+    <span class="crumb">/ Mục lục</span>
+    <span class="spacer"></span>
+    <button id="theme-toggle" type="button">☾ Tối</button>
+</div>
+
+<div class="layout">
+    <nav class="toc">
+        <h4>Nội dung</h4>
+        <div id="toc-list"></div>
+    </nav>
+
+    <main>
+        <span class="eyebrow">Soundspal · TL-Mobile · v1.0.28</span>
+        <h1>Tài liệu kỹ thuật</h1>
+        <p class="lede">
+            Toàn bộ tài liệu về ứng dụng di động Soundspal: kiến trúc, luồng dữ liệu, từng tính năng
+            hoạt động ra sao, công nghệ nào dùng ở đâu, và cách dựng lại mọi dịch vụ bên thứ ba từ
+            con số không.
+        </p>
+
+        <div class="note info">
+            <span class="t">Chưa quen dự án? Đọc theo thứ tự này</span>
+            <b>1.</b> Kiến trúc dự án (hiểu bộ khung) → <b>2.</b> Một tài liệu tính năng bất kỳ bạn
+            sắp làm việc → <b>3.</b> Công nghệ sử dụng (tra cứu khi cần) → <b>4.</b> Setup bên thứ
+            ba (khi cần dựng môi trường hoặc phát hành).
+        </div>
+
+        <h2>Tài liệu nền tảng</h2>
+
+        <div class="grid">
+            <a class="card" href="01-kien-truc-du-an.html">
+                <span class="k">Tài liệu 01</span>
+                <h3>Kiến trúc dự án</h3>
+                <p>
+                    Cấu trúc thư mục, vai trò từng file, ba tầng Clean Architecture, và đường đi của
+                    dữ liệu từ màn hình xuống backend rồi quay lại. Kèm luồng khởi động app và cơ
+                    chế refresh token.
+                </p>
+            </a>
+            <a class="card" href="02-cong-nghe-su-dung.html">
+                <span class="k">Tài liệu 02</span>
+                <h3>Công nghệ sử dụng</h3>
+                <p>
+                    Mỗi thư viện trong <code>package.json</code>: dùng ở file nào, dùng thế nào, và
+                    vì sao chọn nó. Có bản đồ tra cứu nhanh "thư viện → file".
+                </p>
+            </a>
+            <a class="card" href="03-setup-ben-thu-ba.html">
+                <span class="k">Tài liệu 03</span>
+                <h3>Setup bên thứ ba &amp; Auto Deploy</h3>
+                <p>
+                    Hướng dẫn thao tác thật: Google Cloud, Firebase FCM, Google Sign-In, PayOS,
+                    Socket.IO, EAS Build, Google Play Console, Fastlane. Kèm bảng lỗi thường gặp và
+                    checklist dựng lại từ số 0.
+                </p>
+            </a>
+        </div>
+
+        <h2>Tài liệu tính năng</h2>
+
+        <p>
+            Mỗi tài liệu mô tả: luồng đi trong code, business logic, danh sách endpoint, mô hình dữ
+            liệu, các bẫy đã biết và những chỗ cần cải thiện.
+        </p>
+
+        <div class="grid">
+            <a class="card" href="features/auth.html">
+                <span class="k">features/auth</span>
+                <h3>Xác thực &amp; Tài khoản</h3>
+                <p>
+                    Đăng ký, đăng nhập, OTP xác thực email, quên mật khẩu 3 bước, đăng nhập Google,
+                    đổi email. Vòng đời token và guard điều hướng.
+                </p>
+            </a>
+            <a class="card" href="features/profiles.html">
+                <span class="k">features/profiles</span>
+                <h3>Hồ sơ người dùng</h3>
+                <p>
+                    Hồ sơ nghệ sĩ vs venue — hai thế giới tách biệt. 29 endpoint, 11 màn hình,
+                    upload ảnh, thư viện media, phần trăm hoàn thiện hồ sơ.
+                </p>
+            </a>
+            <a class="card" href="features/jobs.html">
+                <span class="k">features/jobs</span>
+                <h3>Tuyển dụng &amp; Ứng tuyển</h3>
+                <p>
+                    Feature lớn nhất: đăng tin (wizard 4 bước), tìm &amp; lọc, ứng tuyển, duyệt hồ
+                    sơ, vòng đời trạng thái bài đăng.
+                </p>
+            </a>
+            <a class="card" href="features/collab.html">
+                <span class="k">features/collab</span>
+                <h3>Quản lý hợp tác</h3>
+                <p>
+                    Đơn đã gửi &amp; bài đăng của tôi. Dùng lại API của jobs bằng lớp code riêng —
+                    và những hệ quả cần biết.
+                </p>
+            </a>
+            <a class="card" href="features/messaging.html">
+                <span class="k">features/messaging</span>
+                <h3>Nhắn tin thời gian thực</h3>
+                <p>
+                    Chat qua WebSocket: tin nhắn tức thời, đang gõ, online, đã xem, đính kèm, và
+                    giao thức thẻ công việc JOB_REF.
+                </p>
+            </a>
+            <a class="card" href="features/notifications.html">
+                <span class="k">features/notifications</span>
+                <h3>Thông báo đẩy (FCM)</h3>
+                <p>
+                    Ít code nhất nhưng nhiều bẫy nhất: quyền Android 13+, ba trạng thái app, điều
+                    hướng khi bấm, và ràng buộc với socket.
+                </p>
+            </a>
+            <a class="card" href="features/payments.html">
+                <span class="k">features/payments</span>
+                <h3>Thanh toán Premium (PayOS)</h3>
+                <p>
+                    Nâng cấp qua VietQR: tạo checkout, deep link trả về, cơ chế poll trạng thái, và
+                    cách đọc trạng thái Premium cho đúng.
+                </p>
+            </a>
+            <a class="card" href="features/blog.html">
+                <span class="k">features/blog</span>
+                <h3>Blog &amp; Bình luận</h3>
+                <p>
+                    Đọc/viết bài, bình luận phân cấp, lưu bài. Luồng tạo bài 4 bước và lớp chuẩn hoá
+                    response nhiều tầng.
+                </p>
+            </a>
+            <a class="card" href="features/challenge.html">
+                <span class="k">features/challenge</span>
+                <h3>Challenge &amp; Phòng thu</h3>
+                <p>
+                    Đăng beat, thu âm đè lên beat, AI chấm 6 tiêu chí, bình chọn, bảng xếp hạng.
+                    Toàn bộ pipeline âm thanh.
+                </p>
+            </a>
+            <a class="card" href="features/explore-home-search.html">
+                <span class="k">home · explore · search</span>
+                <h3>Trang chủ · Khám phá · Tìm kiếm</h3>
+                <p>
+                    Trang chủ tổng hợp, tìm người theo bộ lọc, tìm kiếm gộp, và MiniPlayer nghe
+                    beat.
+                </p>
+            </a>
+        </div>
+
+        <h2>Tra cứu nhanh</h2>
+
+        <h3>Ứng dụng này là gì?</h3>
+
+        <p>
+            Nền tảng kết nối ngành âm nhạc trên di động, xây bằng
+            <b>React Native + Expo</b>, kiến trúc <b>Clean Architecture theo feature</b>. Ba nhóm
+            người dùng:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vai trò</th>
+                        <th>Là ai</th>
+                        <th>Dùng app để</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>singer</code></td>
+                        <td>Ca sĩ / nghệ sĩ biểu diễn</td>
+                        <td>Tạo hồ sơ, ứng tuyển gig, thu âm challenge, nhắn tin</td>
+                    </tr>
+                    <tr>
+                        <td><code>producer</code></td>
+                        <td>Nhà sản xuất / beatmaker</td>
+                        <td>Đăng beat, tạo challenge, nhận cộng tác</td>
+                    </tr>
+                    <tr>
+                        <td><code>venue</code></td>
+                        <td>Quán bar / phòng trà / sự kiện</td>
+                        <td>Đăng tin tuyển, duyệt hồ sơ ứng tuyển, liên hệ nghệ sĩ</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Tôi muốn sửa X, mở file nào?</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Muốn sửa</th>
+                        <th>Mở</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Địa chỉ backend, socket, Google client id</td>
+                        <td><code>.env</code> (rồi <code>npm run start:clear</code>)</td>
+                    </tr>
+                    <tr>
+                        <td>Cách gọi API, gắn token, xử lý 401</td>
+                        <td><code>shared/infrastructure/api/apiClient.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td>Sự kiện realtime</td>
+                        <td><code>shared/infrastructure/socket/socketService.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td>Luật điều hướng khi chưa đăng nhập / chưa xác thực</td>
+                        <td><code>shared/presentation/hooks/useProtectedRoute.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td>Danh sách endpoint của một feature</td>
+                        <td>
+                            <code>features/&lt;tên&gt;/data/datasources/*RemoteDataSource.ts</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Màu sắc, font, design token</td>
+                        <td><code>tailwind.config.js</code></td>
+                    </tr>
+                    <tr>
+                        <td>Component dùng chung</td>
+                        <td><code>shared/presentation/ui/</code></td>
+                    </tr>
+                    <tr>
+                        <td>Thêm màn hình mới</td>
+                        <td>
+                            <code>features/&lt;tên&gt;/presentation/screens/</code> + file route một
+                            dòng trong <code>app/</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cấu hình native (icon, splash, package, plugin)</td>
+                        <td><code>app.json</code></td>
+                    </tr>
+                    <tr>
+                        <td>Quy trình build &amp; phát hành</td>
+                        <td>
+                            <code>eas.json</code>, <code>fastlane/Fastfile</code>,
+                            <code>.github/workflows/eas-build.yml</code>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Lệnh hay dùng</h3>
+
+        <pre><code><span class="c-com"># Phát triển</span>
+npm install
+npm run start:clear        <span class="c-com"># khởi động Metro, xoá cache (dùng sau khi sửa .env)</span>
+npm run android            <span class="c-com"># chạy trên Android</span>
+npm run ios                <span class="c-com"># chạy trên iOS</span>
+
+<span class="c-com"># Kiểm tra chất lượng</span>
+npm run lint
+npm run typecheck
+npm test
+
+<span class="c-com"># Build</span>
+npm run build:android:dev  <span class="c-com"># development build (BẮT BUỘC — Expo Go không chạy được)</span>
+npm run build:android:prod <span class="c-com"># .aab production</span>
+
+<span class="c-com"># Phát hành (tự động toàn bộ)</span>
+fastlane android trigger_release</code></pre>
+
+        <div class="note danger">
+            <span class="t">Dự án này KHÔNG chạy được trên Expo Go</span>
+            Có 3 native module không có trong Expo Go: <code>@react-native-firebase/*</code>,
+            <code>react-native-mmkv</code>, <code>@react-native-google-signin/google-signin</code>.
+            Bắt buộc phải dùng <b>development build</b>.
+        </div>
+
+        <h3>Bảy biến môi trường</h3>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Biến</th>
+                        <th>Đọc bởi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_API_BASE_URL</code></td>
+                        <td><code>apiClient.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_AUTH_REFRESH_URL</code></td>
+                        <td><code>apiClient.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_SOCKET_URL</code></td>
+                        <td><code>socketService.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_SOCKET_PATH</code></td>
+                        <td><code>socketService.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID</code></td>
+                        <td><code>useGoogleSignIn.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_STORAGE_ID</code></td>
+                        <td><code>storage.ts</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>EXPO_PUBLIC_STORAGE_ENCRYPTION_KEY</code></td>
+                        <td><code>storage.ts</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note warn">
+            <span class="t">Tiền tố <code>EXPO_PUBLIC_</code> nghĩa là công khai</span>
+            Giá trị bị nhúng thẳng vào file <code>.apk</code>/<code>.ipa</code>. Nó dùng để tách môi
+            trường, <b>không phải kho bí mật</b>. Không đặt mật khẩu, <code>client_secret</code> hay
+            private key vào đây.
+        </div>
+
+        <h2>Những điều dễ gây bất ngờ</h2>
+
+        <p>
+            Tổng hợp các chi tiết trái với trực giác, thu thập từ toàn bộ tài liệu. Biết trước sẽ
+            tiết kiệm nhiều giờ debug:
+        </p>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Điều bất ngờ</th>
+                        <th>Vì sao</th>
+                        <th>Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tab tên "notifications" lại là danh sách chat</td>
+                        <td>Đặt tên di sản</td>
+                        <td><a href="features/messaging.html">Messaging</a></td>
+                    </tr>
+                    <tr>
+                        <td>App chủ động ngắt socket khi xuống nền</td>
+                        <td>
+                            Server chỉ push cho người offline — không ngắt thì không có thông báo
+                            tin nhắn
+                        </td>
+                        <td><a href="features/notifications.html">Notifications</a></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <code>requestPermission()</code> của Firebase không hỏi gì trên Android
+                        </td>
+                        <td>
+                            Hàm đó là <code>@platform ios</code>; Android 13+ phải dùng
+                            <code>PermissionsAndroid</code>
+                        </td>
+                        <td><a href="features/notifications.html">Notifications</a></td>
+                    </tr>
+                    <tr>
+                        <td>Có hai đường upload file (axios và fetch)</td>
+                        <td>
+                            axios 1.x trên RN gửi <code>FormData</code> rỗng →
+                            <code>ERR_NETWORK</code>
+                        </td>
+                        <td><a href="01-kien-truc-du-an.html">Kiến trúc</a></td>
+                    </tr>
+                    <tr>
+                        <td>Đăng nhập Google và FCM ở hai project Google khác nhau</td>
+                        <td>Chúng độc lập hoàn toàn</td>
+                        <td><a href="03-setup-ben-thu-ba.html">Setup</a></td>
+                    </tr>
+                    <tr>
+                        <td>Không có <code>GET /blogs/{id}</code></td>
+                        <td>Chi tiết bài phải tìm trong feed → bài cũ không mở được</td>
+                        <td><a href="features/blog.html">Blog</a></td>
+                    </tr>
+                    <tr>
+                        <td>Bình luận giọng nói chỉ là giao diện rỗng</td>
+                        <td>Chưa có ghi âm, chưa có upload, chưa có phát</td>
+                        <td><a href="features/blog.html">Blog</a></td>
+                    </tr>
+                    <tr>
+                        <td>Dạng sóng ở phòng thu là số ngẫu nhiên</td>
+                        <td>Không có FFT, không đọc metering</td>
+                        <td><a href="features/challenge.html">Challenge</a></td>
+                    </tr>
+                    <tr>
+                        <td><code>is_premium = true</code> không có nghĩa là đang có Premium</td>
+                        <td>Phải so <code>premium_expired_at</code> với hiện tại</td>
+                        <td><a href="features/payments.html">Payments</a></td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Ngân sách job nhập theo <b>triệu</b> ở màn tạo, theo <b>VND</b> ở màn
+                            sửa
+                        </td>
+                        <td>Hai màn dùng đơn vị khác nhau cho cùng một trường</td>
+                        <td><a href="features/jobs.html">Jobs</a></td>
+                    </tr>
+                    <tr>
+                        <td>Duyệt đơn ở màn này không làm mới màn kia</td>
+                        <td>
+                            <code>jobs</code> và <code>collab</code> có cache tách biệt cho cùng một
+                            API
+                        </td>
+                        <td><a href="features/collab.html">Collab</a></td>
+                    </tr>
+                    <tr>
+                        <td>Có hai màn "Explore" khác nhau</td>
+                        <td>
+                            <code>(tabs)/explore</code> tìm người,
+                            <code>(challenge)/explore</code> tìm beat
+                        </td>
+                        <td>
+                            <a href="features/explore-home-search.html">Explore</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Đổi <code>EXPO_PUBLIC_STORAGE_*</code> làm mọi user bị đăng xuất</td>
+                        <td>Dữ liệu MMKV cũ không giải mã được</td>
+                        <td><a href="02-cong-nghe-su-dung.html">Công nghệ</a></td>
+                    </tr>
+                    <tr>
+                        <td>Bản build từ CI có thể không gọi được API</td>
+                        <td>
+                            <code>.env</code> bị loại khỏi gói EAS — cần cấu hình biến môi trường
+                            trên EAS
+                        </td>
+                        <td><a href="03-setup-ben-thu-ba.html">Setup, mục 8.6</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Tài liệu khác trong repo</h2>
+
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Đường dẫn</th>
+                        <th>Nội dung</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>README.md</code></td>
+                        <td>Bắt đầu nhanh, biến môi trường, cấu trúc thư mục</td>
+                    </tr>
+                    <tr>
+                        <td><code>docs/architecture.md</code></td>
+                        <td>Sơ đồ Mermaid của Clean Architecture (bản Markdown)</td>
+                    </tr>
+                    <tr>
+                        <td><code>docs/onboarding.md</code></td>
+                        <td>Hướng dẫn nắm tổng quan source</td>
+                    </tr>
+                    <tr>
+                        <td><code>docs/features/*.md</code></td>
+                        <td>
+                            Bản Markdown của tài liệu tính năng.
+                            <b>Một số đã lỗi thời</b> so với code — bộ HTML này mới là bản cập nhật
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>HuongDanCaiDat.txt</code></td>
+                        <td>Hướng dẫn cài đặt công cụ &amp; môi trường (bản nộp đề tài)</td>
+                    </tr>
+                    <tr>
+                        <td><code>HuongDanSuDung.txt</code></td>
+                        <td>Hướng dẫn biên dịch, chạy và sử dụng (bản nộp đề tài)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="note info">
+            <span class="t">Về bộ tài liệu này</span>
+            Viết dựa trên source code tại phiên bản <b>v1.0.28</b>. Mọi endpoint, tên trường, hằng
+            số và hành vi mô tả ở đây đều được đối chiếu trực tiếp với code. Khi code thay đổi, hãy
+            cập nhật tài liệu tương ứng — đặc biệt là các bảng endpoint và mô hình dữ liệu.
+        </div>
+    </main>
+</div>
