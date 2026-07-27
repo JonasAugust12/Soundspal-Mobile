@@ -66,15 +66,17 @@
             tạp O(1).
         </div>
 
-        <div class="note warn">
-            <span class="t"
-                >Có <code>useMessagingApi.ts</code> đầy hook React Query — nhưng ít dùng</span
-            >
-            File này định nghĩa <code>useGetConversations</code>, <code>useSendMessage</code>… đầy
-            đủ. Nhưng hai màn hình chính lại <b>gọi thẳng <code>apiClient</code></b> rồi ghi vào
-            store. Các hook đó chủ yếu phục vụ những nơi khác (vd
-            <code>useGetOrCreateConversation</code> dùng từ màn hồ sơ và màn chi tiết job). Đừng
-            nhầm hai đường này với nhau khi debug.
+        <div class="note info">
+            <span class="t">Hai màn hình chat đi qua <code>messagingRepository</code></span>
+            Hai màn hình chính (<code>DetailMessageScreen</code>,
+            <code>NotificationsScreen</code>) <b>không gọi <code>apiClient</code> trực tiếp</b> —
+            chúng gọi <code>messagingRepository</code> (tầng data) rồi ghi kết quả vào Zustand
+            store. Cách này giữ đúng phân tầng Clean Architecture (màn hình phụ thuộc abstraction
+            <code>IMessagingRepository</code>, không phụ thuộc hạ tầng) mà vẫn giữ được luồng "luôn
+            fetch lại" cần thiết cho socket. Song song đó, <code>useMessagingApi.ts</code> có đầy đủ
+            hook React Query (<code>useGetConversations</code>, <code>useSendMessage</code>…) phục
+            vụ những nơi khác (vd <code>useGetOrCreateConversation</code> dùng từ màn hồ sơ và màn
+            chi tiết job).
         </div>
 
         <h2>2. Cấu trúc dữ liệu</h2>
@@ -609,10 +611,12 @@
 
         <div class="note warn">
             <span class="t">Đường upload này dùng axios</span>
-            <code>apiClient.post('/storage/upload', formData)</code> — chính là đường mà
+            Màn hình gọi <code>messagingRepository.uploadAttachment(formData)</code>; datasource bên
+            dưới <code>POST /storage/upload</code> bằng axios — chính là đường mà
             <code>multipartUpload.ts</code> cảnh báo có thể gửi body rỗng trên React Native. Nếu gặp
             <code>ERR_NETWORK</code> khi đính kèm, đây là chỗ cần chuyển sang
-            <code>postMultipartWithFetch()</code>.
+            <code>postMultipartWithFetch()</code> (chỉ cần sửa trong datasource, màn hình giữ
+            nguyên).
         </div>
 
         <h3>Sửa &amp; xoá tin nhắn</h3>
@@ -795,9 +799,11 @@ Xin chào, tôi quan tâm đến "Ca sĩ acoustic tối T6".</code></pre>
             </li>
             <li><b>Đính kèm không sửa được.</b> Muốn đổi thì xoá tin rồi gửi lại.</li>
             <li>
-                <b>Hai đường gọi API song song.</b> Màn hình gọi thẳng <code>apiClient</code>, còn
-                <code>useMessagingApi.ts</code> có hook React Query đầy đủ. Nếu thống nhất về một
-                đường thì code sẽ dễ bảo trì hơn.
+                <b>Hai đường truy cập dữ liệu song song.</b> Màn hình chat dùng
+                <code>messagingRepository</code> + Zustand store; còn
+                <code>useMessagingApi.ts</code> có hook React Query đầy đủ dùng ở nơi khác. Cả hai
+                đều đi qua tầng data (không còn gọi <code>apiClient</code> trực tiếp), nhưng nếu
+                thống nhất về một cơ chế state thì code sẽ dễ bảo trì hơn.
             </li>
         </ul>
 

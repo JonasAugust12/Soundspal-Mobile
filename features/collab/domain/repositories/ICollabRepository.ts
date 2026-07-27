@@ -1,22 +1,31 @@
-import type { collabRemoteDataSource } from '@/features/collab/data/datasources/collabRemoteDataSource';
+import type {
+    MySubmissionsResponse,
+    OpportunitySubmissionsResponse,
+    WithdrawSubmissionRequest,
+    ReviewSubmissionRequest,
+    ReviewSubmissionResponse,
+} from '@/features/collab/domain/entities/collaboration.type';
+import type { JobListResponse } from '@/features/jobs/domain/entities/job.type';
+
+export interface PaginationParams {
+    page?: number;
+    pageSize?: number;
+}
+
+export interface OpportunitySubmissionsParams extends PaginationParams {
+    status?: string;
+    sortBy?: string;
+    sortOrder?: string;
+}
 
 export interface ICollabRepository {
-    getMySubmissions(
-        ...args: Parameters<typeof collabRemoteDataSource.getMySubmissions>
-    ): ReturnType<typeof collabRemoteDataSource.getMySubmissions>;
-    getMyPosts(
-        ...args: Parameters<typeof collabRemoteDataSource.getMyPosts>
-    ): ReturnType<typeof collabRemoteDataSource.getMyPosts>;
+    getMySubmissions(params: PaginationParams): Promise<MySubmissionsResponse>;
+    getMyPosts(params: PaginationParams): Promise<JobListResponse>;
     getOpportunitySubmissions(
-        ...args: Parameters<typeof collabRemoteDataSource.getOpportunitySubmissions>
-    ): ReturnType<typeof collabRemoteDataSource.getOpportunitySubmissions>;
-    getMyPostedJobsSubmissions(
-        ...args: Parameters<typeof collabRemoteDataSource.getMyPostedJobsSubmissions>
-    ): ReturnType<typeof collabRemoteDataSource.getMyPostedJobsSubmissions>;
-    withdrawSubmission(
-        ...args: Parameters<typeof collabRemoteDataSource.withdrawSubmission>
-    ): ReturnType<typeof collabRemoteDataSource.withdrawSubmission>;
-    reviewSubmission(
-        ...args: Parameters<typeof collabRemoteDataSource.reviewSubmission>
-    ): ReturnType<typeof collabRemoteDataSource.reviewSubmission>;
+        opportunityId: string,
+        params: OpportunitySubmissionsParams,
+    ): Promise<OpportunitySubmissionsResponse>;
+    getMyPostedJobsSubmissions(params: PaginationParams): Promise<OpportunitySubmissionsResponse>;
+    withdrawSubmission(id: string, body: WithdrawSubmissionRequest): Promise<{ message: string }>;
+    reviewSubmission(id: string, body: ReviewSubmissionRequest): Promise<ReviewSubmissionResponse>;
 }

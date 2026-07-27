@@ -36,9 +36,9 @@ import {
 import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { socketService } from '@/shared/infrastructure/socket/socketService';
-import { apiClient } from '@/shared/infrastructure/api/apiClient';
+import { messagingRepository } from '@/features/messaging/data/repositories/MessagingRepositoryImpl';
 import type { ChatMessage } from '@/shared/presentation/ui/MessageBubble';
-import type { Message, Conversation } from '@/features/messaging/domain/entities/messaging.type';
+import type { Conversation } from '@/features/messaging/domain/entities/messaging.type';
 import {
     isJobReference,
     buildJobReference,
@@ -126,10 +126,8 @@ export default function DetailMessageScreen() {
 
         const fetchConversation = async () => {
             try {
-                const response = await apiClient.get<Conversation>(
-                    `/conversations/${conversationId}`,
-                );
-                setConversation(response.data);
+                const data = await messagingRepository.getConversationById(conversationId);
+                setConversation(data);
             } catch (error) {
                 console.error('Failed to fetch conversation:', error);
             }
@@ -153,10 +151,8 @@ export default function DetailMessageScreen() {
         if (!hasCache) setLoadingMessages(conversationId, true);
 
         try {
-            const response = await apiClient.get<Message[]>(
-                `/messages/conversation/${conversationId}`,
-            );
-            setMessages(conversationId, response.data);
+            const data = await messagingRepository.getMessages(conversationId);
+            setMessages(conversationId, data);
         } catch (error) {
             console.error('Failed to fetch messages:', error);
         } finally {
@@ -184,7 +180,7 @@ export default function DetailMessageScreen() {
             socketService.joinConversation(conversationId);
             clearUnread(conversationId);
 
-            apiClient.post(`/messages/conversation/${conversationId}/read`).catch(console.error);
+            messagingRepository.markConversationAsRead(conversationId).catch(console.error);
         }
 
         return () => {
@@ -219,12 +215,12 @@ export default function DetailMessageScreen() {
 
         try {
             if (editingMessageId) {
-                const response = await apiClient.put<Message>(`/messages/${editingMessageId}`, {
+                const updated = await messagingRepository.editMessage(editingMessageId, {
                     content: messageText.trim(),
                 });
 
                 updateMessage(conversationId, editingMessageId, {
-                    content: response.data.content,
+                    content: updated.content,
                     isEdited: true,
                 });
 
@@ -241,12 +237,12 @@ export default function DetailMessageScreen() {
                 ? buildJobReference(pendingJobRef.jobData, messageText.trim())
                 : messageText.trim();
 
-            const response = await apiClient.post<Message>('/messages', {
+            const sent = await messagingRepository.sendMessage({
                 conversationId,
                 content,
             });
 
-            addMessage(conversationId, response.data);
+            addMessage(conversationId, sent);
             if (pendingJobRef) clearPendingJobRef(conversationId);
             setMessageText('');
             socketService.stopTyping(conversationId);
@@ -282,22 +278,16 @@ export default function DetailMessageScreen() {
                 } as unknown as Blob);
                 formData.append('folder', 'messages');
 
-                const uploadResponse = await apiClient.post<{ url: string }>(
-                    '/storage/upload',
-                    formData,
-                    {
-                        headers: { 'Content-Type': 'multipart/form-data' },
-                    },
-                );
+                const { url } = await messagingRepository.uploadAttachment(formData);
 
-                const messageResponse = await apiClient.post<Message>('/messages', {
+                const sent = await messagingRepository.sendMessage({
                     conversationId,
                     content: messageText.trim() || '',
-                    attachmentUrl: uploadResponse.data.url,
+                    attachmentUrl: url,
                     attachmentType: 'image',
                 });
 
-                addMessage(conversationId, messageResponse.data);
+                addMessage(conversationId, sent);
                 setMessageText('');
                 setIsUploading(false);
             }
@@ -347,22 +337,16 @@ export default function DetailMessageScreen() {
             } as unknown as Blob);
             formData.append('folder', 'messages');
 
-            const uploadResponse = await apiClient.post<{ url: string }>(
-                '/storage/upload',
-                formData,
-                {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                },
-            );
+            const { url } = await messagingRepository.uploadAttachment(formData);
 
-            const messageResponse = await apiClient.post<Message>('/messages', {
+            const sent = await messagingRepository.sendMessage({
                 conversationId,
                 content: messageText.trim() || '',
-                attachmentUrl: uploadResponse.data.url,
+                attachmentUrl: url,
                 attachmentType,
             });
 
-            addMessage(conversationId, messageResponse.data);
+            addMessage(conversationId, sent);
             setMessageText('');
             setIsUploading(false);
         } catch (error) {
@@ -413,7 +397,7 @@ export default function DetailMessageScreen() {
         if (!selectedMessageId || !conversationId) return;
 
         try {
-            await apiClient.delete(`/messages/${selectedMessageId}`);
+            await messagingRepository.deleteMessage(selectedMessageId);
             removeMessage(conversationId, selectedMessageId);
             Toast.show({ type: 'success', text1: 'Đã xóa tin nhắn' });
         } catch (error) {

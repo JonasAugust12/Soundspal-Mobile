@@ -1,13 +1,13 @@
-import type { paymentRemoteDataSource } from '@/features/payments/data/datasources/paymentsRemoteDataSource';
+import type { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
+import type {
+    CheckoutRequest,
+    PaymentCheckoutResult,
+    PaymentHistoryParams,
+    PaymentStatusResult,
+} from '@/features/payments/domain/entities/payment.type';
 
 export interface IPaymentRepository {
-    createCheckout(
-        ...args: Parameters<typeof paymentRemoteDataSource.createCheckout>
-    ): ReturnType<typeof paymentRemoteDataSource.createCheckout>;
-    getHistory(
-        ...args: Parameters<typeof paymentRemoteDataSource.getHistory>
-    ): ReturnType<typeof paymentRemoteDataSource.getHistory>;
-    getStatus(
-        ...args: Parameters<typeof paymentRemoteDataSource.getStatus>
-    ): ReturnType<typeof paymentRemoteDataSource.getStatus>;
+    createCheckout(body: CheckoutRequest): Promise<PaymentCheckoutResult>;
+    getHistory(params?: PaymentHistoryParams): Promise<ApiResponse<unknown>>;
+    getStatus(orderCode: string): Promise<PaymentStatusResult>;
 }

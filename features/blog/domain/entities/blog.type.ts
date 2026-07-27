@@ -231,6 +231,16 @@ export interface AddMediaRequest {
     embed_id?: string;
 }
 
+/**
+ * Ảnh cục bộ vừa chọn từ picker, dùng để upload media cho bài viết.
+ * Đặt ở domain để interface repository không phải phụ thuộc ngược vào tầng data.
+ */
+export interface LocalImageAsset {
+    uri: string;
+    name?: string | null;
+    mimeType?: string | null;
+}
+
 /** GET /blogs/search query params */
 export interface BlogSearchParams {
     q?: string;

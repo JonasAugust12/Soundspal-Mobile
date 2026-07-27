@@ -109,6 +109,56 @@ export interface UpdateVenueRequirementsPayload {
     artist_requirements_note: string;
 }
 
+// PUT /users/me/basic
+export interface UpdateBasicInfoPayload {
+    display_name?: string;
+    brief_bio?: string;
+    detail_bio?: string;
+    city?: string;
+    country?: string;
+}
+
+// PUT /users/me/contact
+export interface UpdateContactInfoPayload {
+    email?: string;
+    phone_number?: string;
+}
+
+// PUT /users/me/social
+export interface UpdateSocialLinksPayload {
+    facebook_url?: string;
+    instagram_url?: string;
+    youtube_url?: string;
+    tiktok_url?: string;
+    soundcloud_url?: string;
+}
+
+// PUT /users/me/venue/basic — lưu ý field ghi là business_type (số ít) dù giá trị là mảng
+export interface UpdateVenueBasicPayload {
+    display_name?: string;
+    brief_bio?: string;
+    business_type?: string[];
+    capacity?: string;
+}
+
+// PUT /users/me/venue/contact
+export interface UpdateVenueContactPayload {
+    email?: string;
+    phone_number?: string;
+    city?: string;
+    country?: string;
+    state_province?: string;
+    detailed_address?: string;
+    website_url?: string;
+}
+
+// PUT /users/me/venue/additional
+export interface UpdateVenueAdditionalPayload {
+    open_hour?: string;
+    convenient_facilities?: string[];
+    rent_price?: string;
+}
+
 export interface UpdateUserRequest {
     display_name?: string;
     avatar_url?: string;

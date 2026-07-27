@@ -1,16 +1,15 @@
-import type { searchRemoteDataSource } from '@/features/explore/data/datasources/searchRemoteDataSource';
+import type { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
+import type {
+    SearchUsersRequest,
+    SearchUsersData,
+    GetGenresData,
+    FeaturedUsersData,
+    FeaturedJobsData,
+} from '@/features/explore/domain/entities/search.type';
 
 export interface ISearchRepository {
-    searchUsers(
-        ...args: Parameters<typeof searchRemoteDataSource.searchUsers>
-    ): ReturnType<typeof searchRemoteDataSource.searchUsers>;
-    getGenres(
-        ...args: Parameters<typeof searchRemoteDataSource.getGenres>
-    ): ReturnType<typeof searchRemoteDataSource.getGenres>;
-    getFeaturedUsers(
-        ...args: Parameters<typeof searchRemoteDataSource.getFeaturedUsers>
-    ): ReturnType<typeof searchRemoteDataSource.getFeaturedUsers>;
-    getFeaturedJobs(
-        ...args: Parameters<typeof searchRemoteDataSource.getFeaturedJobs>
-    ): ReturnType<typeof searchRemoteDataSource.getFeaturedJobs>;
+    searchUsers(params: SearchUsersRequest): Promise<ApiResponse<SearchUsersData>>;
+    getGenres(): Promise<ApiResponse<GetGenresData>>;
+    getFeaturedUsers(limit: number): Promise<ApiResponse<FeaturedUsersData>>;
+    getFeaturedJobs(limit: number): Promise<ApiResponse<FeaturedJobsData>>;
 }

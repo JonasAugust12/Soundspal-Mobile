@@ -5,12 +5,10 @@ import {
     previewUri,
     serializeUploadError,
 } from '@/features/blog/data/utils/blogUploadUtils';
+import type { LocalImageAsset } from '@/features/blog/domain/entities/blog.type';
 
-export interface LocalImageAsset {
-    uri: string;
-    name?: string | null;
-    mimeType?: string | null;
-}
+// Kiểu gốc nằm ở domain (blog.type.ts); re-export để các import cũ vẫn hoạt động.
+export type { LocalImageAsset };
 
 function extensionForImageMime(mime: string): string {
     const m = mime.toLowerCase();

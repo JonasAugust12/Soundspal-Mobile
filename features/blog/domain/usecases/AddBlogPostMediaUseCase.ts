@@ -1,6 +1,5 @@
 import type { IBlogRepository } from '@/features/blog/domain/repositories/IBlogRepository';
-import type { LocalImageAsset } from '@/features/blog/data/utils/blogMediaUtils';
-import type { BlogItem } from '@/features/blog/domain/entities/blog.type';
+import type { LocalImageAsset, BlogItem } from '@/features/blog/domain/entities/blog.type';
 
 export class AddBlogPostMediaUseCase {
     constructor(private readonly repository: IBlogRepository) {}

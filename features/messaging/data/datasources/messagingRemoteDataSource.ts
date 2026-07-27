@@ -1,10 +1,11 @@
-import { createApiCall } from '@/shared/infrastructure/api/apiClient';
+import { apiClient, createApiCall } from '@/shared/infrastructure/api/apiClient';
 import type {
     Conversation,
     Message,
     SendMessageRequest,
     EditMessageRequest,
     CreateConversationRequest,
+    UploadAttachmentResponse,
 } from '@/features/messaging/domain/entities/messaging.type';
 
 export const messagingRemoteDataSource = {
@@ -63,5 +64,16 @@ export const messagingRemoteDataSource = {
 
     markConversationAsRead: (conversationId: string) => {
         return createApiCall<void>('POST', `/messages/conversation/${conversationId}/read`)();
+    },
+
+    // Upload ảnh/tệp đính kèm chat qua /storage/upload rồi lấy URL để gắn vào tin nhắn.
+    // Dùng apiClient trực tiếp (không phải createApiCall) để giữ nguyên hành vi cũ của màn chat.
+    uploadAttachment: async (formData: FormData): Promise<UploadAttachmentResponse> => {
+        const response = await apiClient.post<UploadAttachmentResponse>(
+            '/storage/upload',
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        return response.data;
     },
 };

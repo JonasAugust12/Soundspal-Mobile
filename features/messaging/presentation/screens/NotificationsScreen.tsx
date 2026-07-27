@@ -17,7 +17,7 @@ import Toast from 'react-native-toast-message';
 import { ChatItem, showAppDialog } from '@/shared/presentation/ui';
 import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
-import { apiClient } from '@/shared/infrastructure/api/apiClient';
+import { messagingRepository } from '@/features/messaging/data/repositories/MessagingRepositoryImpl';
 import { getConversationPreview } from '@/features/messaging/domain/utils/messageContent';
 import type { Conversation } from '@/features/messaging/domain/entities/messaging.type';
 
@@ -44,8 +44,8 @@ export default function MessagesScreen() {
         const fetchConversations = async () => {
             setLoadingConversations(true);
             try {
-                const response = await apiClient.get<Conversation[]>('/conversations');
-                setConversations(response.data);
+                const conversations = await messagingRepository.getConversations();
+                setConversations(conversations);
             } catch (error) {
                 console.error('Failed to fetch conversations:', error);
             } finally {
@@ -74,7 +74,7 @@ export default function MessagesScreen() {
                 style: 'destructive',
                 onPress: async () => {
                     try {
-                        await apiClient.delete(`/conversations/${conversationId}`);
+                        await messagingRepository.deleteConversation(conversationId);
                         removeConversation(conversationId);
                         Toast.show({ type: 'success', text1: 'Đã xóa hội thoại' });
                     } catch (error) {

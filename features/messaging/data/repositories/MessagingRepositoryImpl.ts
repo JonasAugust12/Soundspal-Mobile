@@ -14,6 +14,7 @@ export class MessagingRepositoryImpl implements IMessagingRepository {
     deleteMessage = messagingRemoteDataSource.deleteMessage;
     markMessageAsRead = messagingRemoteDataSource.markMessageAsRead;
     markConversationAsRead = messagingRemoteDataSource.markConversationAsRead;
+    uploadAttachment = messagingRemoteDataSource.uploadAttachment;
 }
 
 export const messagingRepository = new MessagingRepositoryImpl();

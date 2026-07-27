@@ -59,3 +59,8 @@ export interface UploadFileResponse {
     size: number;
     mimeType: string;
 }
+
+/** Kết quả POST /storage/upload khi đính kèm ảnh/tệp trong chat. */
+export interface UploadAttachmentResponse {
+    url: string;
+}

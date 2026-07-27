@@ -1,40 +1,24 @@
-import type { messagingRemoteDataSource } from '@/features/messaging/data/datasources/messagingRemoteDataSource';
+import type {
+    Conversation,
+    Message,
+    SendMessageRequest,
+    EditMessageRequest,
+    CreateConversationRequest,
+    UploadAttachmentResponse,
+} from '@/features/messaging/domain/entities/messaging.type';
 
 export interface IMessagingRepository {
-    getConversations(
-        ...args: Parameters<typeof messagingRemoteDataSource.getConversations>
-    ): ReturnType<typeof messagingRemoteDataSource.getConversations>;
-    getConversationById(
-        ...args: Parameters<typeof messagingRemoteDataSource.getConversationById>
-    ): ReturnType<typeof messagingRemoteDataSource.getConversationById>;
-    getMessages(
-        ...args: Parameters<typeof messagingRemoteDataSource.getMessages>
-    ): ReturnType<typeof messagingRemoteDataSource.getMessages>;
-    getUnreadCount(
-        ...args: Parameters<typeof messagingRemoteDataSource.getUnreadCount>
-    ): ReturnType<typeof messagingRemoteDataSource.getUnreadCount>;
-    createConversation(
-        ...args: Parameters<typeof messagingRemoteDataSource.createConversation>
-    ): ReturnType<typeof messagingRemoteDataSource.createConversation>;
-    getOrCreateConversation(
-        ...args: Parameters<typeof messagingRemoteDataSource.getOrCreateConversation>
-    ): ReturnType<typeof messagingRemoteDataSource.getOrCreateConversation>;
-    deleteConversation(
-        ...args: Parameters<typeof messagingRemoteDataSource.deleteConversation>
-    ): ReturnType<typeof messagingRemoteDataSource.deleteConversation>;
-    sendMessage(
-        ...args: Parameters<typeof messagingRemoteDataSource.sendMessage>
-    ): ReturnType<typeof messagingRemoteDataSource.sendMessage>;
-    editMessage(
-        ...args: Parameters<typeof messagingRemoteDataSource.editMessage>
-    ): ReturnType<typeof messagingRemoteDataSource.editMessage>;
-    deleteMessage(
-        ...args: Parameters<typeof messagingRemoteDataSource.deleteMessage>
-    ): ReturnType<typeof messagingRemoteDataSource.deleteMessage>;
-    markMessageAsRead(
-        ...args: Parameters<typeof messagingRemoteDataSource.markMessageAsRead>
-    ): ReturnType<typeof messagingRemoteDataSource.markMessageAsRead>;
-    markConversationAsRead(
-        ...args: Parameters<typeof messagingRemoteDataSource.markConversationAsRead>
-    ): ReturnType<typeof messagingRemoteDataSource.markConversationAsRead>;
+    getConversations(): Promise<Conversation[]>;
+    getConversationById(conversationId: string): Promise<Conversation>;
+    getMessages(conversationId: string): Promise<Message[]>;
+    getUnreadCount(conversationId: string): Promise<number>;
+    createConversation(body?: CreateConversationRequest): Promise<Conversation>;
+    getOrCreateConversation(participantId: string): Promise<Conversation>;
+    deleteConversation(conversationId: string): Promise<void>;
+    sendMessage(body?: SendMessageRequest): Promise<Message>;
+    editMessage(messageId: string, body: EditMessageRequest): Promise<Message>;
+    deleteMessage(messageId: string): Promise<void>;
+    markMessageAsRead(messageId: string): Promise<void>;
+    markConversationAsRead(conversationId: string): Promise<void>;
+    uploadAttachment(formData: FormData): Promise<UploadAttachmentResponse>;
 }

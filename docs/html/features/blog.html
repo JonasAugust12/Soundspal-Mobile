@@ -771,9 +771,12 @@
                 <code>BLOG_FEED_TABS</code> — <code>@deprecated</code>, chỉ giữ để không vỡ import.
             </li>
             <li>
-                <code>IBlogRepository</code> thực ra là <code>typeof blogRemoteDataSource</code> —
-                tức "hợp đồng domain" đang được suy ra <b>ngược</b> từ tầng data, trái với nguyên
-                tắc Clean Architecture. Đây là ngoại lệ so với các feature khác.
+                <code>IBlogRepository</code>
+                <b>đã được viết lại thành interface tường minh</b> (không còn
+                <code>typeof blogRemoteDataSource</code>). Kèm theo đó,
+                <code>LocalImageAsset</code> đã chuyển từ <code>data/utils/</code> sang
+                <code>domain/entities/blog.type.ts</code> để domain không còn phụ thuộc ngược vào
+                tầng data. Nay khớp chuẩn Clean Architecture như các feature khác.
             </li>
         </ul>
 

@@ -16,6 +16,12 @@ import type {
     ExperienceListData,
     UpdateMyProfilePayload,
     UpdateVenueRequirementsPayload,
+    UpdateBasicInfoPayload,
+    UpdateContactInfoPayload,
+    UpdateSocialLinksPayload,
+    UpdateVenueBasicPayload,
+    UpdateVenueContactPayload,
+    UpdateVenueAdditionalPayload,
 } from '@/features/profiles/domain/entities/user.type';
 import { ApiResponse } from '@/shared/domain/entities/apiresponse.type';
 
@@ -54,35 +60,11 @@ export const userRemoteDataSource = {
         return response.data;
     },
 
-    updateBasicInfo: createApiCall<
-        User,
-        {
-            display_name?: string;
-            brief_bio?: string;
-            detail_bio?: string;
-            city?: string;
-            country?: string;
-        }
-    >('PUT', '/users/me/basic'),
+    updateBasicInfo: createApiCall<User, UpdateBasicInfoPayload>('PUT', '/users/me/basic'),
 
-    updateContactInfo: createApiCall<
-        User,
-        {
-            email?: string;
-            phone_number?: string;
-        }
-    >('PUT', '/users/me/contact'),
+    updateContactInfo: createApiCall<User, UpdateContactInfoPayload>('PUT', '/users/me/contact'),
 
-    updateSocialLinks: createApiCall<
-        User,
-        {
-            facebook_url?: string;
-            instagram_url?: string;
-            youtube_url?: string;
-            tiktok_url?: string;
-            soundcloud_url?: string;
-        }
-    >('PUT', '/users/me/social'),
+    updateSocialLinks: createApiCall<User, UpdateSocialLinksPayload>('PUT', '/users/me/social'),
 
     // Cập nhật gộp hồ sơ (basic + location + offering + availability)
     updateMyProfile: createApiCall<User, UpdateMyProfilePayload>('PATCH', '/users/me'),
@@ -158,37 +140,17 @@ export const userRemoteDataSource = {
     },
 
     // Venue APIs
-    updateVenueBasic: createApiCall<
-        User,
-        {
-            display_name?: string;
-            brief_bio?: string;
-            business_type?: string[];
-            capacity?: string;
-        }
-    >('PUT', '/users/me/venue/basic'),
+    updateVenueBasic: createApiCall<User, UpdateVenueBasicPayload>('PUT', '/users/me/venue/basic'),
 
-    updateVenueContact: createApiCall<
-        User,
-        {
-            email?: string;
-            phone_number?: string;
-            city?: string;
-            country?: string;
-            state_province?: string;
-            detailed_address?: string;
-            website_url?: string;
-        }
-    >('PUT', '/users/me/venue/contact'),
+    updateVenueContact: createApiCall<User, UpdateVenueContactPayload>(
+        'PUT',
+        '/users/me/venue/contact',
+    ),
 
-    updateVenueAdditional: createApiCall<
-        User,
-        {
-            open_hour?: string;
-            convenient_facilities?: string[];
-            rent_price?: string;
-        }
-    >('PUT', '/users/me/venue/additional'),
+    updateVenueAdditional: createApiCall<User, UpdateVenueAdditionalPayload>(
+        'PUT',
+        '/users/me/venue/additional',
+    ),
 
     // Experience (kinh nghiệm / work history)
     getUserExperiences: async (username: string): Promise<Experience[]> => {
