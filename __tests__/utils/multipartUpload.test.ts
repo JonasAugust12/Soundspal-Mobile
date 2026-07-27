@@ -2,6 +2,7 @@ import {
     postMultipartWithFetch,
     unwrapUploadPayload,
 } from '@/shared/infrastructure/api/multipartUpload';
+import { apiClient } from '@/shared/infrastructure/api/apiClient';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 
 describe('unwrapUploadPayload', () => {
@@ -23,9 +24,15 @@ describe('unwrapUploadPayload', () => {
 
 describe('postMultipartWithFetch', () => {
     const realFetch = global.fetch;
+    const previousBaseURL = apiClient.defaults.baseURL;
+
+    beforeEach(() => {
+        apiClient.defaults.baseURL = 'https://api.soundspal.com/api/v1';
+    });
 
     afterEach(() => {
         global.fetch = realFetch;
+        apiClient.defaults.baseURL = previousBaseURL;
         useAuthStore.setState({ accessToken: null });
     });
 
@@ -47,11 +54,10 @@ describe('postMultipartWithFetch', () => {
 
         expect(result).toEqual({ data: { file_url: 'https://cdn/a.jpg' } });
         const [calledUrl, init] = fetchMock.mock.calls[0];
-        expect(calledUrl).toBe('https://talentlink.io.vn/api/v1/users/me/avatar');
+        expect(calledUrl).toBe('https://api.soundspal.com/api/v1/users/me/avatar');
         expect(init.method).toBe('POST');
         expect(init.body).toBe(form);
         expect(init.headers.Authorization).toBe('Bearer tok-123');
-        // Không được set Content-Type thủ công — để fetch tự thêm boundary.
         expect(init.headers['Content-Type']).toBeUndefined();
     });
 
