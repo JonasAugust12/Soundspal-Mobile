@@ -14,20 +14,21 @@
 
 ## Danh sách feature
 
-| #   | Feature            | Route chính                            | File                               |
-| --- | ------------------ | -------------------------------------- | ---------------------------------- |
-| —   | Tổng quan & stack  | —                                      | [00-overview.md](./00-overview.md) |
-| —   | Hạ tầng dùng chung | `app/_layout.tsx`                      | [shared.md](./shared.md)           |
-| 1   | Auth               | `(auth)/*`                             | [auth.md](./auth.md)               |
-| 2   | Home               | `(tabs)/index`                         | [home.md](./home.md)               |
-| 3   | Explore            | `(tabs)/explore`                       | [explore.md](./explore.md)         |
-| 4   | Jobs               | `(tabs)/jobs`, `(jobs)/*`              | [jobs.md](./jobs.md)               |
-| 5   | Profiles           | `(tabs)/personal`, `(profiles)/*`      | [profiles.md](./profiles.md)       |
-| 6   | Collab             | `(profiles)/collaboration`             | [collab.md](./collab.md)           |
-| 7   | Challenge          | `(challenge)/*`                        | [challenge.md](./challenge.md)     |
-| 8   | Blog               | `(blog)/*`                             | [blog.md](./blog.md)               |
-| 9   | Messaging          | `(tabs)/notifications`, `(messages)/*` | [messaging.md](./messaging.md)     |
-| 10  | Payments           | `(payments)/premium`                   | [payments.md](./payments.md)       |
+| #   | Feature            | Route chính                            | File                                       |
+| --- | ------------------ | -------------------------------------- | ------------------------------------------ |
+| —   | Tổng quan & stack  | —                                      | [00-overview.md](./00-overview.md)         |
+| —   | Hạ tầng dùng chung | `app/_layout.tsx`                      | [shared.md](./shared.md)                   |
+| 1   | Auth               | `(auth)/*`                             | [auth.md](./auth.md)                       |
+| 2   | Home               | `(tabs)/index`                         | [home.md](./home.md)                       |
+| 3   | Explore            | `(tabs)/explore`                       | [explore.md](./explore.md)                 |
+| 4   | Jobs               | `(tabs)/jobs`, `(jobs)/*`              | [jobs.md](./jobs.md)                       |
+| 5   | Profiles           | `(tabs)/personal`, `(profiles)/*`      | [profiles.md](./profiles.md)               |
+| 6   | Collab             | `(profiles)/collaboration`             | [collab.md](./collab.md)                   |
+| 6b  | Collab Requests    | `(profiles)/collab-requests`           | [collab-requests.md](./collab-requests.md) |
+| 7   | Challenge          | `(challenge)/*`                        | [challenge.md](./challenge.md)             |
+| 8   | Blog               | `(blog)/*`                             | [blog.md](./blog.md)                       |
+| 9   | Messaging          | `(tabs)/notifications`, `(messages)/*` | [messaging.md](./messaging.md)             |
+| 10  | Payments           | `(payments)/premium`                   | [payments.md](./payments.md)               |
 
 ## Tài liệu liên quan
 

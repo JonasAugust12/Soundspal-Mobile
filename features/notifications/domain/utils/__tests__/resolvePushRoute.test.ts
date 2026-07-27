@@ -102,6 +102,29 @@ describe('resolvePushRoute (push deep-link: job + tin nhắn)', () => {
         });
     });
 
+    describe('collaboration_* → đề nghị hợp tác', () => {
+        it('collaboration_requested mở hub manage', () => {
+            expect(resolvePushRoute({ type: 'collaboration_requested' })).toBe(
+                '/(profiles)/collab-requests?tab=manage',
+            );
+        });
+
+        it('collaboration_status_changed mở hub manage', () => {
+            expect(
+                resolvePushRoute({
+                    type: 'collaboration_status_changed',
+                    new_status: 'ACCEPTED',
+                }),
+            ).toBe('/(profiles)/collab-requests?tab=manage');
+        });
+
+        it('collaboration_cancelled mở hub manage', () => {
+            expect(resolvePushRoute({ type: 'collaboration_cancelled' })).toBe(
+                '/(profiles)/collab-requests?tab=manage',
+            );
+        });
+    });
+
     describe('route/path tường minh chỉ là FALLBACK', () => {
         // Đảo ngược so với trước: route suy ra từ data thắng, vì producer có thể
         // gửi route sai (xem Bug A).

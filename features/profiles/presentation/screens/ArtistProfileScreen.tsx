@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import {
     Music4,
     Video as VideoIcon,
     Briefcase,
+    Handshake,
 } from 'lucide-react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
     YoutubeEmbed,
     ServicesList,
 } from '@/features/profiles/presentation/components/profile';
+import { CreateCollabRequestModal, PublicCollaboratorsSection } from '@/features/collabRequests';
 import {
     useGetCurrentUser,
     useGetUserByUsername,
@@ -35,6 +37,7 @@ import {
     feeRangeLabel,
     serviceTypeLabel,
 } from '@/features/profiles/domain/constants/profileConstants';
+import { colors } from '@/shared/domain/constants/colors';
 
 const fmtMonthYear = (iso?: string | null): string => {
     if (!iso) return '';
@@ -47,6 +50,7 @@ export default function ArtistProfile() {
     const router = useRouter();
     const params = useLocalSearchParams<{ username?: string }>();
     const { user: currentUser } = useAuthStore();
+    const [collabOpen, setCollabOpen] = useState(false);
 
     const isMe = !params.username || params.username === currentUser?.username;
     const [isRefetching, setIsRefetching] = React.useState(false);
@@ -177,17 +181,28 @@ export default function ArtistProfile() {
                 />
 
                 <View className="px-4 gap-6 pt-4 pb-8">
-                    {/* Message Button - Only for other users */}
+                    {/* Message + collab CTAs - Only for other users */}
                     {!isMe && userData?.id && (
-                        <Pressable
-                            onPress={handleSendMessage}
-                            disabled={getOrCreateConversation.isPending}
-                            className="flex-row items-center justify-center gap-2 py-3 rounded-xl bg-primary active:opacity-80"
-                        >
-                            <MessageCircle size={20} color="#ffffff" />
-                            <Text className="text-white font-semibold">Nhắn tin</Text>
-                        </Pressable>
+                        <View className="flex-row gap-2">
+                            <Pressable
+                                onPress={handleSendMessage}
+                                disabled={getOrCreateConversation.isPending}
+                                className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl bg-primary active:opacity-80"
+                            >
+                                <MessageCircle size={20} color="#ffffff" />
+                                <Text className="text-white font-semibold">Nhắn tin</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={() => setCollabOpen(true)}
+                                className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl border-2 border-primary bg-primary/5 active:opacity-80"
+                            >
+                                <Handshake size={20} color={colors.primary01} />
+                                <Text className="text-primary font-semibold">Đề nghị</Text>
+                            </Pressable>
+                        </View>
                     )}
+
+                    <PublicCollaboratorsSection userId={userData?.id} />
 
                     {/* Availability + fee + service types */}
                     {(userData?.is_available !== undefined ||
@@ -445,6 +460,15 @@ export default function ArtistProfile() {
                     />
                 </View>
             </ScrollView>
+
+            {userData?.id ? (
+                <CreateCollabRequestModal
+                    visible={collabOpen}
+                    onClose={() => setCollabOpen(false)}
+                    receiverId={userData.id}
+                    receiverName={userData.display_name || userData.username || 'nghệ sĩ'}
+                />
+            ) : null}
         </SafeAreaView>
     );
 }

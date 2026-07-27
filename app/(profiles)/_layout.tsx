@@ -9,6 +9,7 @@ export default function ProfilesLayout() {
             <Stack.Screen name="videoGallery" />
             <Stack.Screen name="featuredReleases" />
             <Stack.Screen name="collaboration" />
+            <Stack.Screen name="collab-requests" />
             <Stack.Screen name="jobSubmissions" />
         </Stack>
     );

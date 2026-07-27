@@ -30,6 +30,8 @@ import {
     Building2,
     Music2,
     Bookmark,
+    Handshake,
+    CalendarDays,
 } from 'lucide-react-native';
 import { useLogout } from '@/features/auth/presentation/hooks/useAuthApi';
 import { useGetCurrentUser } from '@/features/profiles/presentation/hooks/useUserApi';
@@ -191,6 +193,20 @@ export default function PersonalScreen() {
 
     const handleManageCollaborations = () => {
         router.push('/(profiles)/collaboration');
+    };
+
+    const handleCollabRequests = () => {
+        router.push({
+            pathname: '/(profiles)/collab-requests',
+            params: { tab: 'manage' },
+        });
+    };
+
+    const handleCollabCalendar = () => {
+        router.push({
+            pathname: '/(profiles)/collab-requests',
+            params: { tab: 'calendar' },
+        });
     };
 
     const handlePremiumPayment = () => {
@@ -398,8 +414,22 @@ export default function PersonalScreen() {
                         <MenuItem
                             icon={<GradientIcon Icon={BriefcaseBusiness} />}
                             title="Quản lý hợp tác"
-                            subtitle="Xem các yêu cầu hợp tác"
+                            subtitle="Ứng tuyển & tin đăng của bạn"
                             onPress={handleManageCollaborations}
+                        />
+                        <View className="h-px bg-black/5 mx-4" />
+                        <MenuItem
+                            icon={<GradientIcon Icon={Handshake} />}
+                            title="Đề nghị hợp tác"
+                            subtitle="Gửi / nhận đề nghị 1-1"
+                            onPress={handleCollabRequests}
+                        />
+                        <View className="h-px bg-black/5 mx-4" />
+                        <MenuItem
+                            icon={<GradientIcon Icon={CalendarDays} />}
+                            title="Lịch hợp tác"
+                            subtitle="Các hợp tác đã được chấp nhận"
+                            onPress={handleCollabCalendar}
                         />
                     </GlassCard>
                 </View>
