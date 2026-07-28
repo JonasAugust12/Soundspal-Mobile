@@ -1,15 +1,12 @@
+import { useMemo } from 'react';
 import type { AxiosError } from 'axios';
 import { skipToken, useMutation, useQuery } from '@tanstack/react-query';
+import { PAYMENT_STATUS_STALE_TIME_MS } from '@/features/payments/domain/constants/payment';
+import type { PaymentHistoryParams } from '@/features/payments/domain/entities/payment.type';
 import {
-    PREMIUM_PLANS,
-    PAYMENT_STATUS_STALE_TIME_MS,
-} from '@/features/payments/domain/constants/payment';
-import type {
-    BillingPeriod,
-    CheckoutRequest,
-    PaymentHistoryParams,
-} from '@/features/payments/domain/entities/payment.type';
-import { extractLatestOrderCodeFromHistory } from '@/features/payments/domain/utils/payment';
+    extractLatestOrderCodeFromHistory,
+    parsePaymentHistoryItems,
+} from '@/features/payments/domain/utils/payment';
 import { paymentRepository } from '@/features/payments/data/repositories/PaymentRepositoryImpl';
 
 function isPaymentStatusNotFoundError(error: unknown): boolean {
@@ -39,23 +36,6 @@ export const paymentKeys = {
     status: (orderCode: string) => [...paymentKeys.all, 'status', orderCode] as const,
 };
 
-export function buildPremiumUpgradeCheckoutRequest(
-    userId: string,
-    billingPeriod: BillingPeriod,
-    urls: { redirect_url: string; cancel_url: string },
-): CheckoutRequest {
-    const plan = PREMIUM_PLANS[billingPeriod];
-    return {
-        purpose: 'ACCOUNT_UPGRADE',
-        amount: plan.amount,
-        billing_period: plan.billing_period,
-        description: plan.description,
-        reference_id: userId,
-        redirect_url: urls.redirect_url,
-        cancel_url: urls.cancel_url,
-    };
-}
-
 export const useCreatePaymentCheckout = () => {
     return useMutation({
         mutationFn: paymentRepository.createCheckout,
@@ -71,6 +51,14 @@ export const useGetPaymentHistory = (
         queryFn: () => paymentRepository.getHistory(params),
         enabled: options?.enabled !== false,
     });
+};
+
+/** Lịch sử giao dịch đã chuẩn hoá về `PaymentHistoryItem[]` cho tầng UI. */
+export const usePaymentHistoryItems = (params?: PaymentHistoryParams) => {
+    const query = useGetPaymentHistory(params);
+    const items = useMemo(() => parsePaymentHistoryItems(query.data?.data), [query.data]);
+
+    return { items, isLoading: query.isLoading };
 };
 
 export const useGetPaymentStatus = (orderCode?: string | null, options?: { enabled?: boolean }) => {

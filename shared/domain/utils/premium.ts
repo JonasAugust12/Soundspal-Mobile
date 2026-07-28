@@ -40,6 +40,22 @@ export function getPremiumState(
     return premiumExpiryState(user.premium_expired_at, now);
 }
 
+/**
+ * Như `getPremiumState` nhưng có đường lui về `tier` cho các endpoint chưa trả
+ * `is_premium`/`premium_expired_at`. Chỉ dùng fallback khi thiếu hẳn cờ `is_premium`,
+ * vì `tier` không mang hạn dùng nên không phân biệt được `active` với `expired`.
+ */
+export function resolvePremiumState(
+    currentUser?: (PremiumUserLike & { tier?: string }) | null,
+    fallbackUser?: { tier?: string } | null,
+    now: Date = new Date(),
+): PremiumState {
+    if (currentUser?.is_premium !== undefined) return getPremiumState(currentUser, now);
+
+    const tier = String(currentUser?.tier || fallbackUser?.tier || 'free').toLowerCase();
+    return tier === 'premium' ? 'active' : 'none';
+}
+
 /** Chỉ true khi user được gắn cờ premium VÀ hạn còn ở tương lai — điều kiện hiện huy hiệu. */
 export function isPremiumActive(user?: PremiumUserLike | null, now: Date = new Date()): boolean {
     return getPremiumState(user, now) === 'active';

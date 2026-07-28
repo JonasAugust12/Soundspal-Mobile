@@ -3,6 +3,7 @@ import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { getUserFromToken } from '@/shared/utils/jwt';
 import { authRepository } from '@/features/auth/data/repositories/AuthRepositoryImpl';
 import { LoginUseCase } from '@/features/auth/domain/usecases/LoginUseCase';
+import { clearSyncedFcmToken, getOrCreateDeviceId } from '@/features/notifications/data/deviceInfo';
 import type { LoginRequest } from '@/features/auth/domain/entities/auth.type';
 
 const loginUseCase = new LoginUseCase(authRepository);
@@ -42,10 +43,15 @@ export const useLogout = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: () => authRepository.logout({ refresh_token: refreshToken || '' }),
+        mutationFn: () =>
+            authRepository.logout({
+                refresh_token: refreshToken || '',
+                device_id: getOrCreateDeviceId(),
+            }),
         onSettled: () => {
             // Always logout on client side, even if API fails
             logout();
+            clearSyncedFcmToken();
             queryClient.clear();
         },
     });

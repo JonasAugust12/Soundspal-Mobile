@@ -3,6 +3,7 @@ import { storage } from '@/shared/infrastructure/storage/storage';
 import type { DevicePlatform } from '@/features/notifications/domain/entities/notification.type';
 
 const DEVICE_ID_KEY = 'device_id';
+const SYNCED_FCM_TOKEN_KEY = 'synced_fcm_token';
 
 function generateUuid(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -20,6 +21,20 @@ export function getOrCreateDeviceId(): string {
     const id = generateUuid();
     storage.set(DEVICE_ID_KEY, id);
     return id;
+}
+
+/** Token gần nhất đã đẩy lên backend thành công, để lần mở app sau khỏi gọi lại API. */
+export function getSyncedFcmToken(): string | null {
+    return storage.getString(SYNCED_FCM_TOKEN_KEY) ?? null;
+}
+
+export function setSyncedFcmToken(token: string): void {
+    storage.set(SYNCED_FCM_TOKEN_KEY, token);
+}
+
+/** Logout khiến backend deactivate thiết bị, cache cũ không còn phản ánh đúng server. */
+export function clearSyncedFcmToken(): void {
+    storage.remove(SYNCED_FCM_TOKEN_KEY);
 }
 
 export function resolvePlatform(): DevicePlatform {

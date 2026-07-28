@@ -45,6 +45,7 @@ export interface SignupResponse {
 
 export interface LogoutRequest {
     refresh_token: string;
+    device_id?: string;
 }
 
 export interface LogoutResponse {

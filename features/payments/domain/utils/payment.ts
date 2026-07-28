@@ -1,4 +1,7 @@
+import { PREMIUM_PLANS } from '@/features/payments/domain/constants/payment';
 import type {
+    BillingPeriod,
+    CheckoutRequest,
     NormalizedPaymentStatus,
     PayOSReturnInfo,
     PaymentHistoryItem,
@@ -54,6 +57,20 @@ interface ApiErrorLike {
 
 export function formatVnd(amount: number): string {
     return `${amount.toLocaleString('vi-VN')} VND`;
+}
+
+/** Ngày dd/MM/yyyy theo locale vi-VN; trả null khi chuỗi rỗng hoặc không parse được. */
+export function formatPaymentDate(value?: string | null): string | null {
+    if (!value) return null;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
 }
 
 export function normalizePaymentStatus(status?: string | null): NormalizedPaymentStatus {
@@ -142,6 +159,32 @@ export function normalizePayOSOrderCode(value?: string | null): string | null {
 
     const trimmed = value.trim();
     return /^\d+$/.test(trimmed) ? trimmed : null;
+}
+
+/** Query param của expo-router có thể là mảng; chỉ nhận orderCode toàn chữ số. */
+export function resolvePayOSSearchParam(value?: string | string[]): string | null {
+    if (!value) return null;
+
+    const raw = Array.isArray(value) ? value[0] : value;
+    return normalizePayOSOrderCode(raw);
+}
+
+/**
+ * Dựng lại return URL từ query param của expo-router để tái dùng đúng một đường phân
+ * tích với deep link thật (parsePayOSReturnUrl).
+ */
+export function buildPayOSReturnUrl(
+    baseUrl: string,
+    orderCode?: string | null,
+    status?: string | null,
+): string | null {
+    if (status) {
+        return `${baseUrl}?orderCode=${orderCode || ''}&status=${encodeURIComponent(status)}`;
+    }
+    if (orderCode) {
+        return `${baseUrl}?orderCode=${orderCode}`;
+    }
+    return null;
 }
 
 export function extractPayOSOrderCode(url: string): string | null {
@@ -277,6 +320,24 @@ export function extractLatestOrderCodeFromHistory(data: unknown): string | null 
     }
 
     return null;
+}
+
+/** Body POST /payments/checkout cho luồng nâng cấp Premium. */
+export function buildPremiumUpgradeCheckoutRequest(
+    userId: string,
+    billingPeriod: BillingPeriod,
+    urls: { redirect_url: string; cancel_url: string },
+): CheckoutRequest {
+    const plan = PREMIUM_PLANS[billingPeriod];
+    return {
+        purpose: 'ACCOUNT_UPGRADE',
+        amount: plan.amount,
+        billing_period: plan.billing_period,
+        description: plan.description,
+        reference_id: userId,
+        redirect_url: urls.redirect_url,
+        cancel_url: urls.cancel_url,
+    };
 }
 
 export function getRawPaymentStatus(data: PaymentStatusData): string | undefined {

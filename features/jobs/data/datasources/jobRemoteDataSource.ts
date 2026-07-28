@@ -76,7 +76,7 @@ export const jobRemoteDataSource = {
             (params.genres && params.genres.length > 0)
         );
         // Text search dùng /posts/search; nhưng nếu có filter nâng cao thì ưu tiên /posts
-        // (endpoint hỗ trợ JobPostFilters). Vẫn đính q để BE lọc thêm nếu hỗ trợ.
+        // (endpoint hỗ trợ JobPostFilters).
         if (params.search?.trim()) {
             searchParams.append('q', params.search.trim());
             if (!hasAdvancedFilters) {
