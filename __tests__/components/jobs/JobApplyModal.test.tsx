@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { JobApplyModal } from '@/features/jobs/presentation/components/JobApplyModal';
-import { Alert } from 'react-native';
+import { showAppDialog } from '@/shared/presentation/ui';
 
-// Mock the API hook
 jest.mock('@/features/jobs/presentation/hooks/useJobApi', () => ({
     useSubmitJobApplication: () => ({
         mutate: jest.fn((data, options) => {
@@ -15,13 +15,33 @@ jest.mock('@/features/jobs/presentation/hooks/useJobApi', () => ({
     }),
 }));
 
-// Mock MediaPicker component
 jest.mock('@/features/jobs/presentation/components/MediaPicker', () => ({
     MediaPicker: 'MediaPicker',
 }));
 
-// Spy on Alert
-jest.spyOn(Alert, 'alert');
+jest.mock('@/shared/presentation/ui', () => {
+    const ReactActual = require('react');
+    return {
+        showAppDialog: jest.fn(),
+        KeyboardAwareModalOverlay: ({ children }: { children: React.ReactNode }) =>
+            ReactActual.createElement(ReactActual.Fragment, null, children),
+    };
+});
+
+const mockShowAppDialog = showAppDialog as jest.MockedFunction<typeof showAppDialog>;
+
+function renderModal(props: React.ComponentProps<typeof JobApplyModal>) {
+    return render(
+        <SafeAreaProvider
+            initialMetrics={{
+                frame: { x: 0, y: 0, width: 390, height: 844 },
+                insets: { top: 0, left: 0, right: 0, bottom: 0 },
+            }}
+        >
+            <JobApplyModal {...props} />
+        </SafeAreaProvider>,
+    );
+}
 
 describe('JobApplyModal', () => {
     const defaultProps = {
@@ -35,7 +55,7 @@ describe('JobApplyModal', () => {
     });
 
     it('should render when visible is true', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
         expect(screen.getByText('Ứng tuyển công việc')).toBeTruthy();
         expect(screen.getByPlaceholderText('Nhập họ và tên')).toBeTruthy();
@@ -44,58 +64,57 @@ describe('JobApplyModal', () => {
     });
 
     it('should validate empty full name', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
         fireEvent.press(screen.getByText('Gửi đơn ứng tuyển'));
 
-        expect(Alert.alert).toHaveBeenCalledWith('Lỗi', 'Họ và tên phải có ít nhất 2 ký tự');
+        expect(mockShowAppDialog).toHaveBeenCalledWith('Lỗi', 'Họ và tên phải có ít nhất 2 ký tự');
     });
 
     it('should validate invalid email', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
         fireEvent.changeText(screen.getByPlaceholderText('Nhập họ và tên'), 'John Doe');
         fireEvent.changeText(screen.getByPlaceholderText('email@example.com'), 'invalid-email');
 
         fireEvent.press(screen.getByText('Gửi đơn ứng tuyển'));
 
-        expect(Alert.alert).toHaveBeenCalledWith('Lỗi', 'Email không hợp lệ');
+        expect(mockShowAppDialog).toHaveBeenCalledWith('Lỗi', 'Email không hợp lệ');
     });
 
     it('should validate invalid phone number', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
         fireEvent.changeText(screen.getByPlaceholderText('Nhập họ và tên'), 'John Doe');
         fireEvent.changeText(screen.getByPlaceholderText('email@example.com'), 'john@test.com');
-        fireEvent.changeText(screen.getByPlaceholderText('0912345678'), '123'); // Invalid phone
+        fireEvent.changeText(screen.getByPlaceholderText('0912345678'), '123');
 
         fireEvent.press(screen.getByText('Gửi đơn ứng tuyển'));
 
-        expect(Alert.alert).toHaveBeenCalledWith(
+        expect(mockShowAppDialog).toHaveBeenCalledWith(
             'Lỗi',
             expect.stringContaining('Số điện thoại không hợp lệ'),
         );
     });
 
     it('should validate cover letter length', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
         fireEvent.changeText(screen.getByPlaceholderText('Nhập họ và tên'), 'John Doe');
         fireEvent.changeText(screen.getByPlaceholderText('email@example.com'), 'john@test.com');
         fireEvent.changeText(screen.getByPlaceholderText('0912345678'), '0912345678');
-        // Setting short cover letter (less than 50 chars)
         fireEvent.changeText(screen.getByPlaceholderText(/Chia sẻ về kinh nghiệm/i), 'Too short');
 
         fireEvent.press(screen.getByText('Gửi đơn ứng tuyển'));
 
-        expect(Alert.alert).toHaveBeenCalledWith(
+        expect(mockShowAppDialog).toHaveBeenCalledWith(
             'Lỗi',
             'Giới thiệu bản thân phải có ít nhất 50 ký tự',
         );
     });
 
     it('should call onClose when close button is pressed', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
         fireEvent.press(screen.getByText('Huỷ'));
 
@@ -103,9 +122,8 @@ describe('JobApplyModal', () => {
     });
 
     it('should render media picker section', () => {
-        render(<JobApplyModal {...defaultProps} />);
+        renderModal(defaultProps);
 
-        // This is the trigger for the media picker
         expect(screen.getByText('Chọn từ phương tiện của tôi')).toBeTruthy();
     });
 });

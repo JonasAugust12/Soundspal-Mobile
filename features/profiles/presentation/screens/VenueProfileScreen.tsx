@@ -22,6 +22,7 @@ import {
     SocialList,
     VenueOpenJobs,
 } from '@/features/profiles/presentation/components/profile';
+import { PublicCollaboratorsSection } from '@/features/collabRequests';
 import {
     useGetCurrentUser,
     useGetUserByUsername,
@@ -184,6 +185,8 @@ export default function VenueProfile() {
 
                     {/* Đang tuyển (open jobs) */}
                     <VenueOpenJobs isMe={isMe} username={userData?.username} />
+
+                    <PublicCollaboratorsSection userId={userData?.id} />
 
                     {/* Venue Stats */}
                     <View className="flex-row gap-3">

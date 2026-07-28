@@ -16,6 +16,8 @@ module.exports = {
     ],
     // Coverage threshold removed to allow CI to pass
     // Current coverage: ~15% with 276 passing tests
+    // Live API smoke tests are opt-in: `npm run test:integration`
+    testPathIgnorePatterns: ['/node_modules/', '<rootDir>/__tests__/integration/'],
     reporters: [
         'default',
         [

@@ -30,6 +30,10 @@ export function resolvePushRoute(data?: PushNotificationData | null): string | n
             return '/(jobs)/my-applications';
         case 'new_message':
             return conversationId ? chatRoute(conversationId) : null;
+        case 'collaboration_requested':
+        case 'collaboration_status_changed':
+        case 'collaboration_cancelled':
+            return '/(profiles)/collab-requests?tab=manage';
     }
 
     // messaging-service không gửi `type`.

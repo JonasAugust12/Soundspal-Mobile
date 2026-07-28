@@ -32,8 +32,9 @@ jest.mock('react-native-toast-message', () => ({
 jest.mock('expo-router', () => ({
     useRouter: jest.fn(),
     useSegments: jest.fn(),
-    usePathname: jest.fn(),
-    useLocalSearchParams: jest.fn(),
+    usePathname: jest.fn(() => '/'),
+    useLocalSearchParams: jest.fn(() => ({})),
+    useGlobalSearchParams: jest.fn(() => ({})),
     router: {
         push: jest.fn(),
         replace: jest.fn(),

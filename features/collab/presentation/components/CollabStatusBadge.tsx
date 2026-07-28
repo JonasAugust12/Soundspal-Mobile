@@ -16,6 +16,7 @@ export const CollabStatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => 
                     bg: 'bg-yellow-50 dark:bg-yellow-900/20',
                     border: 'border-yellow-200 dark:border-yellow-800',
                     text: 'text-yellow-700 dark:text-yellow-300',
+                    iconColor: '#A16207',
                     icon: Clock,
                     label: 'Đang chờ xem xét',
                 };
@@ -24,6 +25,7 @@ export const CollabStatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => 
                     bg: 'bg-green-50 dark:bg-green-900/20',
                     border: 'border-green-200 dark:border-green-800',
                     text: 'text-green-700 dark:text-green-300',
+                    iconColor: '#15803D',
                     icon: CheckCircle,
                     label: 'Chấp nhận',
                 };
@@ -32,6 +34,7 @@ export const CollabStatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => 
                     bg: 'bg-red-50 dark:bg-red-900/20',
                     border: 'border-red-200 dark:border-red-800',
                     text: 'text-red-700 dark:text-red-300',
+                    iconColor: '#B91C1C',
                     icon: XCircle,
                     label: 'Từ chối',
                 };
@@ -40,6 +43,7 @@ export const CollabStatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => 
                     bg: 'bg-gray-50 dark:bg-gray-800',
                     border: 'border-gray-200 dark:border-gray-700',
                     text: 'text-gray-700 dark:text-gray-300',
+                    iconColor: '#374151',
                     icon: AlertCircle,
                     label: 'Đã rút lại',
                 };
@@ -62,7 +66,7 @@ export const CollabStatusBadge = ({ status, size = 'md' }: StatusBadgeProps) => 
         <View
             className={`flex-row items-center rounded-lg border ${config.bg} ${config.border} ${sizeClass}`}
         >
-            <Icon size={iconSize} color={config.text} />
+            <Icon size={iconSize} color={config.iconColor} />
             <Text className={`font-semibold ${config.text} ${textSize}`}>{config.label}</Text>
         </View>
     );
