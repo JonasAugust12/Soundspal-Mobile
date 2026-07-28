@@ -3,15 +3,38 @@
 // Note: @testing-library/jest-native is deprecated, using built-in matchers from react-native
 // import '@testing-library/jest-native/extend-expect';
 
-// Mock MMKV storage FIRST before any imports
-jest.mock('react-native-mmkv', () => ({
-    MMKV: jest.fn(() => ({
-        getString: jest.fn(),
-        set: jest.fn(),
-        delete: jest.fn(),
-        clearAll: jest.fn(),
-    })),
-}));
+// Mock MMKV storage FIRST before any imports.
+// storage.ts dùng `createMMKV` (API của MMKV 4) — không phải `MMKV` của bản cũ. Mock cả hai
+// để mọi đường import tới storage.ts đều nạp được, kèm một Map trong bộ nhớ để những hàm
+// đọc-rồi-ghi (vd getOrCreateDeviceId) hành xử nhất quán trong một test.
+jest.mock('react-native-mmkv', () => {
+    const createStore = () => {
+        const data = new Map();
+        return {
+            getString: jest.fn((key) => data.get(key)),
+            getNumber: jest.fn((key) => data.get(key)),
+            getBoolean: jest.fn((key) => data.get(key)),
+            contains: jest.fn((key) => data.has(key)),
+            set: jest.fn((key, value) => {
+                data.set(key, value);
+            }),
+            remove: jest.fn((key) => {
+                data.delete(key);
+            }),
+            delete: jest.fn((key) => {
+                data.delete(key);
+            }),
+            clearAll: jest.fn(() => {
+                data.clear();
+            }),
+        };
+    };
+
+    return {
+        createMMKV: jest.fn(createStore),
+        MMKV: jest.fn(createStore),
+    };
+});
 
 // Mock mmkvStorage module
 jest.mock('@/shared/infrastructure/storage/mmkvStorage', () => ({

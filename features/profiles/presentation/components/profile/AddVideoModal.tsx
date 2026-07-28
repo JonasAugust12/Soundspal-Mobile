@@ -9,11 +9,13 @@ import {
     StyleSheet,
     TextInput,
     TouchableOpacity,
+    ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Upload, Image as ImageIcon, Video } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 
-import { KeyboardAwareModalOverlay } from '@/shared/presentation/ui';
+import { KeyboardAwareModalOverlay, UploadProgress } from '@/shared/presentation/ui';
 import { useUploadUserVideo } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 
@@ -26,6 +28,7 @@ interface AddVideoModalProps {
 export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProps) {
     const { showSuccess, showError } = useToast();
     const uploadVideo = useUploadUserVideo();
+    const insets = useSafeAreaInsets();
 
     const [title, setTitle] = useState('');
     const [videoUri, setVideoUri] = useState<string | null>(null);
@@ -120,9 +123,23 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
     };
 
     const isValid = title.trim() && videoAsset;
+    const isUploading = uploadVideo.isPending;
+
+    // Đang tải lên thì chặn mọi đường thoát: nút X, nút Hủy, và cả nút back của Android.
+    // Đóng giữa chừng sẽ xoá sạch state trong khi request vẫn chạy — người dùng không biết
+    // video có lên được hay không.
+    const handleRequestClose = () => {
+        if (isUploading) return;
+        handleClose();
+    };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
+        <Modal
+            visible={visible}
+            animationType="slide"
+            transparent
+            onRequestClose={handleRequestClose}
+        >
             <KeyboardAwareModalOverlay>
                 <View className="flex-1 bg-black/50 justify-end">
                     <View
@@ -145,8 +162,10 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                                 </Text>
                             </View>
                             <TouchableOpacity
-                                onPress={handleClose}
+                                onPress={handleRequestClose}
+                                disabled={isUploading}
                                 className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center"
+                                style={{ opacity: isUploading ? 0.4 : 1 }}
                             >
                                 <X size={20} color="#6B7280" />
                             </TouchableOpacity>
@@ -246,30 +265,48 @@ export function AddVideoModal({ visible, onClose, onSuccess }: AddVideoModalProp
                             </View>
                         </ScrollView>
 
-                        {/* Actions */}
+                        {/* Actions — app bật edge-to-edge nên phải tự chừa chỗ cho thanh
+                            điều hướng hệ thống, không thì hai nút bị nav bar đè lên. */}
                         <View
-                            style={styles.footer}
-                            className="flex-row gap-3 px-5 py-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
+                            style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}
+                            className="gap-3 px-5 pt-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800"
                         >
-                            <TouchableOpacity
-                                onPress={handleClose}
-                                disabled={uploadVideo.isPending}
-                                className="flex-1 py-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 items-center"
-                            >
-                                <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
-                                    Hủy
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={handleSubmit}
-                                disabled={uploadVideo.isPending || !isValid}
-                                className={`flex-1 py-4 rounded-xl bg-purple-600 items-center ${!isValid || uploadVideo.isPending ? 'opacity-50' : ''}`}
-                                activeOpacity={0.8}
-                            >
-                                <Text className="text-base font-bold text-white">
-                                    {uploadVideo.isPending ? 'Đang tải...' : 'Thêm video'}
-                                </Text>
-                            </TouchableOpacity>
+                            <UploadProgress
+                                visible={isUploading}
+                                kind="video"
+                                fileName={videoAsset?.fileName || title.trim() || undefined}
+                            />
+
+                            <View className="flex-row gap-3">
+                                <TouchableOpacity
+                                    onPress={handleRequestClose}
+                                    disabled={isUploading}
+                                    className="flex-1 py-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 items-center"
+                                >
+                                    <Text className="text-base font-bold text-gray-700 dark:text-gray-300">
+                                        Hủy
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleSubmit}
+                                    disabled={isUploading || !isValid}
+                                    className={`flex-1 py-4 rounded-xl bg-purple-600 items-center justify-center ${!isValid || isUploading ? 'opacity-50' : ''}`}
+                                    activeOpacity={0.8}
+                                >
+                                    {isUploading ? (
+                                        <View className="flex-row items-center gap-2">
+                                            <ActivityIndicator size="small" color="#ffffff" />
+                                            <Text className="text-base font-bold text-white">
+                                                Đang tải...
+                                            </Text>
+                                        </View>
+                                    ) : (
+                                        <Text className="text-base font-bold text-white">
+                                            Thêm video
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </View>

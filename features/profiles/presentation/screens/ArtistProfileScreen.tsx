@@ -17,7 +17,6 @@ import {
     ProfileImageList,
     VideoPlayer,
     SocialList,
-    YoutubeEmbed,
     ServicesList,
 } from '@/features/profiles/presentation/components/profile';
 import { CreateCollabRequestModal, PublicCollaboratorsSection } from '@/features/collabRequests';
@@ -340,54 +339,6 @@ export default function ArtistProfile() {
                             </View>
                         </View>
                     )}
-
-                    {/* Featured Releases */}
-                    <View className="gap-4">
-                        <View className="flex-row justify-between items-center">
-                            <View className="flex-row items-center gap-2">
-                                <View className="w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
-                                    <Music4 size={18} color="#7C3AED" />
-                                </View>
-                                <Text className="text-lg font-bold text-foreground">
-                                    Sản phẩm nổi bật
-                                </Text>
-                            </View>
-                            {(isMe || (userData?.featured_release_links?.length || 0) > 3) && (
-                                <Pressable
-                                    onPress={() =>
-                                        router.push({
-                                            pathname: '/(profiles)/featuredReleases',
-                                            params: isMe ? {} : { username: userData?.username },
-                                        })
-                                    }
-                                    className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 active:bg-primary/20"
-                                >
-                                    <Text className="text-sm font-semibold text-primary">
-                                        Xem tất cả
-                                    </Text>
-                                    <ChevronRight size={14} color="#7C3AED" />
-                                </Pressable>
-                            )}
-                        </View>
-
-                        {userData?.featured_release_links &&
-                        userData.featured_release_links.length > 0 ? (
-                            <View className="gap-3">
-                                {userData.featured_release_links.slice(0, 3).map((link, index) => (
-                                    <YoutubeEmbed key={index} url={link} />
-                                ))}
-                            </View>
-                        ) : (
-                            <View className="py-12 items-center gap-3 bg-muted/30 rounded-2xl">
-                                <View className="w-16 h-16 rounded-2xl bg-muted/60 items-center justify-center">
-                                    <Music4 size={32} color="#9CA3AF" />
-                                </View>
-                                <Text className="text-sm text-muted-foreground">
-                                    Chưa có featured releases
-                                </Text>
-                            </View>
-                        )}
-                    </View>
 
                     {/* Videos */}
                     <View className="gap-4">

@@ -7,11 +7,12 @@ import {
     TextInput,
     TouchableOpacity,
     ActivityIndicator,
+    Image,
     Platform,
     StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, Play } from 'lucide-react-native';
+import { X, Play, FileAudio, FileText } from 'lucide-react-native';
 import { KeyboardAwareModalOverlay, showAppDialog } from '@/shared/presentation/ui';
 import { useSubmitJobApplication } from '@/features/jobs/presentation/hooks/useJobApi';
 import { MediaPicker } from './MediaPicker';
@@ -218,26 +219,82 @@ export const JobApplyModal = ({ visible, onClose, jobId }: JobApplyModalProps) =
                                         File demo (ảnh, video, âm thanh)
                                     </Text>
                                     {selectedMedia ? (
-                                        <View className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl p-4 flex-row items-center justify-between">
-                                            <View className="flex-1 gap-1">
-                                                <Text className="text-sm font-semibold text-gray-900 dark:text-white">
-                                                    {selectedMedia.file_name}
-                                                </Text>
-                                                <Text className="text-xs text-gray-600 dark:text-gray-400">
-                                                    {(
-                                                        selectedMedia.file_size /
-                                                        1024 /
-                                                        1024
-                                                    ).toFixed(2)}{' '}
-                                                    MB
-                                                </Text>
+                                        <View className="rounded-xl overflow-hidden border border-purple-200 dark:border-purple-800 bg-gray-50 dark:bg-gray-800">
+                                            {/* Xem trước ngay trong form — người dùng phải thấy
+                                                mình vừa chọn đúng tệp nào, tên tệp không đủ. */}
+                                            {selectedMedia.mime_type.startsWith('image/') ? (
+                                                <Image
+                                                    source={{ uri: selectedMedia.file_url }}
+                                                    className="w-full aspect-video"
+                                                    resizeMode="cover"
+                                                />
+                                            ) : (
+                                                <View className="w-full aspect-video bg-gray-900 items-center justify-center gap-2">
+                                                    {selectedMedia.mime_type.startsWith(
+                                                        'video/',
+                                                    ) ? (
+                                                        <>
+                                                            <Play
+                                                                size={32}
+                                                                color="#ffffff"
+                                                                fill="#ffffff"
+                                                            />
+                                                            <Text className="text-white text-xs">
+                                                                Video
+                                                            </Text>
+                                                        </>
+                                                    ) : selectedMedia.mime_type.startsWith(
+                                                          'audio/',
+                                                      ) ? (
+                                                        <>
+                                                            <FileAudio size={32} color="#ffffff" />
+                                                            <Text className="text-white text-xs">
+                                                                Âm thanh
+                                                            </Text>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <FileText size={32} color="#ffffff" />
+                                                            <Text className="text-white text-xs">
+                                                                Tệp đính kèm
+                                                            </Text>
+                                                        </>
+                                                    )}
+                                                </View>
+                                            )}
+
+                                            <View className="flex-row items-center justify-between gap-3 px-4 py-3">
+                                                <View className="flex-1 gap-1">
+                                                    <Text
+                                                        numberOfLines={1}
+                                                        className="text-sm font-semibold text-gray-900 dark:text-white"
+                                                    >
+                                                        {selectedMedia.file_name}
+                                                    </Text>
+                                                    <Text className="text-xs text-gray-600 dark:text-gray-400">
+                                                        {(
+                                                            selectedMedia.file_size /
+                                                            1024 /
+                                                            1024
+                                                        ).toFixed(2)}{' '}
+                                                        MB
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity
+                                                    onPress={() => setShowMediaPicker(true)}
+                                                    className="px-3 py-2 rounded-lg bg-purple-100 dark:bg-purple-900/30"
+                                                >
+                                                    <Text className="text-xs font-semibold text-purple-600">
+                                                        Đổi
+                                                    </Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={() => setSelectedMedia(null)}
+                                                    className="p-2"
+                                                >
+                                                    <X size={20} color="#EF4444" />
+                                                </TouchableOpacity>
                                             </View>
-                                            <TouchableOpacity
-                                                onPress={() => setSelectedMedia(null)}
-                                                className="p-2"
-                                            >
-                                                <X size={20} color="#EF4444" />
-                                            </TouchableOpacity>
                                         </View>
                                     ) : (
                                         <TouchableOpacity

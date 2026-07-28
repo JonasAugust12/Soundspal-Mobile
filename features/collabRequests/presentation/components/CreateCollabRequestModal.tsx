@@ -11,6 +11,7 @@ import {
     Platform,
     ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 import { CalendarDays, FileUp, Handshake, X } from 'lucide-react-native';
@@ -41,6 +42,7 @@ function toHm(d: Date): string {
 export function CreateCollabRequestModal({ visible, onClose, receiverId, receiverName }: Props) {
     const { showSuccess, showError } = useToast();
     const createMutation = useCreateCollabRequest();
+    const insets = useSafeAreaInsets();
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -280,7 +282,11 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
                         </View>
                     </ScrollView>
 
-                    <View className="px-5 pb-6 pt-2 border-t border-gray-100 flex-row gap-3">
+                    {/* Edge-to-edge: tự chừa chỗ cho thanh điều hướng, không thì nút bị đè. */}
+                    <View
+                        className="px-5 pt-2 border-t border-gray-100 flex-row gap-3"
+                        style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+                    >
                         <TouchableOpacity
                             onPress={handleClose}
                             className="flex-1 py-3.5 rounded-full border border-gray-200 items-center"

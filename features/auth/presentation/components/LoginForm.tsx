@@ -20,7 +20,10 @@ const loginSchema = z.object({
         .refine(
             (val) => {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+                // Backend cho phép dấu chấm và gạch ngang trong username (vd
+                // "newjeans.hybe.venue"), nên form đăng nhập phải nhận đúng bộ ký tự đó —
+                // chặn ở client là khoá luôn tài khoản hợp lệ ra ngoài.
+                const usernameRegex = /^[a-zA-Z0-9._-]{3,30}$/;
                 return emailRegex.test(val) || usernameRegex.test(val);
             },
             { message: AuthValidationMessage.IdentifierInvalid },

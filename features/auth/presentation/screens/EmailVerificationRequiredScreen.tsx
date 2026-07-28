@@ -9,6 +9,7 @@ import { useResendVerificationCode } from '@/features/auth/presentation/hooks/us
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
+import { clearUserScopedData } from '@/shared/infrastructure/storage/clearUserScopedData';
 import {
     AUTH_COMMON,
     AUTH_EMAIL_REQUIRED_UI,
@@ -44,6 +45,9 @@ export default function EmailVerificationRequiredScreen() {
 
     const handleLogout = () => {
         logout();
+        clearUserScopedData();
+        // Màn này thuộc nhóm (auth) nên không nhánh nào của useProtectedRoute khớp —
+        // phải tự điều hướng, khác với nút Đăng xuất ở PersonalScreen.
         router.replace('/(auth)/login');
     };
 

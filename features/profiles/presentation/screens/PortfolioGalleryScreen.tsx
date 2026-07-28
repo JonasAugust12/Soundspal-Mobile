@@ -24,7 +24,7 @@ import {
 } from '@/features/profiles/presentation/hooks/useUserApi';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { useToast } from '@/shared/presentation/hooks/useToast';
-import { ConfirmModal } from '@/shared/presentation/ui';
+import { ConfirmModal, ImageViewerModal, UploadProgress } from '@/shared/presentation/ui';
 
 const { width: screenWidth } = Dimensions.get('window');
 const PADDING = 16;
@@ -55,6 +55,8 @@ export default function PortfolioGalleryScreen() {
         visible: boolean;
         mediaId: string | null;
     }>({ visible: false, mediaId: null });
+    const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+    const [pendingFileName, setPendingFileName] = useState<string | null>(null);
 
     const userMedia = isMe ? currentMedia : otherMedia;
     const isLoading = isMe ? isLoadingCurrent : isLoadingOther;
@@ -72,15 +74,17 @@ export default function PortfolioGalleryScreen() {
 
             if (!result.canceled && result.assets[0]) {
                 const asset = result.assets[0];
+                const fileName = asset.fileName || 'portfolio.jpg';
 
                 const formData = new FormData();
                 formData.append('file', {
                     uri: asset.uri,
                     type: asset.mimeType || 'image/jpeg',
-                    name: asset.fileName || 'portfolio.jpg',
+                    name: fileName,
                 } as unknown as Blob);
                 formData.append('media_type', 'portfolio');
 
+                setPendingFileName(fileName);
                 await uploadMedia.mutateAsync(formData);
                 showSuccess('Thành công', 'Đã thêm ảnh vào portfolio');
                 refetchCurrent();
@@ -88,6 +92,8 @@ export default function PortfolioGalleryScreen() {
         } catch (error: unknown) {
             const err = error as { message?: string };
             showError('Lỗi', err?.message || 'Không thể tải ảnh lên');
+        } finally {
+            setPendingFileName(null);
         }
     };
 
@@ -174,6 +180,16 @@ export default function PortfolioGalleryScreen() {
                             </Pressable>
                         )}
 
+                        {isMe && (
+                            <View className="mt-3">
+                                <UploadProgress
+                                    visible={uploadMedia.isPending}
+                                    kind="image"
+                                    fileName={pendingFileName ?? undefined}
+                                />
+                            </View>
+                        )}
+
                         {/* Info tip */}
                         {isMe && (
                             <View className="mt-4 p-4 bg-muted/30 rounded-xl">
@@ -185,10 +201,11 @@ export default function PortfolioGalleryScreen() {
                         )}
                     </View>
                 }
-                renderItem={({ item }) => (
+                renderItem={({ item, index }) => (
                     <Pressable
+                        onPress={() => setViewerIndex(index)}
                         style={[styles.imageWrapper, { width: imageSize, height: imageSize }]}
-                        className="rounded-xl overflow-hidden"
+                        className="rounded-xl overflow-hidden active:opacity-80"
                     >
                         <Image
                             source={{ uri: item.file_url }}
@@ -220,6 +237,13 @@ export default function PortfolioGalleryScreen() {
                         )}
                     </View>
                 }
+            />
+
+            <ImageViewerModal
+                visible={viewerIndex !== null}
+                images={portfolioImages.map((m) => ({ id: m.id, uri: m.file_url }))}
+                initialIndex={viewerIndex ?? 0}
+                onClose={() => setViewerIndex(null)}
             />
 
             {/* Confirm Delete Modal */}

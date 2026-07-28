@@ -10,6 +10,7 @@ import {
     ImageSourcePropType,
 } from 'react-native';
 import { Images, ChevronRight } from 'lucide-react-native';
+import { ImageViewerModal, type ImageViewerItem } from '@/shared/presentation/ui/ImageViewerModal';
 
 const { width: screenWidth } = Dimensions.get('window');
 const imageSize = (screenWidth - 32 - 24) / 3; // px-4 (32) + 2 gaps of 12px (24)
@@ -34,6 +35,23 @@ export function ProfileImageList({
     const items = React.useMemo(() => data.slice(0, 6), [data]);
     const hasMore = data.length > 6;
     const remainingCount = data.length - 6;
+
+    const [viewerIndex, setViewerIndex] = React.useState<number | null>(null);
+
+    // Trình xem ảnh vuốt qua được TẤT CẢ ảnh, không chỉ 6 ô đang hiện trên lưới.
+    const viewerImages = React.useMemo<ImageViewerItem[]>(
+        () =>
+            data
+                .map((item) => ({
+                    id: item.id,
+                    uri:
+                        typeof item.cover === 'object' && item.cover !== null && 'uri' in item.cover
+                            ? String(item.cover.uri ?? '')
+                            : '',
+                }))
+                .filter((item) => item.uri.length > 0),
+        [data],
+    );
 
     return (
         <View className="gap-4">
@@ -67,7 +85,7 @@ export function ProfileImageList({
                         return (
                             <Pressable
                                 key={item.id}
-                                onPress={isLastItem ? onPressSeeAll : undefined}
+                                onPress={isLastItem ? onPressSeeAll : () => setViewerIndex(index)}
                                 className="active:scale-95"
                             >
                                 <View
@@ -107,6 +125,13 @@ export function ProfileImageList({
                     <Text className="text-sm text-muted-foreground">Chưa có ảnh portfolio</Text>
                 </View>
             )}
+
+            <ImageViewerModal
+                visible={viewerIndex !== null}
+                images={viewerImages}
+                initialIndex={viewerIndex ?? 0}
+                onClose={() => setViewerIndex(null)}
+            />
         </View>
     );
 }

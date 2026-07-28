@@ -75,9 +75,11 @@
             hành động rồi lo phần UI. Đây đúng là luồng chuẩn của dự án —
             <code>screen → presentation/hooks → repository</code> — giống cách
             <code>JobDetailScreen</code> chỉ dùng hook chứ không đụng <code>jobRepository</code>.
-            Song song đó, <code>useMessagingApi.ts</code> có đầy đủ hook React Query
-            (<code>useGetConversations</code>, <code>useSendMessage</code>…) phục vụ những nơi khác
-            (vd <code>useGetOrCreateConversation</code> dùng từ màn hồ sơ và màn chi tiết job).
+            Song song đó, <code>useMessagingApi.ts</code> chỉ còn đúng một hook React Query —
+            <code>useGetOrCreateConversation</code> — dùng từ màn hồ sơ và màn chi tiết job để mở
+            hội thoại. Dữ liệu <b>bên trong</b> một hội thoại không đi qua React Query: nguồn sự
+            thật là <code>messagingStore</code> + socket, thêm cache thứ hai sẽ khiến
+            <code>refetchOnMount</code> ghi đè mất tin nhắn socket vừa đẩy về.
         </div>
 
         <div class="note warn">

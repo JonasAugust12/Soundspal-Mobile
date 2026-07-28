@@ -882,17 +882,25 @@ presentation/
             cache nào đã cũ.
         </p>
 
-        <pre><code><span class="c-key">export const</span> <span class="c-fn">useSendMessage</span> = () =&gt; {
+        <pre><code><span class="c-key">export const</span> <span class="c-fn">useDeleteBeat</span> = () =&gt; {
     <span class="c-key">const</span> queryClient = <span class="c-fn">useQueryClient</span>();
     <span class="c-key">return</span> <span class="c-fn">useMutation</span>({
-        mutationFn: messagingRepository.sendMessage,
-        onSuccess: (data) =&gt; {
-            <span class="c-com">// Tin nhắn mới → danh sách tin nhắn VÀ danh sách hội thoại đều cũ</span>
-            queryClient.<span class="c-fn">invalidateQueries</span>({ queryKey: messagingKeys.<span class="c-fn">messages</span>(data.conversationId) });
-            queryClient.<span class="c-fn">invalidateQueries</span>({ queryKey: messagingKeys.<span class="c-fn">conversations</span>() });
+        mutationFn: (id: <span class="c-key">string</span>) =&gt; challengeRepository.<span class="c-fn">deleteBeat</span>(id),
+        onSuccess: () =&gt; {
+            <span class="c-com">// Xoá beat → danh sách beat của tôi VÀ danh sách beat chung đều cũ</span>
+            queryClient.<span class="c-fn">invalidateQueries</span>({ queryKey: [<span class="c-str">'my-beats'</span>] });
+            queryClient.<span class="c-fn">invalidateQueries</span>({ queryKey: [<span class="c-str">'beats'</span>] });
         },
     });
 };</code></pre>
+
+        <div class="note info">
+            <span class="t">Messaging là ngoại lệ có chủ ý</span>
+            Tin nhắn <b>không</b> đi qua React Query. Nguồn sự thật là
+            <code>messagingStore</code> (Zustand) để socket đẩy tin nhắn/typing/online vào thẳng
+            store — thêm cache thứ hai sẽ khiến <code>refetchOnMount</code> ghi đè mất tin socket
+            vừa đẩy về. Xem <code>useConversationMessages.ts</code>.
+        </div>
 
         <h3>Vòng đời token &amp; hàng đợi 401</h3>
 

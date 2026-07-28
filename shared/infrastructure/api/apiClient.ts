@@ -6,6 +6,7 @@ import axios, {
 } from 'axios';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { getUserFromToken } from '@/shared/utils/jwt';
+import { clearUserScopedData } from '@/shared/infrastructure/storage/clearUserScopedData';
 import type { RefreshTokenResponse } from '@/features/auth/domain/entities/auth.type';
 
 // Tạo axios instance
@@ -112,6 +113,7 @@ apiClient.interceptors.response.use(
 
             if (!refreshToken) {
                 logout();
+                clearUserScopedData();
                 processQueue(new Error('No refresh token'), null);
                 isRefreshing = false;
                 return Promise.reject(error);
@@ -163,6 +165,7 @@ apiClient.interceptors.response.use(
             } catch (refreshError) {
                 processQueue(refreshError, null);
                 logout();
+                clearUserScopedData();
                 isRefreshing = false;
                 return Promise.reject(refreshError);
             }
