@@ -1,14 +1,12 @@
 import React from 'react';
 import { View, Text, Image, ImageSourcePropType } from 'react-native';
-import { MapPin, Star, BadgeCheck } from 'lucide-react-native';
+import { MapPin, BadgeCheck } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PremiumBadge, LoadingImage } from '@/shared/presentation/ui';
 
 interface InfoProfileProps {
     name: string;
     location: string;
-    rating?: number;
-    reviewCount?: number;
     bio: string;
     avatarSource: ImageSourcePropType;
     backgroundSource?: ImageSourcePropType;
@@ -33,7 +31,6 @@ const roleColors = {
 export function InfoProfile({
     name,
     location,
-    rating = 0,
     bio,
     avatarSource,
     backgroundSource,
@@ -99,14 +96,6 @@ export function InfoProfile({
                                 {location}
                             </Text>
                         </View>
-                        {rating > 0 && (
-                            <View className="flex-row items-center gap-1 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
-                                <Star size={12} color="#f59e0b" fill="#f59e0b" />
-                                <Text className="text-xs font-bold text-amber-600 dark:text-amber-500">
-                                    {rating}
-                                </Text>
-                            </View>
-                        )}
                     </View>
                 </View>
             </View>

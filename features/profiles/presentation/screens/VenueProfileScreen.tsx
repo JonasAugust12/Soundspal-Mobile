@@ -132,7 +132,6 @@ export default function VenueProfile() {
                 <InfoProfile
                     name={userData?.display_name || 'Nhà tuyển dụng'}
                     location={userData?.city || userData?.country || 'Chưa cập nhật'}
-                    rating={4.8}
                     bio={userData?.brief_bio || 'Chưa có thông tin giới thiệu'}
                     avatarSource={
                         userData?.avatar_url

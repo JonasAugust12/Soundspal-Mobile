@@ -164,7 +164,6 @@ export default function ArtistProfile() {
                 <InfoProfile
                     name={userData?.display_name || 'Người dùng'}
                     location={userData?.city || userData?.country || 'Chưa cập nhật'}
-                    rating={4.9}
                     bio={userData?.brief_bio || 'Chưa có thông tin giới thiệu'}
                     avatarSource={
                         userData?.avatar_url
