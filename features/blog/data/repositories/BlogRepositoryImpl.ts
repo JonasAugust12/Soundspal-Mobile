@@ -3,6 +3,7 @@ import { blogRemoteDataSource } from '@/features/blog/data/datasources/blogRemot
 
 export class BlogRepositoryImpl implements IBlogRepository {
     fetchBlogPosts = blogRemoteDataSource.fetchBlogPosts;
+    fetchPostById = blogRemoteDataSource.fetchPostById;
     fetchTopics = blogRemoteDataSource.fetchTopics;
     createPost = blogRemoteDataSource.createPost;
     updatePost = blogRemoteDataSource.updatePost;

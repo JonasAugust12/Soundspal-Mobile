@@ -222,22 +222,17 @@ export function useDeleteComment(postId: string | undefined) {
     });
 }
 
+/**
+ * GET /blogs/:id. Trước đây hook này tải cả feed rồi `.find()` — mà feed mặc định chỉ
+ * 20 bài, nên bài cũ hơn luôn báo "Blog not found"; payload cũng chứa full content của
+ * 20 bài để đọc 1 bài, và item lấy từ list thì thiếu khối `viewer` (đã vote/bookmark).
+ */
 export function useBlogArticle(articleId?: string) {
-    const queryClient = useQueryClient();
-
     return useQuery({
         queryKey: ['blogArticle', articleId],
-        queryFn: async () => {
+        queryFn: () => {
             if (!articleId) throw new Error('Article ID is required');
-
-            const posts = await queryClient.fetchQuery({
-                queryKey: BLOG_FEED_QUERY_KEY,
-                queryFn: () => blogRepository.fetchBlogPosts(undefined),
-            });
-
-            const article = posts.find((p) => p.id === articleId);
-            if (!article) throw new Error('Blog not found');
-            return article;
+            return blogRepository.fetchPostById(articleId);
         },
         enabled: !!articleId,
         staleTime: 1000 * 60 * 30,

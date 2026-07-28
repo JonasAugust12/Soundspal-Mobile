@@ -16,6 +16,7 @@ import type {
 
 export interface IBlogRepository {
     fetchBlogPosts(filters?: BlogPostFilters): Promise<BlogPost[]>;
+    fetchPostById(id: string): Promise<BlogPost>;
     fetchTopics(): Promise<BlogTopic[]>;
     createPost(request: CreatePostRequest): Promise<BlogItem>;
     updatePost(id: string, request: UpdatePostRequest): Promise<BlogItem>;

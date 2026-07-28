@@ -20,6 +20,7 @@ import {
 import { BLOG_FOR_YOU_TAB } from '@/features/blog/domain/constants/blog';
 import {
     useBlogFeed,
+    useBlogPosts,
     useBlogSearch,
     useBlogTopics,
     useBookmarksList,
@@ -66,8 +67,17 @@ export default function BlogScreen() {
     const myPostsNeedsAuth = isMyPostsTab && !user?.id;
     const bookmarksNeedsAuth = isBookmarksTab && !user?.id;
     const tabAuthBlockedForSearch = (isMyPostsTab || isBookmarksTab) && !user?.id;
-    /** One feed fetch when not searching; tabs (incl. My posts) filter client-side. */
-    const listEnabled = !isSearchMode;
+    /** Tab chủ đề lọc phía server (GET /blogs?topic_id=). */
+    const topicId =
+        activeTab !== BLOG_FOR_YOU_TAB.id && !isMyPostsTab && !isBookmarksTab
+            ? activeTab
+            : undefined;
+    /**
+     * Feed chỉ cần cho "Dành cho bạn" và "Bài của tôi" — tab chủ đề đã có query riêng,
+     * tab "Đã lưu" dùng /bookmarks. ("Bài của tôi" vẫn phải lọc client vì backend chưa
+     * hỗ trợ author_id ở GET /blogs.)
+     */
+    const listEnabled = !isSearchMode && !topicId && !isBookmarksTab;
 
     const {
         data: listPosts = [],
@@ -76,6 +86,14 @@ export default function BlogScreen() {
         refetch: refetchList,
         isRefetching: listRefetching,
     } = useBlogFeed({ enabled: listEnabled });
+
+    const {
+        data: topicPosts = [],
+        isLoading: topicLoading,
+        error: topicError,
+        refetch: refetchTopic,
+        isFetching: topicFetching,
+    } = useBlogPosts({ topic_id: topicId }, { enabled: !!topicId && !isSearchMode });
 
     const {
         data: bookmarkPosts = [],
@@ -108,7 +126,11 @@ export default function BlogScreen() {
         error: searchError,
         refetch: refetchSearch,
         isFetching: searchFetching,
-    } = useBlogSearch({ q: committedSearch }, { enabled: searchQueryEnabled });
+    } = useBlogSearch(
+        // Tìm kiếm trong tab chủ đề cũng để server lọc luôn (GET /blogs/search?topic_id=).
+        { q: committedSearch, topic_id: topicId },
+        { enabled: searchQueryEnabled },
+    );
 
     const posts = useMemo((): BlogPost[] => {
         if (isSearchMode) {
@@ -116,6 +138,9 @@ export default function BlogScreen() {
         }
         if (isBookmarksTab && user?.id) {
             return bookmarkPosts;
+        }
+        if (topicId) {
+            return topicPosts;
         }
         return listPosts;
     }, [
@@ -125,6 +150,8 @@ export default function BlogScreen() {
         isBookmarksTab,
         user?.id,
         bookmarkPosts,
+        topicId,
+        topicPosts,
         listPosts,
     ]);
 
@@ -132,13 +159,23 @@ export default function BlogScreen() {
         ? searchLoading
         : isBookmarksTab && user
           ? bookmarksLoading
-          : listLoading;
-    const error = isSearchMode ? searchError : isBookmarksTab && user ? bookmarksError : listError;
+          : topicId
+            ? topicLoading
+            : listLoading;
+    const error = isSearchMode
+        ? searchError
+        : isBookmarksTab && user
+          ? bookmarksError
+          : topicId
+            ? topicError
+            : listError;
     const isRefetching = isSearchMode
         ? searchFetching
         : isBookmarksTab && user
           ? bookmarksFetching
-          : listRefetching;
+          : topicId
+            ? topicFetching
+            : listRefetching;
 
     /** Full-screen spinner: initial feed/bookmarks only — search keeps list + header visible.
      *  Bỏ qua khi ở tab "Đã lưu" mà đã có bài lưu sẵn trong store (khỏi che bằng spinner). */
@@ -151,8 +188,18 @@ export default function BlogScreen() {
     const onRefresh = useCallback(() => {
         if (isSearchMode) void refetchSearch();
         else if (isBookmarksTab && user) void refetchBookmarks();
+        else if (topicId) void refetchTopic();
         else void refetchList();
-    }, [isSearchMode, isBookmarksTab, user, refetchSearch, refetchBookmarks, refetchList]);
+    }, [
+        isSearchMode,
+        isBookmarksTab,
+        user,
+        topicId,
+        refetchSearch,
+        refetchBookmarks,
+        refetchTopic,
+        refetchList,
+    ]);
 
     const handleToggleBookmark = useCallback(
         async (article: BlogPost) => {
@@ -193,36 +240,33 @@ export default function BlogScreen() {
         ],
     );
 
-    const isTopicTab = (t: string) => t !== 'for-you' && t !== 'my-posts' && t !== 'bookmarks';
-
     const filteredArticles = useMemo(() => {
         if (isSearchMode) {
-            let list = posts;
-            if (isMyPostsTab && user?.id) {
-                list = list.filter((a) => a.author_id === user.id);
-            } else if (isBookmarksTab && user?.id) {
-                list = list.filter((a) => isBookmarked(a.id));
-            } else if (isTopicTab(activeTab)) {
-                list = list.filter((a) => a.topic_id === activeTab);
+            // Chủ đề đã được server lọc qua `topic_id`; chỉ 2 tab dưới còn phải lọc client.
+            if (isMyPostsTab) {
+                return user?.id ? posts.filter((a) => a.author_id === user.id) : [];
             }
-            return list;
+            if (isBookmarksTab) {
+                return user?.id ? posts.filter((a) => isBookmarked(a.id)) : [];
+            }
+            return posts;
         }
-        if (activeTab === 'for-you') return listPosts;
-        if (activeTab === 'my-posts') {
+        // Backend chưa hỗ trợ lọc theo author ở GET /blogs → tab này vẫn lọc trên feed.
+        if (isMyPostsTab) {
             if (!user?.id) return [];
             return listPosts.filter((a) => a.author_id === user.id);
         }
-        if (activeTab === 'bookmarks') {
+        if (isBookmarksTab) {
             if (!user?.id) return [];
             return savedPosts;
         }
-        return listPosts.filter((a) => a.topic_id === activeTab);
+        // "Dành cho bạn" → feed; tab chủ đề → kết quả từ GET /blogs?topic_id=
+        return posts;
     }, [
         isSearchMode,
         posts,
         listPosts,
         savedPosts,
-        activeTab,
         isMyPostsTab,
         isBookmarksTab,
         user?.id,

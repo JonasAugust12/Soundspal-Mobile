@@ -131,6 +131,19 @@ export const blogRemoteDataSource = {
         return Array.isArray(items) ? items.map(mapBlogItemToBlogPost) : [];
     },
 
+    /**
+     * GET /blogs/:id — bài viết đơn lẻ.
+     *
+     * Khác `fetchBlogPosts`: backend chạy `GetByIDWithViewer` nên payload có thêm khối
+     * `viewer` (đã vote / đã bookmark). Nhánh list không hydrate phần đó.
+     */
+    async fetchPostById(id: string): Promise<BlogPost> {
+        const { data: body } = await apiClient.get<BlogApiSuccessEnvelope<BlogItem>>(
+            `/blogs/${id}`,
+        );
+        return mapBlogItemToBlogPost(unwrapBlogData<BlogItem>(body, 'fetchBlogPostById'));
+    },
+
     /** GET /blogs/topics — danh mục chủ đề động (thay cho danh sách hardcode). */
     async fetchTopics() {
         const { data: body } = await apiClient.get('/blogs/topics');
