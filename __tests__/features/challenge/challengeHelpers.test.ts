@@ -10,6 +10,7 @@ import {
     isEntryLiked,
     applyEntryLikeToggle,
     filterLeaderboardEntries,
+    localizeScoreExplanation,
 } from '@/features/challenge/domain/utils/challenge';
 import type { Beat, BeatEntry } from '@/features/challenge/domain/entities/challenge.type';
 
@@ -142,5 +143,14 @@ describe('leaderboard vote helpers', () => {
             makeEntry({ id: 'bad', scoring_status: 'failed' }),
         ];
         expect(filterLeaderboardEntries(entries).map((e) => e.id)).toEqual(['ok', 'pending']);
+    });
+
+    it('localizeScoreExplanation maps known English ML phrases to Vietnamese', () => {
+        const en =
+            'Pitch accuracy is excellent with strong intonation. Rhythm alignment is weak — vocal timing diverges from the beat.';
+        const vi = localizeScoreExplanation(en);
+        expect(vi).toContain('Độ chính xác cao độ rất tốt');
+        expect(vi).toContain('Nhịp yếu');
+        expect(vi).not.toContain('Pitch accuracy');
     });
 });

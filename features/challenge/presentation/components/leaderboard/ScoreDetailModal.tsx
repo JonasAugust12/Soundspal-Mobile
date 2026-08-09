@@ -18,7 +18,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import { challengeApi } from '@/features/challenge/presentation/hooks/useChallengeApi';
-import { applyEntryLikeToggle, isEntryLiked } from '@/features/challenge/domain/utils/challenge';
+import {
+    applyEntryLikeToggle,
+    isEntryLiked,
+    localizeScoreExplanation,
+} from '@/features/challenge/domain/utils/challenge';
 import type {
     BeatEntry,
     GetLeaderboardResponse,
@@ -66,12 +70,13 @@ export function ScoreDetailModal({ visible, entry, onClose }: ScoreDetailModalPr
 
     if (!entry) return null;
 
-    const totalScore = Number(entry.normalized_score || entry.total_score || 0);
-    const rawScore = Number(entry.total_score || 0);
+    // Always show absolute AI score (0–100) — never Z-score/normalized.
+    const totalScore = Number(entry.total_score || 0);
     const clamped = Math.min(Math.max(totalScore, 0), 100);
     const dashOffset = CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
     const statusLabel = (entry.scoring_status || '').replace(/_/g, ' ');
     const scoredAtLabel = formatScoredAt(entry.scored_at);
+    const explanation = localizeScoreExplanation(entry.explanation);
 
     // Vị trí 5 bong bóng quanh vòng tròn — bám theo bố cục bên web.
     const metrics: {
@@ -216,9 +221,7 @@ export function ScoreDetailModal({ visible, entry, onClose }: ScoreDetailModalPr
                                 </Text>
                                 <View className="mt-1 flex-row items-center gap-1">
                                     <TrendingUp size={14} color="#7d3bed" />
-                                    <Text className="text-xs font-bold text-primary">
-                                        {rawScore.toFixed(1)} điểm gốc
-                                    </Text>
+                                    <Text className="text-xs font-bold text-primary">/ 100</Text>
                                 </View>
                             </View>
 
@@ -244,7 +247,7 @@ export function ScoreDetailModal({ visible, entry, onClose }: ScoreDetailModalPr
                     </View>
 
                     {/* Nhận xét AI */}
-                    {entry.explanation ? (
+                    {explanation ? (
                         <View
                             style={styles.card}
                             className="mx-6 overflow-hidden rounded-3xl border border-gray-100 bg-white"
@@ -265,7 +268,7 @@ export function ScoreDetailModal({ visible, entry, onClose }: ScoreDetailModalPr
                                     </Text>
                                 </View>
                                 <Text className="font-body text-sm leading-6 text-gray-600">
-                                    {entry.explanation}
+                                    {explanation}
                                 </Text>
                             </View>
                         </View>
