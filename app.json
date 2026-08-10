@@ -2,7 +2,7 @@
     "expo": {
         "name": "Soundspal",
         "slug": "talent_link",
-        "version": "1.0.30",
+        "version": "1.0.31",
         "orientation": "portrait",
         "icon": "./assets/images/Soundspal-Logo.png",
         "scheme": "soundspal",
@@ -22,7 +22,7 @@
             },
             "edgeToEdgeEnabled": true,
             "package": "com.jonasaugust12.talent_link",
-            "versionCode": 15,
+            "versionCode": 16,
             "googleServicesFile": "./google-services.json"
         },
         "web": {
