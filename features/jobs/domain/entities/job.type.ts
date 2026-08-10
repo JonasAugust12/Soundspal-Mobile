@@ -250,6 +250,15 @@ export interface MySubmissionsResponse {
     rejected_count: number;
 }
 
+/** Embedded applicant identity from submission list/detail (same as web applicant_account). */
+export interface SubmissionApplicantAccount {
+    id?: string;
+    username?: string;
+    display_name?: string;
+    full_name?: string;
+    avatar_url?: string | null;
+}
+
 export interface OpportunitySubmission {
     id: string;
     pool_id: string;
@@ -259,6 +268,8 @@ export interface OpportunitySubmission {
     creator_display_name?: string;
     creator_avatar_url?: string | null;
     creator_role?: string;
+    /** Prefer this for messaging/collab receiver id (aligned with web getApplicantIdentity). */
+    applicant_account?: SubmissionApplicantAccount;
     full_name: string;
     email: string;
     phone_number: string;

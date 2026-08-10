@@ -57,12 +57,22 @@ export default function JobApplicantsScreen() {
         useGetOrCreateConversation();
     const [collabTarget, setCollabTarget] = useState<OpportunitySubmission | null>(null);
 
+    /** Same resolution order as web getApplicantIdentity — never use submission.id. */
+    const applicantUserId = (item: OpportunitySubmission) =>
+        item.applicant_account?.id?.trim() || item.creator_id?.trim() || '';
+
     const applicantName = (item: OpportunitySubmission) =>
-        item.creator_display_name || item.full_name || item.creator_username || 'Ứng viên';
+        item.applicant_account?.display_name ||
+        item.applicant_account?.full_name ||
+        item.creator_display_name ||
+        item.full_name ||
+        item.creator_username ||
+        'Ứng viên';
 
     const messageApplicant = (item: OpportunitySubmission) => {
-        if (!item.creator_id) return;
-        getOrCreateConversation(item.creator_id, {
+        const recipientId = applicantUserId(item);
+        if (!recipientId) return;
+        getOrCreateConversation(recipientId, {
             onSuccess: (conversation) => {
                 // Giữ format JOB_REF khi nhắn từ ngữ cảnh job (spec mục 2.2).
                 if (job) {
@@ -183,7 +193,7 @@ export default function JobApplicantsScreen() {
         const selected = selectedIds.includes(item.id);
         // Nhắn tin / gửi hợp tác chỉ mở sau khi đơn được chấp nhận; pending & rejected không có.
         const showAcceptedActions =
-            !selectionMode && item.status === 'accepted' && Boolean(item.creator_id);
+            !selectionMode && item.status === 'accepted' && Boolean(applicantUserId(item));
 
         return (
             <View
@@ -413,7 +423,7 @@ export default function JobApplicantsScreen() {
             <CreateCollabRequestModal
                 visible={Boolean(collabTarget)}
                 onClose={() => setCollabTarget(null)}
-                receiverId={collabTarget?.creator_id ?? ''}
+                receiverId={collabTarget ? applicantUserId(collabTarget) : ''}
                 receiverName={collabTarget ? applicantName(collabTarget) : ''}
             />
         </SafeAreaView>

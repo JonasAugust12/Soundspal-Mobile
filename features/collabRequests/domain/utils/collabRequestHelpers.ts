@@ -154,3 +154,58 @@ export function paletteForId(id: string) {
     }
     return PALETTES[hash % PALETTES.length];
 }
+
+export type CreateCollabErrorTone = {
+    title: string;
+    message: string;
+};
+
+/**
+ * Map POST /collaborations failures to a short Vietnamese toast.
+ * Users should never see raw backend phrases like "pair".
+ */
+export function resolveCreateCollabError(error: unknown): CreateCollabErrorTone {
+    const axiosLike = error as {
+        response?: { status?: number; data?: { message?: string } };
+        message?: string;
+    };
+    const status = axiosLike.response?.status;
+    const apiMessage = (axiosLike.response?.data?.message || axiosLike.message || '').toLowerCase();
+
+    if (status === 409 || apiMessage.includes('pending collaboration request already exists')) {
+        return {
+            title: 'Đã có đề nghị đang chờ',
+            message:
+                'Bạn đã gửi đề nghị hợp tác tới người này và đang chờ phản hồi. Vào Đề nghị hợp tác để xem hoặc hủy trước khi gửi lại.',
+        };
+    }
+    if (apiMessage.includes('cannot send a collaboration request to yourself')) {
+        return {
+            title: 'Không hợp lệ',
+            message: 'Bạn không thể gửi đề nghị hợp tác cho chính mình.',
+        };
+    }
+    if (status === 404 || apiMessage.includes('receiver user not found')) {
+        return {
+            title: 'Không tìm thấy người nhận',
+            message: 'Không tìm thấy người nhận. Vui lòng thử lại.',
+        };
+    }
+    if (apiMessage.includes('invalid date format') || apiMessage.includes('expected dd-mm-yyyy')) {
+        return {
+            title: 'Ngày không hợp lệ',
+            message: 'Vui lòng chọn lại lịch hợp tác.',
+        };
+    }
+    if (apiMessage.includes('end_date must be on or after start_date')) {
+        return {
+            title: 'Ngày không hợp lệ',
+            message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+        };
+    }
+
+    return {
+        title: 'Lỗi',
+        message: 'Không thể gửi đề nghị hợp tác. Vui lòng thử lại.',
+    };
+}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -16,7 +16,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as DocumentPicker from 'expo-document-picker';
 import { CalendarDays, FileUp, Handshake, X } from 'lucide-react-native';
 import { useCreateCollabRequest } from '@/features/collabRequests/presentation/hooks/useCollabRequestApi';
-import { toApiDate } from '@/features/collabRequests/domain/utils/collabRequestHelpers';
+import {
+    resolveCreateCollabError,
+    toApiDate,
+} from '@/features/collabRequests/domain/utils/collabRequestHelpers';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { colors } from '@/shared/domain/constants/colors';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,6 +46,8 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
     const { showSuccess, showError } = useToast();
     const createMutation = useCreateCollabRequest();
     const insets = useSafeAreaInsets();
+    // Sync lock: isPending flips async — without this, double-tap can fire two POSTs (2nd → 409).
+    const submitLockRef = useRef(false);
 
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -74,6 +79,7 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
     };
 
     const handleClose = () => {
+        submitLockRef.current = false;
         reset();
         onClose();
     };
@@ -100,6 +106,11 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
     );
 
     const handleSubmit = () => {
+        if (submitLockRef.current || createMutation.isPending) return;
+        if (!receiverId.trim()) {
+            showError('Lỗi', 'Thiếu thông tin người nhận.');
+            return;
+        }
         if (!title.trim() || !description.trim() || !startDate || !endDate) {
             showError('Thiếu thông tin', 'Vui lòng điền tiêu đề, mô tả và ngày.');
             return;
@@ -111,6 +122,7 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
             return;
         }
 
+        submitLockRef.current = true;
         createMutation.mutate(
             {
                 payload: {
@@ -131,12 +143,11 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
                     handleClose();
                 },
                 onError: (err: unknown) => {
-                    const message =
-                        (err as { response?: { data?: { message?: string } }; message?: string })
-                            ?.response?.data?.message ||
-                        (err as { message?: string })?.message ||
-                        'Không thể gửi đề nghị hợp tác.';
-                    showError('Lỗi', message);
+                    const { title, message } = resolveCreateCollabError(err);
+                    showError(title, message);
+                },
+                onSettled: () => {
+                    submitLockRef.current = false;
                 },
             },
         );
