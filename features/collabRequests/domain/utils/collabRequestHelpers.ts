@@ -50,6 +50,11 @@ export function canCancelCollab(item: CollabRequest): boolean {
     return item.status === 'PENDING' || item.status === 'ACCEPTED';
 }
 
+/** Nhắn tin chỉ mở sau khi đề nghị được chấp nhận (khớp gate của web). */
+export function canMessageCollabPartner(item: CollabRequest): boolean {
+    return item.status === 'ACCEPTED';
+}
+
 export function isOngoing(item: CollabRequest, today = todayIsoLocal()): boolean {
     return item.start_date <= today && item.end_date >= today;
 }

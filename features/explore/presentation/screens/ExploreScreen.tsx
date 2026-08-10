@@ -16,21 +16,38 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Search, SlidersHorizontal, Disc2, MicVocal, Building2, Users } from 'lucide-react-native';
+import {
+    Search,
+    SlidersHorizontal,
+    Disc2,
+    MicVocal,
+    Building2,
+    Users,
+    Music2,
+} from 'lucide-react-native';
 import { useSearchUsersInfinite } from '@/features/explore/presentation/hooks/useSearchApi';
-import { useSearchStore, UserRole } from '@/features/explore/presentation/store/searchStore';
+import {
+    useSearchStore,
+    countActiveFilters,
+    UserRole,
+} from '@/features/explore/presentation/store/searchStore';
 import { FilterSheet } from '@/shared/presentation/ui';
 import { ExploreUserCard } from '@/features/explore/presentation/components/ExploreUserCard';
 import type { UserProfile } from '@/features/explore/domain/entities/search.type';
 
 const SEARCH_PAGE_SIZE = 20;
 
+type RoleTabValue = UserRole | 'all';
+
+// 'artist' = ca sĩ + nhà sản xuất (bí danh backend hiểu được). Không có tab này thì "khám phá
+// nghệ sĩ" phải dùng 'Tất cả' — vốn kéo cả nhà tuyển dụng vào kết quả.
 const ROLE_TABS: {
     label: string;
-    value: 'singer' | 'producer' | 'venue' | 'all';
+    value: RoleTabValue;
     icon: React.ElementType;
 }[] = [
     { label: 'Tất cả', value: 'all', icon: Users },
+    { label: 'Nghệ sĩ', value: 'artist', icon: Music2 },
     { label: 'Ca sĩ', value: 'singer', icon: MicVocal },
     { label: 'Nhà sản xuất', value: 'producer', icon: Disc2 },
     { label: 'Nhà tuyển dụng', value: 'venue', icon: Building2 },
@@ -43,9 +60,7 @@ export default function ExploreScreen() {
     const params = useLocalSearchParams<{ query?: string }>();
     const router = useRouter();
     const [searchText, setSearchText] = useState('');
-    const [selectedRole, setSelectedRole] = useState<'singer' | 'producer' | 'venue' | 'all'>(
-        'all',
-    );
+    const [selectedRole, setSelectedRole] = useState<RoleTabValue>('all');
     const [showFilter, setShowFilter] = useState(false);
 
     const { filters, setQuery, setRole } = useSearchStore();
@@ -117,7 +132,7 @@ export default function ExploreScreen() {
         return () => clearTimeout(timer);
     }, [searchText, filters.query, setQuery]);
 
-    const handleRoleChange = (role: 'singer' | 'producer' | 'venue' | 'all') => {
+    const handleRoleChange = (role: RoleTabValue) => {
         setSelectedRole(role);
         setRole(role === 'all' ? undefined : role);
     };
@@ -148,6 +163,10 @@ export default function ExploreScreen() {
             void fetchNextPage();
         }
     }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    // Sheet đóng lại thì không còn dấu hiệu nào cho biết đang có bộ lọc — badge trên nút lọc
+    // giữ vai trò đó (thay cho nút "Xoá lọc" luôn hiện bên web).
+    const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
     const keyExtractor = useCallback((item: UserProfile) => item.id, []);
 
@@ -222,6 +241,16 @@ export default function ExploreScreen() {
                         onPress={() => setShowFilter(true)}
                     >
                         <SlidersHorizontal size={18} color="#FFFFFF" />
+                        {activeFilterCount > 0 && (
+                            <View
+                                style={styles.filterBadge}
+                                className="bg-pink-500 rounded-full items-center justify-center"
+                            >
+                                <Text className="text-[10px] font-bold text-white">
+                                    {activeFilterCount}
+                                </Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -328,7 +357,7 @@ export default function ExploreScreen() {
             <FilterSheet
                 visible={showFilter}
                 onClose={() => setShowFilter(false)}
-                currentRole={selectedRole === 'all' ? undefined : (selectedRole as UserRole)}
+                currentRole={selectedRole === 'all' ? undefined : selectedRole}
             />
         </SafeAreaView>
     );
@@ -347,6 +376,16 @@ const styles = StyleSheet.create({
                 elevation: 2,
             },
         }),
+    },
+    filterBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -4,
+        minWidth: 18,
+        height: 18,
+        paddingHorizontal: 4,
+        borderWidth: 2,
+        borderColor: '#FFFFFF',
     },
     tabsRow: {
         paddingHorizontal: 16,

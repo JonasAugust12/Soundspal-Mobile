@@ -34,6 +34,21 @@ export function useAcceptedCollabRequests() {
     });
 }
 
+/**
+ * Chi tiết một đề nghị hợp tác — dùng để hydrate thẻ COLLAB_REF trong khung chat.
+ * React Query cache theo id nên nhiều tin nhắn cùng trỏ một collab chỉ gọi API một lần.
+ * Không retry: 403 (không thuộc collab) và 404 sẽ không khá hơn khi thử lại.
+ */
+export function useCollabRequestDetail(id?: string) {
+    return useQuery({
+        queryKey: collabRequestKeys.detail(id ?? ''),
+        queryFn: () => collabRequestRepository.getById(id!),
+        enabled: Boolean(id),
+        staleTime: 5 * 60_000,
+        retry: false,
+    });
+}
+
 export function usePublicCollaborators(userId: string, enabled = true) {
     return useQuery({
         queryKey: collabRequestKeys.public(userId),

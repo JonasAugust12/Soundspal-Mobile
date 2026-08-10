@@ -12,13 +12,13 @@ import { X } from 'lucide-react-native';
 import { useGetAllGenres } from '@/features/profiles/presentation/hooks/useUserApi';
 import type { Genre } from '@/features/profiles/domain/entities/user.type';
 import type {
-    PostType,
+    PostTypeFilter,
     LocationType,
     ExperienceLevel,
 } from '@/features/jobs/domain/entities/job.type';
 
 export interface JobFilters {
-    post_type?: PostType;
+    post_type?: PostTypeFilter;
     location?: string;
     location_type?: LocationType;
     experience_level?: ExperienceLevel;
@@ -27,7 +27,10 @@ export interface JobFilters {
     genres?: string[];
 }
 
-const POST_TYPES: { value: PostType; label: string }[] = [
+// Nhãn khớp `JOB_TYPE_LABELS` trong messaging/domain/utils/messageContent.ts.
+const POST_TYPES: { value: PostTypeFilter; label: string }[] = [
+    { value: 'opportunity', label: 'Cơ hội biểu diễn' },
+    { value: 'collaboration', label: 'Tìm cộng tác' },
     { value: 'job_offer', label: 'Tuyển dụng' },
     { value: 'gig', label: 'Gig / Show' },
     { value: 'availability', label: 'Nhận show' },

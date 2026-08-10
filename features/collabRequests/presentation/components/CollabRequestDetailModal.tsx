@@ -10,15 +10,17 @@ import {
     TouchableOpacity,
     ActivityIndicator,
 } from 'react-native';
-import { ExternalLink, Paperclip, X } from 'lucide-react-native';
+import { ExternalLink, MessageCircle, Paperclip, X } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import type { CollabRequest } from '@/features/collabRequests/domain/entities/collabRequest.type';
 import {
     canCancelCollab,
+    canMessageCollabPartner,
     counterpartOf,
     formatCollabDate,
     isCollabOverdue,
 } from '@/features/collabRequests/domain/utils/collabRequestHelpers';
+import { useMessageCollabPartner } from '@/features/collabRequests/presentation/hooks/useMessageCollabPartner';
 import { CollabRequestStatusBadge } from './CollabRequestStatusBadge';
 import { colors } from '@/shared/domain/constants/colors';
 
@@ -40,12 +42,14 @@ export function CollabRequestDetailModal({
     cancelling = false,
 }: Props) {
     const router = useRouter();
+    const { messagePartner, isOpening } = useMessageCollabPartner();
     if (!item) return null;
 
     const partner = counterpartOf(item, currentUserId);
     const name = partner.display_name || partner.username;
     const overdue = isCollabOverdue(item);
     const showCancel = Boolean(onCancel) && canCancelCollab(item);
+    const showMessage = canMessageCollabPartner(item);
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -123,6 +127,28 @@ export function CollabRequestDetailModal({
                                 Xem hồ sơ {name}
                             </Text>
                         </TouchableOpacity>
+
+                        {showMessage ? (
+                            <TouchableOpacity
+                                disabled={isOpening}
+                                onPress={() => {
+                                    onClose();
+                                    messagePartner(item);
+                                }}
+                                className="mt-2 py-3.5 rounded-full bg-primary flex-row items-center justify-center gap-2 active:opacity-80"
+                            >
+                                {isOpening ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <>
+                                        <MessageCircle size={18} color="#fff" />
+                                        <Text className="text-white font-semibold">
+                                            Nhắn đối tác
+                                        </Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        ) : null}
 
                         {showCancel ? (
                             <TouchableOpacity

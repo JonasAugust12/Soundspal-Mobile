@@ -12,10 +12,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Briefcase, MapPin, DollarSign, Clock, FileText, Play, Music } from 'lucide-react-native';
 import {
     parseJobReference,
+    parseCollabReference,
     getJobTypeLabel,
     type JobRefData,
     type MessageAttachmentType,
 } from '@/features/messaging/domain/utils/messageContent';
+import { CollabRefCard } from '@/features/collabRequests/presentation/components/CollabRefCard';
 
 export type ChatMessage = {
     id: string;
@@ -161,7 +163,10 @@ export function MessageBubble({
 
     const isLeft = side === 'left';
     const jobRef = !isDeleted ? parseJobReference(text) : null;
-    const displayText = isDeleted ? 'Tin nhắn đã bị xóa' : jobRef ? jobRef.userText : text;
+    const collabRef = !isDeleted && !jobRef ? parseCollabReference(text) : null;
+    const displayText = isDeleted
+        ? 'Tin nhắn đã bị xóa'
+        : (jobRef?.userText ?? collabRef?.userText ?? text);
     const hasAttachment = !!attachmentUrl && !isDeleted;
     const hasBubble = !!displayText || hasAttachment;
     const maxBubbleWidth = screenWidth * 0.85 - 32 - (isLeft ? 36 : 0);
@@ -226,6 +231,7 @@ export function MessageBubble({
                 <Pressable onLongPress={onLongPress} delayLongPress={500}>
                     <View className={`gap-1.5 ${isLeft ? 'items-start' : 'items-end'}`}>
                         {jobRef && <JobRefCard data={jobRef.jobData} />}
+                        {collabRef && <CollabRefCard collaborationId={collabRef.collaborationId} />}
                         {messageBody}
                     </View>
                 </Pressable>

@@ -5,7 +5,15 @@ export interface Genre {
     updated_at: string;
 }
 
+/** Vai trò trả về trong response — luôn là vai trò thật trong DB. */
 export type UserRole = 'singer' | 'producer' | 'venue';
+
+/**
+ * Vai trò dùng để LỌC. Thêm bí danh `artist` mà backend map sang
+ * `role IN ('singer','producer')` — nhờ đó "khám phá nghệ sĩ" loại được địa điểm
+ * mà vẫn giữ cả ca sĩ lẫn nhà sản xuất (khớp `role=artist` bên web).
+ */
+export type SearchUserRole = UserRole | 'artist';
 
 export interface FeaturedUser {
     id: string;
@@ -118,8 +126,9 @@ export interface UserProfile {
 
 export interface SearchUsersRequest {
     query?: string;
-    role?: UserRole;
+    role?: SearchUserRole;
     location?: string;
+    /** TÊN thể loại — backend so khớp `genres.name IN (?)`, không phải id. */
     genres?: string[];
     openHour?: string;
     rentPrice?: string;

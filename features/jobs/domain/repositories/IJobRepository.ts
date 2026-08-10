@@ -9,7 +9,7 @@ import type {
     MySubmissionsResponse,
     PostStatus,
     PostVisibility,
-    PostType,
+    PostTypeFilter,
     LocationType,
     ExperienceLevel,
     GetJobSubmissionsParams,
@@ -30,7 +30,7 @@ export interface GetJobsParams {
     status?: PostStatus;
     visibility?: PostVisibility;
     // Bộ lọc nâng cao (khớp JobPostFilters bên web — gửi query params tới GET /posts)
-    post_type?: PostType;
+    post_type?: PostTypeFilter;
     location?: string;
     location_type?: LocationType;
     experience_level?: ExperienceLevel;

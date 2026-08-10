@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { messagingRepository } from '@/features/messaging/data/repositories/MessagingRepositoryImpl';
 import type { Conversation } from '@/features/messaging/domain/entities/messaging.type';
 import {
+    buildCollabReference,
     buildJobReference,
     getAttachmentTypeFromMimeType,
 } from '@/features/messaging/domain/utils/messageContent';
@@ -49,6 +50,8 @@ export function useConversationMessages(conversationId: string | undefined) {
         isUserOnline,
         pendingJobRefs,
         clearPendingJobRef,
+        pendingCollabRefs,
+        clearPendingCollabRef,
     } = useMessagingStore();
 
     const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -56,6 +59,7 @@ export function useConversationMessages(conversationId: string | undefined) {
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const pendingJobRef = pendingJobRefs[conversationId || ''];
+    const pendingCollabRef = pendingCollabRefs[conversationId || ''];
     const messages = getMessages(conversationId || '');
     const isLoadingMessages = loadingMessages[conversationId || ''] || false;
     const allTypingUsers = typingUsers[conversationId || ''] || [];
@@ -145,16 +149,29 @@ export function useConversationMessages(conversationId: string | undefined) {
         async (text: string) => {
             if (!conversationId) return;
 
-            // First message of a job-originated conversation is wrapped as a
-            // JOB_REF so the recipient sees the rich job card (mirrors web).
-            const content = pendingJobRef ? buildJobReference(pendingJobRef.jobData, text) : text;
+            // Tin đầu tiên của cuộc trò chuyện mở từ job / đề nghị hợp tác được bọc thành
+            // JOB_REF / COLLAB_REF để phía nhận thấy thẻ thông tin (khớp web). Chỉ có tối đa
+            // một loại pending cho mỗi hội thoại; job ref được ưu tiên nếu cả hai cùng tồn tại.
+            const content = pendingJobRef
+                ? buildJobReference(pendingJobRef.jobData, text)
+                : pendingCollabRef
+                  ? buildCollabReference(pendingCollabRef.collaborationId, text)
+                  : text;
 
             const sent = await messagingRepository.sendMessage({ conversationId, content });
 
             addMessage(conversationId, sent);
             if (pendingJobRef) clearPendingJobRef(conversationId);
+            else if (pendingCollabRef) clearPendingCollabRef(conversationId);
         },
-        [conversationId, pendingJobRef, addMessage, clearPendingJobRef],
+        [
+            conversationId,
+            pendingJobRef,
+            pendingCollabRef,
+            addMessage,
+            clearPendingJobRef,
+            clearPendingCollabRef,
+        ],
     );
 
     const editMessage = useCallback(
@@ -259,6 +276,7 @@ export function useConversationMessages(conversationId: string | undefined) {
         isUploading,
         typingUserIds,
         pendingJobRef,
+        pendingCollabRef,
         // Hành động
         sendMessage,
         editMessage,

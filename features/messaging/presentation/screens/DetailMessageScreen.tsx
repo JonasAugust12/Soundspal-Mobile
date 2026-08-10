@@ -35,7 +35,10 @@ import {
 import { useConversationMessages } from '@/features/messaging/presentation/hooks/useConversationMessages';
 import { useAuthStore } from '@/features/auth/presentation/store/authStore';
 import type { ChatMessage } from '@/shared/presentation/ui/MessageBubble';
-import { isJobReference, isMessageSeenBy } from '@/features/messaging/domain/utils/messageContent';
+import {
+    isStructuredReference,
+    isMessageSeenBy,
+} from '@/features/messaging/domain/utils/messageContent';
 
 export default function DetailMessageScreen() {
     const router = useRouter();
@@ -72,6 +75,7 @@ export default function DetailMessageScreen() {
         isUploading,
         typingUserIds,
         pendingJobRef,
+        pendingCollabRef,
         sendMessage,
         editMessage,
         deleteMessage,
@@ -111,11 +115,13 @@ export default function DetailMessageScreen() {
     }, [messages.length]);
 
     // Prefill composer with a default message when opening from a job (JOB_REF flow)
+    // or from an accepted collaboration request (COLLAB_REF flow).
     useEffect(() => {
-        if (pendingJobRef) {
-            setMessageText((prev) => (prev.length === 0 ? pendingJobRef.defaultText : prev));
+        const defaultText = pendingJobRef?.defaultText ?? pendingCollabRef?.defaultText;
+        if (defaultText) {
+            setMessageText((prev) => (prev.length === 0 ? defaultText : prev));
         }
-    }, [pendingJobRef]);
+    }, [pendingJobRef, pendingCollabRef]);
 
     const handleSendMessage = async () => {
         if (!messageText.trim() || !conversationId) return;
@@ -304,15 +310,19 @@ export default function DetailMessageScreen() {
     }, [messages, otherUser?.id, currentUserId]);
 
     const selectedMessage = messages.find((m) => m.id === selectedMessageId);
-    const selectedIsJobRef = selectedMessage ? isJobReference(selectedMessage.content) : false;
+    // Sửa/xoá tin JOB_REF / COLLAB_REF sẽ để lộ payload thô `:::..:::` trong ô nhập → khoá lại.
+    // Tệp đính kèm cũng không sửa được.
+    const selectedIsStructuredRef = selectedMessage
+        ? isStructuredReference(selectedMessage.content)
+        : false;
     const isSelectedOwn = selectedMessage?.senderId === currentUserId;
-    // JOB_REF messages are locked (no edit/delete); attachments cannot be edited.
     const canEditSelected =
         isSelectedOwn &&
         !selectedMessage?.isDeleted &&
-        !selectedIsJobRef &&
+        !selectedIsStructuredRef &&
         !selectedMessage?.attachmentUrl;
-    const canDeleteSelected = isSelectedOwn && !selectedMessage?.isDeleted && !selectedIsJobRef;
+    const canDeleteSelected =
+        isSelectedOwn && !selectedMessage?.isDeleted && !selectedIsStructuredRef;
 
     if (isLoadingMessages && messages.length === 0) {
         return (

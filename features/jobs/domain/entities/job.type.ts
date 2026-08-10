@@ -36,7 +36,15 @@ export interface Tag {
 }
 
 // Enum types - matching Go backend exactly
+/** Các loại tin app này tạo được. */
 export type PostType = 'job_offer' | 'gig' | 'availability';
+
+/**
+ * Loại tin dùng để LỌC. Rộng hơn `PostType` vì backend còn nhận `opportunity` và
+ * `collaboration` (xem `job_post.go` check constraint) — đây là hai loại tin web đăng nhiều
+ * nhất, không có trong danh sách lọc thì mobile không lọc tới chúng được.
+ */
+export type PostTypeFilter = PostType | 'opportunity' | 'collaboration';
 export type ArtistType = 'venue' | 'producer' | 'singer';
 export type RecruitmentType = 'full_time' | 'part_time' | 'contract' | 'one_time';
 export type LocationType = 'remote' | 'onsite' | 'hybrid';
@@ -245,7 +253,12 @@ export interface MySubmissionsResponse {
 export interface OpportunitySubmission {
     id: string;
     pool_id: string;
+    /** User id của ỨNG VIÊN (người tạo đơn) — dùng làm người nhận khi nhắn tin / gửi collab. */
     creator_id: string;
+    creator_username?: string;
+    creator_display_name?: string;
+    creator_avatar_url?: string | null;
+    creator_role?: string;
     full_name: string;
     email: string;
     phone_number: string;

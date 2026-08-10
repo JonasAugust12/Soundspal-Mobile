@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { CalendarRange } from 'lucide-react-native';
+import { CalendarRange, MessageCircle } from 'lucide-react-native';
 import type {
     CollabRequest,
     CollabRequestStatus,
 } from '@/features/collabRequests/domain/entities/collabRequest.type';
 import {
     canCancelCollab,
+    canMessageCollabPartner,
     canRespondToCollab,
     counterpartOf,
     formatCollabDate,
@@ -14,6 +15,7 @@ import {
     isCollabOverdue,
     isSentByMe,
 } from '@/features/collabRequests/domain/utils/collabRequestHelpers';
+import { useMessageCollabPartner } from '@/features/collabRequests/presentation/hooks/useMessageCollabPartner';
 import { CollabRequestStatusBadge } from './CollabRequestStatusBadge';
 import { colors } from '@/shared/domain/constants/colors';
 
@@ -32,6 +34,8 @@ export function CollabRequestCard({
     onPress,
     onUpdateStatus,
 }: Props) {
+    const { messagePartner, isOpening } = useMessageCollabPartner();
+
     const counterpart = counterpartOf(item, currentUserId);
     const sent = isSentByMe(item, currentUserId);
     const overdue = isCollabOverdue(item);
@@ -40,6 +44,7 @@ export function CollabRequestCard({
     const avatar = counterpart.avatar_url;
     const showRespond = canRespondToCollab(item, currentUserId);
     const showCancel = canCancelCollab(item);
+    const showMessage = canMessageCollabPartner(item);
 
     return (
         <TouchableOpacity
@@ -87,8 +92,26 @@ export function CollabRequestCard({
                         </View>
                     </View>
 
-                    {(showRespond || showCancel) && (
+                    {(showRespond || showCancel || showMessage) && (
                         <View className="flex-row flex-wrap gap-2 pt-1">
+                            {showMessage ? (
+                                <TouchableOpacity
+                                    disabled={isOpening}
+                                    onPress={() => messagePartner(item)}
+                                    className="flex-row items-center gap-1.5 px-4 py-2 rounded-full bg-primary active:opacity-80"
+                                >
+                                    {isOpening ? (
+                                        <ActivityIndicator size="small" color="#fff" />
+                                    ) : (
+                                        <>
+                                            <MessageCircle size={14} color="#fff" />
+                                            <Text className="text-white text-sm font-semibold">
+                                                Nhắn đối tác
+                                            </Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            ) : null}
                             {showRespond ? (
                                 <>
                                     <TouchableOpacity

@@ -19,12 +19,18 @@ import {
     Users,
     CheckSquare,
     Square,
+    MessageCircle,
+    Handshake,
 } from 'lucide-react-native';
 import {
     useGetJobSubmissions,
+    useGetJobById,
     useReviewSubmission,
     useBulkReviewSubmissions,
 } from '@/features/jobs/presentation/hooks/useJobApi';
+import { useGetOrCreateConversation } from '@/features/messaging/presentation/hooks/useMessagingApi';
+import { useMessagingStore } from '@/features/messaging/presentation/store/messagingStore';
+import { CreateCollabRequestModal } from '@/features/collabRequests';
 import { useToast } from '@/shared/presentation/hooks/useToast';
 import { getSubmissionStatusMeta } from '@/features/jobs/domain/utils/submissionStatus';
 import { formatDate } from '@/features/jobs/domain/utils/jobFormatters';
@@ -42,6 +48,49 @@ export default function JobApplicantsScreen() {
     const { mutate: review, isPending: isReviewing } = useReviewSubmission(jobId);
     const { mutate: bulkReview, isPending: isBulkReviewing } = useBulkReviewSubmissions(jobId);
     const [reviewingId, setReviewingId] = useState<string | null>(null);
+
+    // Sau khi chấp nhận đơn, chủ tin có thể nhắn ứng viên hoặc gửi đề nghị hợp tác 1-1
+    // (xem docs/mobile-team/collaboration-messaging-sync.md, mục 2).
+    const { data: job } = useGetJobById(jobId ?? '', { enabled: Boolean(jobId) });
+    const setPendingJobRef = useMessagingStore((s) => s.setPendingJobRef);
+    const { mutate: getOrCreateConversation, isPending: isOpeningChat } =
+        useGetOrCreateConversation();
+    const [collabTarget, setCollabTarget] = useState<OpportunitySubmission | null>(null);
+
+    const applicantName = (item: OpportunitySubmission) =>
+        item.creator_display_name || item.full_name || item.creator_username || 'Ứng viên';
+
+    const messageApplicant = (item: OpportunitySubmission) => {
+        if (!item.creator_id) return;
+        getOrCreateConversation(item.creator_id, {
+            onSuccess: (conversation) => {
+                // Giữ format JOB_REF khi nhắn từ ngữ cảnh job (spec mục 2.2).
+                if (job) {
+                    const budgetLabel =
+                        job.budget_min || job.budget_max
+                            ? `${job.budget_min ?? ''}${
+                                  job.budget_max ? ` - ${job.budget_max}` : ''
+                              } ${job.budget_currency ?? ''}`.trim()
+                            : undefined;
+                    setPendingJobRef(conversation.id, {
+                        jobData: {
+                            id: job.id,
+                            title: job.title,
+                            location: job.location,
+                            type: job.post_type,
+                            budget: budgetLabel,
+                            description: job.description,
+                        },
+                        defaultText: `Chào ${applicantName(item)}, đơn ứng tuyển "${job.title}" của bạn đã được chấp nhận.`,
+                    });
+                }
+                router.push(
+                    `/(messages)/detailMessage?conversationId=${conversation.id}` as `${string}`,
+                );
+            },
+            onError: () => showError('Lỗi', 'Không thể mở cuộc trò chuyện'),
+        });
+    };
 
     // Chế độ chọn nhiều để duyệt hàng loạt.
     const [selectionMode, setSelectionMode] = useState(false);
@@ -132,6 +181,9 @@ export default function JobApplicantsScreen() {
         const isThisReviewing = isReviewing && reviewingId === item.id;
         const selectable = item.can_be_reviewed;
         const selected = selectedIds.includes(item.id);
+        // Nhắn tin / gửi hợp tác chỉ mở sau khi đơn được chấp nhận; pending & rejected không có.
+        const showAcceptedActions =
+            !selectionMode && item.status === 'accepted' && Boolean(item.creator_id);
 
         return (
             <View
@@ -233,6 +285,38 @@ export default function JobApplicantsScreen() {
                         </TouchableOpacity>
                     </View>
                 )}
+
+                {showAcceptedActions && (
+                    <View className="flex-row gap-3 mt-1">
+                        <TouchableOpacity
+                            onPress={() => messageApplicant(item)}
+                            disabled={isOpeningChat}
+                            className="flex-1 flex-row items-center justify-center gap-1.5 bg-purple-600 rounded-xl py-2.5"
+                            activeOpacity={0.8}
+                        >
+                            {isOpeningChat ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <>
+                                    <MessageCircle size={15} color="#FFFFFF" />
+                                    <Text className="text-white font-semibold text-sm">
+                                        Nhắn ứng viên
+                                    </Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setCollabTarget(item)}
+                            className="flex-1 flex-row items-center justify-center gap-1.5 border border-purple-500 rounded-xl py-2.5"
+                            activeOpacity={0.8}
+                        >
+                            <Handshake size={15} color="#7C3BED" />
+                            <Text className="text-purple-600 font-semibold text-sm">
+                                Gửi hợp tác
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         );
     };
@@ -324,6 +408,14 @@ export default function JobApplicantsScreen() {
                     </TouchableOpacity>
                 </View>
             )}
+
+            {/* Gửi đề nghị hợp tác 1-1 tới ứng viên đã được chấp nhận (reuse form ở profile) */}
+            <CreateCollabRequestModal
+                visible={Boolean(collabTarget)}
+                onClose={() => setCollabTarget(null)}
+                receiverId={collabTarget?.creator_id ?? ''}
+                receiverName={collabTarget ? applicantName(collabTarget) : ''}
+            />
         </SafeAreaView>
     );
 }

@@ -34,6 +34,9 @@ interface MessagingState {
     // Pending JOB_REF to prepend to the first message of a job-originated conversation
     pendingJobRefs: Record<string, { jobData: JobRefData; defaultText: string }>;
 
+    // Tương tự cho luồng "Nhắn đối tác" từ một đề nghị hợp tác đã ACCEPTED
+    pendingCollabRefs: Record<string, { collaborationId: string; defaultText: string }>;
+
     // Loading states
     isLoadingConversations: boolean;
     loadingMessages: Record<string, boolean>;
@@ -73,12 +76,17 @@ interface MessagingState {
     // ── Actions: Active conversation ─────────────────────────────────────────
     setActiveConversation: (conversationId: string | null) => void;
 
-    // ── Actions: Pending JOB_REF ─────────────────────────────────────────────
+    // ── Actions: Pending JOB_REF / COLLAB_REF ────────────────────────────────
     setPendingJobRef: (
         conversationId: string,
         payload: { jobData: JobRefData; defaultText: string },
     ) => void;
     clearPendingJobRef: (conversationId: string) => void;
+    setPendingCollabRef: (
+        conversationId: string,
+        payload: { collaborationId: string; defaultText: string },
+    ) => void;
+    clearPendingCollabRef: (conversationId: string) => void;
 
     // ── Selectors ────────────────────────────────────────────────────────────
     getMessages: (conversationId: string) => Message[];
@@ -113,6 +121,7 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
     typingUsers: {},
     activeConversationId: null,
     pendingJobRefs: {},
+    pendingCollabRefs: {},
     isLoadingConversations: false,
     loadingMessages: {},
 
@@ -411,7 +420,7 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
 
     setActiveConversation: (conversationId) => set({ activeConversationId: conversationId }),
 
-    // ── Pending JOB_REF ───────────────────────────────────────────────────────
+    // ── Pending JOB_REF / COLLAB_REF ──────────────────────────────────────────
 
     setPendingJobRef: (conversationId, payload) =>
         set((state) => ({
@@ -424,6 +433,19 @@ export const useMessagingStore = create<MessagingState>()((set, get) => ({
             const next = { ...state.pendingJobRefs };
             delete next[conversationId];
             return { pendingJobRefs: next };
+        }),
+
+    setPendingCollabRef: (conversationId, payload) =>
+        set((state) => ({
+            pendingCollabRefs: { ...state.pendingCollabRefs, [conversationId]: payload },
+        })),
+
+    clearPendingCollabRef: (conversationId) =>
+        set((state) => {
+            if (!state.pendingCollabRefs[conversationId]) return state;
+            const next = { ...state.pendingCollabRefs };
+            delete next[conversationId];
+            return { pendingCollabRefs: next };
         }),
 
     // ── Selectors ─────────────────────────────────────────────────────────────

@@ -25,7 +25,12 @@ import {
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useSearchStore, UserRole } from '@/features/explore/presentation/store/searchStore';
+import {
+    useSearchStore,
+    countActiveFilters,
+    isArtistRole,
+    UserRole,
+} from '@/features/explore/presentation/store/searchStore';
 import { useGetGenres } from '@/features/explore/presentation/hooks/useSearchApi';
 import { businessTypes } from '@/shared/domain/constants/businessTypes';
 import { serviceTypes } from '@/shared/domain/constants/serviceTypes';
@@ -136,23 +141,17 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
     const { data: genresData, isLoading: isLoadingGenres } = useGetGenres();
     const genres = genresData?.data?.genres || [];
 
-    const isArtist = currentRole === 'singer' || currentRole === 'producer';
+    const isArtist = isArtistRole(currentRole);
     const isVenue = currentRole === 'venue';
+    // Thể loại chỉ áp dụng cho nghệ sĩ — backend bỏ qua khi tìm địa điểm
+    // (xem `discovery-search-fixes-mobile-api.md`, mục 3).
     const showGenres = isArtist || !currentRole;
 
     const selectedGenresCount = filters.genres.length;
     const selectedBusinessTypesCount = filters.businessTypes.length;
     const selectedServiceTypesCount = filters.serviceTypes.length;
 
-    const activeCount =
-        selectedGenresCount +
-        selectedBusinessTypesCount +
-        selectedServiceTypesCount +
-        (filters.stateProvince ? 1 : 0) +
-        (filters.venueType ? 1 : 0) +
-        (filters.feeMin != null ? 1 : 0) +
-        (filters.feeMax != null ? 1 : 0) +
-        (filters.isAvailable ? 1 : 0);
+    const activeCount = countActiveFilters(filters);
 
     return (
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -243,8 +242,8 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                                                     key={genre.id}
                                                     label={genre.name}
                                                     tone="pink"
-                                                    selected={filters.genres.includes(genre.id)}
-                                                    onPress={() => toggleGenre(genre.id)}
+                                                    selected={filters.genres.includes(genre.name)}
+                                                    onPress={() => toggleGenre(genre.name)}
                                                 />
                                             ))}
                                         </View>
