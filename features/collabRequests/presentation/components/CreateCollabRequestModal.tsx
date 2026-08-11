@@ -122,29 +122,36 @@ export function CreateCollabRequestModal({ visible, onClose, receiverId, receive
             return;
         }
 
+        // Chốt dữ liệu TRƯỚC khi đóng form, vì handleClose() reset toàn bộ state.
+        const payload = {
+            receiver_id: receiverId,
+            title: title.trim(),
+            description: description.trim(),
+            start_date: toApiDate(startIso),
+            end_date: toApiDate(endIso),
+            start_time: startTime ? toHm(startTime) : null,
+            end_time: endTime ? toHm(endTime) : null,
+            is_public: isPublic,
+        };
+        const attachment = file;
+
+        // Đóng form ngay khi bấm gửi — kết quả (thành công hay lỗi) báo bằng toast, người
+        // dùng không phải ngồi chờ trong modal. Component vẫn mounted ở màn cha (chỉ đổi
+        // `visible`) nên callback dưới đây vẫn chạy sau khi form đã đóng.
+        handleClose();
+        // Đặt lại khoá SAU handleClose (hàm đó tự nhả khoá): chặn mở lại rồi gửi tiếp
+        // khi request đầu còn bay — gửi trùng sẽ dính 409.
         submitLockRef.current = true;
+
         createMutation.mutate(
-            {
-                payload: {
-                    receiver_id: receiverId,
-                    title: title.trim(),
-                    description: description.trim(),
-                    start_date: toApiDate(startIso),
-                    end_date: toApiDate(endIso),
-                    start_time: startTime ? toHm(startTime) : null,
-                    end_time: endTime ? toHm(endTime) : null,
-                    is_public: isPublic,
-                },
-                file,
-            },
+            { payload, file: attachment },
             {
                 onSuccess: () => {
                     showSuccess('Thành công', 'Đã gửi đề nghị hợp tác.');
-                    handleClose();
                 },
                 onError: (err: unknown) => {
-                    const { title, message } = resolveCreateCollabError(err);
-                    showError(title, message);
+                    const { title: errorTitle, message } = resolveCreateCollabError(err);
+                    showError(errorTitle, message);
                 },
                 onSettled: () => {
                     submitLockRef.current = false;

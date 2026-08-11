@@ -143,9 +143,11 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
 
     const isArtist = isArtistRole(currentRole);
     const isVenue = currentRole === 'venue';
-    // Thể loại chỉ áp dụng cho nghệ sĩ — backend bỏ qua khi tìm địa điểm
-    // (xem `discovery-search-fixes-mobile-api.md`, mục 3).
-    const showGenres = isArtist || !currentRole;
+    // Các mục thể loại / dịch vụ / thù lao / đang nhận show chỉ áp dụng cho nghệ sĩ —
+    // backend bỏ qua khi tìm địa điểm (xem `discovery-search-fixes-mobile-api.md`, mục 3).
+    // Tab 'Tất cả' (currentRole === undefined) vẫn phải hiện chúng, nếu không người dùng
+    // mở bộ lọc ở tab mặc định sẽ chỉ thấy mỗi Tỉnh/Thành.
+    const showArtistFilters = isArtist || !currentRole;
 
     const selectedGenresCount = filters.genres.length;
     const selectedBusinessTypesCount = filters.businessTypes.length;
@@ -223,7 +225,7 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                             </View>
 
                             {/* Genres - singer/producer/all */}
-                            {showGenres && (
+                            {showArtistFilters && (
                                 <View>
                                     <SectionHeader
                                         icon={<Music size={18} color="#EC4899" />}
@@ -252,7 +254,7 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                             )}
 
                             {/* Artist-only: Service types */}
-                            {isArtist && (
+                            {showArtistFilters && (
                                 <View>
                                     <SectionHeader
                                         icon={<Briefcase size={18} color="#7C3AED" />}
@@ -273,7 +275,7 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                             )}
 
                             {/* Artist-only: Fee range */}
-                            {isArtist && (
+                            {showArtistFilters && (
                                 <View>
                                     <SectionHeader
                                         icon={<Wallet size={18} color="#7C3AED" />}
@@ -379,7 +381,7 @@ export function FilterSheet({ visible, onClose, currentRole }: FilterSheetProps)
                             )}
 
                             {/* Availability / Hiring toggle */}
-                            {(isArtist || isVenue) && (
+                            {(showArtistFilters || isVenue) && (
                                 <View className="flex-row items-center justify-between py-1">
                                     <View className="flex-row items-center gap-2 flex-1 pr-3">
                                         <CircleCheck size={18} color="#10B981" />

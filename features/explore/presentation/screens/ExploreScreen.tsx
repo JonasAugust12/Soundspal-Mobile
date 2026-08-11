@@ -16,15 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_SAFE_AREA_EDGES } from '@/shared/presentation/ui';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import {
-    Search,
-    SlidersHorizontal,
-    Disc2,
-    MicVocal,
-    Building2,
-    Users,
-    Music2,
-} from 'lucide-react-native';
+import { Search, SlidersHorizontal, Disc2, MicVocal, Building2, Users } from 'lucide-react-native';
 import { useSearchUsersInfinite } from '@/features/explore/presentation/hooks/useSearchApi';
 import {
     useSearchStore,
@@ -39,15 +31,14 @@ const SEARCH_PAGE_SIZE = 20;
 
 type RoleTabValue = UserRole | 'all';
 
-// 'artist' = ca sĩ + nhà sản xuất (bí danh backend hiểu được). Không có tab này thì "khám phá
-// nghệ sĩ" phải dùng 'Tất cả' — vốn kéo cả nhà tuyển dụng vào kết quả.
+// Không có tab gộp 'artist' (ca sĩ + nhà sản xuất): trùng vai trò với 'Tất cả' và hai tab
+// con bên dưới. Bí danh 'artist' vẫn còn ở tầng store/API cho nơi khác dùng.
 const ROLE_TABS: {
     label: string;
     value: RoleTabValue;
     icon: React.ElementType;
 }[] = [
     { label: 'Tất cả', value: 'all', icon: Users },
-    { label: 'Nghệ sĩ', value: 'artist', icon: Music2 },
     { label: 'Ca sĩ', value: 'singer', icon: MicVocal },
     { label: 'Nhà sản xuất', value: 'producer', icon: Disc2 },
     { label: 'Nhà tuyển dụng', value: 'venue', icon: Building2 },
