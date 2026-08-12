@@ -24,6 +24,12 @@ export interface Beat {
     waveform_json?: string;
 }
 
+/** Platform kill-switch for challenge entry uploads. */
+export interface BeatBattleSettings {
+    entries_upload_enabled: boolean;
+    updated_at?: string;
+}
+
 export interface BeatPagination {
     current_page: number;
     page_size: number;

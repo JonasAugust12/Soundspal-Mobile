@@ -2,6 +2,7 @@ import type {
     GetBeatsResponse,
     GetBeatsParams,
     Beat,
+    BeatBattleSettings,
     BeatEntry,
     GetLeaderboardResponse,
     UserStats,
@@ -15,6 +16,7 @@ import type {
 export interface IChallengeRepository {
     getBeats(params?: GetBeatsParams): Promise<GetBeatsResponse>;
     getBeatById(id: string): Promise<Beat>;
+    getBattleSettings(): Promise<BeatBattleSettings>;
     getLeaderboard(
         id: string,
         limit?: number,

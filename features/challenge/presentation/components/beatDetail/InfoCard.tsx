@@ -10,6 +10,7 @@ import {
     getBeatCreatorDisplayName,
     getBeatGenres,
 } from '@/features/challenge/domain/utils/challenge';
+import { useGetBattleSettings } from '@/features/challenge/presentation/hooks/useChallengeApi';
 
 interface InfoCardProps {
     beat?: Beat;
@@ -18,6 +19,9 @@ interface InfoCardProps {
 
 export function InfoCard({ beat, isLoading }: InfoCardProps) {
     const router = useRouter();
+    const { data: battleSettings } = useGetBattleSettings();
+    const entriesUploadEnabled = battleSettings?.entries_upload_enabled !== false;
+    const canSubmitEntry = Boolean(beat?.is_active) && entriesUploadEnabled;
 
     const genres = beat ? getBeatGenres(beat) : [];
     const creatorName = beat ? getBeatCreatorDisplayName(beat) : '';
@@ -242,29 +246,41 @@ export function InfoCard({ beat, isLoading }: InfoCardProps) {
 
                 {/* Actions */}
                 <View className="gap-4">
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        style={[styles.actionShadow, { borderRadius: 9999 }]}
-                        onPress={() =>
-                            router.push({
-                                pathname: '/(challenge)/record',
-                                params: { id: beat?.id },
-                            })
-                        }
-                    >
-                        <LinearGradient
-                            colors={['#7d3bed', '#f471b7']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={{ borderRadius: 9999 }}
-                            className="h-16 rounded-full flex-row items-center justify-center gap-3"
+                    {canSubmitEntry ? (
+                        <TouchableOpacity
+                            activeOpacity={0.8}
+                            style={[styles.actionShadow, { borderRadius: 9999 }]}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/(challenge)/record',
+                                    params: { id: beat?.id },
+                                })
+                            }
                         >
-                            <Mic size={24} color="white" fill="white" />
-                            <Text className="text-white font-heading font-black text-lg">
-                                Thu âm ngay
+                            <LinearGradient
+                                colors={['#7d3bed', '#f471b7']}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={{ borderRadius: 9999 }}
+                                className="h-16 rounded-full flex-row items-center justify-center gap-3"
+                            >
+                                <Mic size={24} color="white" fill="white" />
+                                <Text className="text-white font-heading font-black text-lg">
+                                    Thu âm ngay
+                                </Text>
+                            </LinearGradient>
+                        </TouchableOpacity>
+                    ) : (
+                        <View className="rounded-3xl border border-gray-200 bg-gray-50 px-4 py-4">
+                            <Text className="text-center font-heading font-bold text-base text-gray-900">
+                                Hiện không nhận bài thi
                             </Text>
-                        </LinearGradient>
-                    </TouchableOpacity>
+                            <Text className="mt-1 text-center text-sm text-gray-500">
+                                Admin đã tạm khóa nộp bài challenge. Bạn vẫn có thể nghe beat và xem
+                                bảng xếp hạng.
+                            </Text>
+                        </View>
+                    )}
 
                     <View className="flex-row gap-3">
                         <TouchableOpacity

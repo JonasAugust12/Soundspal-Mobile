@@ -29,6 +29,14 @@ export const useGetBeatById = (id: string | undefined) => {
     });
 };
 
+export const useGetBattleSettings = () => {
+    return useQuery({
+        queryKey: ['beat-battle-settings'],
+        queryFn: () => challengeRepository.getBattleSettings(),
+        staleTime: 30_000,
+    });
+};
+
 export const useGetLeaderboard = (
     id: string | undefined,
     limit: number = 20,

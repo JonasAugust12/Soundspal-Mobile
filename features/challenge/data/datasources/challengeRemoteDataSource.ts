@@ -4,6 +4,7 @@ import type {
     GetBeatsResponse,
     GetBeatsParams,
     Beat,
+    BeatBattleSettings,
     BeatEntry,
     GetLeaderboardResponse,
     UserStats,
@@ -30,6 +31,8 @@ export const challengeRemoteDataSource = {
     },
 
     getBeatById: (id: string) => createApiCall<Beat>('GET', `/beats/${id}`)(),
+
+    getBattleSettings: () => createApiCall<BeatBattleSettings>('GET', '/beats/settings')(),
 
     getLeaderboard: (
         id: string,

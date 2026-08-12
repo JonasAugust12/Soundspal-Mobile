@@ -4,6 +4,7 @@ import { challengeRemoteDataSource } from '@/features/challenge/data/datasources
 export class ChallengeRepositoryImpl implements IChallengeRepository {
     getBeats = challengeRemoteDataSource.getBeats;
     getBeatById = challengeRemoteDataSource.getBeatById;
+    getBattleSettings = challengeRemoteDataSource.getBattleSettings;
     getLeaderboard = challengeRemoteDataSource.getLeaderboard;
     updateBeat = challengeRemoteDataSource.updateBeat;
     deleteBeat = challengeRemoteDataSource.deleteBeat;

@@ -359,10 +359,25 @@ export const StudioDashboard = memo(function StudioDashboard({
             });
         } catch (error) {
             console.error('Entry submit error:', error);
+            const status = (
+                error as { response?: { status?: number; data?: { message?: string } } }
+            )?.response?.status;
+            const apiMessage = (
+                error as { response?: { data?: { message?: string } }; message?: string }
+            )?.response?.data?.message;
+            const message = (
+                apiMessage ||
+                (error as { message?: string })?.message ||
+                ''
+            ).toLowerCase();
+            const uploadsDisabled =
+                status === 403 || message.includes('entry uploads are currently disabled');
             Toast.show({
                 type: 'error',
-                text1: 'Lỗi nộp bài',
-                text2: 'Gặp sự cố khi nộp bài dự thi.',
+                text1: uploadsDisabled ? 'Tạm khóa nộp bài' : 'Lỗi nộp bài',
+                text2: uploadsDisabled
+                    ? 'Admin đã tạm khóa nộp bài challenge. Vui lòng thử lại sau.'
+                    : 'Gặp sự cố khi nộp bài dự thi.',
             });
         } finally {
             setIsSubmitting(false);
