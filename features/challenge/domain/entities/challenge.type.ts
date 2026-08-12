@@ -24,7 +24,7 @@ export interface Beat {
     waveform_json?: string;
 }
 
-/** Platform kill-switch for challenge entry uploads. */
+/** When false, clients hide the external file-upload button (in-app recording stays available). */
 export interface BeatBattleSettings {
     entries_upload_enabled: boolean;
     updated_at?: string;

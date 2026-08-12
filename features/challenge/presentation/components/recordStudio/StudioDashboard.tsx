@@ -26,6 +26,8 @@ import {
 
 interface StudioDashboardProps {
     beat?: Beat;
+    /** When false, hide/disable picking an external audio file (in-app record still allowed). */
+    fileUploadEnabled?: boolean;
     onDurationUpdate?: (durationMillis: number) => void;
     onRecordingStateChange?: (isRecording: boolean) => void;
 }
@@ -51,6 +53,7 @@ function guessAudioMime(extension: string): string {
 
 export const StudioDashboard = memo(function StudioDashboard({
     beat,
+    fileUploadEnabled = true,
     onDurationUpdate,
     onRecordingStateChange,
 }: StudioDashboardProps) {
@@ -224,6 +227,14 @@ export const StudioDashboard = memo(function StudioDashboard({
     // Chọn file audio có sẵn để nộp thay cho thu trực tiếp — tương đương nút "Tải lên" của web.
     const handleUpload = async () => {
         if (isRecording) return;
+        if (!fileUploadEnabled) {
+            Toast.show({
+                type: 'info',
+                text1: 'Tạm khóa tải file',
+                text2: 'Bạn vẫn có thể thu âm trực tiếp trên app rồi nộp bài.',
+            });
+            return;
+        }
         try {
             const result = await DocumentPicker.getDocumentAsync({
                 type: 'audio/*',
@@ -359,25 +370,10 @@ export const StudioDashboard = memo(function StudioDashboard({
             });
         } catch (error) {
             console.error('Entry submit error:', error);
-            const status = (
-                error as { response?: { status?: number; data?: { message?: string } } }
-            )?.response?.status;
-            const apiMessage = (
-                error as { response?: { data?: { message?: string } }; message?: string }
-            )?.response?.data?.message;
-            const message = (
-                apiMessage ||
-                (error as { message?: string })?.message ||
-                ''
-            ).toLowerCase();
-            const uploadsDisabled =
-                status === 403 || message.includes('entry uploads are currently disabled');
             Toast.show({
                 type: 'error',
-                text1: uploadsDisabled ? 'Tạm khóa nộp bài' : 'Lỗi nộp bài',
-                text2: uploadsDisabled
-                    ? 'Admin đã tạm khóa nộp bài challenge. Vui lòng thử lại sau.'
-                    : 'Gặp sự cố khi nộp bài dự thi.',
+                text1: 'Lỗi nộp bài',
+                text2: 'Gặp sự cố khi nộp bài dự thi.',
             });
         } finally {
             setIsSubmitting(false);
@@ -558,13 +554,15 @@ export const StudioDashboard = memo(function StudioDashboard({
                 <View className="flex-row gap-3 pt-4 border-t border-gray-100">
                     <TouchableOpacity
                         activeOpacity={0.7}
-                        disabled={isRecording}
+                        disabled={isRecording || !fileUploadEnabled}
                         onPress={handleUpload}
-                        className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl bg-gray-50 border border-gray-200 ${isRecording ? 'opacity-50' : ''}`}
+                        className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-2xl bg-gray-50 border border-gray-200 ${isRecording || !fileUploadEnabled ? 'opacity-50' : ''}`}
                     >
-                        <Upload size={17} color="#7d3bed" />
-                        <Text className="text-xs font-bold font-body text-gray-700 uppercase tracking-wide">
-                            Tải lên file
+                        <Upload size={17} color={fileUploadEnabled ? '#7d3bed' : '#9ca3af'} />
+                        <Text
+                            className={`text-xs font-bold font-body uppercase tracking-wide ${fileUploadEnabled ? 'text-gray-700' : 'text-gray-400'}`}
+                        >
+                            {fileUploadEnabled ? 'Tải lên file' : 'Khóa tải file'}
                         </Text>
                     </TouchableOpacity>
 
